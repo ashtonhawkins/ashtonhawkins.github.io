@@ -1,179 +1,161 @@
-import { useEffect, useState } from "react";
 import { Command } from "cmdk";
-import { animate } from "motion";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-type QuickLink = {
+type CommandItem = {
   label: string;
-  href: string;
-  description?: string;
+  hint?: string;
+  action: () => void;
 };
 
-type QuickLinkGroup = {
-  heading: string;
-  items: QuickLink[];
-};
-
-const quickLinks: QuickLinkGroup[] = [
-  {
-    heading: "Core",
-    items: [
-      { label: "Home", href: "/" },
-      { label: "About", href: "/about" },
-      { label: "Now", href: "/now" }
-    ]
-  },
-  {
-    heading: "Explore",
-    items: [
-      { label: "Writing", href: "/writing", description: "Essays, notes, and dispatches." },
-      { label: "Projects", href: "/projects", description: "Selected work and experiments." },
-      { label: "Press", href: "/press", description: "Interviews and features from around the web." },
-      { label: "Activity", href: "/activity", description: "Live feed of what I'm building." }
-    ]
-  },
-  {
-    heading: "Elsewhere",
-    items: [
-      { label: "GitHub", href: "https://github.com/ashtonhawkins" },
-      { label: "LinkedIn", href: "https://www.linkedin.com/in/ashtonhawkins" },
-      { label: "Email", href: "mailto:hello@ashtonhawkins.com" }
-    ]
-  }
+const NAVIGATION_COMMANDS: Array<{ label: string; href: string; hint?: string }> = [
+  { label: "Home", href: "/" },
+  { label: "About", href: "/about" },
+  { label: "Now", href: "/now" },
+  { label: "Projects", href: "/projects" },
+  { label: "Writing", href: "/writing" },
+  { label: "Activity", href: "/activity" },
+  { label: "Resume", href: "/resume", hint: "Opens in this tab" }
 ];
 
-const kbd = (shortcuts: string) => shortcuts.toUpperCase().replace(/\+/g, " + ");
+const focusPagefindInput = (): boolean => {
+  const selectors = [
+    "#pagefind-search input[type=\"text\"]",
+    "#footer-search input[type=\"text\"]",
+    ".pagefind-wrapper input[type=\"text\"]"
+  ];
+
+  for (const selector of selectors) {
+    const input = document.querySelector<HTMLInputElement>(selector);
+    if (input) {
+      input.focus();
+      input.select();
+      input.scrollIntoView({ behavior: "smooth", block: "center" });
+      return true;
+    }
+  }
+
+  return false;
+};
 
 const CommandPalette = (): JSX.Element | null => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const openRef = useRef(open);
 
-  useEffect(() => {
-    const handler = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        setOpen((value) => !value);
-      }
-      if (event.key === "Escape") {
-        setOpen(false);
-      }
-    };
-
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+  const closePalette = useCallback(() => {
+    setOpen(false);
+    setQuery("");
   }, []);
 
   useEffect(() => {
-    const handleOpen = (event: Event) => {
+    openRef.current = open;
+  }, [open]);
+
+  const commands = useMemo<CommandItem[]>(() => {
+    const navigationCommands = NAVIGATION_COMMANDS.map((item) => ({
+      label: item.label,
+      hint: item.hint ?? item.href,
+      action: () => {
+        closePalette();
+        window.location.href = item.href;
+      }
+    }));
+
+    return [
+      {
+        label: "Search site…",
+        hint: "Focus site search",
+        action: () => {
+          focusPagefindInput();
+          closePalette();
+        }
+      },
+      ...navigationCommands
+    ];
+  }, [closePalette]);
+
+  useEffect(() => {
+    const openListener = (event: Event) => {
       setOpen(true);
       const detail = (event as CustomEvent<string | undefined>).detail;
       if (typeof detail === "string") {
         setQuery(detail);
+      } else {
+        setQuery("");
       }
     };
-    window.addEventListener("command-palette:open", handleOpen as EventListener);
-    return () => window.removeEventListener("command-palette:open", handleOpen as EventListener);
-  }, []);
+    const closeListener = () => closePalette();
+    const toggleListener = () => {
+      if (openRef.current) {
+        closePalette();
+      } else {
+        setQuery("");
+        setOpen(true);
+      }
+    };
+
+    window.addEventListener("command-palette:open", openListener as EventListener);
+    window.addEventListener("command-palette:close", closeListener);
+    window.addEventListener("command-palette:toggle", toggleListener);
+
+    return () => {
+      window.removeEventListener("command-palette:open", openListener as EventListener);
+      window.removeEventListener("command-palette:close", closeListener);
+      window.removeEventListener("command-palette:toggle", toggleListener);
+    };
+  }, [closePalette]);
 
   useEffect(() => {
-    document.documentElement.classList.toggle("command-open", open);
+    document.documentElement.classList.toggle("command-palette-open", open);
     document.body.style.overflow = open ? "hidden" : "";
-    if (open) {
-      requestAnimationFrame(() => {
-        const dialog = document.querySelector("[data-command-root]");
-        if (dialog) {
-          animate(
-            dialog,
-            { opacity: [0, 1], transform: ["translateY(10px)", "translateY(0)"] },
-            { duration: 0.22, easing: "ease-out" }
-          );
-        }
-      });
-    }
+    return () => {
+      document.documentElement.classList.remove("command-palette-open");
+      document.body.style.overflow = "";
+    };
   }, [open]);
-
-  const searchWithPagefind = (value: string) => {
-    if (!value) return;
-    window.dispatchEvent(new CustomEvent("pagefind:query", { detail: value }));
-    const anchor = document.querySelector("#footer-search");
-    anchor?.scrollIntoView({ behavior: "smooth", block: "center" });
-  };
 
   if (!open) {
     return null;
   }
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-start justify-center bg-black/40 px-4 py-24 backdrop-blur-sm" role="presentation">
-      <div className="fixed inset-0" onClick={() => setOpen(false)} aria-hidden="true" />
+    <div className="fixed inset-0 z-[90] flex items-start justify-center bg-black/40 px-4 py-24 backdrop-blur-sm">
+      <div
+        className="absolute inset-0"
+        aria-hidden="true"
+        onClick={() => closePalette()}
+      />
       <Command
-        label="Command Menu"
-        className="relative z-10 w-full max-w-2xl overflow-hidden rounded-3xl border border-border/60 bg-surface text-text-primary shadow-overlay"
-        data-command-root
+        label="Command Palette"
+        className="relative z-10 w-full max-w-xl overflow-hidden rounded-3xl border border-border/60 bg-surface text-text-primary shadow-overlay"
       >
-        <div className="flex items-center justify-between border-b border-border/50 bg-background/80 px-5 py-4">
-          <div className="flex flex-1 items-center gap-2">
-            <Command.Input
-              id="cmdk-search"
-              value={query}
-              onValueChange={setQuery}
-              autoFocus
-              placeholder="Jump to anything..."
-              className="w-full bg-transparent text-base outline-none placeholder:text-text-muted"
-            />
-          </div>
-          <kbd className="text-xs uppercase tracking-wide text-text-muted">{kbd("esc")}</kbd>
+        <div className="flex items-center justify-between border-b border-border/60 bg-background/80 px-5 py-4">
+          <Command.Input
+            autoFocus
+            value={query}
+            onValueChange={setQuery}
+            placeholder="Type a command or search…"
+            className="w-full bg-transparent text-base outline-none placeholder:text-text-muted"
+          />
+          <kbd className="ml-4 text-xs uppercase tracking-wide text-text-muted">ESC</kbd>
         </div>
         <Command.List className="max-h-[55vh] overflow-y-auto px-3 py-4">
           <Command.Empty className="px-4 py-6 text-sm text-text-muted">
-            Nothing yet—try another search term.
+            No matches—try another phrase.
           </Command.Empty>
-          {query && (
-            <Command.Group heading="Search" className="px-2">
+          <Command.Group heading="Actions" className="px-2 text-xs uppercase tracking-wide text-text-muted">
+            {commands.map((item) => (
               <Command.Item
-                key="search-pagefind"
-                value={`search-${query}`}
-                onSelect={() => {
-                  searchWithPagefind(query);
-                  setOpen(false);
-                }}
-                className="group flex cursor-pointer items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm transition hover:bg-accent-soft"
+                key={item.label}
+                value={`${item.label.toLowerCase()} ${item.hint ?? ""}`.trim()}
+                onSelect={() => item.action()}
+                className="mt-2 flex cursor-pointer items-center justify-between rounded-2xl px-4 py-3 text-sm transition hover:bg-accent-soft"
               >
-                <span>
-                  Search for <span className="font-semibold text-text-secondary">“{query}”</span>
-                </span>
-                <span className="text-xs text-text-muted">Pagefind</span>
+                <span className="font-medium text-text-primary">{item.label}</span>
+                {item.hint ? <span className="text-xs text-text-muted">{item.hint}</span> : null}
               </Command.Item>
-            </Command.Group>
-          )}
-          {quickLinks.map((group) => (
-            <Command.Group key={group.heading} heading={group.heading} className="mt-3 px-2 text-xs uppercase tracking-wide text-text-muted">
-              {group.items.map((item) => (
-                <Command.Item
-                  key={item.href}
-                  value={`${group.heading}-${item.label}`}
-                  onSelect={() => {
-                    setOpen(false);
-                    if (item.href.startsWith("http")) {
-                      window.open(item.href, "_blank", "noreferrer");
-                    } else {
-                      window.location.href = item.href;
-                    }
-                  }}
-                  className="group mt-2 flex cursor-pointer items-start justify-between gap-3 rounded-2xl px-4 py-3 text-sm transition hover:bg-accent-soft"
-                >
-                  <div>
-                    <div className="font-medium text-text-primary">{item.label}</div>
-                    {item.description ? (
-                      <p className="text-xs text-text-muted">{item.description}</p>
-                    ) : null}
-                  </div>
-                  <span className="rounded-full bg-border/50 px-2 py-0.5 text-[10px] uppercase tracking-wide text-text-muted">
-                    {item.href.replace(/^https?:\/\//, "")}
-                  </span>
-                </Command.Item>
-              ))}
-            </Command.Group>
-          ))}
+            ))}
+          </Command.Group>
         </Command.List>
       </Command>
     </div>
