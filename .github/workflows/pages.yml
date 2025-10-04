@@ -20,53 +20,14 @@ jobs:
         with:
           node-version: 20
 
-      - name: Detect package manager
-        id: detect
-        run: |
-          echo "PM=$(node -p \"require('./package.json').packageManager || ''\")" >> $GITHUB_ENV
-          echo "HAS_PNPM=$([ -f pnpm-lock.yaml ] && echo true || echo false)" >> $GITHUB_ENV
-          echo "HAS_YARN=$([ -f yarn.lock ] && echo true || echo false)" >> $GITHUB_ENV
-          echo "HAS_NPM=$([ -f package-lock.json ] && echo true || echo false)" >> $GITHUB_ENV
-          echo "---- package.json ----"
-          cat package.json || true
-          echo "----------------------"
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
-      - name: Setup PM
-        run: |
-          corepack enable || true
-          if [[ "$PM" == pnpm* || "$HAS_PNPM" == "true" ]]; then
-            corepack prepare pnpm@latest --activate
-            pnpm --version
-          elif [[ "$PM" == yarn* || "$HAS_YARN" == "true" ]]; then
-            corepack prepare yarn@stable --activate
-            yarn --version
-          else
-            npm --version
-          fi
-
-      - name: Install deps
-        run: |
-          if [[ "$PM" == pnpm* || "$HAS_PNPM" == "true" ]]; then
-            pnpm install --frozen-lockfile || pnpm install
-          elif [[ "$PM" == yarn* || "$HAS_YARN" == "true" ]]; then
-            yarn install --frozen-lockfile || yarn install
-          else
-            if [[ "$HAS_NPM" == "true" ]]; then npm ci; else npm install; fi
-          fi
-
-      - name: Astro version
-        run: npx astro --version || echo "astro not yet installed"
+      - name: Install dependencies
+        run: npm ci
 
       - name: Build
-        run: |
-          set -e
-          if [[ "$PM" == pnpm* || "$HAS_PNPM" == "true" ]]; then
-            pnpm run -s build || npx astro build --verbose
-          elif [[ "$PM" == yarn* || "$HAS_YARN" == "true" ]]; then
-            yarn -s build || npx astro build --verbose
-          else
-            npm run -s build || npx astro build --verbose
-          fi
+        run: npm run build
 
       - uses: actions/upload-pages-artifact@v3
         with:
