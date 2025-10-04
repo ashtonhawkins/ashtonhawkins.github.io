@@ -1,0 +1,134 @@
+---
+import "../styles/global.css";
+import CommandPalette from "../components/CommandPalette";
+import ThemeToggle from "../components/ThemeToggle";
+import SearchBox from "../components/SearchBox.astro";
+
+const navLinks = [
+  { href: "/", label: "Home" },
+  { href: "/about", label: "About" },
+  { href: "/now", label: "Now" },
+  { href: "/writing", label: "Writing" },
+  { href: "/projects", label: "Projects" },
+  { href: "/activity", label: "Activity" }
+];
+---
+
+<!DOCTYPE html>
+<html lang="en" class="bg-background text-text-primary">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <slot name="head" />
+    <script is:inline>
+      const storedTheme = window.localStorage.getItem('site-theme');
+      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const activeTheme = storedTheme ?? (systemPrefersDark ? 'dark' : 'light');
+      document.documentElement.classList.toggle('dark', activeTheme === 'dark');
+      document.documentElement.dataset.theme = activeTheme;
+    </script>
+  </head>
+  <body class="min-h-screen bg-background text-text-primary">
+    <CommandPalette client:idle />
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:rounded-full focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:shadow-ring"
+    >
+      Skip to content
+    </a>
+    <header class="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur">
+      <div class="container flex items-center justify-between gap-6 py-4">
+        <a
+          href="/"
+          class="font-semibold text-lg transition-colors hover:text-accent"
+          data-astro-transition="animate"
+        >
+          Ashton Hawkins
+        </a>
+        <nav class="hidden items-center gap-2 text-sm font-medium md:flex">
+          {navLinks.map((link) => (
+            <a
+              transition:animate
+              href={link.href}
+              class="rounded-full px-4 py-2 text-text-secondary transition-all hover:bg-accent-soft hover:text-text-primary"
+              data-astro-transition="animate"
+            >
+              {link.label}
+            </a>
+          ))}
+        </nav>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="hidden rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-text-secondary shadow-soft transition hover:border-accent hover:text-text-primary hover:shadow-ring md:inline-flex"
+            data-command-button
+          >
+            <span class="hidden lg:inline">Search ·</span>
+            <span class="ml-1 rounded-full bg-accent-soft px-2 py-0.5 text-xs font-semibold text-accent">⌘K</span>
+          </button>
+          <ThemeToggle client:idle />
+        </div>
+      </div>
+    </header>
+    <main id="main" class="container flex flex-col gap-16 py-12">
+      <slot />
+    </main>
+    <footer class="border-t border-border/60 bg-background/90 py-10">
+      <div class="container flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+        <div class="max-w-md space-y-3">
+          <p class="text-sm text-text-muted">
+            Built with Astro, Tailwind, and a love for small, fast websites. View transitions are
+            enabled—enjoy the smoothness.
+          </p>
+          <p class="text-xs text-text-muted">
+            © {new Date().getFullYear()} Ashton Hawkins. All rights reserved.
+          </p>
+        </div>
+        <div class="w-full max-w-md space-y-4">
+          <h2 class="text-sm font-semibold uppercase tracking-wide text-text-secondary">
+            Search the site
+          </h2>
+          <SearchBox id="footer-search" />
+        </div>
+      </div>
+    </footer>
+    <script is:inline>
+      const attachCommandButton = () => {
+        const commandButton = document.querySelector('[data-command-button]');
+        if (!commandButton || commandButton.dataset.bound === 'true') return;
+        commandButton.dataset.bound = 'true';
+        commandButton.addEventListener('click', () => {
+          window.dispatchEvent(new CustomEvent('command-palette:open'));
+        });
+      };
+
+      attachCommandButton();
+      document.addEventListener('astro:page-load', attachCommandButton);
+    </script>
+    <script is:inline type="module">
+      import Lenis from "lenis";
+
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!prefersReduced) {
+        let lenis = new Lenis({
+          smoothWheel: true,
+          lerp: 0.12,
+          duration: 1.2
+        });
+
+        function raf(time) {
+          lenis.raf(time);
+          requestAnimationFrame(raf);
+        }
+
+        requestAnimationFrame(raf);
+
+        document.addEventListener('astro:after-swap', () => {
+          lenis?.destroy();
+          lenis = new Lenis({ smoothWheel: true, lerp: 0.12, duration: 1.2 });
+          requestAnimationFrame(raf);
+        });
+      }
+    </script>
+  </body>
+</html>

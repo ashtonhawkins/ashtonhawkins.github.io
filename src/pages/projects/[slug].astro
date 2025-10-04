@@ -1,0 +1,58 @@
+---
+import AppShell from "../../layouts/AppShell.astro";
+import dayjs from "dayjs";
+import { getCollection, getEntry } from "astro:content";
+
+const { slug } = Astro.params;
+if (!slug) {
+  throw new Error("Missing project slug");
+}
+
+const entry = await getEntry("projects", slug);
+if (!entry || entry.data.draft) {
+  return Astro.redirect("/projects");
+}
+
+const { Content } = await entry.render();
+const { title, summary, date, status, link, tags, ogTitle } = entry.data;
+
+export async function getStaticPaths() {
+  const entries = await getCollection("projects", ({ data }) => !data.draft);
+  return entries.map((project) => ({ params: { slug: project.slug } }));
+}
+---
+
+<AppShell>
+  <fragment slot="head">
+    <title>{ogTitle ?? title} · Projects · Ashton Hawkins</title>
+    <meta name="description" content={summary} />
+  </fragment>
+  <article class="prose prose-neutral mx-auto max-w-prose text-base text-text-secondary">
+    <p class="text-xs uppercase tracking-[0.3em] text-text-muted">
+      {dayjs(date).format("MMMM YYYY")}
+    </p>
+    <h1 class="mb-4 text-4xl font-semibold text-text-primary">{title}</h1>
+    <p class="text-sm text-text-muted">{summary}</p>
+    <div class="mt-4 flex flex-wrap items-center gap-3 text-xs text-text-muted">
+      <span class="rounded-full bg-border/50 px-3 py-1 uppercase tracking-wide text-[10px]">{status}</span>
+      {link ? (
+        <a
+          href={link}
+          class="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 font-medium text-text-inverted transition hover:bg-accent-strong"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Visit project ↗
+        </a>
+      ) : null}
+    </div>
+    <div class="mt-6 flex flex-wrap gap-2 text-xs text-text-muted">
+      {tags.map((tag) => (
+        <span class="rounded-full bg-accent-soft px-3 py-1 font-medium text-accent">#{tag}</span>
+      ))}
+    </div>
+    <div class="mt-10 space-y-6">
+      <Content />
+    </div>
+  </article>
+</AppShell>

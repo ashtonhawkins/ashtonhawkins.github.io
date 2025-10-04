@@ -1,0 +1,28 @@
+---
+import AppShell from "../layouts/AppShell.astro";
+---
+
+<AppShell>
+  <fragment slot="head">
+    <title>Activity · Ashton Hawkins</title>
+    <meta
+      name="description"
+      content="A running log of what Ashton Hawkins is building, reading, and shipping."
+    />
+  </fragment>
+  <section class="space-y-8">
+    <header class="max-w-prose space-y-4">
+      <h1 class="text-4xl font-semibold text-text-primary">Activity</h1>
+      <p class="text-lg text-text-secondary">
+        Soon this page will aggregate commits, talks, playlists, and other signals of what’s in
+        motion. For now, it’s a placeholder while the data pipeline comes together.
+      </p>
+    </header>
+    <div class="rounded-3xl border border-dashed border-border/70 bg-surface/50 p-10 text-sm text-text-secondary">
+      <p>
+        I’m currently wiring up a JSON feed that will surface project updates, reading lists, and
+        small wins. Check back shortly—or subscribe to the now page for updates.
+      </p>
+    </div>
+  </section>
+</AppShell>

@@ -1,0 +1,8 @@
+/* TEAM */
+Creator: Ashton Hawkins
+Site: https://ashtonhawkins.com
+Twitter: @ashtonhawkins
+
+/* THANKS */
+Built with Astro, Tailwind CSS, and lots of curiosity.
+Fonts: Geist Sans & Geist Mono via fontsource.
