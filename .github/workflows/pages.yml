@@ -10,6 +10,7 @@ permissions:
 concurrency:
   group: "pages"
   cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,20 +19,40 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-      - run: node -v && npm -v && ls -la
+      - name: Detect package manager
+        id: pm
+        run: |
+          echo "PM=$(node -p \"require('./package.json').packageManager || ''\" || true)" >> $GITHUB_ENV
+          echo "HAS_PNPM=$([ -f pnpm-lock.yaml ] && echo true || echo false)" >> $GITHUB_ENV
+          echo "HAS_YARN=$([ -f yarn.lock ] && echo true || echo false)" >> $GITHUB_ENV
+          echo "HAS_NPM=$([ -f package-lock.json ] && echo true || echo false)" >> $GITHUB_ENV
       - name: Install deps
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci
+          corepack enable || true
+          if [[ "$PM" == pnpm* || "$HAS_PNPM" == "true" ]]; then
+            pnpm install --frozen-lockfile || pnpm install
+          elif [[ "$PM" == yarn* || "$HAS_YARN" == "true" ]]; then
+            yarn install --frozen-lockfile || yarn install
           else
-            echo "No package-lock.json; using npm install"
-            npm install
+            if [[ "$HAS_NPM" == "true" ]]; then
+              npm ci
+            else
+              npm install
+            fi
           fi
-      - run: npm run build
+      - name: Build
+        run: |
+          if [[ "$PM" == pnpm* || "$HAS_PNPM" == "true" ]]; then
+            pnpm run build
+          elif [[ "$PM" == yarn* || "$HAS_YARN" == "true" ]]; then
+            yarn build
+          else
+            npm run build
+          fi
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
