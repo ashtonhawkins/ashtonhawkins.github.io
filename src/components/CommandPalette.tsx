@@ -27,6 +27,7 @@ const quickLinks: QuickLinkGroup[] = [
     items: [
       { label: "Writing", href: "/writing", description: "Essays, notes, and dispatches." },
       { label: "Projects", href: "/projects", description: "Selected work and experiments." },
+      { label: "Press", href: "/press", description: "Interviews and features from around the web." },
       { label: "Activity", href: "/activity", description: "Live feed of what I'm building." }
     ]
   },

@@ -8,7 +8,7 @@ const writingEntries = (await getCollection("writing", ({ data }) => !data.draft
 );
 const latestWriting = writingEntries.slice(0, 3);
 
-const projectEntries = (await getCollection("projects", ({ data }) => !data.draft)).sort(
+const projectEntries = (await getCollection("projects")).sort(
   (a, b) => b.data.date.getTime() - a.data.date.getTime()
 );
 const latestProjects = projectEntries.slice(0, 3);
@@ -92,7 +92,6 @@ const latestProjects = projectEntries.slice(0, 3);
       </div>
     </div>
 
-
     <section class="grid gap-12 md:grid-cols-[2fr,1.2fr]">
       <div class="space-y-6">
         <header class="flex items-center justify-between">
@@ -117,13 +116,15 @@ const latestProjects = projectEntries.slice(0, 3);
                   </span>
                   <h3 class="text-xl font-semibold">{entry.data.title}</h3>
                   <p class="text-sm text-text-secondary">{entry.data.summary}</p>
-                  <div class="flex flex-wrap gap-2">
-                    {entry.data.tags.map((tag) => (
-                      <span class="rounded-full bg-accent-soft px-3 py-1 text-xs font-medium text-accent" aria-label={`Tagged ${tag}`}>
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
+                  {entry.data.tags.length ? (
+                    <div class="flex flex-wrap gap-2">
+                      {entry.data.tags.map((tag) => (
+                        <span class="rounded-full bg-accent-soft px-3 py-1 text-xs font-medium text-accent" aria-label={`Tagged ${tag}`}>
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
                 </a>
               </article>
             ))
@@ -147,22 +148,36 @@ const latestProjects = projectEntries.slice(0, 3);
               >
                 <a
                   href={`/projects/${entry.slug}`}
-                  class="grid gap-3"
+                  class="grid gap-4"
                   data-astro-transition="animate"
                 >
-                  <span class="text-xs uppercase tracking-[0.3em] text-text-muted">
-                    {dayjs(entry.data.date).format("MMM YYYY")}
-                  </span>
-                  <h3 class="text-xl font-semibold">{entry.data.title}</h3>
-                  <p class="text-sm text-text-secondary">{entry.data.summary}</p>
-                  <div class="flex items-center justify-between text-xs text-text-muted">
-                    <span class="rounded-full bg-border/40 px-3 py-1 uppercase tracking-wide text-[10px]">
-                      {entry.data.status}
+                  <div class="flex items-start justify-between">
+                    <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-border/40 text-2xl">
+                      {entry.data.coverEmoji}
                     </span>
-                    {entry.data.tags.length ? (
-                      <span>{entry.data.tags.join(" · ")}</span>
-                    ) : null}
+                    <span class="text-xs uppercase tracking-[0.3em] text-text-muted">
+                      {dayjs(entry.data.date).format("MMM YYYY")}
+                    </span>
                   </div>
+                  <div class="space-y-2">
+                    <h3 class="text-xl font-semibold">{entry.data.title}</h3>
+                    <p class="text-sm text-text-secondary">{entry.data.summary}</p>
+                    <div class="rounded-2xl bg-background/60 px-4 py-2 text-xs text-text-secondary">
+                      <span class="font-semibold text-text-primary">Role:</span> {entry.data.role}
+                    </div>
+                  </div>
+                  {entry.data.stack.length ? (
+                    <div class="flex flex-wrap gap-2 text-xs text-text-muted">
+                      {entry.data.stack.map((tech) => (
+                        <span class="rounded-full bg-border/40 px-3 py-1 font-medium">{tech}</span>
+                      ))}
+                    </div>
+                  ) : null}
+                  {entry.data.impact.length ? (
+                    <p class="text-xs text-text-muted">
+                      {entry.data.impact[0]}
+                    </p>
+                  ) : null}
                 </a>
               </article>
             ))

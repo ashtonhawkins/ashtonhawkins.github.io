@@ -3,7 +3,7 @@ import AppShell from "../../layouts/AppShell.astro";
 import { getCollection } from "astro:content";
 import dayjs from "dayjs";
 
-const projects = (await getCollection("projects", ({ data }) => !data.draft)).sort(
+const projects = (await getCollection("projects")).sort(
   (a, b) => b.data.date.getTime() - a.data.date.getTime()
 );
 ---
@@ -27,29 +27,64 @@ const projects = (await getCollection("projects", ({ data }) => !data.draft)).so
     <div class="grid gap-6 md:grid-cols-2">
       {projects.length ? (
         projects.map((entry) => (
-          <article class="flex h-full flex-col justify-between rounded-3xl border border-border/60 bg-surface/80 p-6 shadow-soft transition hover:-translate-y-1 hover:border-accent">
-            <div class="space-y-3">
+          <article class="flex h-full flex-col gap-6 rounded-3xl border border-border/60 bg-surface/80 p-6 shadow-soft transition hover:-translate-y-1 hover:border-accent">
+            <div class="flex items-start justify-between">
+              <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-border/40 text-2xl">
+                {entry.data.coverEmoji}
+              </span>
               <span class="text-xs uppercase tracking-[0.3em] text-text-muted">
                 {dayjs(entry.data.date).format("MMM YYYY")}
               </span>
+            </div>
+            <div class="space-y-3">
               <h2 class="text-2xl font-semibold text-text-primary">{entry.data.title}</h2>
               <p class="text-sm text-text-secondary">{entry.data.summary}</p>
+              <div class="rounded-2xl bg-background/60 px-4 py-3 text-xs text-text-secondary">
+                <span class="font-semibold text-text-primary">Role:</span> {entry.data.role}
+              </div>
             </div>
-            <div class="mt-6 flex items-center justify-between text-xs text-text-muted">
-              <span class="rounded-full bg-border/50 px-3 py-1 uppercase tracking-wide text-[10px]">
-                {entry.data.status}
-              </span>
-              {entry.data.tags.length ? (
-                <span>{entry.data.tags.join(" · ")}</span>
-              ) : null}
+            {entry.data.impact.length ? (
+              <ul class="space-y-2 text-sm text-text-secondary">
+                {entry.data.impact.map((item) => (
+                  <li class="flex items-start gap-2">
+                    <span class="mt-[6px] inline-block h-1.5 w-1.5 rounded-full bg-accent"></span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {entry.data.stack.length ? (
+              <div class="flex flex-wrap gap-2 text-xs text-text-muted">
+                {entry.data.stack.map((tech) => (
+                  <span class="rounded-full bg-border/40 px-3 py-1 font-medium">{tech}</span>
+                ))}
+              </div>
+            ) : null}
+            <div class="mt-auto flex items-center justify-between">
+              {entry.data.links.length ? (
+                <div class="flex flex-wrap gap-2 text-xs text-text-muted">
+                  {entry.data.links.map((link) => (
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      class="rounded-full bg-background/70 px-3 py-1 font-medium text-text-secondary transition hover:text-accent"
+                    >
+                      {link.label} ↗
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <span class="text-xs text-text-muted">Documentation coming soon.</span>
+              )}
+              <a
+                href={`/projects/${entry.slug}`}
+                class="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-text-inverted transition hover:bg-accent-strong"
+                data-astro-transition="animate"
+              >
+                View project
+              </a>
             </div>
-            <a
-              href={`/projects/${entry.slug}`}
-              class="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-accent transition hover:text-accent-strong"
-              data-astro-transition="animate"
-            >
-              View case study ↗
-            </a>
           </article>
         ))
       ) : (
