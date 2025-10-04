@@ -1,0 +1,90 @@
+@layer base {
+  @property --reveal-progress {
+    syntax: "<angle>";
+    inherits: false;
+    initial-value: 350deg;
+  }
+}
+
+@layer utilities {
+  :root {
+    --grain-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
+  }
+
+  .bg-radial {
+    --radial-shape: circle;
+    --radial-position-x: 50%;
+    --radial-position-y: 50%;
+    --radial-stops: rgba(255, 255, 255, 0.08) 0%, transparent 65%;
+    background-image: radial-gradient(
+      var(--radial-shape) at var(--radial-position-x) var(--radial-position-y),
+      var(--radial-stops)
+    );
+    background-repeat: no-repeat;
+  }
+
+  .bg-conic {
+    --conic-angle: -90deg;
+    --conic-position-x: 50%;
+    --conic-position-y: 50%;
+    --conic-stops: transparent 0deg, rgba(255, 255, 255, 0.2) 130deg, transparent 260deg;
+    background-image: conic-gradient(
+      from var(--conic-angle) at var(--conic-position-x) var(--conic-position-y),
+      var(--conic-stops)
+    );
+    background-repeat: no-repeat;
+  }
+
+  .with-grain {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .with-grain::after {
+    content: "";
+    position: absolute;
+    inset: -40%;
+    background-image: var(--grain-svg);
+    background-size: 200px 200px;
+    opacity: var(--grain-opacity, 0.25);
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+    filter: contrast(150%);
+  }
+
+  .text-reveal {
+    position: relative;
+    color: var(--text-reveal-base, currentColor);
+    --reveal-progress: 350deg;
+    -webkit-mask-image: conic-gradient(
+      from var(--reveal-angle, -90deg) at var(--reveal-origin-x, 50%) var(--reveal-origin-y, 50%),
+      transparent 0deg,
+      transparent var(--reveal-progress),
+      #000 var(--reveal-progress),
+      #000 360deg
+    );
+    mask-image: conic-gradient(
+      from var(--reveal-angle, -90deg) at var(--reveal-origin-x, 50%) var(--reveal-origin-y, 50%),
+      transparent 0deg,
+      transparent var(--reveal-progress),
+      #000 var(--reveal-progress),
+      #000 360deg
+    );
+    transition: --reveal-progress 450ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .text-reveal:hover,
+  .text-reveal:focus-visible {
+    --reveal-progress: 360deg;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .with-grain::after {
+      opacity: min(var(--grain-opacity, 0.25), 0.2);
+    }
+
+    .text-reveal {
+      --reveal-progress: 360deg;
+    }
+  }
+}

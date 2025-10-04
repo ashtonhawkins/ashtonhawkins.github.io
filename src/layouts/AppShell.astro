@@ -3,6 +3,7 @@ import "../styles/global.css";
 import CommandPalette from "../components/CommandPalette";
 import ThemeToggle from "../components/ThemeToggle";
 import SearchBox from "../components/SearchBox.astro";
+import lenisScript from "../scripts/lenis.ts?url";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -105,30 +106,6 @@ const navLinks = [
       attachCommandButton();
       document.addEventListener('astro:page-load', attachCommandButton);
     </script>
-    <script is:inline type="module">
-      import Lenis from "lenis";
-
-      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (!prefersReduced) {
-        let lenis = new Lenis({
-          smoothWheel: true,
-          lerp: 0.12,
-          duration: 1.2
-        });
-
-        function raf(time) {
-          lenis.raf(time);
-          requestAnimationFrame(raf);
-        }
-
-        requestAnimationFrame(raf);
-
-        document.addEventListener('astro:after-swap', () => {
-          lenis?.destroy();
-          lenis = new Lenis({ smoothWheel: true, lerp: 0.12, duration: 1.2 });
-          requestAnimationFrame(raf);
-        });
-      }
-    </script>
+    <script type="module" src={lenisScript}></script>
   </body>
 </html>
