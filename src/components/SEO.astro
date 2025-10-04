@@ -1,0 +1,82 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  ogTitle?: string;
+}
+
+const { title, description, ogTitle } = Astro.props as Props;
+
+const siteUrl = Astro.site?.origin ?? Astro.url?.origin ?? "";
+const canonicalUrl = Astro.site
+  ? new URL(Astro.url.pathname, Astro.site).toString()
+  : Astro.url?.href ?? "";
+const openGraphTitle = ogTitle ?? title;
+const isHomepage = Astro.url?.pathname === "/";
+const isArticle = Astro.url?.pathname.startsWith("/writing/") ?? false;
+const siteName = "Ashton Hawkins";
+
+const structuredData: Record<string, unknown>[] = [];
+
+if (isHomepage && siteUrl) {
+  structuredData.push(
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "@id": `${siteUrl}#person`,
+      name: siteName,
+      url: siteUrl,
+      description,
+      jobTitle: "Builder, designer, and systems thinker"
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "@id": `${siteUrl}#website`,
+      name: siteName,
+      url: siteUrl,
+      description,
+      publisher: {
+        "@id": `${siteUrl}#person`
+      }
+    }
+  );
+}
+
+if (isArticle && canonicalUrl) {
+  structuredData.push({
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: openGraphTitle,
+    description,
+    mainEntityOfPage: canonicalUrl,
+    author: {
+      "@type": "Person",
+      name: siteName,
+      url: siteUrl || undefined
+    },
+    publisher: {
+      "@type": "Person",
+      name: siteName,
+      url: siteUrl || undefined
+    }
+  });
+}
+---
+<title>{title}</title>
+<meta name="description" content={description} />
+{canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+<meta property="og:type" content={isArticle ? "article" : "website"} />
+{siteName && <meta property="og:site_name" content={siteName} />}
+{canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
+<meta property="og:title" content={openGraphTitle} />
+<meta property="og:description" content={description} />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content={openGraphTitle} />
+<meta name="twitter:description" content={description} />
+{structuredData.map((schema) => (
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(schema, (_key, value) => (value === undefined ? undefined : value))}
+  />
+))}

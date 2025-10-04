@@ -1,5 +1,6 @@
 ---
 import AppShell from "../layouts/AppShell.astro";
+import SEO from "../components/SEO.astro";
 import NowCard from "../components/NowCard.astro";
 import dayjs from "dayjs";
 import { getCollection } from "astro:content";
@@ -16,13 +17,12 @@ const latestProjects = projectEntries.slice(0, 3);
 ---
 
 <AppShell>
-  <fragment slot="head">
-    <title>Ashton Hawkins · Builder, designer, and systems thinker</title>
-    <meta
-      name="description"
-      content="Creative technologist building thoughtful products across web, AI, and live experiences."
-    />
-  </fragment>
+  <SEO
+    slot="head"
+    title="Ashton Hawkins · Builder, designer, and systems thinker"
+    description="Creative technologist building thoughtful products across web, AI, and live experiences."
+    ogTitle="Ashton Hawkins"
+  />
   <section class="grid gap-16">
     <div class="with-grain relative overflow-hidden rounded-[32px] border border-border/60 bg-surface/60 p-10 shadow-soft">
       <div aria-hidden="true" class="pointer-events-none absolute inset-0 overflow-hidden">

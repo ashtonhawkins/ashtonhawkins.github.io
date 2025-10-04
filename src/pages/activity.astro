@@ -1,16 +1,15 @@
 ---
 import AppShell from "../layouts/AppShell.astro";
+import SEO from "../components/SEO.astro";
 import ActivityList from "../components/ActivityList";
 ---
 
 <AppShell>
-  <fragment slot="head">
-    <title>Activity · Ashton Hawkins</title>
-    <meta
-      name="description"
-      content="A running log of what Ashton Hawkins is building, reading, and shipping."
-    />
-  </fragment>
+  <SEO
+    slot="head"
+    title="Activity · Ashton Hawkins"
+    description="A running log of what Ashton Hawkins is building, reading, and shipping."
+  />
   <section class="space-y-10">
     <header class="max-w-2xl space-y-4">
       <h1 class="text-4xl font-semibold text-text-primary">Activity</h1>

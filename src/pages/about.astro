@@ -1,12 +1,14 @@
 ---
 import AppShell from "../layouts/AppShell.astro";
+import SEO from "../components/SEO.astro";
 ---
 
 <AppShell>
-  <fragment slot="head">
-    <title>About · Ashton Hawkins</title>
-    <meta name="description" content="The long-form story behind the work of Ashton Hawkins." />
-  </fragment>
+  <SEO
+    slot="head"
+    title="About · Ashton Hawkins"
+    description="The long-form story behind the work of Ashton Hawkins."
+  />
   <article class="prose prose-neutral max-w-prose text-base text-text-secondary">
     <h1 class="font-semibold text-text-primary">About</h1>
     <p>

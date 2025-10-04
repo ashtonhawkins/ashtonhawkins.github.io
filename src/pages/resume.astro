@@ -1,5 +1,6 @@
 ---
 import AppShell from "../layouts/AppShell.astro";
+import SEO from "../components/SEO.astro";
 import resume from "../content/resume.json";
 
 const { basics = {}, work = [], education = [], projects = [], skills = [] } = resume as {
@@ -26,25 +27,24 @@ const formatRange = (start?: string, end?: string) => {
 
 const locationParts = [basics?.location?.city, basics?.location?.region, basics?.location?.countryCode].filter(Boolean);
 const hasSummary = Boolean(basics?.summary);
+const resumeName = basics?.name ?? "Ashton Hawkins";
+const resumeDescription = hasSummary
+  ? `${resumeName}'s resume – ${basics.summary}`
+  : "A snapshot of work, education, projects, and skills.";
 ---
 
 <AppShell>
-  <fragment slot="head">
-    <title>Resume · {basics?.name ?? "Ashton Hawkins"}</title>
-    <meta
-      name="description"
-      content={
-        basics?.summary
-          ? `${basics.name}'s resume – ${basics.summary}`
-          : "A snapshot of work, education, projects, and skills."
-      }
-    />
-  </fragment>
+  <SEO
+    slot="head"
+    title={`Resume · ${resumeName}`}
+    description={resumeDescription}
+    ogTitle={`Resume · ${resumeName}`}
+  />
   <article class="mx-auto flex w-full max-w-4xl flex-col gap-12 text-base text-text-secondary">
     <header class="flex flex-col gap-6 border-b border-border/60 pb-10">
       <div class="flex flex-col gap-3">
         <p class="text-sm font-semibold uppercase tracking-widest text-accent">Resume</p>
-        <h1 class="text-3xl font-semibold text-text-primary md:text-4xl">{basics?.name ?? "Ashton Hawkins"}</h1>
+        <h1 class="text-3xl font-semibold text-text-primary md:text-4xl">{resumeName}</h1>
         {basics?.label && <p class="text-lg text-text-secondary">{basics.label}</p>}
         {(hasSummary || locationParts.length > 0) && (
           <div class="flex flex-col gap-2 text-sm text-text-muted md:flex-row md:items-center md:gap-4">

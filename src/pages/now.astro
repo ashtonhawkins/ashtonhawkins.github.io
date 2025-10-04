@@ -1,13 +1,15 @@
 ---
 import AppShell from "../layouts/AppShell.astro";
+import SEO from "../components/SEO.astro";
 import NowCard from "../components/NowCard.astro";
 ---
 
 <AppShell>
-  <fragment slot="head">
-    <title>Now · Ashton Hawkins</title>
-    <meta name="description" content="A snapshot of what Ashton Hawkins is focused on right now." />
-  </fragment>
+  <SEO
+    slot="head"
+    title="Now · Ashton Hawkins"
+    description="A snapshot of what Ashton Hawkins is focused on right now."
+  />
 
   <section class="mx-auto grid max-w-3xl gap-10 text-text-secondary">
     <header class="grid gap-4 text-text-primary">
