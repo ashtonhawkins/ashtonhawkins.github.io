@@ -1,5 +1,6 @@
 ---
 import AppShell from "../../layouts/AppShell.astro";
+import SEO from "../../components/SEO.astro";
 import dayjs from "dayjs";
 import { getCollection, getEntry } from "astro:content";
 
@@ -23,10 +24,12 @@ export async function getStaticPaths() {
 ---
 
 <AppShell>
-  <fragment slot="head">
-    <title>{title} · Projects · Ashton Hawkins</title>
-    <meta name="description" content={summary} />
-  </fragment>
+  <SEO
+    slot="head"
+    title={`${title} · Projects · Ashton Hawkins`}
+    description={summary}
+    ogTitle={title}
+  />
   <article class="prose prose-neutral mx-auto max-w-prose text-base text-text-secondary">
     <div class="mb-6 flex items-center justify-between gap-4 text-sm text-text-muted">
       <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-border/40 text-2xl">

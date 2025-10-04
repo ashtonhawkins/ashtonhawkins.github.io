@@ -1,5 +1,6 @@
 ---
 import AppShell from "../../layouts/AppShell.astro";
+import SEO from "../../components/SEO.astro";
 import { getCollection } from "astro:content";
 import dayjs from "dayjs";
 
@@ -9,13 +10,11 @@ const writing = (await getCollection("writing", ({ data }) => !data.draft)).sort
 ---
 
 <AppShell>
-  <fragment slot="head">
-    <title>Writing · Ashton Hawkins</title>
-    <meta
-      name="description"
-      content="Essays, field notes, and observations from Ashton Hawkins."
-    />
-  </fragment>
+  <SEO
+    slot="head"
+    title="Writing · Ashton Hawkins"
+    description="Essays, field notes, and observations from Ashton Hawkins."
+  />
   <section class="space-y-10">
     <header class="max-w-prose space-y-4">
       <h1 class="text-4xl font-semibold text-text-primary">Writing</h1>

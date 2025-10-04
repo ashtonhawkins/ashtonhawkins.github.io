@@ -1,5 +1,6 @@
 ---
 import AppShell from "../../layouts/AppShell.astro";
+import SEO from "../../components/SEO.astro";
 import dayjs from "dayjs";
 import { getCollection, getEntry } from "astro:content";
 
@@ -23,10 +24,12 @@ export async function getStaticPaths() {
 ---
 
 <AppShell>
-  <fragment slot="head">
-    <title>{ogTitle ?? title} · Writing · Ashton Hawkins</title>
-    <meta name="description" content={summary} />
-  </fragment>
+  <SEO
+    slot="head"
+    title={`${ogTitle ?? title} · Writing · Ashton Hawkins`}
+    description={summary}
+    ogTitle={ogTitle ?? title}
+  />
   <article class="prose prose-neutral mx-auto max-w-prose text-base text-text-secondary">
     <p class="text-xs uppercase tracking-[0.3em] text-text-muted">
       {dayjs(date).format("MMMM D, YYYY")}
