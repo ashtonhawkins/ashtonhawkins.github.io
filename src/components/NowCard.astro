@@ -1,0 +1,44 @@
+---
+import now from "../content/now.json";
+
+const { updated, location, focus = [], reading = [], notes } = now;
+const formattedDate = new Date(updated + "T00:00:00Z");
+const lastUpdated = Number.isNaN(formattedDate.getTime())
+  ? updated
+  : formattedDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+const hasFocus = Array.isArray(focus) && focus.length > 0;
+const hasReading = Array.isArray(reading) && reading.length > 0;
+---
+
+<div class="grid gap-5 rounded-3xl border border-border/40 bg-background/70 p-6 text-sm text-text-secondary shadow-ring">
+  <div class="flex flex-wrap items-baseline justify-between gap-2">
+    <p class="text-xs font-semibold uppercase tracking-[0.3em] text-text-muted">Last updated</p>
+    <p class="text-xs text-text-muted">{lastUpdated}</p>
+  </div>
+  <div class="grid gap-3 text-text-primary">
+    {location ? (
+      <p class="text-sm font-medium text-text-secondary">Based in {location}</p>
+    ) : null}
+    {notes ? <p class="leading-relaxed text-text-secondary">{notes}</p> : null}
+  </div>
+  {hasFocus ? (
+    <div class="grid gap-2">
+      <h3 class="text-xs font-semibold uppercase tracking-[0.3em] text-text-muted">Focus</h3>
+      <ul class="grid gap-2 list-disc pl-6 text-text-secondary">
+        {focus.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ul>
+    </div>
+  ) : null}
+  {hasReading ? (
+    <div class="grid gap-2">
+      <h3 class="text-xs font-semibold uppercase tracking-[0.3em] text-text-muted">Reading</h3>
+      <ul class="grid gap-2 list-disc pl-6 text-text-secondary">
+        {reading.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ul>
+    </div>
+  ) : null}
+</div>

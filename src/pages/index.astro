@@ -1,5 +1,6 @@
 ---
 import AppShell from "../layouts/AppShell.astro";
+import NowCard from "../components/NowCard.astro";
 import dayjs from "dayjs";
 import { getCollection } from "astro:content";
 
@@ -73,14 +74,8 @@ const latestProjects = projectEntries.slice(0, 3);
             </a>
           </div>
         </div>
-        <div class="flex h-full flex-col justify-between gap-6 rounded-3xl border border-border/40 bg-background/70 p-6 text-sm text-text-secondary shadow-ring">
-          <div>
-            <h2 class="text-xs font-semibold uppercase tracking-[0.3em] text-text-muted">Now</h2>
-            <p class="mt-3 leading-relaxed">
-              I’m deep in prototyping mode—building research tools for independent teams, exploring
-              spatial interfaces, and writing about sustainable pace.
-            </p>
-          </div>
+        <div class="flex h-full flex-col justify-between gap-6">
+          <NowCard />
           <a
             href="/now"
             class="inline-flex items-center gap-2 self-start rounded-full bg-accent text-sm font-semibold text-text-inverted transition hover:bg-accent-strong"
