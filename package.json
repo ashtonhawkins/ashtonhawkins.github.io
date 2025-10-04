@@ -5,9 +5,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview",
+    "dev": "astro dev",
+    "preview": "astro preview --host",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
     "lint": "eslint . --ext .astro,.ts,.tsx,.js"
