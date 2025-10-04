@@ -1,0 +1,28 @@
+@import "@fontsource/geist/index.css";
+@import "@fontsource/geist/700.css";
+@import "@fontsource/geist-mono/index.css";
+
+:root {
+  --font-sans: "Geist", "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", monospace;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01" 1, "ss02" 1, "ss03" 1, "liga" 1;
+  font-variation-settings: "GRAD" 0;
+  text-rendering: optimizeLegibility;
+  background-color: var(--bg);
+  color: var(--text-1);
+}
+
+.prose pre,
+code,
+pre {
+  font-family: var(--font-mono);
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--text-1);
+}

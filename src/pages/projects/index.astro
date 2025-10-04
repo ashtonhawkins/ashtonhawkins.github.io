@@ -1,0 +1,60 @@
+---
+import AppShell from "../../layouts/AppShell.astro";
+import { getCollection } from "astro:content";
+import dayjs from "dayjs";
+
+const projects = (await getCollection("projects", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+---
+
+<AppShell>
+  <fragment slot="head">
+    <title>Projects · Ashton Hawkins</title>
+    <meta
+      name="description"
+      content="Selected work, prototypes, and experiments led by Ashton Hawkins."
+    />
+  </fragment>
+  <section class="space-y-10">
+    <header class="max-w-prose space-y-4">
+      <h1 class="text-4xl font-semibold text-text-primary">Projects</h1>
+      <p class="text-lg text-text-secondary">
+        A curated mix of client collaborations, studio experiments, and technical explorations. Each
+        project blends systems thinking with craft, always focused on impact.
+      </p>
+    </header>
+    <div class="grid gap-6 md:grid-cols-2">
+      {projects.length ? (
+        projects.map((entry) => (
+          <article class="flex h-full flex-col justify-between rounded-3xl border border-border/60 bg-surface/80 p-6 shadow-soft transition hover:-translate-y-1 hover:border-accent">
+            <div class="space-y-3">
+              <span class="text-xs uppercase tracking-[0.3em] text-text-muted">
+                {dayjs(entry.data.date).format("MMM YYYY")}
+              </span>
+              <h2 class="text-2xl font-semibold text-text-primary">{entry.data.title}</h2>
+              <p class="text-sm text-text-secondary">{entry.data.summary}</p>
+            </div>
+            <div class="mt-6 flex items-center justify-between text-xs text-text-muted">
+              <span class="rounded-full bg-border/50 px-3 py-1 uppercase tracking-wide text-[10px]">
+                {entry.data.status}
+              </span>
+              {entry.data.tags.length ? (
+                <span>{entry.data.tags.join(" · ")}</span>
+              ) : null}
+            </div>
+            <a
+              href={`/projects/${entry.slug}`}
+              class="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-accent transition hover:text-accent-strong"
+              data-astro-transition="animate"
+            >
+              View case study ↗
+            </a>
+          </article>
+        ))
+      ) : (
+        <p class="text-sm text-text-muted">New projects coming soon.</p>
+      )}
+    </div>
+  </section>
+</AppShell>
