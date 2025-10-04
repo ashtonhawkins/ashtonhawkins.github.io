@@ -19,36 +19,55 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
       - name: Detect package manager
-        id: pm
+        id: detect
         run: |
-          echo "PM=$(node -p \"require('./package.json').packageManager || ''\" || true)" >> $GITHUB_ENV
+          echo "PM=$(node -p \"require('./package.json').packageManager || ''\")" >> $GITHUB_ENV
           echo "HAS_PNPM=$([ -f pnpm-lock.yaml ] && echo true || echo false)" >> $GITHUB_ENV
           echo "HAS_YARN=$([ -f yarn.lock ] && echo true || echo false)" >> $GITHUB_ENV
           echo "HAS_NPM=$([ -f package-lock.json ] && echo true || echo false)" >> $GITHUB_ENV
-      - name: Install deps
+          echo "---- package.json ----"
+          cat package.json || true
+          echo "----------------------"
+
+      - name: Setup PM
         run: |
           corepack enable || true
+          if [[ "$PM" == pnpm* || "$HAS_PNPM" == "true" ]]; then
+            corepack prepare pnpm@latest --activate
+            pnpm --version
+          elif [[ "$PM" == yarn* || "$HAS_YARN" == "true" ]]; then
+            corepack prepare yarn@stable --activate
+            yarn --version
+          else
+            npm --version
+          fi
+
+      - name: Install deps
+        run: |
           if [[ "$PM" == pnpm* || "$HAS_PNPM" == "true" ]]; then
             pnpm install --frozen-lockfile || pnpm install
           elif [[ "$PM" == yarn* || "$HAS_YARN" == "true" ]]; then
             yarn install --frozen-lockfile || yarn install
           else
-            if [[ "$HAS_NPM" == "true" ]]; then
-              npm ci
-            else
-              npm install
-            fi
+            if [[ "$HAS_NPM" == "true" ]]; then npm ci; else npm install; fi
           fi
+
+      - name: Astro version
+        run: npx astro --version || echo "astro not yet installed"
+
       - name: Build
         run: |
+          set -e
           if [[ "$PM" == pnpm* || "$HAS_PNPM" == "true" ]]; then
-            pnpm run build
+            pnpm run -s build || npx astro build --verbose
           elif [[ "$PM" == yarn* || "$HAS_YARN" == "true" ]]; then
-            yarn build
+            yarn -s build || npx astro build --verbose
           else
-            npm run build
+            npm run -s build || npx astro build --verbose
           fi
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
