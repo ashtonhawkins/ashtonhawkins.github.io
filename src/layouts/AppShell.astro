@@ -5,6 +5,10 @@ import ThemeToggle from "../components/ThemeToggle";
 import SearchBox from "../components/SearchBox.astro";
 import lenisScript from "../scripts/lenis.ts?url";
 
+interface Props {
+  hideNavigation?: boolean;
+}
+
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
@@ -15,6 +19,8 @@ const navLinks = [
   { href: "/press", label: "Press" },
   { href: "/activity", label: "Activity" }
 ];
+
+const { hideNavigation = false } = Astro.props as Props;
 ---
 
 <!DOCTYPE html>
@@ -48,18 +54,20 @@ const navLinks = [
         >
           Ashton Hawkins
         </a>
-        <nav class="hidden items-center gap-2 text-sm font-medium md:flex">
-          {navLinks.map((link) => (
-            <a
-              transition:animate
-              href={link.href}
-              class="rounded-full px-4 py-2 text-text-secondary transition-all hover:bg-accent-soft hover:text-text-primary"
-              data-astro-transition="animate"
-            >
-              {link.label}
-            </a>
-          ))}
-        </nav>
+        {!hideNavigation && (
+          <nav class="hidden items-center gap-2 text-sm font-medium md:flex">
+            {navLinks.map((link) => (
+              <a
+                transition:animate
+                href={link.href}
+                class="rounded-full px-4 py-2 text-text-secondary transition-all hover:bg-accent-soft hover:text-text-primary"
+                data-astro-transition="animate"
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+        )}
         <div class="flex items-center gap-2">
           <button
             type="button"
