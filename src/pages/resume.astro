@@ -47,10 +47,6 @@ const jsonLd = [
 
 const jsonLdStrings = jsonLd.map((schema) => JSON.stringify(schema));
 
-const renderJsonLdScript = (schemaJson: string) => (
-  <script type="application/ld+json" is:inline>{schemaJson}</script>
-);
-
 const formatRange = (startYear?: string | null, endYear?: string | null) => {
   if (!startYear && !endYear) return undefined;
   const endLabel = endYear ? endYear : "Present";
@@ -118,7 +114,9 @@ const sanitizeId = (value: string) =>
   <script id="resume-data" type="application/json" is:inline>
     {JSON.stringify(resumeData)}
   </script>
-  {jsonLdStrings.map(renderJsonLdScript)}
+  {jsonLdStrings.map((schemaJson) => (
+    <script type="application/ld+json" is:inline>{schemaJson}</script>
+  ))}
   <article class="flex flex-col gap-16 lg:gap-20">
     <section class="flex flex-col gap-10 rounded-3xl border border-border/60 bg-surface/60 p-8 shadow-soft transition-colors motion-safe:duration-500 motion-safe:ease-out lg:p-12" data-inline-editable>
       <div class="flex flex-col gap-6 text-text-secondary">
