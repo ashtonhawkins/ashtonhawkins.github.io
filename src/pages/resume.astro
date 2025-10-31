@@ -167,6 +167,8 @@ const resumeData = {
 const title = `${resumeData.meta.name} · Resume`;
 const description = resumeData.positioning;
 
+const defaultConfidential = Boolean(resumeData.privacy?.defaultConfidential);
+
 const sections = [
   { id: "experience", label: "Experience" },
   { id: "case-studies", label: "Case studies" },
@@ -422,6 +424,8 @@ const sanitizeId = (value: string) =>
               const roleId = sanitizeId(`${role.role}-${role.employer_full}`);
               const confidentialLabelField = resumeData.privacy.rules.employerLabelFieldWhenConfidential;
               const employerGeneric = role[confidentialLabelField as "employer_public" | "employer_full"] ?? role.employer_public;
+              const shouldUseGenericLabel = defaultConfidential && role.confidential;
+              const employerInitialLabel = shouldUseGenericLabel ? employerGeneric ?? role.employer_full : role.employer_full ?? employerGeneric;
               return (
                 <li class="relative pl-6" id={roleId}>
                   <span class="absolute -left-3 top-2 h-2.5 w-2.5 rounded-full border border-background bg-accent"></span>
@@ -437,7 +441,7 @@ const sanitizeId = (value: string) =>
                               data-full={role.employer_full}
                               data-generic={employerGeneric}
                             >
-                              {role.employer_full}
+                              {employerInitialLabel}
                             </span>
                           </h3>
                           <p class="text-sm text-text-muted" data-inline-editable>{role.location}</p>
