@@ -1,0 +1,72 @@
+---
+import Scoreboard from "./Scoreboard.astro";
+
+interface Stat {
+  label: string;
+  value: string;
+}
+
+interface HeroData {
+  headline: string;
+  subhead: string;
+  stats: Stat[];
+}
+
+const { hero, email } = Astro.props as { hero: HeroData; email: string };
+
+const headlineWords = hero.headline.split(" ");
+const midpoint = Math.ceil(headlineWords.length / 2);
+const headlineTop = headlineWords.slice(0, midpoint).join(" ");
+const headlineBottom = headlineWords.slice(midpoint).join(" ");
+---
+
+<section class="flex flex-col gap-10 rounded-3xl border border-border/60 bg-surface/70 px-6 py-10 text-left shadow-soft backdrop-blur-sm md:px-10" data-hero-entrance>
+  <style is:inline>
+    [data-hero-entrance] {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 400ms ease, transform 400ms ease;
+    }
+    [data-hero-entrance].is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+  <div class="flex flex-col gap-4">
+    <h1 class="text-4xl font-semibold leading-tight tracking-tight text-text-primary sm:text-5xl lg:text-6xl">
+      <span class="block">{headlineTop}</span>
+      <span class="block text-text-secondary">{headlineBottom}</span>
+    </h1>
+    <p class="max-w-2xl text-base text-text-secondary sm:text-lg">{hero.subhead}</p>
+  </div>
+  <Scoreboard stats={hero.stats} />
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+    <a
+      href="#case-studies"
+      class="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-background transition-transform duration-100 ease-out hover:-translate-y-0.5 hover:bg-accent-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      data-astro-transition="animate"
+    >
+      View case studies
+    </a>
+    <a
+      href={`mailto:${email}`}
+      class="inline-flex items-center justify-center rounded-full border border-border px-6 py-3 text-sm font-semibold text-text-secondary transition-transform duration-100 ease-out hover:-translate-y-0.5 hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      data-astro-transition="animate"
+    >
+      Email Ashton
+    </a>
+  </div>
+</section>
+
+<script type="module">
+const hydrate = () => {
+  document.querySelectorAll('[data-hero-entrance]').forEach((section) => {
+    requestAnimationFrame(() => {
+      section.classList.add('is-visible');
+    });
+  });
+};
+
+document.addEventListener('astro:page-load', hydrate);
+hydrate();
+</script>

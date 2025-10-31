@@ -1,0 +1,134 @@
+---
+import ExperienceCard from "./ExperienceCard.astro";
+
+interface Scope {
+  team: string;
+  budget: string;
+  surfaces: string;
+}
+
+interface CaseStudyLink {
+  id: string;
+  title: string;
+  url: string;
+}
+
+interface ExperienceWithComputed {
+  id: string;
+  org_public: string;
+  org_confidential: string;
+  role_public: string;
+  role_confidential: string;
+  start?: string | null;
+  end?: string | null;
+  scope: Scope;
+  impacts: string[];
+  tags: string[];
+  caseStudies: CaseStudyLink[];
+  rangePublic: string;
+  rangeConfidential: string;
+}
+
+const { experiences } = Astro.props as {
+  experiences: ExperienceWithComputed[];
+};
+---
+
+<section id="experience" class="flex flex-col gap-6" aria-label="Experience timeline">
+  <style is:inline>
+    [data-experience-timeline] {
+      position: relative;
+      padding-left: 1.5rem;
+    }
+    @media (min-width: 768px) {
+      [data-experience-timeline] {
+        padding-left: 2.5rem;
+      }
+    }
+    [data-experience-timeline]::before {
+      content: "";
+      position: absolute;
+      top: 0.5rem;
+      bottom: 0.5rem;
+      left: 0.5rem;
+      width: 2px;
+      background: var(--border);
+    }
+    @media (min-width: 768px) {
+      [data-experience-timeline]::before {
+        left: 0.75rem;
+      }
+    }
+    [data-experience-item] {
+      position: relative;
+    }
+    [data-experience-item]::before {
+      content: "";
+      position: absolute;
+      left: -1.5rem;
+      top: 1.25rem;
+      width: 10px;
+      height: 10px;
+      border-radius: 9999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+    @media (min-width: 768px) {
+      [data-experience-item]::before {
+        left: -2.25rem;
+      }
+    }
+  </style>
+  <div class="flex items-center justify-between gap-4">
+    <h2 class="text-lg font-semibold text-text-primary">Experience</h2>
+    <button
+      type="button"
+      class="hidden items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:inline-flex"
+      data-expand-all
+    >
+      Expand all
+    </button>
+  </div>
+  <div class="flex flex-col gap-6" data-experience-timeline>
+    {experiences.map((experience) => (
+      <div data-experience-item data-tags={experience.tags.join(",")}>
+        <ExperienceCard experience={experience} />
+      </div>
+    ))}
+  </div>
+</section>
+
+<script type="module">
+const initExpandControl = () => {
+  const button = document.querySelector('[data-expand-all]');
+  const cards = () => Array.from(document.querySelectorAll('[data-experience-card]'));
+  if (!button || button.dataset.bound === 'true') return;
+  button.dataset.bound = 'true';
+
+  const updateLabel = () => {
+    const list = cards();
+    if (list.length === 0) return;
+    const allOpen = list.every((card) => card.hasAttribute('open'));
+    button.textContent = allOpen ? 'Collapse all' : 'Expand all';
+  };
+
+  button.addEventListener('click', () => {
+    const list = cards();
+    const shouldOpen = !list.every((card) => card.hasAttribute('open'));
+    list.forEach((card) => {
+      if (shouldOpen) card.setAttribute('open', 'true');
+      else card.removeAttribute('open');
+    });
+    updateLabel();
+  });
+
+  cards().forEach((card) => {
+    card.addEventListener('toggle', updateLabel);
+  });
+
+  updateLabel();
+};
+
+initExpandControl();
+document.addEventListener('astro:page-load', initExpandControl);
+</script>

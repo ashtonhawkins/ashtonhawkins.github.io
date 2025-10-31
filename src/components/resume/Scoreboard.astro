@@ -1,0 +1,97 @@
+---
+interface Stat {
+  label: string;
+  value: string;
+}
+
+const { stats } = Astro.props as { stats: Stat[] };
+---
+
+<dl class="grid grid-cols-1 gap-6 sm:grid-cols-3" data-scoreboard>
+  {stats.map((stat) => (
+    <div class="flex flex-col items-start gap-2 rounded-2xl border border-border/50 bg-background/80 px-6 py-5 shadow-soft transition-transform duration-100 ease-out hover:-translate-y-1 hover:shadow-ring focus-within:-translate-y-1 focus-within:shadow-ring">
+      <dt class="text-xs font-semibold uppercase tracking-[0.3em] text-text-muted">{stat.label}</dt>
+      <dd class="text-3xl font-semibold text-text-primary" data-score-value data-value={stat.value}>{stat.value}</dd>
+    </div>
+  ))}
+</dl>
+
+<script type="module">
+const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const nodes = Array.from(document.querySelectorAll('[data-scoreboard] [data-score-value]'));
+const seen = new WeakSet();
+
+const parseValue = (raw) => {
+  if (!raw) return { prefix: '', suffix: '', number: 0, decimals: 0 };
+  const match = raw.trim().match(/^([^0-9+-]*)([+\-]?[0-9]+(?:\.[0-9]+)?)(.*)$/);
+  if (!match) {
+    return { prefix: '', suffix: '', number: Number(raw) || 0, decimals: 0 };
+  }
+  const decimals = match[2].includes('.') ? match[2].split('.')[1].length : 0;
+  return {
+    prefix: match[1] ?? '',
+    suffix: match[3] ?? '',
+    number: Number(match[2]) || 0,
+    decimals
+  };
+};
+
+const animateNode = (node) => {
+  if (seen.has(node)) return;
+  seen.add(node);
+  const rawValue = node.dataset.value ?? '';
+  const { prefix, suffix, number, decimals } = parseValue(rawValue);
+  if (prefersReduced) {
+    node.textContent = `${prefix}${number.toFixed(decimals)}${suffix}`;
+    return;
+  }
+  const duration = 900;
+  const start = performance.now();
+  const startValue = 0;
+
+  const step = (now) => {
+    const elapsed = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - elapsed, 3);
+    const current = startValue + (number - startValue) * eased;
+    node.textContent = `${prefix}${current.toFixed(decimals)}${suffix}`;
+    if (elapsed < 1) requestAnimationFrame(step);
+  };
+
+  requestAnimationFrame(step);
+};
+
+if ('IntersectionObserver' in window) {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        animateNode(entry.target);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.6 });
+
+  nodes.forEach((node) => observer.observe(node));
+} else {
+  nodes.forEach((node) => animateNode(node));
+}
+
+document.addEventListener('astro:page-load', () => {
+  Array.from(document.querySelectorAll('[data-scoreboard] [data-score-value]')).forEach((node) => {
+    if (!seen.has(node)) {
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries, obs) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              animateNode(entry.target);
+              obs.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.6 });
+        observer.observe(node);
+      } else {
+        animateNode(node);
+      }
+    }
+  });
+});
+</script>
