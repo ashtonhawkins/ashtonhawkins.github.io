@@ -1,236 +1,803 @@
 ---
 import AppShell from "../layouts/AppShell.astro";
 import SEO from "../components/SEO.astro";
-import resume from "../content/resume.json";
+import geistRegular from "@fontsource/geist/files/geist-latin-400-normal.woff2?url";
 
-const { basics = {}, work = [], education = [], projects = [], skills = [] } = resume as {
-  basics?: Record<string, any>;
-  work?: Record<string, any>[];
-  education?: Record<string, any>[];
-  projects?: Record<string, any>[];
-  skills?: Record<string, any>[];
+const resumeData = {
+  "meta": {
+    "name": "Ashton Hawkins",
+    "title": "Digital Experience & Growth Leader",
+    "location": "San Francisco Bay Area",
+    "email": "ashtonhawkins@gmail.com",
+    "website": "https://www.ashtonhawkins.com",
+    "links": [
+      { "label": "LinkedIn", "url": "https://www.linkedin.com/in/ashtonhawkins" },
+      { "label": "Writing", "url": "https://www.ashtonhawkins.com/writing" },
+      { "label": "Now", "url": "https://www.ashtonhawkins.com/now" }
+    ]
+  },
+  "positioning": "I build high-performing web experiences and the digital operations behind them—experimentation, CRO/SEO, taxonomy & structured data, content systems, analytics, and platform/process modernization. I turn messy ecosystems into compounding, organic-led growth.",
+  "highlights": [
+    { "value": "~30%", "label": "Brand engagement lift", "context": "via organic-led acquisition and content/taxonomy improvements" },
+    { "value": "+20%", "label": "YoY category sales", "context": "after catalog and merchandising improvements" },
+    { "value": "7", "label": "Team members led", "context": "plus a multi-vendor SaaS stack and provider agreements" },
+    { "value": "+177%", "label": "Digital category traffic", "context": "Walmart 'Project Windex' award" }
+  ],
+  "experience": [
+    {
+      "role": "Portfolio lead, Web Experience & Optimization",
+      "employer_public": "Healthcare ecommerce (confidential)",
+      "employer_full": "Two healthcare ecommerce businesses",
+      "location": "Remote",
+      "dates": { "startYear": "2022", "endYear": null },
+      "summary": "Operate across two healthcare ecommerce orgs leading web experience, experimentation, SEO/IA, performance, analytics, and day-to-day site ops.",
+      "bullets": [
+        "Built a modernization framework across platforms, automation, and KPI dashboards.",
+        "Shifted to organic-led acquisition while reducing paid spend; increased engagement.",
+        "Owned SaaS P&L and vendor agreements; led cross-org implementations.",
+        "Stood up onboarding/training and a durable shipping cadence."
+      ],
+      "confidential": true
+    },
+    {
+      "role": "Site Operations Manager, Digital Merchandising",
+      "employer_public": "Walmart",
+      "employer_full": "Walmart",
+      "location": "SF Bay Area & Remote",
+      "dates": { "startYear": "2020", "endYear": "2021" },
+      "bullets": [
+        "Managed a multi-$B digital category end-to-end (SEO, UX/CX, content, taxonomy, analytics, paid search, merchandising).",
+        "Delivered +20% YoY category sales via catalog and merchandising improvements.",
+        "Led 5 Site Merchants + 2 Content Managers; OKRs and operating rhythms."
+      ],
+      "confidential": false
+    },
+    {
+      "role": "Optimization & Structured Data Lead",
+      "employer_public": "Walmart eCommerce",
+      "employer_full": "Walmart eCommerce",
+      "location": "San Francisco Bay Area",
+      "dates": { "startYear": "2018", "endYear": "2020" },
+      "bullets": [
+        "Led CRO and site-speed programs; codified technical/experience best practices.",
+        "Rebuilt IA for Home/Patio & Garden; improved internal search and browse.",
+        "Implemented attribution to automate merchandising and increase external relevance."
+      ],
+      "confidential": false
+    },
+    {
+      "role": "Consultant",
+      "employer_public": "Cultivox Communications",
+      "employer_full": "Cultivox Communications",
+      "location": "Remote",
+      "dates": { "startYear": "2014", "endYear": "2018" },
+      "bullets": [
+        "Strategy frameworks for small enterprises: brand, content, CX, analytics.",
+        "Templates and trainings to improve digital execution and policy understanding."
+      ],
+      "confidential": false
+    }
+  ],
+  "caseStudies": [
+    {
+      "name": "Healthcare ecommerce modernization",
+      "context": "Portfolio (confidential)",
+      "problem": "Fragmented stack, paid-heavy acquisition, weak visibility into KPIs.",
+      "approach": [
+        "Experimentation program",
+        "Taxonomy/structured data unification",
+        "Content standards",
+        "Performance tuning"
+      ],
+      "outcomes": [
+        "~30% engagement lift with lower paid spend",
+        "Faster releases with fewer regressions"
+      ]
+    },
+    {
+      "name": "Category growth at scale",
+      "context": "Walmart",
+      "problem": "Flat growth in a core digital category.",
+      "approach": [
+        "Catalog quality fixes",
+        "On-page SEO & merchandising automation",
+        "Analytics-driven roadmap"
+      ],
+      "outcomes": [
+        "+20% YoY category sales",
+        "Improved search/browse journeys"
+      ]
+    },
+    {
+      "name": "Project Windex",
+      "context": "Walmart (award-winning)",
+      "problem": "Outdated omnichannel experience for window shopping.",
+      "approach": [
+        "Customer journey redesign",
+        "Omnichannel taxonomy & content",
+        "Performance & SEO improvements"
+      ],
+      "outcomes": [
+        "+177% digital category traffic",
+        "Improved revenue & profit"
+      ]
+    }
+  ],
+  "competencies": [
+    "Ecommerce strategy",
+    "Experimentation/CRO",
+    "SEO",
+    "Information architecture & taxonomy",
+    "Analytics & dashboards",
+    "Web merchandising",
+    "SaaS stack ownership",
+    "Org enablement & training"
+  ],
+  "keywords": [
+    "Core Web Vitals (LCP/CLS/INP)",
+    "semantic search & vector search",
+    "Consent Mode v2",
+    "first-party data",
+    "GA4 BigQuery",
+    "server-side tagging",
+    "predictive personalization",
+    "AI-assisted merchandising",
+    "taxonomy/IA",
+    "catalog quality",
+    "feature flags",
+    "edge rendering",
+    "structured data (schema.org)"
+  ],
+  "awards": [
+    { "name": "Digital & Tech Team of the Year", "issuer": "Walmart", "year": "2021", "notes": "Project Windex — +177% digital category traffic" }
+  ],
+  "education": [
+    { "school": "College of Charleston", "credential": "BA, English / Political Science" },
+    { "school": "University of Northampton", "credential": "Political Strategy (2008)" }
+  ],
+  "privacy": {
+    "defaultConfidential": true,
+    "rules": {
+      "datesPrecisionWhenConfidential": "year",
+      "employerLabelFieldWhenConfidential": "employer_public"
+    }
+  }
+} as const;
+
+const title = `${resumeData.meta.name} · Resume`;
+const description = resumeData.positioning;
+
+const sections = [
+  { id: "experience", label: "Experience" },
+  { id: "case-studies", label: "Case studies" },
+  { id: "competencies", label: "Competencies" },
+  { id: "keywords", label: "Keywords" },
+  { id: "education", label: "Education" }
+];
+
+const siteOrigin = Astro.site?.origin ?? Astro.url?.origin ?? "";
+const canonicalUrl = Astro.site
+  ? new URL(Astro.url.pathname, Astro.site).toString()
+  : Astro.url?.href ?? "";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "@id": `${siteOrigin || resumeData.meta.website}#ashton-hawkins`,
+    name: resumeData.meta.name,
+    jobTitle: resumeData.meta.title,
+    url: resumeData.meta.website,
+    email: `mailto:${resumeData.meta.email}`,
+    address: {
+      "@type": "PostalAddress",
+      addressRegion: resumeData.meta.location
+    },
+    sameAs: resumeData.meta.links.map((link) => link.url)
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    url: canonicalUrl,
+    about: {
+      "@id": `${siteOrigin || resumeData.meta.website}#ashton-hawkins`
+    }
+  }
+];
+
+const jsonLdStrings = jsonLd.map((schema) => JSON.stringify(schema));
+
+const renderJsonLdScript = (schemaJson: string) => (
+  <script type="application/ld+json" is:inline>{schemaJson}</script>
+);
+
+const formatRange = (startYear?: string | null, endYear?: string | null) => {
+  if (!startYear && !endYear) return undefined;
+  const endLabel = endYear ? endYear : "Present";
+  return startYear ? `${startYear} – ${endLabel}` : endLabel;
 };
 
-const formatDate = (value?: string) => {
-  if (!value) return undefined;
-  const date = new Date(value);
-  if (Number.isNaN(date.valueOf())) return value;
-  return new Intl.DateTimeFormat("en", { month: "short", year: "numeric" }).format(date);
-};
-
-const formatRange = (start?: string, end?: string) => {
-  if (!start && !end) return undefined;
-  const startLabel = start ? formatDate(start) : undefined;
-  const endLabel = end ? formatDate(end) : "Present";
-  return [startLabel, endLabel].filter(Boolean).join(" – ") || undefined;
-};
-
-const locationParts = [basics?.location?.city, basics?.location?.region, basics?.location?.countryCode].filter(Boolean);
-const hasSummary = Boolean(basics?.summary);
-const resumeName = basics?.name ?? "Ashton Hawkins";
-const resumeDescription = hasSummary
-  ? `${resumeName}'s resume – ${basics.summary}`
-  : "A snapshot of work, education, projects, and skills.";
+const sanitizeId = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
 ---
 
 <AppShell>
-  <SEO
-    slot="head"
-    title={`Resume · ${resumeName}`}
-    description={resumeDescription}
-    ogTitle={`Resume · ${resumeName}`}
-  />
-  <article class="mx-auto flex w-full max-w-4xl flex-col gap-12 text-base text-text-secondary">
-    <header class="flex flex-col gap-6 border-b border-border/60 pb-10">
-      <div class="flex flex-col gap-3">
-        <p class="text-sm font-semibold uppercase tracking-widest text-accent">Resume</p>
-        <h1 class="text-3xl font-semibold text-text-primary md:text-4xl">{resumeName}</h1>
-        {basics?.label && <p class="text-lg text-text-secondary">{basics.label}</p>}
-        {(hasSummary || locationParts.length > 0) && (
-          <div class="flex flex-col gap-2 text-sm text-text-muted md:flex-row md:items-center md:gap-4">
-            {hasSummary && <p class="max-w-2xl leading-relaxed text-text-secondary">{basics.summary}</p>}
-            {locationParts.length > 0 && (
-              <p class="font-medium text-text-secondary">{locationParts.join(", ")}</p>
-            )}
+  <SEO slot="head" title={title} description={description} ogTitle={title} />
+  <link rel="preload" as="font" href={geistRegular} type="font/woff2" crossorigin="anonymous" />
+  <style is:inline>{`
+    [data-confidential-toggle][aria-checked="true"] [data-confidential-handle] {
+      transform: translateX(140%);
+    }
+    [data-confidential-toggle][aria-checked="false"] [data-confidential-handle] {
+      transform: translateX(0);
+    }
+    [data-inline-editable][contenteditable="true"] {
+      outline: 2px solid rgba(37, 99, 235, 0.55);
+      outline-offset: 2px;
+    }
+    @media print {
+      :root {
+        color-scheme: light;
+      }
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 11pt;
+      }
+      header,
+      footer,
+      [data-command-button],
+      [data-sticky-nav],
+      [data-case-study-button],
+      [data-confidential-toggle],
+      [data-download-actions] {
+        display: none !important;
+      }
+      main {
+        padding-block: 0 !important;
+      }
+      section {
+        break-inside: avoid;
+      }
+      h2, h3 {
+        break-after: avoid;
+        break-inside: avoid;
+      }
+      .print-grid {
+        display: block !important;
+      }
+      .timeline::before {
+        background: #0000001a !important;
+      }
+    }
+  `}</style>
+  <script id="resume-data" type="application/json" is:inline>
+    {JSON.stringify(resumeData)}
+  </script>
+  {jsonLdStrings.map(renderJsonLdScript)}
+  <article class="flex flex-col gap-16 lg:gap-20">
+    <section class="flex flex-col gap-10 rounded-3xl border border-border/60 bg-surface/60 p-8 shadow-soft transition-colors motion-safe:duration-500 motion-safe:ease-out lg:p-12" data-inline-editable>
+      <div class="flex flex-col gap-6 text-text-secondary">
+        <p class="text-sm font-semibold uppercase tracking-[0.4em] text-accent">Resume</p>
+        <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div class="space-y-4 text-text-primary">
+            <h1 class="text-4xl font-semibold text-text-primary md:text-5xl" data-inline-editable>
+              {resumeData.meta.name}
+            </h1>
+            <p class="text-lg font-medium text-text-secondary" data-inline-editable>
+              {resumeData.meta.title}
+            </p>
           </div>
-        )}
+          <div class="flex flex-col gap-3 text-sm text-text-secondary md:items-end">
+            <a
+              class="font-medium text-accent underline-offset-4 transition hover:text-accent-strong hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              href={`mailto:${resumeData.meta.email}`}
+            >
+              {resumeData.meta.email}
+            </a>
+            <a
+              class="font-medium text-accent underline-offset-4 transition hover:text-accent-strong hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              href={resumeData.meta.website}
+            >
+              {resumeData.meta.website.replace(/^https?:\/\//, "")}
+            </a>
+            <p class="text-sm text-text-muted" data-inline-editable>{resumeData.meta.location}</p>
+            <ul class="flex flex-wrap gap-3 text-sm">
+              {resumeData.meta.links.map((link) => (
+                <li>
+                  <a
+                    class="rounded-full border border-transparent px-3 py-1 font-medium text-accent transition hover:border-accent hover:bg-accent-soft hover:text-accent-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    href={link.url}
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <p class="max-w-3xl text-base leading-relaxed text-text-secondary md:text-lg" data-inline-editable>
+          {resumeData.positioning}
+        </p>
       </div>
-      <div class="flex flex-wrap items-center gap-3 text-sm">
-        {basics?.email && (
-          <a class="text-accent underline-offset-4 transition hover:underline" href={`mailto:${basics.email}`}>
-            {basics.email}
-          </a>
-        )}
-        {basics?.phone && <span class="text-text-muted">{basics.phone}</span>}
-        {basics?.url && (
-          <a class="text-accent underline-offset-4 transition hover:underline" href={basics.url}>
-            {basics.url.replace(/^https?:\/\//, "")}
-          </a>
-        )}
-        {Array.isArray(basics?.profiles) && basics.profiles.length > 0 && (
-          <span class="flex flex-wrap items-center gap-2 text-text-muted">
-            {basics.profiles.map((profile) => (
-              <a class="text-accent underline-offset-4 transition hover:underline" href={profile.url}>
-                {profile.network}
-              </a>
-            ))}
-          </span>
-        )}
-      </div>
-      <div class="flex flex-wrap gap-3">
+      <div class="flex flex-wrap items-center gap-4" data-download-actions>
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-full border border-border bg-background/80 px-5 py-2 text-sm font-semibold text-text-primary shadow-soft transition hover:border-accent hover:bg-accent-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          data-print-trigger
+        >
+          Download PDF
+        </button>
+        <a
+          href="#case-studies"
+          class="inline-flex items-center gap-2 rounded-full border border-transparent bg-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-accent-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          View case studies
+        </a>
         <a
           href="/resume.json"
-          download
-          class="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-text-secondary shadow-soft transition hover:border-accent hover:bg-accent-soft hover:text-text-primary hover:shadow-ring"
+          download="ashton-hawkins-resume.json"
+          class="inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-5 py-2 text-sm font-semibold text-text-primary shadow-soft transition hover:border-accent hover:bg-accent-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           Download JSON
         </a>
-        <button
-          type="button"
-          onclick="window.print()"
-          class="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-text-secondary shadow-soft transition hover:border-accent hover:bg-accent-soft hover:text-text-primary hover:shadow-ring"
-        >
-          Print to PDF
-        </button>
       </div>
-    </header>
+    </section>
 
-    {work.length > 0 && (
-      <section class="flex flex-col gap-6">
-        <div class="space-y-2">
-          <h2 class="text-2xl font-semibold text-text-primary">Work</h2>
-          <p class="text-sm text-text-muted">
-            Select roles that blend strategy, systems, and hands-on making.
-          </p>
-        </div>
-        <div class="flex flex-col gap-8">
-          {work.map((role) => (
-            <article class="flex flex-col gap-3">
-              <header class="flex flex-col gap-1">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                  <h3 class="text-lg font-semibold text-text-primary">
-                    {role.position} · {role.name}
-                  </h3>
-                  {formatRange(role.startDate, role.endDate) && (
-                    <span class="text-xs uppercase tracking-wide text-text-muted">
-                      {formatRange(role.startDate, role.endDate)}
-                    </span>
-                  )}
-                </div>
-                {role.summary && <p class="text-sm text-text-secondary">{role.summary}</p>}
-              </header>
-              {Array.isArray(role.highlights) && role.highlights.length > 0 && (
-                <ul class="list-disc space-y-2 pl-6 text-sm text-text-secondary">
-                  {role.highlights.map((highlight) => (
-                    <li>{highlight}</li>
-                  ))}
-                </ul>
-              )}
-            </article>
-          ))}
-        </div>
-      </section>
-    )}
+    <section aria-labelledby="impact-heading" class="space-y-6" data-inline-editable>
+      <div class="flex flex-col gap-2">
+        <h2 id="impact-heading" class="text-2xl font-semibold text-text-primary">Impact snapshots</h2>
+        <p class="text-sm text-text-muted">Signals from growth, modernization, and operational uplift.</p>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" role="list">
+        {resumeData.highlights.map((highlight) => (
+          <div
+            role="listitem"
+            class="group rounded-2xl border border-border/60 bg-surface/80 p-6 shadow-soft transition hover:border-accent hover:-translate-y-1 motion-safe:duration-300"
+          >
+            <p class="text-3xl font-semibold text-text-primary">{highlight.value}</p>
+            <p class="mt-2 text-base font-medium text-text-secondary">{highlight.label}</p>
+            <p class="mt-3 text-sm text-text-muted">{highlight.context}</p>
+          </div>
+        ))}
+      </div>
+    </section>
 
-    {projects.length > 0 && (
-      <section class="flex flex-col gap-6">
-        <div class="space-y-2">
-          <h2 class="text-2xl font-semibold text-text-primary">Projects</h2>
-          <p class="text-sm text-text-muted">Selected experiments and products shipped independently or with collaborators.</p>
+    <section class="print-grid grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.5fr)]">
+      <aside class="flex flex-col gap-8 self-start lg:sticky lg:top-28" data-sticky-nav>
+        <div class="rounded-2xl border border-border/50 bg-surface/70 p-6 shadow-soft">
+          <h2 class="text-sm font-semibold uppercase tracking-[0.3em] text-text-muted">On this page</h2>
+          <nav aria-label="On this page" class="mt-4">
+            <ol class="flex flex-col gap-3 text-sm text-text-secondary">
+              {sections.map((section) => (
+                <li>
+                  <a
+                    href={`#${section.id}`}
+                    class="flex items-center gap-2 rounded-full px-3 py-2 transition hover:bg-accent-soft hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    data-astro-transition="animate"
+                  >
+                    <span class="h-1.5 w-1.5 rounded-full bg-accent/70" aria-hidden="true"></span>
+                    {section.label}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
         </div>
-        <div class="grid gap-8 md:grid-cols-2">
-          {projects.map((project) => (
-            <article class="flex h-full flex-col gap-3 rounded-2xl border border-border/60 bg-surface/50 p-6 shadow-soft">
-              <header class="flex flex-col gap-1">
-                <div class="flex items-center justify-between gap-2">
-                  <h3 class="text-lg font-semibold text-text-primary">{project.name}</h3>
-                  {project.url && (
-                    <a class="text-sm font-medium text-accent underline-offset-4 hover:underline" href={project.url}>
-                      Visit
-                    </a>
-                  )}
-                </div>
-                {project.description && <p class="text-sm text-text-secondary">{project.description}</p>}
-              </header>
-              {Array.isArray(project.highlights) && project.highlights.length > 0 && (
-                <ul class="list-disc space-y-2 pl-5 text-sm text-text-secondary">
-                  {project.highlights.map((highlight) => (
-                    <li>{highlight}</li>
-                  ))}
-                </ul>
-              )}
-              <div class="mt-auto flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide text-text-muted">
-                {Array.isArray(project.roles) &&
-                  project.roles.map((role) => <span class="rounded-full bg-surface px-3 py-1 text-text-secondary">{role}</span>)}
-                {Array.isArray(project.keywords) &&
-                  project.keywords.map((keyword) => (
-                    <span class="rounded-full bg-accent-soft px-3 py-1 text-accent">{keyword}</span>
-                  ))}
-              </div>
-            </article>
-          ))}
+        <div class="rounded-2xl border border-border/50 bg-surface/70 p-6 shadow-soft">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <p class="text-sm font-semibold text-text-primary">Confidential mode</p>
+              <p class="text-xs text-text-muted">Hides sensitive org names and precise dates.</p>
+            </div>
+            <button
+              type="button"
+              class="relative inline-flex h-8 w-14 shrink-0 cursor-pointer items-center rounded-full border border-border bg-background/80 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              role="switch"
+              aria-checked="true"
+              data-confidential-toggle
+            >
+              <span class="sr-only">Toggle confidential mode</span>
+              <span class="ml-1 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-semibold text-white transition-transform" data-confidential-handle>
+                <span data-confidential-state>On</span>
+              </span>
+            </button>
+          </div>
         </div>
-      </section>
-    )}
+      </aside>
 
-    {education.length > 0 && (
-      <section class="flex flex-col gap-6">
-        <div class="space-y-2">
-          <h2 class="text-2xl font-semibold text-text-primary">Education</h2>
-          <p class="text-sm text-text-muted">Academic foundations and areas of study.</p>
-        </div>
-        <div class="flex flex-col gap-6">
-          {education.map((entry) => (
-            <article class="flex flex-col gap-2">
-              <div class="flex flex-wrap items-center justify-between gap-2">
-                <h3 class="text-lg font-semibold text-text-primary">{entry.institution}</h3>
-                {formatRange(entry.startDate, entry.endDate) && (
-                  <span class="text-xs uppercase tracking-wide text-text-muted">
-                    {formatRange(entry.startDate, entry.endDate)}
-                  </span>
-                )}
-              </div>
-              <p class="text-sm text-text-secondary">
-                {entry.studyType} in {entry.area}
-              </p>
-              {entry.summary && <p class="text-sm text-text-secondary">{entry.summary}</p>}
-              {Array.isArray(entry.courses) && entry.courses.length > 0 && (
-                <ul class="flex flex-wrap gap-2 text-xs uppercase tracking-wide text-text-muted">
-                  {entry.courses.map((course) => (
-                    <li class="rounded-full bg-surface px-3 py-1 text-text-secondary">{course}</li>
-                  ))}
-                </ul>
-              )}
-            </article>
-          ))}
-        </div>
-      </section>
-    )}
+      <div class="flex flex-col gap-16">
+        <section id="experience" aria-labelledby="experience-heading" class="space-y-6" data-inline-editable>
+          <div class="space-y-2">
+            <h2 id="experience-heading" class="text-2xl font-semibold text-text-primary">Experience</h2>
+            <p class="text-sm text-text-muted">Full-stack ownership of ecommerce growth, experimentation, and operations.</p>
+          </div>
+          <ol class="timeline relative flex flex-col gap-6 border-l border-border/60 pl-6">
+            {resumeData.experience.map((role) => {
+              const range = formatRange(role.dates.startYear, role.dates.endYear);
+              const roleId = sanitizeId(`${role.role}-${role.employer_full}`);
+              const confidentialLabelField = resumeData.privacy.rules.employerLabelFieldWhenConfidential;
+              const employerGeneric = role[confidentialLabelField as "employer_public" | "employer_full"] ?? role.employer_public;
+              return (
+                <li class="relative pl-6" id={roleId}>
+                  <span class="absolute -left-3 top-2 h-2.5 w-2.5 rounded-full border border-background bg-accent"></span>
+                  <details class="group rounded-2xl border border-border/60 bg-surface/70 p-6 shadow-soft transition">
+                    <summary class="flex cursor-pointer list-none flex-col gap-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                      <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div class="space-y-1">
+                          <h3 class="text-lg font-semibold text-text-primary" data-inline-editable>
+                            <span>{role.role}</span>
+                            <span class="text-text-muted"> · </span>
+                            <span
+                              data-confidential-label
+                              data-full={role.employer_full}
+                              data-generic={employerGeneric}
+                            >
+                              {role.employer_full}
+                            </span>
+                          </h3>
+                          <p class="text-sm text-text-muted" data-inline-editable>{role.location}</p>
+                        </div>
+                        {range && (
+                          <span
+                            class="rounded-full bg-background/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-text-muted"
+                            data-confidential-dates
+                            data-full={range}
+                            data-year={range}
+                          >
+                            {range}
+                          </span>
+                        )}
+                      </div>
+                      {role.summary && <p class="text-sm text-text-secondary" data-inline-editable>{role.summary}</p>}
+                      <span class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-text-muted">
+                        <span class="inline-flex h-6 w-6 items-center justify-center rounded-full border border-border/60 bg-background/80 text-[0.625rem] font-bold text-accent transition group-open:translate-x-6 motion-safe:duration-300">+</span>
+                        <span class="group-open:hidden">Expand impact</span>
+                        <span class="hidden group-open:inline">Collapse</span>
+                      </span>
+                    </summary>
+                    <div class="mt-4 space-y-3 text-sm text-text-secondary">
+                      <ul class="space-y-2 pl-5">
+                        {role.bullets.map((bullet) => (
+                          <li class="list-disc" data-inline-editable>{bullet}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </details>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
 
-    {skills.length > 0 && (
-      <section class="flex flex-col gap-6">
-        <div class="space-y-2">
-          <h2 class="text-2xl font-semibold text-text-primary">Skills</h2>
-          <p class="text-sm text-text-muted">Tools, processes, and domains that guide current work.</p>
-        </div>
-        <div class="grid gap-6 md:grid-cols-2">
-          {skills.map((skill) => (
-            <article class="flex flex-col gap-3 rounded-2xl border border-border/60 bg-surface/60 p-5 shadow-soft">
-              <header class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-text-primary">{skill.name}</h3>
-                {skill.level && <span class="text-xs uppercase tracking-wide text-text-muted">{skill.level}</span>}
-              </header>
-              {Array.isArray(skill.keywords) && skill.keywords.length > 0 && (
-                <ul class="flex flex-wrap gap-2 text-sm text-text-secondary">
-                  {skill.keywords.map((keyword) => (
-                    <li class="rounded-full bg-surface px-3 py-1 text-text-secondary">{keyword}</li>
-                  ))}
-                </ul>
-              )}
-            </article>
-          ))}
-        </div>
-      </section>
-    )}
+        <section id="case-studies" aria-labelledby="case-studies-heading" class="space-y-6" data-inline-editable>
+          <div class="space-y-2">
+            <h2 id="case-studies-heading" class="text-2xl font-semibold text-text-primary">Case studies</h2>
+            <p class="text-sm text-text-muted">Selected programs illustrating systems thinking, experimentation, and measurable outcomes.</p>
+          </div>
+          <div class="grid gap-6 lg:grid-cols-3">
+            {resumeData.caseStudies.map((study) => {
+              const id = sanitizeId(study.name);
+              const outcomesWithValue = study.outcomes.map((outcome) => {
+                const numeric = Number((outcome.match(/[-+]?\d+(?:\.\d+)?/) ?? ["0"])[0]);
+                const width = Math.max(20, Math.min(100, Number.isFinite(numeric) ? Math.abs(numeric) : 45));
+                return { label: outcome, width };
+              });
+              return (
+                <article class="flex flex-col gap-5 rounded-3xl border border-border/50 bg-surface/70 p-6 shadow-soft">
+                  <div class="space-y-2">
+                    <p class="text-xs font-semibold uppercase tracking-[0.3em] text-text-muted">{study.context}</p>
+                    <h3 class="text-lg font-semibold text-text-primary">{study.name}</h3>
+                  </div>
+                  <p class="text-sm text-text-secondary">{study.problem}</p>
+                  <div class="flex h-2 w-full items-center gap-1 rounded-full bg-background/60 p-0.5">
+                    {outcomesWithValue.map((outcome) => (
+                      <span
+                        class="h-1.5 rounded-full bg-accent/80 transition"
+                        style={`flex: 0 0 ${outcome.width}%;`}
+                        aria-hidden="true"
+                      ></span>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    class="mt-auto inline-flex items-center justify-between gap-3 rounded-full border border-border bg-background/70 px-4 py-2 text-sm font-semibold text-text-primary transition hover:border-accent hover:bg-accent-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    data-case-study-button
+                    data-case-study-trigger={id}
+                  >
+                    Open case study
+                    <span aria-hidden="true">→</span>
+                  </button>
+                  <dialog
+                    data-case-study-modal={id}
+                    class="max-w-2xl rounded-3xl border border-border/60 bg-background/95 p-0 text-left shadow-overlay backdrop:bg-black/50"
+                  >
+                    <form method="dialog" class="flex flex-col gap-6 p-6">
+                      <header class="flex items-start justify-between gap-4">
+                        <div>
+                          <p class="text-xs font-semibold uppercase tracking-[0.3em] text-text-muted">{study.context}</p>
+                          <h3 class="mt-2 text-2xl font-semibold text-text-primary">{study.name}</h3>
+                        </div>
+                        <button
+                          type="submit"
+                          class="rounded-full border border-border px-3 py-1 text-sm font-medium text-text-secondary transition hover:border-accent hover:bg-accent-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                          data-modal-close
+                        >
+                          Close
+                        </button>
+                      </header>
+                      <div class="grid gap-4 text-sm text-text-secondary md:grid-cols-2">
+                        <div class="space-y-3">
+                          <h4 class="text-sm font-semibold uppercase tracking-[0.2em] text-text-muted">Problem</h4>
+                          <p>{study.problem}</p>
+                        </div>
+                        <div class="space-y-3">
+                          <h4 class="text-sm font-semibold uppercase tracking-[0.2em] text-text-muted">Approach</h4>
+                          <ul class="list-disc space-y-2 pl-5">
+                            {study.approach.map((item) => (
+                              <li>{item}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div class="space-y-3 md:col-span-2">
+                          <h4 class="text-sm font-semibold uppercase tracking-[0.2em] text-text-muted">Outcomes</h4>
+                          <ul class="space-y-2">
+                            {outcomesWithValue.map((outcome) => (
+                              <li class="flex flex-col gap-1">
+                                <span class="text-sm font-medium text-text-primary">{outcome.label}</span>
+                                <span
+                                  class="h-1.5 rounded-full bg-accent/70"
+                                  style={`width: ${outcome.width}%;`}
+                                  aria-hidden="true"
+                                ></span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </form>
+                  </dialog>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <section id="competencies" aria-labelledby="competencies-heading" class="space-y-6" data-inline-editable>
+          <div class="space-y-2">
+            <h2 id="competencies-heading" class="text-2xl font-semibold text-text-primary">Competencies</h2>
+            <p class="text-sm text-text-muted">Systems, practices, and toolkits used to operationalize digital growth.</p>
+          </div>
+          <ul class="flex flex-wrap gap-3 text-sm text-text-secondary">
+            {resumeData.competencies.map((item) => (
+              <li class="rounded-full border border-border/60 bg-surface/70 px-4 py-2" data-inline-editable>{item}</li>
+            ))}
+          </ul>
+        </section>
+
+        <section id="keywords" aria-labelledby="keywords-heading" class="space-y-6" data-inline-editable>
+          <div class="space-y-2">
+            <h2 id="keywords-heading" class="text-2xl font-semibold text-text-primary">Keywords</h2>
+            <p class="text-sm text-text-muted">Signals for recruiters and search—focus areas, tools, and emerging bets.</p>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2">
+            {resumeData.keywords.map((keyword) => (
+              <span class="rounded-2xl border border-dashed border-border/60 bg-surface/60 px-4 py-3 text-sm text-text-secondary" data-inline-editable>
+                {keyword}
+              </span>
+            ))}
+          </div>
+        </section>
+
+        <section id="education" aria-labelledby="education-heading" class="space-y-6" data-inline-editable>
+          <div class="space-y-2">
+            <h2 id="education-heading" class="text-2xl font-semibold text-text-primary">Education & recognition</h2>
+            <p class="text-sm text-text-muted">Formal study and awards reinforcing leadership and craft.</p>
+          </div>
+          <div class="grid gap-6 md:grid-cols-2">
+            <div class="rounded-2xl border border-border/60 bg-surface/70 p-6 shadow-soft">
+              <h3 class="text-sm font-semibold uppercase tracking-[0.3em] text-text-muted">Education</h3>
+              <ul class="mt-4 space-y-3 text-sm text-text-secondary">
+                {resumeData.education.map((item) => (
+                  <li>
+                    <p class="font-semibold text-text-primary">{item.school}</p>
+                    <p>{item.credential}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div class="rounded-2xl border border-border/60 bg-surface/70 p-6 shadow-soft">
+              <h3 class="text-sm font-semibold uppercase tracking-[0.3em] text-text-muted">Awards</h3>
+              <ul class="mt-4 space-y-3 text-sm text-text-secondary">
+                {resumeData.awards.map((award) => (
+                  <li>
+                    <p class="font-semibold text-text-primary">{award.name}</p>
+                    <p>{award.issuer} · {award.year}</p>
+                    <p>{award.notes}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
   </article>
+
+  <script is:inline>
+    const storageKey = "resume-confidential-mode";
+    const dataScript = document.getElementById("resume-data");
+    const resume = dataScript ? JSON.parse(dataScript.textContent || "{}") : {};
+
+    const getSearchInput = () =>
+      document.querySelector("#pagefind-search input[type='text']") ||
+      document.querySelector("#footer-search input[type='text']");
+
+    const confidentialToggle = document.querySelector("[data-confidential-toggle]");
+    const confidentialStateLabel = document.querySelector("[data-confidential-state]");
+
+    const applyConfidentialMode = (isConfidential) => {
+      document.documentElement.dataset.confidential = isConfidential ? "on" : "off";
+      if (confidentialToggle) {
+        confidentialToggle.setAttribute("aria-checked", String(isConfidential));
+      }
+      if (confidentialStateLabel) {
+        confidentialStateLabel.textContent = isConfidential ? "On" : "Off";
+      }
+      document.querySelectorAll("[data-confidential-label]").forEach((node) => {
+        const element = node;
+        const generic = element.getAttribute("data-generic");
+        const full = element.getAttribute("data-full");
+        const nextLabel = isConfidential ? generic || full : full || generic;
+        if (nextLabel) {
+          element.textContent = nextLabel;
+        }
+      });
+      document.querySelectorAll("[data-confidential-dates]").forEach((node) => {
+        const element = node;
+        const yearOnly = element.getAttribute("data-year");
+        const full = element.getAttribute("data-full");
+        const nextLabel = isConfidential ? yearOnly || full : full || yearOnly;
+        if (nextLabel) {
+          element.textContent = nextLabel;
+        }
+      });
+    };
+
+    const initConfidentialMode = () => {
+      const defaultConfidential = Boolean(resume?.privacy?.defaultConfidential);
+      let storedValue;
+      try {
+        storedValue = window.localStorage.getItem(storageKey);
+      } catch (error) {
+        storedValue = null;
+      }
+      const isConfidential = storedValue === null ? defaultConfidential : storedValue === "true";
+      applyConfidentialMode(isConfidential);
+      confidentialToggle?.addEventListener("click", () => {
+        const nextState = confidentialToggle.getAttribute("aria-checked") !== "true";
+        applyConfidentialMode(nextState);
+        try {
+          window.localStorage.setItem(storageKey, String(nextState));
+        } catch (error) {}
+      });
+    };
+
+    const bindCaseStudyModals = () => {
+      Array.from(document.querySelectorAll("[data-case-study-trigger]")).forEach((trigger) => {
+        if (!(trigger instanceof HTMLElement)) return;
+        const id = trigger.getAttribute("data-case-study-trigger");
+        if (!id) return;
+        const dialog = document.querySelector(`[data-case-study-modal="${id}"]`);
+        if (!(dialog instanceof HTMLDialogElement)) return;
+        trigger.addEventListener("click", () => {
+          const previouslyFocused = document.activeElement;
+          dialog.addEventListener(
+            "close",
+            () => {
+              if (previouslyFocused instanceof HTMLElement) {
+                previouslyFocused.focus();
+              }
+            },
+            { once: true }
+          );
+          if (typeof dialog.showModal === "function") {
+            dialog.showModal();
+            const firstFocusable = dialog.querySelector("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])");
+            if (firstFocusable instanceof HTMLElement) {
+              firstFocusable.focus();
+            }
+          }
+        });
+        dialog.addEventListener("click", (event) => {
+          if (event.target === dialog) {
+            dialog.close();
+          }
+        });
+      });
+    };
+
+    const bindKeyboardShortcuts = () => {
+      const handleKeydown = (event) => {
+        const target = event.target;
+        const isTypingField =
+          target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement ||
+          (target instanceof HTMLElement && target.isContentEditable);
+        if (event.key === "/" && !event.metaKey && !event.ctrlKey && !isTypingField) {
+          event.preventDefault();
+          const searchInput = getSearchInput();
+          searchInput?.focus();
+          if (searchInput instanceof HTMLInputElement) {
+            searchInput.select();
+          }
+        }
+        if (event.key.toLowerCase() === "p" && !event.metaKey && !event.ctrlKey && !isTypingField) {
+          event.preventDefault();
+          window.print();
+        }
+        if (event.key.toLowerCase() === "c" && !event.metaKey && !event.ctrlKey && !isTypingField) {
+          event.preventDefault();
+          confidentialToggle?.click();
+        }
+        if (event.key.toLowerCase() === "e" && !event.metaKey && !event.ctrlKey) {
+          event.preventDefault();
+          const editing = document.documentElement.dataset.inlineEdit === "on";
+          document.documentElement.dataset.inlineEdit = editing ? "off" : "on";
+          document.querySelectorAll("[data-inline-editable]").forEach((node) => {
+            if (!(node instanceof HTMLElement)) return;
+            if (editing) {
+              node.removeAttribute("contenteditable");
+            } else {
+              node.setAttribute("contenteditable", "true");
+            }
+          });
+        }
+      };
+      document.addEventListener("keydown", handleKeydown);
+      document.addEventListener(
+        "astro:before-swap",
+        () => {
+          document.removeEventListener("keydown", handleKeydown);
+        },
+        { once: true }
+      );
+    };
+
+    const initPrintTriggers = () => {
+      document.querySelectorAll("[data-print-trigger]").forEach((node) => {
+        node.addEventListener("click", () => window.print());
+      });
+    };
+
+    const init = () => {
+      if (window.__resumePageInitialized) {
+        return;
+      }
+      window.__resumePageInitialized = true;
+      initConfidentialMode();
+      bindCaseStudyModals();
+      bindKeyboardShortcuts();
+      initPrintTriggers();
+      document.addEventListener(
+        "astro:before-swap",
+        () => {
+          window.__resumePageInitialized = false;
+        },
+        { once: true }
+      );
+    };
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init, { once: true });
+    } else {
+      init();
+    }
+
+    document.addEventListener("astro:page-load", init);
+  </script>
 </AppShell>
