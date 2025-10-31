@@ -1,0 +1,212 @@
+{
+  "hero": {
+    "headline": "Digital Experience & Growth Leader",
+    "subhead": "Driving compounding growth through disciplined experimentation and orchestrated delivery.",
+    "stats": [
+      { "label": "YoY revenue lift", "value": "+22%" },
+      { "label": "Traffic growth", "value": "+177%" },
+      { "label": "Teams scaled", "value": "7" }
+    ]
+  },
+  "snapshots": [
+    {
+      "stat": "$48M",
+      "lever": "Commerce conversion unlocked",
+      "timeframe": "18 months",
+      "methodology": "Sequenced CRO, CRM, and search sprints anchored on RICE scoring."
+    },
+    {
+      "stat": "-37%",
+      "lever": "Acquisition cost compression",
+      "timeframe": "9 months",
+      "methodology": "Unified first-party data and rebuilt MMM with Bayesian priors."
+    },
+    {
+      "stat": "+9.4",
+      "lever": "NPS uplift across digital surfaces",
+      "timeframe": "2 quarters",
+      "methodology": "Introduced dual-track discovery with weekly journey clinics."
+    },
+    {
+      "stat": "4.6M",
+      "lever": "High-intent sessions generated",
+      "timeframe": "12 months",
+      "methodology": "Scaled content ops with semantic clustering and automation."
+    }
+  ],
+  "experience": [
+    {
+      "id": "exp-enterprise-commerce",
+      "org_public": "Aurora Outfitters",
+      "org_confidential": "Confidential: Fortune 100 Retailer",
+      "role_public": "Head of Digital Growth",
+      "role_confidential": "Digital Growth Partner",
+      "start": "2019-02-01",
+      "end": "2023-08-01",
+      "scope": {
+        "team": "42 cross-functional contributors",
+        "budget": "$32M media & experimentation",
+        "surfaces": "Web, app, retail POS"
+      },
+      "impacts": [
+        "Launched a modular experimentation program that accelerated release cadence by 3×.",
+        "Rebuilt lifecycle segmentation, lifting repeat purchase share by 18%.",
+        "Shipped AI-assisted merchandising that reduced out-of-stock incidents by 26%."
+      ],
+      "tags": ["cro", "merchandising", "lifecycle", "leadership"],
+      "caseStudyIds": ["cs-commerce-ops", "cs-merch-intelligence", "cs-lifecycle"]
+    },
+    {
+      "id": "exp-b2b-saas",
+      "org_public": "SignalAmp",
+      "org_confidential": "Confidential: Series D SaaS Platform",
+      "role_public": "Director, Growth Strategy",
+      "role_confidential": "Growth Strategy Partner",
+      "start": "2016-06-01",
+      "end": "2018-12-01",
+      "scope": {
+        "team": "18 growth & product leads",
+        "budget": "$12M pipeline acceleration",
+        "surfaces": "Product, web, sales enablement"
+      },
+      "impacts": [
+        "Established revenue operations pod increasing SQL velocity by 41%.",
+        "Forged ABM playbook yielding 3.2× enterprise ACV uplift.",
+        "Operationalized win/loss intelligence driving 12-point retention swing."
+      ],
+      "tags": ["b2b", "revops", "abm", "ops"],
+      "caseStudyIds": ["cs-revops", "cs-abm"]
+    },
+    {
+      "id": "exp-media-network",
+      "org_public": "Northwind Media",
+      "org_confidential": "Confidential: Global Media Network",
+      "role_public": "Innovation Lead",
+      "role_confidential": "Experience Innovation Partner",
+      "start": "2013-04-01",
+      "end": "2016-05-01",
+      "scope": {
+        "team": "24 product storytellers",
+        "budget": "$8M platform modernization",
+        "surfaces": "OTT, web, emerging surfaces"
+      },
+      "impacts": [
+        "Delivered unified design system reducing launch time by 45%.",
+        "Introduced personalization framework boosting ad yield by 28%.",
+        "Scaled editorial analytics, powering a 2.6× content velocity increase."
+      ],
+      "tags": ["media", "personalization", "design-systems", "analytics"],
+      "caseStudyIds": ["cs-design-system", "cs-personalization"]
+    },
+    {
+      "id": "exp-startup",
+      "org_public": "Brightline Labs",
+      "org_confidential": "Confidential: Venture-backed Marketplace",
+      "role_public": "Founding Growth Partner",
+      "role_confidential": "Founding Growth Partner",
+      "start": "2010-01-01",
+      "end": "2013-03-01",
+      "scope": {
+        "team": "Seed-stage squad of 9",
+        "budget": "$2.5M seed runway",
+        "surfaces": "Web, mobile web"
+      },
+      "impacts": [
+        "Guided product-market fit loops culminating in 1.9× conversion lift.",
+        "Expanded supply-side acquisition delivering 6× city footprint growth.",
+        "Raised Series A with evidence-backed growth thesis and LTV clarity."
+      ],
+      "tags": ["startup", "gtm", "fundraising", "product"],
+      "caseStudyIds": ["cs-marketplace", "cs-pmf"]
+    }
+  ],
+  "caseStudies": [
+    {
+      "id": "cs-commerce-ops",
+      "title": "Commerce Replatform & CRO Engine",
+      "thumb": "commerce",
+      "problem": "Legacy checkout leaks stalled margin growth.",
+      "approach": "Sequenced modular rollout with dual-track discovery.",
+      "outcome": "+22% revenue lift and 14-point AOV increase.",
+      "tags": ["cro", "commerce", "experimentation"],
+      "url": "/projects/commerce-replatform"
+    },
+    {
+      "id": "cs-merch-intelligence",
+      "title": "Merch Intelligence Stack",
+      "thumb": "merch",
+      "problem": "Buyers lacked visibility into SKU performance.",
+      "approach": "Deployed predictive inventory scoring and alerts.",
+      "outcome": "26% fewer stockouts and 9% sell-through lift.",
+      "tags": ["merchandising", "analytics", "ai"],
+      "url": "/projects/merch-intelligence"
+    },
+    {
+      "id": "cs-lifecycle",
+      "title": "Lifecycle Automation Reset",
+      "thumb": "lifecycle",
+      "problem": "Stagnant CRM programs eroded retention.",
+      "approach": "Rebuilt segmentation and dynamic content system.",
+      "outcome": "18% repeat purchase share uplift.",
+      "tags": ["crm", "automation", "retention"],
+      "url": "/projects/lifecycle-reset"
+    },
+    {
+      "id": "cs-revops",
+      "title": "Revenue Operations Spine",
+      "thumb": "revops",
+      "problem": "Fragmented funnel analytics limited growth spend.",
+      "approach": "Centralized data model with live health scoring.",
+      "outcome": "41% faster SQL velocity.",
+      "tags": ["revops", "b2b", "analytics"],
+      "url": "/projects/revops-spine"
+    },
+    {
+      "id": "cs-abm",
+      "title": "Enterprise ABM Plays",
+      "thumb": "abm",
+      "problem": "Enterprise deals stalled pre-proposal.",
+      "approach": "Launched account pods with orchestrated signals.",
+      "outcome": "3.2× enterprise ACV uplift.",
+      "tags": ["abm", "b2b", "orchestration"],
+      "url": "/projects/enterprise-abm"
+    },
+    {
+      "id": "cs-marketplace",
+      "title": "Marketplace Liquidity Flywheel",
+      "thumb": "marketplace",
+      "problem": "Two-sided activation lagged in new markets.",
+      "approach": "Built liquidity scoring and localized GTM kits.",
+      "outcome": "6× city footprint growth.",
+      "tags": ["marketplace", "gtm", "ops"],
+      "url": "/projects/marketplace-flywheel"
+    }
+  ],
+  "keywords": [
+    "cro",
+    "commerce",
+    "experimentation",
+    "analytics",
+    "merchandising",
+    "ai",
+    "crm",
+    "automation",
+    "retention",
+    "revops",
+    "b2b",
+    "orchestration",
+    "abm",
+    "ops",
+    "marketplace",
+    "gtm",
+    "lifecycle",
+    "personalization",
+    "design-systems",
+    "leadership",
+    "product",
+    "fundraising",
+    "growth-marketing",
+    "data-science"
+  ],
+  "bioShort": "Digital growth partner blending experimentation, brand, and ops to compound enterprise value."
+}

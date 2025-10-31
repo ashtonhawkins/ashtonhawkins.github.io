@@ -1,0 +1,94 @@
+---
+const { email, bio } = Astro.props as { email: string; bio: string };
+---
+
+<div aria-label="Contact utilities">
+  <div class="fixed inset-x-4 bottom-4 z-50 flex items-center justify-between gap-3 rounded-3xl border border-border/70 bg-background/95 px-4 py-3 shadow-soft backdrop-blur md:hidden">
+    <a
+      href={`mailto:${email}`}
+      class="flex-1 rounded-full bg-accent px-4 py-2 text-center text-sm font-semibold text-background transition hover:bg-accent-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      data-astro-transition="animate"
+    >
+      Email Ashton
+    </a>
+    <button
+      type="button"
+      class="flex-1 rounded-full border border-border px-4 py-2 text-sm font-semibold text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      data-contact-print
+    >
+      Download PDF
+    </button>
+    <button
+      type="button"
+      class="flex-1 rounded-full border border-border px-4 py-2 text-sm font-semibold text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      data-contact-copy
+      data-copy-payload={bio}
+    >
+      Copy short bio
+    </button>
+  </div>
+  <aside class="sticky top-28 hidden w-full max-w-xs flex-col gap-3 rounded-3xl border border-border/70 bg-background/80 p-4 shadow-soft md:flex">
+    <a
+      href={`mailto:${email}`}
+      class="w-full rounded-full bg-accent px-4 py-2 text-center text-sm font-semibold text-background transition hover:bg-accent-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      data-astro-transition="animate"
+    >
+      Email Ashton
+    </a>
+    <button
+      type="button"
+      class="w-full rounded-full border border-border px-4 py-2 text-sm font-semibold text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      data-contact-print
+    >
+      Download PDF
+    </button>
+    <button
+      type="button"
+      class="w-full rounded-full border border-border px-4 py-2 text-sm font-semibold text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      data-contact-copy
+      data-copy-payload={bio}
+    >
+      Copy short bio
+    </button>
+  </aside>
+</div>
+
+<script type="module">
+import { createToastController } from './Toast.ts';
+
+const bindContactUtilities = () => {
+  const toast = createToastController();
+  document.querySelectorAll('[data-contact-print]').forEach((button) => {
+    if (button.dataset.bound === 'true') return;
+    button.dataset.bound = 'true';
+    button.addEventListener('click', () => {
+      window.print();
+    });
+  });
+  document.querySelectorAll('[data-contact-copy]').forEach((button) => {
+    if (button.dataset.bound === 'true') return;
+    button.dataset.bound = 'true';
+    button.addEventListener('click', async () => {
+      const payload = button.getAttribute('data-copy-payload') ?? '';
+      try {
+        await navigator.clipboard.writeText(payload);
+        toast.show('Short bio copied');
+      } catch (error) {
+        const textarea = document.createElement('textarea');
+        textarea.value = payload;
+        textarea.setAttribute('readonly', 'true');
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        toast.show('Short bio copied');
+      }
+    });
+  });
+};
+
+bindContactUtilities();
+document.addEventListener('astro:page-load', bindContactUtilities);
+</script>

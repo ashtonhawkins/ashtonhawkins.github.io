@@ -1,0 +1,43 @@
+@media print {
+  :root {
+    color-scheme: light;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  header,
+  footer,
+  [data-confidential-controls],
+  [data-toast],
+  [data-contact-print],
+  [data-contact-copy],
+  [data-astro-transition="animate"],
+  [data-keyword-container],
+  [data-expand-all] {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+  article[data-confidential-root] {
+    display: block;
+  }
+  article[data-confidential-root] > * {
+    break-inside: avoid;
+  }
+  details {
+    border-color: #00000055 !important;
+    box-shadow: none !important;
+  }
+  details > summary {
+    cursor: default !important;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  a::after {
+    content: " (" attr(href) ")";
+    font-size: 0.75em;
+  }
+}
