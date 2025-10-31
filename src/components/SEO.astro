@@ -62,6 +62,14 @@ if (isArticle && canonicalUrl) {
     }
   });
 }
+
+const structuredDataStrings = structuredData.map((schema) =>
+  JSON.stringify(schema, (_key, value) => (value === undefined ? undefined : value))
+);
+
+const renderStructuredScript = (schemaJson: string) => (
+  <script type="application/ld+json" is:inline>{schemaJson}</script>
+);
 ---
 <title>{title}</title>
 <meta name="description" content={description} />
@@ -74,9 +82,4 @@ if (isArticle && canonicalUrl) {
 <meta name="twitter:card" content="summary" />
 <meta name="twitter:title" content={openGraphTitle} />
 <meta name="twitter:description" content={description} />
-{structuredData.map((schema) => (
-  <script
-    type="application/ld+json"
-    set:html={JSON.stringify(schema, (_key, value) => (value === undefined ? undefined : value))}
-  />
-))}
+{structuredDataStrings.map(renderStructuredScript)}
