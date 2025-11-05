@@ -198,21 +198,5 @@
     "title": "Created branch: codex/generate-astro-+-tailwind-resume-page",
     "url": "https://github.com/ashtonhawkins/ashtonhawkins.github.io",
     "createdAt": "2025-10-31T16:47:20Z"
-  },
-  {
-    "source": "github",
-    "type": "PullRequestEvent",
-    "repo": "ashtonhawkins/ashtonhawkins.github.io",
-    "title": "Labeled pull request: pull request",
-    "url": "https://github.com/ashtonhawkins/ashtonhawkins.github.io",
-    "createdAt": "2025-10-05T22:40:38Z"
-  },
-  {
-    "source": "github",
-    "type": "PullRequestEvent",
-    "repo": "ashtonhawkins/ashtonhawkins.github.io",
-    "title": "Opened pull request: pull request",
-    "url": "https://github.com/ashtonhawkins/ashtonhawkins.github.io",
-    "createdAt": "2025-10-05T22:40:38Z"
   }
 ]
