@@ -1,151 +1,63 @@
 ---
 import ExperienceCard from "./ExperienceCard.astro";
 
-interface Scope {
-  team: string;
-  budget: string;
-  surfaces: string;
-}
-
-interface CaseStudyLink {
+interface ExperienceItem {
   id: string;
-  title: string;
-  url: string;
-}
-
-interface ExperienceWithComputed {
-  id: string;
-  org_public: string;
-  org_confidential: string;
-  role_public: string;
-  role_confidential: string;
-  start?: string | null;
-  end?: string | null;
-  scope: Scope;
-  impacts: string[];
-  metrics: unknown[];
-  budget_band: string;
-  stack: string[];
-  tags: string[];
-  caseStudies: CaseStudyLink[];
   rangePublic: string;
   rangeConfidential: string;
+  [key: string]: unknown;
 }
 
-const { experiences } = Astro.props as {
-  experiences: ExperienceWithComputed[];
-};
+const { experiences } = Astro.props as { experiences: ExperienceItem[] };
 ---
-
-<section id="experience" class="flex flex-col gap-6 rounded-3xl border border-border/60 bg-[color:var(--resume-surface-odd)] p-6 shadow-soft md:p-8" aria-label="Experience timeline">
-  <style is:inline>
-    [data-experience-timeline] {
-      position: relative;
-      padding-left: 1.5rem;
-    }
-    @media (min-width: 768px) {
-      [data-experience-timeline] {
-        padding-left: 2.5rem;
-      }
-    }
-    [data-experience-timeline]::before {
-      content: "";
-      position: absolute;
-      top: 0.5rem;
-      bottom: 0.5rem;
-      left: 0.5rem;
-      width: 2px;
-      background: var(--border);
-    }
-    @media (min-width: 768px) {
-      [data-experience-timeline]::before {
-        left: 0.75rem;
-      }
-    }
-    [data-experience-item] {
-      position: relative;
-    }
-    [data-experience-item]::before {
-      content: "";
-      position: absolute;
-      left: -1.5rem;
-      top: 1.25rem;
-      width: 10px;
-      height: 10px;
-      border-radius: 9999px;
-      background: var(--accent);
-      box-shadow: 0 0 0 4px var(--accent-soft);
-    }
-    @media (min-width: 768px) {
-      [data-experience-item]::before {
-        left: -2.25rem;
-      }
-    }
-  </style>
-  <div class="flex flex-col gap-1">
-    <span class="text-xs font-semibold uppercase tracking-[0.32em] text-text-muted">Career timeline</span>
-    <div class="flex items-center justify-between gap-4">
-      <h2 class="text-lg font-semibold text-text-primary">Experience</h2>
-      <button
-        type="button"
-        class="hidden items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:inline-flex"
-        data-expand-all
-      >
-        Expand all
-      </button>
+<section class="flex flex-col gap-6" id="experience">
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex flex-col gap-2">
+      <h2 class="text-lg font-semibold text-[color:var(--ink)]">Experience Timeline</h2>
+      <p class="text-sm text-[color:var(--ink-2)]">Outcome-first engagements spanning enterprise, SaaS, media, and venture contexts.</p>
     </div>
+    <button
+      type="button"
+      class="inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-4 py-2 text-sm font-semibold text-[color:var(--ink)]"
+      data-expand-all
+    >
+      Expand all
+    </button>
   </div>
-  <div class="flex flex-col gap-6" data-experience-timeline>
+  <ol class="flex flex-col gap-6 border-l border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)]">
     {experiences.map((experience) => (
-      <div data-experience-item data-tags={experience.tags.join(",")}>
-        <ExperienceCard experience={experience} />
-      </div>
+      <ExperienceCard experience={experience} />
     ))}
-  </div>
-  <button
-    type="button"
-    class="inline-flex items-center justify-center rounded-full border border-border px-4 py-2 text-sm font-medium text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:hidden"
-    data-expand-all
-  >
-    Expand all
-  </button>
+  </ol>
 </section>
-
 <script type="module">
-const initExpandControl = () => {
-  const buttons = Array.from(document.querySelectorAll('[data-expand-all]'));
-  const cards = () => Array.from(document.querySelectorAll('[data-experience-card]'));
-  if (buttons.some((button) => button.dataset.bound === 'true')) return;
-
-  const updateLabel = () => {
-    const list = cards();
-    if (list.length === 0) return;
-    const allOpen = list.every((card) => card.hasAttribute('open'));
-    buttons.forEach((button) => {
-      button.textContent = allOpen ? 'Collapse all' : 'Expand all';
-    });
-  };
-
-  buttons.forEach((button) => {
-    button.dataset.bound = 'true';
-    button.addEventListener('click', () => {
-      const list = cards();
-      const shouldOpen = !list.every((card) => card.hasAttribute('open'));
-      list.forEach((card) => {
-        if (shouldOpen) card.setAttribute('open', 'true');
-        else card.removeAttribute('open');
-      });
-      updateLabel();
-    });
+const button = document.querySelector<HTMLButtonElement>('[data-expand-all]');
+let expanded = false;
+const sync = () => {
+  const details = document.querySelectorAll<HTMLDetailsElement>('[data-experience-details]');
+  details.forEach((detail) => {
+    if (expanded) {
+      detail.setAttribute('open', 'true');
+    } else {
+      detail.removeAttribute('open');
+    }
   });
-
-  cards().forEach((card) => {
-    card.addEventListener('toggle', updateLabel);
-  });
-
-  updateLabel();
+  if (button) {
+    button.textContent = expanded ? 'Collapse all' : 'Expand all';
+  }
 };
-
-initExpandControl();
-document.addEventListener('astro:page-load', initExpandControl);
+if (button) {
+  button.addEventListener('click', () => {
+    expanded = !expanded;
+    sync();
+  });
+}
+window.addEventListener('beforeprint', () => {
+  expanded = true;
+  sync();
+});
+window.addEventListener('afterprint', () => {
+  expanded = false;
+  sync();
+});
 </script>

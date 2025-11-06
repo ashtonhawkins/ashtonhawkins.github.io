@@ -1,4 +1,10 @@
 ---
+interface Receipt {
+  label: string;
+  url: string;
+  sensitive?: boolean;
+}
+
 interface CaseStudy {
   id: string;
   title: string;
@@ -6,93 +12,112 @@ interface CaseStudy {
   problem: string;
   approach: string;
   outcome: string;
-  tags: string[];
   url: string;
+  receipts: Receipt[];
   sensitive?: boolean;
 }
 
 const { caseStudies } = Astro.props as { caseStudies: CaseStudy[] };
+const backgroundMap: Record<string, string> = {
+  commerce: "linear-gradient(135deg, rgba(8,132,255,0.22), rgba(8,132,255,0.06)), repeating-linear-gradient(45deg, rgba(255,255,255,0.08) 0, rgba(255,255,255,0.08) 1px, transparent 1px, transparent 18px)",
+  merch: "linear-gradient(135deg, rgba(255,152,0,0.22), rgba(255,152,0,0.08)), repeating-linear-gradient(-45deg, rgba(255,255,255,0.08) 0, rgba(255,255,255,0.08) 1px, transparent 1px, transparent 16px)",
+  lifecycle: "linear-gradient(135deg, rgba(0,184,148,0.18), rgba(0,184,148,0.08)), repeating-linear-gradient(0deg, rgba(255,255,255,0.08) 0, rgba(255,255,255,0.08) 1px, transparent 1px, transparent 20px)",
+  revops: "linear-gradient(135deg, rgba(142,68,173,0.22), rgba(142,68,173,0.08)), repeating-linear-gradient(90deg, rgba(255,255,255,0.08) 0, rgba(255,255,255,0.08) 1px, transparent 1px, transparent 14px)",
+  marketplace: "linear-gradient(135deg, rgba(52,152,219,0.18), rgba(52,152,219,0.08)), repeating-linear-gradient(45deg, rgba(255,255,255,0.08) 0, rgba(255,255,255,0.08) 1px, transparent 1px, transparent 22px)",
+  abm: "linear-gradient(135deg, rgba(231,76,60,0.22), rgba(231,76,60,0.08)), repeating-linear-gradient(-45deg, rgba(255,255,255,0.08) 0, rgba(255,255,255,0.08) 1px, transparent 1px, transparent 18px)",
+  pmf: "linear-gradient(135deg, rgba(26,188,156,0.22), rgba(26,188,156,0.08)), repeating-linear-gradient(0deg, rgba(255,255,255,0.08) 0, rgba(255,255,255,0.08) 1px, transparent 1px, transparent 24px)",
+  design: "linear-gradient(135deg, rgba(241,196,15,0.22), rgba(241,196,15,0.08)), repeating-linear-gradient(45deg, rgba(255,255,255,0.1) 0, rgba(255,255,255,0.1) 1px, transparent 1px, transparent 18px)",
+  personalization: "linear-gradient(135deg, rgba(52,73,94,0.22), rgba(52,73,94,0.08)), repeating-linear-gradient(-45deg, rgba(255,255,255,0.1) 0, rgba(255,255,255,0.1) 1px, transparent 1px, transparent 14px)"
+};
+const iconMap: Record<string, string> = {
+  PR: "🧾",
+  Dashboard: "📊",
+  Doc: "📄"
+};
 ---
-
-<section id="case-studies" class="flex flex-col gap-6 rounded-3xl border border-border/60 bg-[color:var(--resume-surface-even)] p-6 shadow-soft md:p-8" aria-label="Case studies">
-  <div class="flex flex-col gap-1">
-    <span class="text-xs font-semibold uppercase tracking-[0.32em] text-text-muted">Selected engagements</span>
-    <h2 class="text-lg font-semibold text-text-primary">Case studies</h2>
+<section class="flex flex-col gap-6" id="case-studies">
+  <div class="flex flex-col gap-2">
+    <h2 class="text-lg font-semibold text-[color:var(--ink)]">Portfolio Case Studies</h2>
+    <p class="text-sm text-[color:var(--ink-2)]">Story-driven programs with receipts across delivery, analytics, and adoption.</p>
   </div>
-  <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-    {caseStudies.map((caseStudy) => {
-      const isSensitive = caseStudy.sensitive === true;
-      const baseClasses =
-        "flex flex-col gap-4 rounded-3xl border border-border/70 bg-background/85 p-6 text-left shadow-soft";
-      const interactiveClasses =
-        "group transition-transform duration-100 ease-out hover:-translate-y-1 hover:shadow-ring focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
-
-      const publicContent = (
-        <>
-          <div class="flex items-center gap-4">
-            <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-soft text-sm font-semibold uppercase tracking-wide text-accent">
-              <span>{caseStudy.thumb.slice(0, 2)}</span>
-            </div>
-            <h3 class="text-base font-semibold text-text-primary">{caseStudy.title}</h3>
-          </div>
-          <div class="flex flex-col gap-2 text-xs text-text-secondary">
-            <span class="inline-flex flex-wrap items-center gap-2 rounded-full bg-surface/60 px-3 py-2">
-              <span class="font-semibold uppercase tracking-[0.2em] text-text-muted">Problem</span>
-              <span class="text-left text-text-secondary">{caseStudy.problem}</span>
-            </span>
-            <span class="inline-flex flex-wrap items-center gap-2 rounded-full bg-surface/60 px-3 py-2">
-              <span class="font-semibold uppercase tracking-[0.2em] text-text-muted">Approach</span>
-              <span class="text-left text-text-secondary">{caseStudy.approach}</span>
-            </span>
-            <span class="inline-flex flex-wrap items-center gap-2 rounded-full bg-surface/60 px-3 py-2">
-              <span class="font-semibold uppercase tracking-[0.2em] text-text-muted">Outcome</span>
-              <span class="text-left text-text-secondary">{caseStudy.outcome}</span>
-            </span>
-          </div>
-          <div class="flex flex-wrap gap-2 pt-2">
-            {caseStudy.tags.map((tag) => (
-              <span class="inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-medium text-text-muted transition group-hover:border-accent group-hover:text-text-primary">
-                #{tag}
-              </span>
-            ))}
-          </div>
-        </>
-      );
-
-      const confidentialContent = (
-        <>
-          <div class="flex items-center gap-4">
-            <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface/70 text-[11px] font-medium uppercase tracking-[0.3em] text-text-muted">
-              NDA
-            </div>
-            <h3 class="text-base font-semibold text-text-primary">Confidential case study</h3>
-          </div>
-          <div class="flex flex-col gap-2 text-xs text-text-secondary">
-            <span class="inline-flex flex-wrap items-center gap-2 rounded-full bg-surface/60 px-3 py-2 text-left text-text-muted">
-              Redacted details shared under NDA.
-            </span>
-          </div>
-        </>
-      );
-
+  <div class="grid gap-5 md:grid-cols-2">
+    {caseStudies.map((item) => {
+      const allReceiptsSensitive = item.receipts.length > 0 && item.receipts.every((receipt) => receipt.sensitive);
       return (
-        <div
-          class="flex flex-col gap-4"
+        <article
+          id={`case-${item.id}`}
+          class="group flex flex-col gap-4 rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_94%,transparent)] p-5 shadow-[0_20px_60px_-36px_rgba(12,20,32,0.55)] transition-transform duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:-translate-y-1 focus-within:-translate-y-1"
+          style={`view-transition-name:case-${item.id};`}
           data-case-study-card
-          data-tags={caseStudy.tags.join(",")}
         >
-          <a
-            href={caseStudy.url}
-            data-astro-transition="animate"
-            data-astro-prefetch
-            class={`${baseClasses} ${interactiveClasses} ${isSensitive ? "public-only" : ""}`}
-          >
-            {publicContent}
-          </a>
-          {isSensitive && (
-            <div class={`confidential-only ${baseClasses} pointer-events-none opacity-90`}>{confidentialContent}</div>
-          )}
-        </div>
+          <div class="flex items-center justify-between text-xs uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
+            <span>{item.title}</span>
+            {item.sensitive && (
+              <span class="rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-2 py-1">
+                <span class="confidential-only">Confidential</span>
+                <span class="public-only">Public-ready</span>
+              </span>
+            )}
+          </div>
+          <div class="relative h-40 overflow-hidden rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)]">
+            {item.sensitive ? (
+              <>
+                <div class="confidential-only flex h-full w-full items-center justify-center bg-[color:color-mix(in_srgb,var(--surface-alt)_88%,transparent)] text-sm font-semibold text-[color:var(--ink-2)]">
+                  Confidential preview
+                </div>
+                <div class="public-only h-full w-full" style={`background:${backgroundMap[item.thumb] ?? backgroundMap.commerce};`}></div>
+              </>
+            ) : (
+              <div class="h-full w-full" style={`background:${backgroundMap[item.thumb] ?? backgroundMap.commerce};`}></div>
+            )}
+          </div>
+          <div class="flex flex-col gap-2 text-sm text-[color:var(--ink-2)]">
+            <p><strong class="text-[color:var(--ink)]">Problem:</strong> {item.problem}</p>
+            <p><strong class="text-[color:var(--ink)]">Approach:</strong> {item.approach}</p>
+            <p><strong class="text-[color:var(--ink)]">Outcome:</strong> {item.outcome}</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
+            <span>Receipts</span>
+            {item.receipts.map((receipt) => (
+              <a
+                href={receipt.url}
+                class={`inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-3 py-2 text-[color:var(--ink)] hover:border-[color:color-mix(in_srgb,var(--accent)_32%,transparent)] ${receipt.sensitive ? "public-only" : ""}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <span aria-hidden="true">{iconMap[receipt.label] ?? "🔗"}</span>
+                {receipt.label}
+              </a>
+            ))}
+            {allReceiptsSensitive && <span class="confidential-only">Hidden</span>}
+          </div>
+          <div class="mt-auto">
+            {item.sensitive ? (
+              <>
+                <button type="button" class="confidential-only inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-4 py-2 text-sm font-semibold text-[color:var(--ink-2)]" disabled>
+                  Confidential ON
+                </button>
+                <a
+                  href={item.url}
+                  class="public-only inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-4 py-2 text-sm font-semibold text-[color:var(--ink)] transition-transform duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:-translate-y-0.5"
+                  data-astro-transition="animate"
+                >
+                  View story
+                  <span aria-hidden="true">↗</span>
+                </a>
+              </>
+            ) : (
+              <a
+                href={item.url}
+                class="inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-4 py-2 text-sm font-semibold text-[color:var(--ink)] transition-transform duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:-translate-y-0.5"
+                data-astro-transition="animate"
+              >
+                View story
+                <span aria-hidden="true">↗</span>
+              </a>
+            )}
+          </div>
+        </article>
       );
     })}
   </div>

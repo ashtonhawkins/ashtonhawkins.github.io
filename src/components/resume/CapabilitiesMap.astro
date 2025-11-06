@@ -1,0 +1,50 @@
+---
+interface CapabilityCell {
+  area: string;
+  depth: number;
+}
+
+const { capabilities } = Astro.props as { capabilities: CapabilityCell[] };
+const areas = ["CRO", "SEO", "IA", "Analytics", "Platform"];
+const depths = [1, 2, 3, 4, 5];
+const lookup = new Set(capabilities.map((item) => `${item.area}|${item.depth}`));
+---
+<section class="flex flex-col gap-4">
+  <div class="flex flex-col gap-2">
+    <h2 class="text-lg font-semibold text-[color:var(--ink)]">Capabilities Map</h2>
+    <p class="text-sm text-[color:var(--ink-2)]">Depth of hands-on leadership across core growth capability areas.</p>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="min-w-full border-separate border-spacing-0 text-sm" aria-label="Capabilities depth map">
+      <thead>
+        <tr>
+          <th class="sticky left-0 bg-[color:var(--surface)] px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--ink-2)]">Area</th>
+          {depths.map((depth) => (
+            <th class="px-4 py-3 text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--ink-2)]">{depth}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {areas.map((area) => (
+          <tr>
+            <th scope="row" class="sticky left-0 bg-[color:color-mix(in_srgb,var(--surface)_96%,transparent)] px-4 py-3 text-left text-sm font-semibold text-[color:var(--ink)]">
+              {area}
+            </th>
+            {depths.map((depth) => {
+              const filled = lookup.has(`${area}|${depth}`);
+              return (
+                <td class="px-4 py-3">
+                  <span
+                    class={`block h-8 w-8 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] ${filled ? "bg-[color:color-mix(in_srgb,var(--accent)_28%,transparent)]" : "bg-transparent"}`}
+                    role="presentation"
+                    aria-hidden="true"
+                  ></span>
+                </td>
+              );
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</section>

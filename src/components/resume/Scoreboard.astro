@@ -1,111 +1,92 @@
 ---
-import { meetsMetricGate } from "../../utils/filters";
 
-interface Metric {
+interface KpiItem {
   key: string;
   label: string;
-  value: string;
+  value: number;
+  suffix?: string;
   sample?: number;
   confidence?: string;
 }
 
-const { metrics } = Astro.props as { metrics: Metric[] };
-const eligible = metrics.filter((metric) => meetsMetricGate(metric)).slice(0, 3);
+const { items } = Astro.props as { items: KpiItem[] };
+const compactFormatter = new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 1
+});
+const eligible = items
+  .filter((item) => (item.sample ?? 0) >= 1000 || !!item.confidence)
+  .slice(0, 3);
+const toSampleText = (sample?: number) => {
+  if (!sample) return "";
+  return `${compactFormatter.format(sample)} sample`;
+};
+const toDecimals = (value: number) => {
+  const [, decimals] = value.toString().split(".");
+  return Math.min(decimals ? decimals.length : 0, 2);
+};
 ---
-
-<dl
-  class="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [scrollbar-width:thin]"
-  data-scoreboard
->
-  {eligible.map((metric) => (
-    <div class="flex min-w-[16rem] flex-col gap-2 rounded-2xl border border-border/50 bg-surface/70 px-6 py-5 shadow-soft transition-transform duration-150 ease-out hover:-translate-y-1 hover:shadow-ring focus-within:-translate-y-1 focus-within:shadow-ring">
-      <dt class="text-xs font-semibold uppercase tracking-[0.3em] text-text-muted">{metric.label}</dt>
-      <dd class="text-3xl font-semibold text-text-primary" data-score-value data-value={metric.value}>{metric.value}</dd>
-      {metric.confidence && (
-        <span class="inline-flex w-max items-center rounded-full bg-surface/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.24em] text-text-muted">
-          {metric.confidence}
-        </span>
-      )}
+{eligible.length === 3 && (
+  <section class="flex flex-col gap-6" data-scoreboard>
+    <div class="flex items-center gap-3">
+      <h2 class="text-sm font-semibold tracking-[0.32em] uppercase text-[color:var(--ink-2)]">Signature Outcomes</h2>
+      <div class="flex items-center gap-1 rounded-full border border-[color:var(--ink-2)]/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
+        <span>Reel</span>
+      </div>
     </div>
-  ))}
-</dl>
-
+    <div class="grid gap-4 sm:grid-cols-3">
+      {eligible.map((item) => (
+        <article
+          class="group relative flex flex-col gap-4 rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_92%,transparent)] p-4 shadow-[0_12px_32px_-24px_rgba(12,20,32,0.45)]"
+          data-kpi-tile
+        >
+          <div class="flex items-center justify-between gap-2 text-xs uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
+            <span>{item.label}</span>
+            {item.confidence && (
+              <span class="rounded-full border border-[color:var(--accent)]/50 bg-[color:color-mix(in_srgb,var(--accent)_16%,transparent)] px-2 py-1 text-[0.6rem] font-semibold text-[color:var(--accent)]">
+                CI
+              </span>
+            )}
+          </div>
+          <div class="flex items-baseline gap-2">
+            <span
+              class="text-4xl font-semibold tracking-tight text-[color:var(--ink)]"
+              data-kpi-value
+              data-value={item.value}
+              data-suffix={item.suffix ?? ""}
+              data-decimals={toDecimals(item.value)}
+            >
+              0
+            </span>
+          </div>
+          <div class="flex items-center justify-between text-xs text-[color:var(--ink-2)]">
+            <span>{toSampleText(item.sample)}</span>
+            {item.confidence && <span>{item.confidence}</span>}
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+)}
 <script type="module">
-const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const nodes = Array.from(document.querySelectorAll('[data-scoreboard] [data-score-value]'));
-const seen = new WeakSet();
+import { animate } from "motion";
+import { motion as motionConfig, prefersReducedMotion as prefers } from "../../utils/motion";
 
-const parseValue = (raw) => {
-  if (!raw) return { prefix: '', suffix: '', number: 0, decimals: 0 };
-  const match = raw.trim().match(/^([^0-9+-]*)([+\-]?[0-9]+(?:\.[0-9]+)?)(.*)$/);
-  if (!match) {
-    return { prefix: '', suffix: '', number: Number(raw) || 0, decimals: 0 };
-  }
-  const decimals = match[2].includes('.') ? match[2].split('.')[1].length : 0;
-  return {
-    prefix: match[1] ?? '',
-    suffix: match[3] ?? '',
-    number: Number(match[2]) || 0,
-    decimals
-  };
-};
-
-const animateNode = (node) => {
-  if (seen.has(node)) return;
-  seen.add(node);
-  const rawValue = node.dataset.value ?? '';
-  const { prefix, suffix, number, decimals } = parseValue(rawValue);
-  if (prefersReduced) {
-    node.textContent = `${prefix}${number.toFixed(decimals)}${suffix}`;
-    return;
-  }
-  const duration = 900;
-  const start = performance.now();
-  const startValue = 0;
-
-  const step = (now) => {
-    const elapsed = Math.min(1, (now - start) / duration);
-    const eased = 1 - Math.pow(1 - elapsed, 3);
-    const current = startValue + (number - startValue) * eased;
-    node.textContent = `${prefix}${current.toFixed(decimals)}${suffix}`;
-    if (elapsed < 1) requestAnimationFrame(step);
-  };
-
-  requestAnimationFrame(step);
-};
-
-if ('IntersectionObserver' in window) {
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        animateNode(entry.target);
-        observer.unobserve(entry.target);
+const run = () => {
+  if (prefers()) return;
+  document.querySelectorAll('[data-kpi-value]').forEach((el) => {
+    const target = Number(el.getAttribute('data-value') ?? '0');
+    const suffix = el.getAttribute('data-suffix') ?? '';
+    const decimals = Number(el.getAttribute('data-decimals') ?? '0');
+    animate(0, target, {
+      duration: motionConfig.durations.slow,
+      easing: motionConfig.easing,
+      onUpdate: (value) => {
+        el.textContent = value.toFixed(decimals) + suffix;
       }
     });
-  }, { threshold: 0.6 });
-
-  nodes.forEach((node) => observer.observe(node));
-} else {
-  nodes.forEach((node) => animateNode(node));
-}
-
-document.addEventListener('astro:page-load', () => {
-  Array.from(document.querySelectorAll('[data-scoreboard] [data-score-value]')).forEach((node) => {
-    if (!seen.has(node)) {
-      if ('IntersectionObserver' in window) {
-        const observer = new IntersectionObserver((entries, obs) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              animateNode(entry.target);
-              obs.unobserve(entry.target);
-            }
-          });
-        }, { threshold: 0.6 });
-        observer.observe(node);
-      } else {
-        animateNode(node);
-      }
-    }
   });
-});
+};
+run();
+document.addEventListener('astro:page-load', run);
 </script>
