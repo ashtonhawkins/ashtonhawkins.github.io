@@ -1,17 +1,28 @@
 ---
-interface Stat {
+import { meetsMetricGate } from "../../utils/filters";
+
+interface Metric {
+  key: string;
   label: string;
   value: string;
+  sample?: number;
+  confidence?: string;
 }
 
-const { stats } = Astro.props as { stats: Stat[] };
+const { metrics } = Astro.props as { metrics: Metric[] };
+const eligible = metrics.filter((metric) => meetsMetricGate(metric)).slice(0, 3);
 ---
 
-<dl class="grid grid-cols-1 gap-6 sm:grid-cols-3" data-scoreboard>
-  {stats.map((stat) => (
-    <div class="flex flex-col items-start gap-2 rounded-2xl border border-border/50 bg-background/80 px-6 py-5 shadow-soft transition-transform duration-100 ease-out hover:-translate-y-1 hover:shadow-ring focus-within:-translate-y-1 focus-within:shadow-ring">
-      <dt class="text-xs font-semibold uppercase tracking-[0.3em] text-text-muted">{stat.label}</dt>
-      <dd class="text-3xl font-semibold text-text-primary" data-score-value data-value={stat.value}>{stat.value}</dd>
+<dl class="grid grid-cols-1 gap-4 sm:grid-cols-3" data-scoreboard>
+  {eligible.map((metric) => (
+    <div class="flex flex-col gap-2 rounded-2xl border border-border/50 bg-surface/70 px-6 py-5 shadow-soft transition-transform duration-150 ease-out hover:-translate-y-1 hover:shadow-ring focus-within:-translate-y-1 focus-within:shadow-ring">
+      <dt class="text-xs font-semibold uppercase tracking-[0.3em] text-text-muted">{metric.label}</dt>
+      <dd class="text-3xl font-semibold text-text-primary" data-score-value data-value={metric.value}>{metric.value}</dd>
+      {metric.confidence && (
+        <span class="inline-flex w-max items-center rounded-full bg-surface/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.24em] text-text-muted">
+          {metric.confidence}
+        </span>
+      )}
     </div>
   ))}
 </dl>

@@ -19,3 +19,15 @@ export const serializeTags = (tags: string[]) =>
     .map((tag) => tag.trim().toLowerCase())
     .filter(Boolean)
     .join(",");
+
+interface MetricGateLike {
+  sample?: number;
+  confidence?: string | null;
+}
+
+export const meetsMetricGate = (metric: MetricGateLike) => {
+  const sample = typeof metric.sample === "number" ? metric.sample : undefined;
+  const hasSample = typeof sample === "number" && sample >= 1000;
+  const hasConfidence = Boolean(metric.confidence);
+  return hasSample || hasConfidence;
+};

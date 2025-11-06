@@ -1,0 +1,210 @@
+---
+const { email, bio } = Astro.props as { email: string; bio: string };
+const emailLiteral = JSON.stringify(email);
+const bioLiteral = JSON.stringify(bio);
+---
+
+<div data-action-dock>
+  <style is:inline>
+    [data-action-dock] {
+      --dock-right: max(1.5rem, calc((100vw - min(100vw, 72rem)) / 2 + 1.5rem));
+    }
+    [data-action-dock-desktop] {
+      position: fixed;
+      top: 6rem;
+      right: var(--dock-right);
+      z-index: 40;
+      display: none;
+      flex-direction: column;
+      gap: 0.5rem;
+      border-radius: 9999px;
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--surface) 85%, transparent);
+      padding: 0.5rem;
+      box-shadow: var(--shadow-soft);
+      opacity: 0;
+      transform: translateY(-8px);
+      transition: opacity 200ms ease, transform 200ms ease;
+      pointer-events: none;
+    }
+    [data-action-dock-desktop][data-visible="true"] {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    @media (min-width: 768px) {
+      [data-action-dock-desktop] {
+        display: flex;
+      }
+    }
+    [data-action-dock-mobile] {
+      position: fixed;
+      left: 50%;
+      bottom: 1.25rem;
+      z-index: 40;
+      display: flex;
+      width: min(calc(100vw - 2rem), 28rem);
+      transform: translateX(-50%) translateY(8px);
+      border-radius: 9999px;
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--background) 92%, transparent);
+      padding: 0.5rem;
+      gap: 0.5rem;
+      box-shadow: var(--shadow-soft);
+      opacity: 0;
+      transition: opacity 200ms ease, transform 200ms ease;
+      pointer-events: none;
+    }
+    [data-action-dock-mobile][data-visible="true"] {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+    @media (min-width: 768px) {
+      [data-action-dock-mobile] {
+        display: none;
+      }
+    }
+  </style>
+  <div data-action-dock-desktop data-visible="false" aria-hidden="true">
+    <button
+      type="button"
+      class="whitespace-nowrap rounded-full border border-border/70 bg-background/90 px-4 py-2 text-xs font-semibold text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      data-action-email
+    >
+      Email Ashton
+    </button>
+    <button
+      type="button"
+      class="whitespace-nowrap rounded-full border border-border/70 bg-background/90 px-4 py-2 text-xs font-semibold text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      data-action-print
+    >
+      Download PDF
+    </button>
+    <button
+      type="button"
+      class="whitespace-nowrap rounded-full border border-border/70 bg-background/90 px-4 py-2 text-xs font-semibold text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      data-action-copy
+      data-copy-payload={bio}
+    >
+      Copy short bio
+    </button>
+    <button
+      type="button"
+      class="whitespace-nowrap rounded-full border border-border/70 bg-background/90 px-4 py-2 text-xs font-semibold text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      data-download-json
+    >
+      JSON export
+    </button>
+    <button
+      type="button"
+      class="whitespace-nowrap rounded-full border border-border/70 bg-background/90 px-4 py-2 text-xs font-semibold text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      data-download-text
+    >
+      TXT export
+    </button>
+  </div>
+  <div data-action-dock-mobile data-visible="false" aria-hidden="true">
+    <button
+      type="button"
+      class="flex-1 rounded-full border border-border/70 bg-background/95 px-4 py-2 text-xs font-semibold text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      data-action-email
+    >
+      Email Ashton
+    </button>
+    <button
+      type="button"
+      class="flex-1 rounded-full border border-border/70 bg-background/95 px-4 py-2 text-xs font-semibold text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      data-action-print
+    >
+      Download PDF
+    </button>
+    <button
+      type="button"
+      class="flex-1 rounded-full border border-border/70 bg-background/95 px-4 py-2 text-xs font-semibold text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      data-action-copy
+      data-copy-payload={bio}
+    >
+      Copy short bio
+    </button>
+  </div>
+</div>
+
+<script type="module">
+import { createToastController } from '../ui/Toast.ts';
+
+const emailAddress = {emailLiteral};
+const bioValue = {bioLiteral};
+const bindDock = () => {
+  const desktop = document.querySelector('[data-action-dock-desktop]');
+  const mobile = document.querySelector('[data-action-dock-mobile]');
+  const toast = createToastController();
+  const emailButtons = document.querySelectorAll('[data-action-email]');
+  const printButtons = document.querySelectorAll('[data-action-print]');
+  const copyButtons = document.querySelectorAll('[data-action-copy]');
+  const toggleVisibility = (visible) => {
+    [desktop, mobile].forEach((node) => {
+      if (!node) return;
+      node.dataset.visible = visible ? 'true' : 'false';
+      node.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    });
+  };
+  emailButtons.forEach((button) => {
+    if (button.dataset.bound === 'true') return;
+    button.dataset.bound = 'true';
+    button.addEventListener('click', () => {
+      window.location.href = `mailto:${emailAddress}`;
+    });
+  });
+  printButtons.forEach((button) => {
+    if (button.dataset.bound === 'true') return;
+    button.dataset.bound = 'true';
+    button.addEventListener('click', () => {
+      window.print();
+    });
+  });
+  copyButtons.forEach((button) => {
+    if (button.dataset.bound === 'true') return;
+    button.dataset.bound = 'true';
+    button.addEventListener('click', async () => {
+      const payload = button.getAttribute('data-copy-payload') ?? bioValue;
+      try {
+        await navigator.clipboard.writeText(payload);
+        toast.show('Short bio copied');
+      } catch (error) {
+        const textarea = document.createElement('textarea');
+        textarea.value = payload;
+        textarea.setAttribute('readonly', 'true');
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        toast.show('Short bio copied');
+      }
+    });
+  });
+  if ('IntersectionObserver' in window) {
+    const cta = document.querySelector('[data-hero-cta]');
+    if (cta) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            toggleVisibility(!entry.isIntersecting || entry.intersectionRatio < 0.5);
+          });
+        },
+        { threshold: [0, 0.5, 1] }
+      );
+      observer.observe(cta);
+    } else {
+      toggleVisibility(true);
+    }
+  } else {
+    toggleVisibility(true);
+  }
+};
+
+bindDock();
+document.addEventListener('astro:page-load', bindDock);
+</script>

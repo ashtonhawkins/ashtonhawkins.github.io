@@ -82,11 +82,13 @@ export const initializeConfidentialMode = ({
   const applyState = (nextState: boolean, announce = false) => {
     state = nextState;
     root.dataset.confidentialState = nextState ? "confidential" : "public";
+    document.documentElement.dataset.confidential = nextState ? "confidential" : "public";
     window.localStorage.setItem(STORAGE_KEY, nextState ? "true" : "false");
     const toggle = document.querySelector<HTMLButtonElement>(toggleSelector);
     if (toggle) {
       toggle.setAttribute("aria-checked", nextState ? "true" : "false");
       toggle.dataset.state = nextState ? "confidential" : "public";
+      toggle.setAttribute("aria-label", nextState ? "Disable confidential mode" : "Enable confidential mode");
     }
     setUrlModeParam(nextState);
     const announcer = document.querySelector<HTMLElement>(announcerSelector);

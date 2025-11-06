@@ -54,7 +54,7 @@ const { email, bio } = Astro.props as { email: string; bio: string };
 </div>
 
 <script type="module">
-import { createToastController } from './Toast.ts';
+import { createToastController } from '../ui/Toast.ts';
 
 const bindContactUtilities = () => {
   const toast = createToastController();
