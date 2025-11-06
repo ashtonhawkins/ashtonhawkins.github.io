@@ -11,16 +11,15 @@
     display: none !important;
   }
   [data-action-dock],
+  [data-action-pill],
   [data-toast-root],
   [data-confidential-toggle] {
     display: none !important;
   }
   article[data-confidential-root] {
-    gap: 1.5rem !important;
+    gap: 1rem !important;
   }
-  article[data-confidential-root] > section,
-  article[data-confidential-root] > div,
-  article[data-confidential-root] > header {
+  article[data-confidential-root] > * {
     break-inside: avoid;
   }
   section,
@@ -30,8 +29,16 @@
     box-shadow: none !important;
     background: #ffffff !important;
   }
+  .grid,
+  .flex {
+    display: block !important;
+  }
+  [data-filter-item][data-filter-hidden="true"] {
+    display: block !important;
+  }
   details {
-    border: 1px solid #00000033 !important;
+    border: 1px solid #00000022 !important;
+    padding-bottom: 0.5rem;
   }
   details > summary {
     cursor: default !important;

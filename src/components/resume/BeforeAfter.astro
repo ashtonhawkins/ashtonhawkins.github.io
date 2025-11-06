@@ -9,112 +9,85 @@ interface BeforeAfterItem {
 
 const { items } = Astro.props as { items: BeforeAfterItem[] };
 ---
-<section class="flex flex-col gap-6">
-  <div class="flex flex-col gap-3">
-    <h2 class="text-lg font-semibold text-[color:var(--ink)]">Proof Modules · Before → After</h2>
-    <p class="text-sm text-[color:var(--ink-2)]">Drag the seam to inspect shifts from the original state into the shipped experience.</p>
+<section class="flex flex-col gap-6" id="before-after">
+  <div class="flex flex-col gap-2">
+    <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Proof</span>
+    <h2 class="text-lg font-semibold text-[color:var(--ink)]">Before / After</h2>
+    <p class="max-w-2xl text-sm text-[color:var(--ink-2)]">Draggable slices reveal program shifts across checkout, navigation, and search.</p>
   </div>
-  <div class="grid gap-6 md:grid-cols-3">
+  <div class="grid gap-6 lg:grid-cols-3">
     {items.map((item) => (
-      <figure
-        class="flex flex-col gap-3 rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_90%,transparent)] p-4"
+      <article
+        class="group relative flex flex-col gap-3 overflow-hidden rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_94%,transparent)] p-4 shadow-[0_20px_48px_-40px_rgba(12,20,32,0.6)]"
+        data-before-after
+        data-motion
       >
-        <div
-          class="relative h-64 overflow-hidden rounded-[var(--r-3)]"
-          data-before-after-root
-          style={`--position:50%;--before:${item.beforeImg};--after:${item.afterImg};`}
-        >
-          <div class="absolute inset-0" aria-hidden="true">
-            <div class="absolute inset-0 bg-[image:var(--after)] bg-cover bg-center"></div>
-            <div class="absolute inset-0 bg-[image:var(--before)] bg-cover bg-center" data-before-pane style="width:var(--position);"></div>
-            <span class="absolute left-4 top-4 rounded-full bg-[color:color-mix(in_srgb,var(--surface)_92%,transparent)] px-2 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--ink-2)]">Before</span>
-            <span class="absolute right-4 top-4 rounded-full bg-[color:color-mix(in_srgb,var(--surface)_92%,transparent)] px-2 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--ink-2)]">After</span>
+        <div class="relative h-56 overflow-hidden rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)]">
+          <img src={item.afterImg} alt="After state for {item.title}" class="h-full w-full object-cover" loading="lazy" />
+          <div class="absolute inset-0" data-before-mask>
+            <img src={item.beforeImg} alt="Before state for {item.title}" class="h-full w-full object-cover" loading="lazy" />
           </div>
-          <button
-            type="button"
-            class="group absolute inset-y-0 flex w-10 translate-x-[-50%] items-center justify-center"
-            data-before-handle
-            aria-label={`Drag to reveal ${item.title}`}
-            role="slider"
-            aria-valuemin="0"
-            aria-valuemax="100"
-            aria-valuenow="50"
-            style="left:var(--position);"
-          >
-            <span class="pointer-events-none flex h-14 w-14 items-center justify-center rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_96%,transparent)] shadow-[0_10px_30px_-20px_rgba(12,20,32,0.6)] transition-transform duration-200 ease-[cubic-bezier(.2,.8,.2,1)] group-hover:scale-105">
-              <span class="flex items-center gap-1 text-xs font-semibold text-[color:var(--ink)]">
-                <span aria-hidden="true">↔</span>
-              </span>
-            </span>
-          </button>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value="50"
+            class="absolute inset-x-0 bottom-3 mx-auto h-1 w-11/12 appearance-none rounded-full bg-white/20 [--tw-shadow:0_0_0_1px_rgba(12,20,32,0.25)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+            aria-label={`Adjust before and after for ${item.title}`}
+            data-before-slider
+          />
+          <div class="pointer-events-none absolute inset-y-0 left-1/2 flex h-full w-0.5 -translate-x-1/2 items-center justify-center bg-white/60" data-before-handle>
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--accent)] text-white shadow-lg">↔</span>
+          </div>
         </div>
-        <figcaption class="flex flex-col gap-2">
-          <span class="text-sm font-semibold text-[color:var(--ink)]">{item.title}</span>
-          {item.note && <span class="text-sm text-[color:var(--ink-2)]">{item.note}</span>}
-        </figcaption>
-      </figure>
+        <div class="flex flex-col gap-2 text-sm text-[color:var(--ink-2)]">
+          <h3 class="text-base font-semibold text-[color:var(--ink)]">{item.title}</h3>
+          {item.note && <p>{item.note}</p>}
+        </div>
+      </article>
     ))}
   </div>
 </section>
-<style is:inline>
-[data-before-after-root] {
-  --position: 50%;
-}
-@media (prefers-reduced-motion: reduce) {
-  [data-before-handle] span {
-    transition: none;
-  }
-}
-</style>
 <script type="module">
-const attach = (root: HTMLElement) => {
-  if (root.dataset.bound === 'true') return;
-  root.dataset.bound = 'true';
-  const pane = root.querySelector<HTMLElement>('[data-before-pane]');
-  const handle = root.querySelector<HTMLButtonElement>('[data-before-handle]');
-  if (!pane || !handle) return;
-  let active = false;
-  const setPosition = (percent: number) => {
-    const clamped = Math.min(Math.max(percent, 0), 100);
-    root.style.setProperty('--position', `${clamped}%`);
-    pane.style.width = `${clamped}%`;
-    handle.style.left = `${clamped}%`;
-    handle.setAttribute('aria-valuenow', String(Math.round(clamped)));
-  };
-  const positionFromEvent = (event: PointerEvent) => {
-    const rect = root.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    setPosition((x / rect.width) * 100);
-  };
-  handle.addEventListener('pointerdown', (event) => {
-    active = true;
-    handle.setPointerCapture(event.pointerId);
-  });
-  window.addEventListener('pointerup', (event) => {
-    if (!active) return;
-    active = false;
-    handle.releasePointerCapture(event.pointerId);
-  });
-  root.addEventListener('pointermove', (event) => {
-    if (!active) return;
-    positionFromEvent(event);
-  });
-  handle.addEventListener('keydown', (event) => {
-    if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      const value = Number(handle.getAttribute('aria-valuenow') ?? '50') - 5;
-      setPosition(value);
-    }
-    if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      const value = Number(handle.getAttribute('aria-valuenow') ?? '50') + 5;
-      setPosition(value);
-    }
+import { prefersReducedMotion } from "../../utils/motion";
+
+const clamp = (value: number) => Math.min(100, Math.max(0, value));
+
+const init = () => {
+  document.querySelectorAll<HTMLElement>("[data-before-after]").forEach((card) => {
+    const mask = card.querySelector<HTMLElement>("[data-before-mask]");
+    const slider = card.querySelector<HTMLInputElement>("[data-before-slider]");
+    const handle = card.querySelector<HTMLElement>("[data-before-handle]");
+    if (!mask || !slider || !handle) return;
+    const setValue = (value: number) => {
+      const clamped = clamp(value);
+      mask.style.clipPath = `inset(0 ${100 - clamped}% 0 0)`;
+      handle.style.left = `${clamped}%`;
+      slider.value = clamped.toString();
+    };
+    setValue(Number(slider.value));
+    const updateFromPointer = (event: PointerEvent) => {
+      const rect = card.getBoundingClientRect();
+      const percentage = ((event.clientX - rect.left) / rect.width) * 100;
+      setValue(percentage);
+    };
+    slider.addEventListener("input", () => setValue(Number(slider.value)));
+    card.addEventListener("pointerdown", (event) => {
+      if (prefersReducedMotion()) return;
+      card.setPointerCapture(event.pointerId);
+      updateFromPointer(event);
+      const move = (moveEvent: PointerEvent) => updateFromPointer(moveEvent);
+      const up = (upEvent: PointerEvent) => {
+        card.releasePointerCapture(upEvent.pointerId);
+        card.removeEventListener("pointermove", move);
+        card.removeEventListener("pointerup", up);
+      };
+      card.addEventListener("pointermove", move);
+      card.addEventListener("pointerup", up);
+    });
   });
 };
 
-document.querySelectorAll<HTMLElement>('[data-before-after-root]').forEach((root) => attach(root));
-document.addEventListener('astro:page-load', () => {
-  document.querySelectorAll<HTMLElement>('[data-before-after-root]').forEach((root) => attach(root));
-});
+init();
+document.addEventListener("astro:page-load", init);
 </script>

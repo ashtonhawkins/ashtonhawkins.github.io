@@ -1,27 +1,30 @@
-export interface SparklineProps {
-  values: number[];
+export interface SparklineOptions {
   width?: number;
   height?: number;
-  stroke?: string;
 }
 
-const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+export interface SparklineData {
+  width: number;
+  height: number;
+  points: string;
+}
 
-export const Sparkline = ({ values, width = 120, height = 32, stroke = "currentColor" }: SparklineProps) => {
-  if (!values || values.length === 0) return "";
+const buildPoints = (values: number[], width: number, height: number) => {
+  if (!values.length) return "";
   const min = Math.min(...values);
   const max = Math.max(...values);
-  const span = max - min || 1;
-  const step = width / Math.max(values.length - 1, 1);
-  const points = values
+  const range = max - min || 1;
+  return values
     .map((value, index) => {
-      const x = index * step;
-      const normalized = (value - min) / span;
-      const y = height - normalized * height;
-      return `${x},${clamp(y, 0, height)}`;
+      const x = (index / Math.max(1, values.length - 1)) * width;
+      const y = height - ((value - min) / range) * height;
+      return `${x},${y}`;
     })
     .join(" ");
-  return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" aria-hidden="true" focusable="false" role="img"><polyline points="${points}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 };
 
-export default Sparkline;
+export const getSparklineData = (values: number[], options: SparklineOptions = {}): SparklineData => {
+  const width = options.width ?? 96;
+  const height = options.height ?? 28;
+  return { width, height, points: buildPoints(values, width, height) };
+};
