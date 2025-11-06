@@ -1,4 +1,5 @@
 ---
+import { meetsMetricGate, formatSample } from "../../utils/metrics";
 
 interface KpiItem {
   key: string;
@@ -10,40 +11,36 @@ interface KpiItem {
 }
 
 const { items } = Astro.props as { items: KpiItem[] };
-const compactFormatter = new Intl.NumberFormat("en-US", {
-  notation: "compact",
-  maximumFractionDigits: 1
-});
-const eligible = items
-  .filter((item) => (item.sample ?? 0) >= 1000 || !!item.confidence)
-  .slice(0, 3);
-const toSampleText = (sample?: number) => {
-  if (!sample) return "";
-  return `${compactFormatter.format(sample)} sample`;
+const filtered = items.filter((item) => meetsMetricGate(item)).slice(0, 3);
+const decimals = (value: number) => {
+  const [, fractional] = value.toString().split(".");
+  return fractional ? Math.min(2, fractional.length) : 0;
 };
-const toDecimals = (value: number) => {
-  const [, decimals] = value.toString().split(".");
-  return Math.min(decimals ? decimals.length : 0, 2);
+const suffixFor = (item: KpiItem) => {
+  if (item.suffix) return item.suffix;
+  const label = item.label.toLowerCase();
+  if (label.includes("pp")) return " pp";
+  if (label.includes("%") || label.includes("lift") || label.includes("Δ") || label.includes("rate")) return "%";
+  return "";
 };
 ---
-{eligible.length === 3 && (
-  <section class="flex flex-col gap-6" data-scoreboard>
-    <div class="flex items-center gap-3">
-      <h2 class="text-sm font-semibold tracking-[0.32em] uppercase text-[color:var(--ink-2)]">Signature Outcomes</h2>
-      <div class="flex items-center gap-1 rounded-full border border-[color:var(--ink-2)]/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
-        <span>Reel</span>
-      </div>
+{filtered.length === 3 && (
+  <section class="flex flex-col gap-5" data-scoreboard>
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h2 class="text-sm font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Signature Outcomes</h2>
+      <span class="text-xs uppercase tracking-[0.28em] text-[color:var(--ink-2)]">Audited programs</span>
     </div>
     <div class="grid gap-4 sm:grid-cols-3">
-      {eligible.map((item) => (
+      {filtered.map((item) => (
         <article
-          class="group relative flex flex-col gap-4 rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_92%,transparent)] p-4 shadow-[0_12px_32px_-24px_rgba(12,20,32,0.45)]"
-          data-kpi-tile
+          class="group relative flex flex-col gap-4 rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_92%,transparent)] p-5 shadow-[0_24px_60px_-48px_rgba(12,20,32,0.65)]"
+          data-motion
+          data-motion-delay="0"
         >
-          <div class="flex items-center justify-between gap-2 text-xs uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
+          <div class="flex items-center justify-between text-xs uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
             <span>{item.label}</span>
             {item.confidence && (
-              <span class="rounded-full border border-[color:var(--accent)]/50 bg-[color:color-mix(in_srgb,var(--accent)_16%,transparent)] px-2 py-1 text-[0.6rem] font-semibold text-[color:var(--accent)]">
+              <span class="inline-flex items-center gap-1 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_84%,transparent)] px-2 py-1 text-[10px] font-semibold text-[color:var(--ink-2)]">
                 CI
               </span>
             )}
@@ -53,14 +50,14 @@ const toDecimals = (value: number) => {
               class="text-4xl font-semibold tracking-tight text-[color:var(--ink)]"
               data-kpi-value
               data-value={item.value}
-              data-suffix={item.suffix ?? ""}
-              data-decimals={toDecimals(item.value)}
+              data-decimals={decimals(item.value)}
+              data-suffix={suffixFor(item)}
             >
               0
             </span>
           </div>
-          <div class="flex items-center justify-between text-xs text-[color:var(--ink-2)]">
-            <span>{toSampleText(item.sample)}</span>
+          <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-[color:var(--ink-2)]">
+            <span>{formatSample(item.sample)}</span>
             {item.confidence && <span>{item.confidence}</span>}
           </div>
         </article>
@@ -70,23 +67,40 @@ const toDecimals = (value: number) => {
 )}
 <script type="module">
 import { animate } from "motion";
-import { motion as motionConfig, prefersReducedMotion as prefers } from "../../utils/motion";
+import { onceVisible, prefersReducedMotion, durations, easing } from "../../utils/motion";
 
-const run = () => {
-  if (prefers()) return;
-  document.querySelectorAll('[data-kpi-value]').forEach((el) => {
-    const target = Number(el.getAttribute('data-value') ?? '0');
-    const suffix = el.getAttribute('data-suffix') ?? '';
-    const decimals = Number(el.getAttribute('data-decimals') ?? '0');
+const storeKey = "resume_kpi_animated";
+const runAnimation = () => {
+  const nodes = document.querySelectorAll<HTMLElement>("[data-kpi-value]");
+  if (!nodes.length) return;
+  if (prefersReducedMotion() || sessionStorage.getItem(storeKey) === "true") {
+    nodes.forEach((node) => {
+      const target = Number(node.dataset.value ?? "0");
+      const suffix = node.dataset.suffix ?? "";
+      const decimals = Number(node.dataset.decimals ?? "0");
+      node.textContent = target.toFixed(decimals) + suffix;
+    });
+    sessionStorage.setItem(storeKey, "true");
+    return;
+  }
+  onceVisible(nodes, (node) => {
+    const target = Number(node.dataset.value ?? "0");
+    const suffix = node.dataset.suffix ?? "";
+    const decimals = Number(node.dataset.decimals ?? "0");
     animate(0, target, {
-      duration: motionConfig.durations.slow,
-      easing: motionConfig.easing,
+      duration: durations.slow,
+      easing,
       onUpdate: (value) => {
-        el.textContent = value.toFixed(decimals) + suffix;
+        node.textContent = value.toFixed(decimals) + suffix;
+      },
+      onComplete: () => {
+        node.textContent = target.toFixed(decimals) + suffix;
+        sessionStorage.setItem(storeKey, "true");
       }
     });
-  });
+  }, 0.4);
 };
-run();
-document.addEventListener('astro:page-load', run);
+
+runAnimation();
+document.addEventListener("astro:page-load", runAnimation);
 </script>

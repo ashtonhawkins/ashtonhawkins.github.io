@@ -1,47 +1,15 @@
-export const redact = (publicValue: string, confidentialValue: string, isConfidential: boolean) =>
-  isConfidential ? confidentialValue : publicValue;
+const STORAGE_KEY = "resume_confidential";
 
-const monthFormatter = new Intl.DateTimeFormat("en", { month: "short" });
-const yearFormatter = new Intl.DateTimeFormat("en", { year: "numeric" });
-
-const formatMonthYear = (value?: string | null) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return `${monthFormatter.format(date)} ${yearFormatter.format(date)}`;
-};
-
-export const formatPreciseRange = (start?: string | null, end?: string | null) => {
-  const startLabel = formatMonthYear(start);
-  const endLabel = end ? formatMonthYear(end) : "Present";
-  if (!startLabel && !endLabel) return "";
-  if (!startLabel) return endLabel;
-  return `${startLabel} – ${endLabel}`;
-};
-
-const monthsBetween = (start?: string | null, end?: string | null) => {
-  if (!start && !end) return 0;
-  const startDate = start ? new Date(start) : undefined;
-  const endDate = end ? new Date(end) : new Date();
-  if (startDate && Number.isNaN(startDate.getTime())) return 0;
-  if (Number.isNaN(endDate.getTime())) return 0;
-  const effectiveStart = startDate ?? endDate;
-  const diffMs = endDate.getTime() - effectiveStart.getTime();
-  const diffMonths = diffMs / (1000 * 60 * 60 * 24 * 30.4375);
-  return Math.max(0, diffMonths);
-};
-
-export const formatApproxRange = (start?: string | null, end?: string | null) => {
-  const months = monthsBetween(start, end);
-  if (!months) return "~tenure";
-  if (months < 12) {
-    const rounded = Math.max(1, Math.round(months));
-    return `~${rounded} month${rounded === 1 ? "" : "s"}`;
+declare global {
+  interface Document {
+    __confidentialHotkeyBound?: boolean;
   }
-  const years = months / 12;
-  const roundedYears = Math.round(years * 10) / 10;
-  const label = roundedYears % 1 === 0 ? Math.round(roundedYears).toString() : roundedYears.toFixed(1);
-  return `~${label} year${Number(label) === 1 ? "" : "s"}`;
+}
+
+const setUrlModeParam = (state: boolean) => {
+  const url = new URL(window.location.href);
+  url.searchParams.set("mode", state ? "confidential" : "public");
+  window.history.replaceState(window.history.state, "", url.toString());
 };
 
 interface ConfidentialOptions {
@@ -51,12 +19,15 @@ interface ConfidentialOptions {
   announcerSelector?: string;
 }
 
-const STORAGE_KEY = "resume_confidential";
-
-const setUrlModeParam = (state: boolean) => {
-  const url = new URL(window.location.href);
-  url.searchParams.set("mode", state ? "confidential" : "public");
-  history.replaceState(history.state, "", url.toString());
+const updateToggleVisuals = (toggle: HTMLButtonElement | null, state: boolean) => {
+  if (!toggle) return;
+  toggle.setAttribute("aria-pressed", state ? "true" : "false");
+  toggle.dataset.state = state ? "confidential" : "public";
+  toggle.setAttribute("aria-label", state ? "Disable confidential mode" : "Enable confidential mode");
+  const icon = toggle.querySelector<HTMLElement>("[data-icon]");
+  const label = toggle.querySelector<HTMLElement>("[data-label]");
+  if (icon) icon.textContent = state ? "🔒" : "🔓";
+  if (label) label.textContent = state ? "Confidential" : "Public";
 };
 
 export const initializeConfidentialMode = ({
@@ -67,6 +38,8 @@ export const initializeConfidentialMode = ({
 }: ConfidentialOptions) => {
   const root = document.querySelector<HTMLElement>(rootSelector);
   if (!root) return;
+  const toggle = document.querySelector<HTMLButtonElement>(toggleSelector);
+  const announcer = document.querySelector<HTMLElement>(announcerSelector);
 
   const searchParams = new URL(window.location.href).searchParams;
   const modeParam = searchParams.get("mode");
@@ -75,23 +48,15 @@ export const initializeConfidentialMode = ({
   let state = defaultState;
   if (modeParam === "public") state = false;
   if (modeParam === "confidential") state = true;
-  if (modeParam !== "public" && modeParam !== "confidential" && stored !== null) {
-    state = stored === "true";
-  }
+  if (!modeParam && stored !== null) state = stored === "true";
 
   const applyState = (nextState: boolean, announce = false) => {
     state = nextState;
     root.dataset.confidentialState = nextState ? "confidential" : "public";
     document.documentElement.dataset.confidential = nextState ? "confidential" : "public";
     window.localStorage.setItem(STORAGE_KEY, nextState ? "true" : "false");
-    const toggle = document.querySelector<HTMLButtonElement>(toggleSelector);
-    if (toggle) {
-      toggle.setAttribute("aria-checked", nextState ? "true" : "false");
-      toggle.dataset.state = nextState ? "confidential" : "public";
-      toggle.setAttribute("aria-label", nextState ? "Disable confidential mode" : "Enable confidential mode");
-    }
     setUrlModeParam(nextState);
-    const announcer = document.querySelector<HTMLElement>(announcerSelector);
+    updateToggleVisuals(toggle ?? null, nextState);
     if (announce && announcer) {
       announcer.textContent = nextState ? "Confidential mode enabled" : "Confidential mode disabled";
     }
@@ -100,15 +65,26 @@ export const initializeConfidentialMode = ({
 
   applyState(state);
 
-  const toggle = document.querySelector<HTMLButtonElement>(toggleSelector);
   if (toggle && toggle.dataset.bound !== "true") {
     toggle.dataset.bound = "true";
-    toggle.addEventListener("click", () => {
-      applyState(!state, true);
-    });
+    toggle.addEventListener("click", () => applyState(!state, true));
     toggle.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
+        applyState(!state, true);
+      }
+    });
+  }
+
+  if (!document.__confidentialHotkeyBound) {
+    document.__confidentialHotkeyBound = true;
+    document.addEventListener("keydown", (event) => {
+      if (event.defaultPrevented) return;
+      if (event.key.toLowerCase() === "c" && !event.metaKey && !event.ctrlKey && !event.altKey) {
+        const active = document.activeElement;
+        if (active && (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || active instanceof HTMLSelectElement || active.hasAttribute("contenteditable"))) {
+          return;
+        }
         applyState(!state, true);
       }
     });

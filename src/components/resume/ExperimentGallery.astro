@@ -1,6 +1,12 @@
 ---
-import { BulletGraph } from "../ui/BulletGraph";
-import { Sparkline } from "../ui/Sparkline";
+import { getSparklineData } from "../ui/Sparkline";
+import { getBulletGraphData } from "../ui/BulletGraph";
+import { formatSample, meetsMetricGate } from "../../utils/metrics";
+
+interface ExperimentChart {
+  type: "spark" | "bullet";
+  values: number[];
+}
 
 interface ExperimentItem {
   id: string;
@@ -8,105 +14,88 @@ interface ExperimentItem {
   problem: string;
   bet: string;
   outcome: string;
-  chart: {
-    type: "spark" | "bullet";
-    values: number[];
-  };
+  chart?: ExperimentChart;
   sample?: number;
   confidence?: string;
 }
 
 const { items } = Astro.props as { items: ExperimentItem[] };
-const compactFormatter = new Intl.NumberFormat("en-US", {
-  notation: "compact",
-  maximumFractionDigits: 1
-});
-const formatSample = (sample?: number) => {
-  if (!sample) return "";
-  return `${compactFormatter.format(sample)} sample`;
-};
 ---
-<section class="flex flex-col gap-6">
-  <div class="flex flex-col gap-3">
-    <h2 class="text-lg font-semibold text-[color:var(--ink)]">Proof Modules · Experiment Gallery</h2>
-    <p class="text-sm text-[color:var(--ink-2)]">Signals captured across fast-cycle experiments blending quant confidence with qualitative reads.</p>
+<section class="flex flex-col gap-6" id="experiment-gallery">
+  <div class="flex flex-col gap-2">
+    <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Proof</span>
+    <h2 class="text-lg font-semibold text-[color:var(--ink)]">Experiment Gallery</h2>
+    <p class="max-w-3xl text-sm text-[color:var(--ink-2)]">High-signal A/B and multi-variant tests across funnels with clear problem framing, test bets, and measurable outcomes.</p>
   </div>
   <div class="grid gap-5 lg:grid-cols-3">
-    {items.map((item) => (
-      <article
-        class="flex flex-col gap-4 rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_92%,transparent)] p-5 shadow-[0_16px_42px_-28px_rgba(12,20,32,0.5)]"
-        data-experiment-card
-      >
-        <header class="flex flex-col gap-2">
-          <div class="flex items-center justify-between text-xs uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
-            <span>{item.title}</span>
-            <div class="flex items-center gap-2 text-[0.65rem] font-semibold">
+    {items.map((item) => {
+      const gated = meetsMetricGate(item);
+      const chartLabel = `${item.title} experiment trend`;
+      const spark = item.chart?.type === "spark" ? getSparklineData(item.chart.values) : null;
+      const bullet = item.chart?.type === "bullet" ? getBulletGraphData(item.chart.values) : null;
+      return (
+        <article
+          class="flex flex-col gap-4 rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_94%,transparent)] p-5 shadow-[0_24px_60px_-48px_rgba(12,20,32,0.6)]"
+          data-motion
+        >
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="text-base font-semibold text-[color:var(--ink)]">{item.title}</h3>
+            <div class="flex flex-col items-end gap-1 text-xs text-[color:var(--ink-2)]">
+              {gated && <span>{formatSample(item.sample)}</span>}
               {item.confidence && <span>{item.confidence}</span>}
-              {formatSample(item.sample) && <span>{formatSample(item.sample)}</span>}
             </div>
           </div>
-          <div class="h-16 text-[color:var(--accent)]" aria-hidden="true">
-            {item.chart.type === "spark" ? (
-              <div set:html={Sparkline({ values: item.chart.values, height: 48, width: 160 })}></div>
-            ) : (
-              <div set:html={BulletGraph({ values: item.chart.values, width: 160, height: 36 })}></div>
-            )}
-          </div>
-        </header>
-        <div class="grid gap-2 text-sm text-[color:var(--ink-2)]">
-          <div class="flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
-            <span class="rounded-full bg-[color:color-mix(in_srgb,var(--surface)_94%,transparent)] px-2 py-1">Problem</span>
-            <span class="rounded-full bg-[color:color-mix(in_srgb,var(--surface)_94%,transparent)] px-2 py-1">Bet</span>
-            <span class="rounded-full bg-[color:color-mix(in_srgb,var(--surface)_94%,transparent)] px-2 py-1">Outcome</span>
-          </div>
-          <p><strong class="text-[color:var(--ink)]">Problem:</strong> {item.problem}</p>
-          <p><strong class="text-[color:var(--ink)]">Bet:</strong> {item.bet}</p>
-          <p><strong class="text-[color:var(--ink)]">Outcome:</strong> {item.outcome}</p>
-        </div>
-        <div class="mt-auto">
-          <button
-            type="button"
-            class="inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] bg-transparent px-4 py-2 text-sm font-semibold text-[color:var(--ink)] transition-transform duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
-            data-experiment-cta
-            data-experiment-title={item.title}
-          >
-            View story
-            <span aria-hidden="true">↗</span>
-          </button>
-        </div>
-      </article>
-    ))}
+          {spark && (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox={`0 0 ${spark.width} ${spark.height}`}
+              width={spark.width}
+              height={spark.height}
+              role="img"
+              aria-label={chartLabel}
+              class="text-[color:var(--accent)]"
+            >
+              <polyline
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                points={spark.points}
+              />
+            </svg>
+          )}
+          {bullet && (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox={`0 0 ${bullet.width} ${bullet.height}`}
+              width={bullet.width}
+              height={bullet.height}
+              role="img"
+              aria-label={chartLabel}
+              class="text-[color:var(--accent)]"
+            >
+              <rect x="0" y={bullet.height / 4} width={bullet.trackWidth} height={bullet.height / 2} fill="rgba(15,15,25,0.08)" rx={bullet.height / 4} />
+              <rect x="0" y={bullet.height / 4} width={bullet.targetWidth} height={bullet.height / 2} fill="currentColor" rx={bullet.height / 4} />
+              <line x1={bullet.baselineX} y1="0" x2={bullet.baselineX} y2={bullet.height} stroke="#0b1120" stroke-width="2" stroke-linecap="round" opacity="0.6" />
+            </svg>
+          )}
+          <dl class="flex flex-col gap-3 text-sm text-[color:var(--ink-2)]">
+            <div class="flex flex-col gap-1">
+              <dt class="text-[11px] font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Problem</dt>
+              <dd>{item.problem}</dd>
+            </div>
+            <div class="flex flex-col gap-1">
+              <dt class="text-[11px] font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Bet</dt>
+              <dd>{item.bet}</dd>
+            </div>
+            <div class="flex flex-col gap-1">
+              <dt class="text-[11px] font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Outcome</dt>
+              <dd>{item.outcome}</dd>
+            </div>
+          </dl>
+        </article>
+      );
+    })}
   </div>
 </section>
-<script type="module">
-import { animate } from "motion";
-import { motion as motionConfig, prefersReducedMotion as prefers } from "../../utils/motion";
-import { showToast } from "../ui/Toast";
-
-const bind = () => {
-  document.querySelectorAll<HTMLButtonElement>('[data-experiment-cta]').forEach((button) => {
-    if (button.dataset.bound === 'true') return;
-    button.dataset.bound = 'true';
-    button.addEventListener('click', () => {
-      const title = button.getAttribute('data-experiment-title') ?? 'Story';
-      showToast(`${title} queued for deep-dive`);
-    });
-  });
-  if (prefers()) return;
-  const cards = document.querySelectorAll<HTMLElement>('[data-experiment-card]');
-  cards.forEach((card, index) => {
-    card.style.opacity = '0';
-    card.style.transform = 'translateY(12px)';
-    requestAnimationFrame(() => {
-      animate(card, { opacity: 1, transform: 'translateY(0)' }, {
-        duration: motionConfig.durations.medium,
-        easing: motionConfig.easing,
-        delay: index * 0.04
-      });
-    });
-  });
-};
-
-bind();
-document.addEventListener('astro:page-load', bind);
-</script>

@@ -66,6 +66,15 @@ if (isArticle && canonicalUrl) {
 const structuredDataStrings = structuredData.map((schema) =>
   JSON.stringify(schema, (_key, value) => (value === undefined ? undefined : value))
 );
+
+const structuredDataScripts = structuredDataStrings.map((json, index) => ({
+  id: `schema-${index}`,
+  json,
+}));
+
+const renderStructuredData = (schema: { json: string }) => (
+  <script type="application/ld+json" is:inline>{schema.json}</script>
+);
 ---
 <title>{title}</title>
 <meta name="description" content={description} />
@@ -78,6 +87,4 @@ const structuredDataStrings = structuredData.map((schema) =>
 <meta name="twitter:card" content="summary" />
 <meta name="twitter:title" content={openGraphTitle} />
 <meta name="twitter:description" content={description} />
-  {structuredDataStrings.map((schemaJson) => (
-    <script type="application/ld+json" is:inline>{schemaJson}</script>
-  ))}
+  {structuredDataScripts.map(renderStructuredData)}
