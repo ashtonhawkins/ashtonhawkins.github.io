@@ -14,7 +14,12 @@ interface HeroData {
   subhead: string;
 }
 
-const { hero, email, metrics } = Astro.props as { hero: HeroData; email: string; metrics: Metric[] };
+const { hero, email, metrics, bio } = Astro.props as {
+  hero: HeroData;
+  email: string;
+  metrics: Metric[];
+  bio: string;
+};
 
 const headlineWords = hero.headline.split(" ");
 const midpoint = Math.ceil(headlineWords.length / 2);
@@ -40,21 +45,41 @@ const headlineBottom = headlineWords.slice(midpoint).join(" ");
     <Scoreboard metrics={metrics} />
   </div>
   <div class="col-span-12">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center" data-hero-cta>
-      <a
-        href="#case-studies"
-        class="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-background transition-transform duration-100 ease-out hover:-translate-y-0.5 hover:bg-accent-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        data-astro-transition="animate"
-      >
-        View case studies
-      </a>
-      <a
-        href={`mailto:${email}`}
-        class="inline-flex items-center justify-center rounded-full border border-border px-6 py-3 text-sm font-semibold text-text-secondary transition-transform duration-100 ease-out hover:-translate-y-0.5 hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        data-astro-transition="animate"
-      >
-        Email Ashton
-      </a>
+    <div class="flex flex-col gap-4" data-hero-cta>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <a
+          href="#case-studies"
+          class="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-background transition-transform duration-100 ease-out hover:-translate-y-0.5 hover:bg-accent-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          data-astro-transition="animate"
+        >
+          View case studies
+        </a>
+        <a
+          href={`mailto:${email}`}
+          class="inline-flex items-center justify-center rounded-full border border-border px-6 py-3 text-sm font-semibold text-text-secondary transition-transform duration-100 ease-out hover:-translate-y-0.5 hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          data-astro-transition="animate"
+          data-action-email
+        >
+          Email Ashton
+        </a>
+      </div>
+      <div class="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-text-muted">
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-4 py-2 text-[11px] font-semibold tracking-[0.2em] text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          data-action-print
+        >
+          Download PDF
+        </button>
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-4 py-2 text-[11px] font-semibold tracking-[0.2em] text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          data-action-copy
+          data-copy-payload={bio}
+        >
+          Copy short bio
+        </button>
+      </div>
     </div>
   </div>
 </section>
