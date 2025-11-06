@@ -2,12 +2,12 @@
 import AppShell from "../layouts/AppShell.astro";
 import SEO from "../components/SEO.astro";
 import Hero from "../components/resume/Hero.astro";
-import Snapshots from "../components/resume/Snapshots.astro";
+import ImpactTapestry from "../components/resume/ImpactTapestry.astro";
 import ExperienceTimeline from "../components/resume/ExperienceTimeline.astro";
 import CaseStudyGrid from "../components/resume/CaseStudyGrid.astro";
 import KeywordChips from "../components/resume/KeywordChips.astro";
-import StickyContact from "../components/resume/StickyContact.astro";
 import ConfidentialToggle from "../components/resume/ConfidentialToggle.astro";
+import ActionDock from "../components/resume/ActionDock.astro";
 import resume from "../data/resume.json";
 import { formatPreciseRange, formatApproxRange } from "../utils/confidential";
 import { parseTags } from "../utils/filters";
@@ -56,41 +56,57 @@ const initialTagsLiteral = JSON.stringify(activeTags);
       opacity: 1;
       transform: translateY(0);
     }
+    article[data-confidential-root] {
+      --resume-surface-odd: color-mix(in srgb, var(--surface) 88%, transparent);
+      --resume-surface-even: color-mix(in srgb, var(--surface) 80%, transparent);
+    }
+    [data-confidential-root][data-confidential-state="confidential"] [data-confidential-sensitive="true"] {
+      display: none;
+    }
+    [data-confidential-root][data-confidential-state="confidential"] [data-confidential-obscure="true"] .public-token {
+      display: none;
+    }
+    [data-confidential-root][data-confidential-state="confidential"] [data-confidential-obscure="true"] .confidential-token {
+      display: flex;
+    }
   </style>
   <article
-    class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_320px]"
+    class="flex flex-col gap-16"
     data-confidential-root
     data-confidential-state={isConfidential ? "confidential" : "public"}
   >
-    <div class="flex flex-col gap-16">
-      <Hero hero={resume.hero} email={email} />
-      <ConfidentialToggle isConfidential={isConfidential} />
-      <Snapshots snapshots={resume.snapshots} />
-      <ExperienceTimeline experiences={experiences} />
-      <CaseStudyGrid caseStudies={resume.caseStudies} />
-      <section id="exports" class="flex flex-col gap-4">
-        <h2 class="text-lg font-semibold text-text-primary">Exports</h2>
-        <div class="flex flex-wrap gap-3">
-          <button
-            type="button"
-            class="rounded-full border border-border px-5 py-2 text-sm font-medium text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            data-download-json
-          >
-            Download JSON
-          </button>
-          <button
-            type="button"
-            class="rounded-full border border-border px-5 py-2 text-sm font-medium text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            data-download-text
-          >
-            Download .txt
-          </button>
-        </div>
-      </section>
+    <Hero hero={resume.hero} email={email} metrics={resume.metrics}>
+      <ConfidentialToggle slot="mode-toggle" isConfidential={isConfidential} />
+    </Hero>
+    <ImpactTapestry items={resume.tapestry} />
+    <ExperienceTimeline experiences={experiences} />
+    <CaseStudyGrid caseStudies={resume.caseStudies} />
+    <section id="exports" class="flex flex-col gap-4 rounded-3xl border border-border/60 bg-[color:var(--resume-surface-odd)] p-6 shadow-soft">
+      <span class="text-xs font-semibold uppercase tracking-[0.32em] text-text-muted">Exports</span>
+      <h2 class="text-lg font-semibold text-text-primary">Takeaways</h2>
+      <div class="flex flex-wrap gap-3">
+        <button
+          type="button"
+          class="rounded-full border border-border px-5 py-2 text-sm font-medium text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          data-download-json
+        >
+          Download JSON
+        </button>
+        <button
+          type="button"
+          class="rounded-full border border-border px-5 py-2 text-sm font-medium text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          data-download-text
+        >
+          Download .txt
+        </button>
+      </div>
+    </section>
+    <section class="rounded-3xl border border-border/60 bg-[color:var(--resume-surface-even)] p-6 shadow-soft">
+      <span class="text-xs font-semibold uppercase tracking-[0.32em] text-text-muted">Focus areas</span>
       <KeywordChips keywords={resume.keywords} activeTags={activeTags} />
-    </div>
-    <StickyContact email={email} bio={resume.bioShort} />
+    </section>
   </article>
+  <ActionDock email={email} bio={resume.bioShort} />
   <div aria-live="polite" data-toast class="pointer-events-none fixed bottom-24 right-6 z-50 rounded-full bg-text-primary px-4 py-2 text-sm font-medium text-background shadow-soft"></div>
   <script id="resume-payload" type="application/json" is:inline>{JSON.stringify(resume)}</script>
   <script type="module">
@@ -99,6 +115,13 @@ import { parseTags, serializeTags } from '../utils/filters.ts';
 const initialTags = {initialTagsLiteral};
 let activeTags = new Set(initialTags);
 let printBound = false;
+
+const meetsMetricGate = (metric) => {
+  const sample = typeof metric.sample === 'number' ? metric.sample : undefined;
+  const hasSample = typeof sample === 'number' && sample >= 1000;
+  const hasConfidence = Boolean(metric.confidence);
+  return hasSample || hasConfidence;
+};
 
 const applyFilters = () => {
   const tags = Array.from(activeTags);
@@ -199,17 +222,22 @@ const downloadFile = (filename, content, mime) => {
 
 const buildTextResume = (data) => {
   let text = `${data.hero.headline}\n${data.hero.subhead}\n\n`;
-  if (Array.isArray(data.hero.stats)) {
-    text += 'Scoreboard:\n';
-    data.hero.stats.forEach((stat) => {
-      text += `- ${stat.label}: ${stat.value}\n`;
-    });
-    text += '\n';
+  if (Array.isArray(data.metrics)) {
+    const gated = data.metrics.filter((metric) => meetsMetricGate(metric)).slice(0, 3);
+    if (gated.length > 0) {
+      text += 'Scoreboard:\n';
+      gated.forEach((metric) => {
+        text += `- ${metric.label}: ${metric.value}`;
+        if (metric.confidence) text += ` (${metric.confidence})`;
+        text += '\n';
+      });
+      text += '\n';
+    }
   }
-  if (Array.isArray(data.snapshots)) {
-    text += 'Impact Snapshots:\n';
-    data.snapshots.forEach((snapshot) => {
-      text += `- ${snapshot.stat} · ${snapshot.lever} (${snapshot.timeframe})\n`;
+  if (Array.isArray(data.tapestry)) {
+    text += 'Impact Tapestry:\n';
+    data.tapestry.forEach((item) => {
+      text += `- ${item.label}: ${item.value}\n`;
     });
     text += '\n';
   }
@@ -217,6 +245,16 @@ const buildTextResume = (data) => {
     data.experience.forEach((experience) => {
       text += `${experience.role_public} at ${experience.org_public}\n`;
       text += `  Scope: ${experience.scope.team}; ${experience.scope.budget}; ${experience.scope.surfaces}\n`;
+      if (Array.isArray(experience.metrics)) {
+        const gated = experience.metrics.filter((metric) => meetsMetricGate(metric));
+        gated.forEach((metric) => {
+          text += `  Metric ${metric.label}: ${metric.delta_pct}%`;
+          if (metric.baseline !== undefined) text += ` (baseline ${metric.baseline}%)`;
+          if (metric.sample !== undefined) text += ` [n=${metric.sample}]`;
+          if (metric.confidence) text += ` ${metric.confidence}`;
+          text += '\n';
+        });
+      }
       experience.impacts.forEach((impact) => {
         text += `  - ${impact}\n`;
       });

@@ -23,6 +23,9 @@ interface ExperienceWithComputed {
   end?: string | null;
   scope: Scope;
   impacts: string[];
+  metrics: unknown[];
+  budget_band: string;
+  stack: string[];
   tags: string[];
   caseStudies: CaseStudyLink[];
   rangePublic: string;
@@ -34,7 +37,7 @@ const { experiences } = Astro.props as {
 };
 ---
 
-<section id="experience" class="flex flex-col gap-6" aria-label="Experience timeline">
+<section id="experience" class="flex flex-col gap-6 rounded-3xl border border-border/60 bg-[color:var(--resume-surface-odd)] p-6 shadow-soft md:p-8" aria-label="Experience timeline">
   <style is:inline>
     [data-experience-timeline] {
       position: relative;
@@ -79,15 +82,18 @@ const { experiences } = Astro.props as {
       }
     }
   </style>
-  <div class="flex items-center justify-between gap-4">
-    <h2 class="text-lg font-semibold text-text-primary">Experience</h2>
-    <button
-      type="button"
-      class="hidden items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:inline-flex"
-      data-expand-all
-    >
-      Expand all
-    </button>
+  <div class="flex flex-col gap-1">
+    <span class="text-xs font-semibold uppercase tracking-[0.32em] text-text-muted">Career timeline</span>
+    <div class="flex items-center justify-between gap-4">
+      <h2 class="text-lg font-semibold text-text-primary">Experience</h2>
+      <button
+        type="button"
+        class="hidden items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:inline-flex"
+        data-expand-all
+      >
+        Expand all
+      </button>
+    </div>
   </div>
   <div class="flex flex-col gap-6" data-experience-timeline>
     {experiences.map((experience) => (
@@ -96,30 +102,41 @@ const { experiences } = Astro.props as {
       </div>
     ))}
   </div>
+  <button
+    type="button"
+    class="inline-flex items-center justify-center rounded-full border border-border px-4 py-2 text-sm font-medium text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:hidden"
+    data-expand-all
+  >
+    Expand all
+  </button>
 </section>
 
 <script type="module">
 const initExpandControl = () => {
-  const button = document.querySelector('[data-expand-all]');
+  const buttons = Array.from(document.querySelectorAll('[data-expand-all]'));
   const cards = () => Array.from(document.querySelectorAll('[data-experience-card]'));
-  if (!button || button.dataset.bound === 'true') return;
-  button.dataset.bound = 'true';
+  if (buttons.some((button) => button.dataset.bound === 'true')) return;
 
   const updateLabel = () => {
     const list = cards();
     if (list.length === 0) return;
     const allOpen = list.every((card) => card.hasAttribute('open'));
-    button.textContent = allOpen ? 'Collapse all' : 'Expand all';
+    buttons.forEach((button) => {
+      button.textContent = allOpen ? 'Collapse all' : 'Expand all';
+    });
   };
 
-  button.addEventListener('click', () => {
-    const list = cards();
-    const shouldOpen = !list.every((card) => card.hasAttribute('open'));
-    list.forEach((card) => {
-      if (shouldOpen) card.setAttribute('open', 'true');
-      else card.removeAttribute('open');
+  buttons.forEach((button) => {
+    button.dataset.bound = 'true';
+    button.addEventListener('click', () => {
+      const list = cards();
+      const shouldOpen = !list.every((card) => card.hasAttribute('open'));
+      list.forEach((card) => {
+        if (shouldOpen) card.setAttribute('open', 'true');
+        else card.removeAttribute('open');
+      });
+      updateLabel();
     });
-    updateLabel();
   });
 
   cards().forEach((card) => {

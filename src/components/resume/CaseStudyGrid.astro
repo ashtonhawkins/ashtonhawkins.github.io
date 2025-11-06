@@ -8,26 +8,34 @@ interface CaseStudy {
   outcome: string;
   tags: string[];
   url: string;
+  sensitive?: boolean;
 }
 
 const { caseStudies } = Astro.props as { caseStudies: CaseStudy[] };
 ---
 
-<section id="case-studies" class="flex flex-col gap-6" aria-label="Case studies">
-  <h2 class="text-lg font-semibold text-text-primary">Case studies</h2>
+<section id="case-studies" class="flex flex-col gap-6 rounded-3xl border border-border/60 bg-[color:var(--resume-surface-even)] p-6 shadow-soft md:p-8" aria-label="Case studies">
+  <div class="flex flex-col gap-1">
+    <span class="text-xs font-semibold uppercase tracking-[0.32em] text-text-muted">Selected engagements</span>
+    <h2 class="text-lg font-semibold text-text-primary">Case studies</h2>
+  </div>
   <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
     {caseStudies.map((caseStudy) => (
       <a
         href={caseStudy.url}
         data-astro-transition="animate"
         data-astro-prefetch
-        class="group flex flex-col gap-4 rounded-2xl border border-border/70 bg-background/80 p-6 text-left shadow-soft transition-transform duration-100 ease-out hover:-translate-y-1 hover:shadow-ring focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        class="group flex flex-col gap-4 rounded-3xl border border-border/70 bg-background/85 p-6 text-left shadow-soft transition-transform duration-100 ease-out hover:-translate-y-1 hover:shadow-ring focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         data-case-study-card
         data-tags={caseStudy.tags.join(",")}
+        data-confidential-obscure={caseStudy.sensitive ? "true" : "false"}
       >
         <div class="flex items-center gap-4">
           <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-soft text-sm font-semibold uppercase tracking-wide text-accent">
-            {caseStudy.thumb.slice(0, 2)}
+            <span class="public-token">{caseStudy.thumb.slice(0, 2)}</span>
+            {caseStudy.sensitive && (
+              <span class="confidential-token hidden text-[11px] font-medium text-text-muted">Confidential</span>
+            )}
           </div>
           <h3 class="text-base font-semibold text-text-primary">{caseStudy.title}</h3>
         </div>

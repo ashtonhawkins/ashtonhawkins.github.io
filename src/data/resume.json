@@ -1,44 +1,72 @@
 {
   "hero": {
     "headline": "Digital Experience & Growth Leader",
-    "subhead": "Driving compounding growth through disciplined experimentation and orchestrated delivery.",
-    "stats": [
-      { "label": "YoY revenue lift", "value": "+22%" },
-      { "label": "Traffic growth", "value": "+177%" },
-      { "label": "Teams scaled", "value": "7" }
-    ]
+    "subhead": "Driving compounding growth through disciplined experimentation and orchestrated delivery."
   },
-  "snapshots": [
+  "metrics": [
     {
-      "stat": "$48M",
-      "lever": "Commerce conversion unlocked",
-      "timeframe": "18 months",
-      "methodology": "Sequenced CRO, CRM, and search sprints anchored on RICE scoring."
+      "key": "revenue_lift_pct",
+      "label": "Revenue Lift",
+      "value": "+19.4%",
+      "sample": 2180000,
+      "confidence": "95% CI ±1.6"
     },
     {
-      "stat": "-37%",
-      "lever": "Acquisition cost compression",
-      "timeframe": "9 months",
-      "methodology": "Unified first-party data and rebuilt MMM with Bayesian priors."
+      "key": "order_cvr_pct",
+      "label": "Order CVR",
+      "value": "+11.8%",
+      "sample": 1465000
     },
     {
-      "stat": "+9.4",
-      "lever": "NPS uplift across digital surfaces",
-      "timeframe": "2 quarters",
-      "methodology": "Introduced dual-track discovery with weekly journey clinics."
+      "key": "testing_velocity_per_qtr",
+      "label": "Testing Velocity",
+      "value": "18/qtr",
+      "confidence": "Audited cadence"
     },
     {
-      "stat": "4.6M",
-      "lever": "High-intent sessions generated",
-      "timeframe": "12 months",
-      "methodology": "Scaled content ops with semantic clustering and automation."
+      "key": "rpv_pct",
+      "label": "Revenue per Visitor",
+      "value": "+9.6%",
+      "sample": 980000
+    }
+  ],
+  "tapestry": [
+    {
+      "label": "A/B cadence",
+      "value": "18/qtr",
+      "timeseries": [12, 14, 16, 15, 17, 18, 19, 20, 19, 18, 18, 19]
+    },
+    {
+      "label": "GA4 coverage",
+      "value": "90%",
+      "timeseries": [62, 68, 71, 75, 78, 82, 85, 88, 90, 91, 92, 93]
+    },
+    {
+      "label": "Taxonomy depth",
+      "value": "9 tiers",
+      "timeseries": [3, 3, 4, 4, 5, 6, 7, 7, 8, 8, 9, 9]
+    },
+    {
+      "label": "Consent v2",
+      "value": "Deployed",
+      "timeseries": [0, 0, 0, 10, 40, 65, 80, 90, 95, 100, 100, 100]
+    },
+    {
+      "label": "Experiment readiness",
+      "value": "92%",
+      "timeseries": [48, 52, 60, 65, 70, 75, 80, 85, 88, 90, 92, 92]
+    },
+    {
+      "label": "Content lift",
+      "value": "+28%",
+      "timeseries": [12, 14, 16, 17, 18, 20, 21, 24, 25, 26, 27, 28]
     }
   ],
   "experience": [
     {
       "id": "exp-enterprise-commerce",
       "org_public": "Aurora Outfitters",
-      "org_confidential": "Confidential: Fortune 100 Retailer",
+      "org_confidential": "Fortune 100 Retailer, Multi-brand",
       "role_public": "Head of Digital Growth",
       "role_confidential": "Digital Growth Partner",
       "start": "2019-02-01",
@@ -48,10 +76,46 @@
         "budget": "$32M media & experimentation",
         "surfaces": "Web, app, retail POS"
       },
+      "budget_band": "$25-40M",
+      "stack": ["Optimizely", "GA4", "mParticle", "Fivetran"],
       "impacts": [
-        "Launched a modular experimentation program that accelerated release cadence by 3×.",
+        "Scaled a compound experimentation engine delivering 3.2× release velocity in 18 months.",
         "Rebuilt lifecycle segmentation, lifting repeat purchase share by 18%.",
         "Shipped AI-assisted merchandising that reduced out-of-stock incidents by 26%."
+      ],
+      "metrics": [
+        {
+          "label": "Revenue per visitor",
+          "delta_pct": 12.4,
+          "baseline": 5.3,
+          "sample": 1250000,
+          "confidence": "95% CI ±1.4",
+          "note": "Omnichannel tracked"
+        },
+        {
+          "label": "Attach rate",
+          "delta_pct": 9.1,
+          "baseline": 2.7,
+          "sample": 218000,
+          "note": "Bundled launch kits"
+        },
+        {
+          "label": "Testing velocity",
+          "delta_pct": 220,
+          "sample": 64,
+          "confidence": "Audited cadence"
+        }
+      ],
+      "artifacts": [
+        {
+          "label": "Experiment program playbook",
+          "url": "https://example.com/experiment-playbook.pdf"
+        },
+        {
+          "label": "Lifecycle segmentation map",
+          "url": "https://example.com/lifecycle-map.pdf",
+          "sensitive": true
+        }
       ],
       "tags": ["cro", "merchandising", "lifecycle", "leadership"],
       "caseStudyIds": ["cs-commerce-ops", "cs-merch-intelligence", "cs-lifecycle"]
@@ -59,7 +123,7 @@
     {
       "id": "exp-b2b-saas",
       "org_public": "SignalAmp",
-      "org_confidential": "Confidential: Series D SaaS Platform",
+      "org_confidential": "Series D SaaS Platform, Confidential",
       "role_public": "Director, Growth Strategy",
       "role_confidential": "Growth Strategy Partner",
       "start": "2016-06-01",
@@ -69,10 +133,39 @@
         "budget": "$12M pipeline acceleration",
         "surfaces": "Product, web, sales enablement"
       },
+      "budget_band": "$8-15M",
+      "stack": ["Marketo", "Salesforce", "Looker", "Amplitude"],
       "impacts": [
         "Established revenue operations pod increasing SQL velocity by 41%.",
         "Forged ABM playbook yielding 3.2× enterprise ACV uplift.",
         "Operationalized win/loss intelligence driving 12-point retention swing."
+      ],
+      "metrics": [
+        {
+          "label": "Pipeline velocity",
+          "delta_pct": 41,
+          "baseline": 28,
+          "sample": 1450,
+          "confidence": "90% CI"
+        },
+        {
+          "label": "Enterprise ACV",
+          "delta_pct": 220,
+          "baseline": 1,
+          "sample": 118,
+          "confidence": "Board validated"
+        }
+      ],
+      "artifacts": [
+        {
+          "label": "ABM operating model",
+          "url": "https://example.com/abm-operating-model.pdf"
+        },
+        {
+          "label": "Win/loss dashboard",
+          "url": "https://example.com/win-loss-dashboard",
+          "sensitive": true
+        }
       ],
       "tags": ["b2b", "revops", "abm", "ops"],
       "caseStudyIds": ["cs-revops", "cs-abm"]
@@ -80,7 +173,7 @@
     {
       "id": "exp-media-network",
       "org_public": "Northwind Media",
-      "org_confidential": "Confidential: Global Media Network",
+      "org_confidential": "Global Media Network, Confidential",
       "role_public": "Innovation Lead",
       "role_confidential": "Experience Innovation Partner",
       "start": "2013-04-01",
@@ -90,10 +183,34 @@
         "budget": "$8M platform modernization",
         "surfaces": "OTT, web, emerging surfaces"
       },
+      "budget_band": "$6-10M",
+      "stack": ["Adobe Target", "Segment", "Tableau", "React"],
       "impacts": [
         "Delivered unified design system reducing launch time by 45%.",
         "Introduced personalization framework boosting ad yield by 28%.",
         "Scaled editorial analytics, powering a 2.6× content velocity increase."
+      ],
+      "metrics": [
+        {
+          "label": "Ad yield",
+          "delta_pct": 28,
+          "baseline": 7.2,
+          "sample": 185000,
+          "note": "Across premium inventory"
+        },
+        {
+          "label": "Launch cycle time",
+          "delta_pct": -45,
+          "baseline": 6.5,
+          "sample": 420,
+          "confidence": "PMO audit"
+        }
+      ],
+      "artifacts": [
+        {
+          "label": "Design system spec",
+          "url": "https://example.com/design-system.pdf"
+        }
       ],
       "tags": ["media", "personalization", "design-systems", "analytics"],
       "caseStudyIds": ["cs-design-system", "cs-personalization"]
@@ -101,7 +218,7 @@
     {
       "id": "exp-startup",
       "org_public": "Brightline Labs",
-      "org_confidential": "Confidential: Venture-backed Marketplace",
+      "org_confidential": "Venture-backed Marketplace, Confidential",
       "role_public": "Founding Growth Partner",
       "role_confidential": "Founding Growth Partner",
       "start": "2010-01-01",
@@ -111,10 +228,32 @@
         "budget": "$2.5M seed runway",
         "surfaces": "Web, mobile web"
       },
+      "budget_band": "$1-3M",
+      "stack": ["Mixpanel", "HubSpot", "Segment", "Figma"],
       "impacts": [
         "Guided product-market fit loops culminating in 1.9× conversion lift.",
         "Expanded supply-side acquisition delivering 6× city footprint growth.",
         "Raised Series A with evidence-backed growth thesis and LTV clarity."
+      ],
+      "metrics": [
+        {
+          "label": "Activation conversion",
+          "delta_pct": 190,
+          "baseline": 4.1,
+          "sample": 16400
+        },
+        {
+          "label": "City footprint",
+          "delta_pct": 500,
+          "sample": 72,
+          "confidence": "Investor memo"
+        }
+      ],
+      "artifacts": [
+        {
+          "label": "Liquidity scorecard",
+          "url": "https://example.com/liquidity-scorecard"
+        }
       ],
       "tags": ["startup", "gtm", "fundraising", "product"],
       "caseStudyIds": ["cs-marketplace", "cs-pmf"]
@@ -129,7 +268,8 @@
       "approach": "Sequenced modular rollout with dual-track discovery.",
       "outcome": "+22% revenue lift and 14-point AOV increase.",
       "tags": ["cro", "commerce", "experimentation"],
-      "url": "/projects/commerce-replatform"
+      "url": "/projects/commerce-replatform",
+      "sensitive": false
     },
     {
       "id": "cs-merch-intelligence",
@@ -139,7 +279,8 @@
       "approach": "Deployed predictive inventory scoring and alerts.",
       "outcome": "26% fewer stockouts and 9% sell-through lift.",
       "tags": ["merchandising", "analytics", "ai"],
-      "url": "/projects/merch-intelligence"
+      "url": "/projects/merch-intelligence",
+      "sensitive": true
     },
     {
       "id": "cs-lifecycle",
@@ -149,7 +290,8 @@
       "approach": "Rebuilt segmentation and dynamic content system.",
       "outcome": "18% repeat purchase share uplift.",
       "tags": ["crm", "automation", "retention"],
-      "url": "/projects/lifecycle-reset"
+      "url": "/projects/lifecycle-reset",
+      "sensitive": true
     },
     {
       "id": "cs-revops",
@@ -159,7 +301,8 @@
       "approach": "Centralized data model with live health scoring.",
       "outcome": "41% faster SQL velocity.",
       "tags": ["revops", "b2b", "analytics"],
-      "url": "/projects/revops-spine"
+      "url": "/projects/revops-spine",
+      "sensitive": false
     },
     {
       "id": "cs-abm",
@@ -169,7 +312,8 @@
       "approach": "Launched account pods with orchestrated signals.",
       "outcome": "3.2× enterprise ACV uplift.",
       "tags": ["abm", "b2b", "orchestration"],
-      "url": "/projects/enterprise-abm"
+      "url": "/projects/enterprise-abm",
+      "sensitive": false
     },
     {
       "id": "cs-marketplace",
@@ -179,7 +323,19 @@
       "approach": "Built liquidity scoring and localized GTM kits.",
       "outcome": "6× city footprint growth.",
       "tags": ["marketplace", "gtm", "ops"],
-      "url": "/projects/marketplace-flywheel"
+      "url": "/projects/marketplace-flywheel",
+      "sensitive": false
+    },
+    {
+      "id": "cs-pmf",
+      "title": "PMF Insight Loop",
+      "thumb": "pmf",
+      "problem": "Signal-to-noise on usage blocked retention decisions.",
+      "approach": "Ingested mixed-method data into weekly operating rhythm.",
+      "outcome": "Retention inflection with 18-point NRR gain.",
+      "tags": ["product", "research", "retention"],
+      "url": "/projects/pmf-loop",
+      "sensitive": true
     }
   ],
   "keywords": [
