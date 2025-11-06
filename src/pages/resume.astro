@@ -2,203 +2,177 @@
 import AppShell from "../layouts/AppShell.astro";
 import SEO from "../components/SEO.astro";
 import Hero from "../components/resume/Hero.astro";
-import ImpactTapestry from "../components/resume/ImpactTapestry.astro";
-import ExperienceTimeline from "../components/resume/ExperienceTimeline.astro";
-import CaseStudyGrid from "../components/resume/CaseStudyGrid.astro";
-import KeywordChips from "../components/resume/KeywordChips.astro";
 import ConfidentialToggle from "../components/resume/ConfidentialToggle.astro";
+import BeforeAfter from "../components/resume/BeforeAfter.astro";
+import ExperimentGallery from "../components/resume/ExperimentGallery.astro";
+import ImpactTapestry from "../components/resume/ImpactTapestry.astro";
+import CaseStudyGrid from "../components/resume/CaseStudyGrid.astro";
+import ExperienceTimeline from "../components/resume/ExperienceTimeline.astro";
+import CapabilitiesMap from "../components/resume/CapabilitiesMap.astro";
 import ActionDock from "../components/resume/ActionDock.astro";
 import resume from "../data/resume.json";
-import { formatPreciseRange, formatApproxRange } from "../utils/confidential";
-import { parseTags } from "../utils/filters";
 import printStyles from "../styles/print.css?url";
 
 const searchParams = Astro.url.searchParams;
 const modeParam = searchParams.get("mode");
-const isConfidential = modeParam ? modeParam !== "public" : true;
-const activeTags = parseTags(searchParams.get("tags"));
+const isConfidentialInitial = modeParam ? modeParam !== "public" : true;
 
-const caseStudyMap = new Map(resume.caseStudies.map((item) => [item.id, item]));
+const formatRange = (start: string, end: string) => {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  const formatter = new Intl.DateTimeFormat("en", { month: "short", year: "numeric" });
+  return `${formatter.format(startDate)} – ${formatter.format(endDate)}`;
+};
 
-const experiences = resume.experience.map((item) => ({
-  ...item,
-  rangePublic: formatPreciseRange(item.start, item.end),
-  rangeConfidential: formatApproxRange(item.start, item.end),
-  caseStudies: item.caseStudyIds
-    .map((id) => caseStudyMap.get(id))
-    .filter(Boolean)
-    .map((caseStudy) => ({
-      id: caseStudy!.id,
-      title: caseStudy!.title,
-      url: caseStudy!.url,
-      sensitive: caseStudy!.sensitive ?? false
-    }))
-}));
+const experiences = resume.experience.map((experience) => {
+  const caseStudyRefs = experience.caseStudyIds
+    ? experience.caseStudyIds
+        .map((id) => resume.caseStudies.find((caseStudy) => caseStudy.id === id))
+        .filter(Boolean)
+        .map((caseStudy) => ({
+          id: caseStudy!.id,
+          title: caseStudy!.title,
+          sensitive: caseStudy!.sensitive ?? false
+        }))
+    : [];
+  return {
+    ...experience,
+    rangePublic: formatRange(experience.start, experience.end),
+    rangeConfidential: `~${experience.durationYears.toFixed(1)} years`,
+    caseStudies: caseStudyRefs
+  };
+});
 
 const email = "hello@ashtonhawkins.com";
 const title = "Ashton Hawkins · Resume";
 const description = resume.hero.subhead;
 const canonicalUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString() : Astro.url.href;
-const initialTagsLiteral = JSON.stringify(activeTags);
----
 
+const textExport = [
+  resume.hero.headline,
+  resume.hero.subhead,
+  "",
+  "Key Metrics:",
+  ...resume.kpis.map((kpi) => `${kpi.label}: ${kpi.value}${kpi.suffix ?? ""}`),
+  "",
+  "Experiences:",
+  ...experiences.map((experience) => `${experience.role_public} @ ${experience.org_public}`)
+].join("\n");
+---
 <AppShell>
   <SEO slot="head" title={title} description={description} ogTitle={title} canonical={canonicalUrl} />
   <link rel="stylesheet" href={printStyles} media="print" />
   <style is:inline>
+    :root {
+      --ink: #0b1120;
+      --ink-2: rgba(11, 17, 32, 0.7);
+      --surface: #f7f7f9;
+      --surface-alt: #ffffff;
+      --accent: #0f7bf2;
+      --r-2: 0.75rem;
+      --r-3: 1rem;
+      --r-4: 1.5rem;
+    }
+    body {
+      background: radial-gradient(circle at 0 0, rgba(15, 123, 242, 0.08), transparent 50%), radial-gradient(circle at 100% 0, rgba(15, 123, 242, 0.08), transparent 50%), var(--surface);
+    }
+    main {
+      position: relative;
+    }
+    main::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(var(--surface), var(--surface)),
+        conic-gradient(from 90deg, rgba(12, 20, 32, 0.04) 0deg, rgba(12, 20, 32, 0.04) 90deg, transparent 90deg, transparent 180deg);
+      background-size: 100% 100%, 48px 48px;
+      mix-blend-mode: multiply;
+      opacity: 0.6;
+      z-index: -1;
+    }
     [data-confidential-root][data-confidential-state="confidential"] .public-only {
-      display: none;
+      display: none !important;
     }
     [data-confidential-root][data-confidential-state="public"] .confidential-only {
-      display: none;
+      display: none !important;
     }
-    [data-toast] {
+    [data-toast-root] {
+      position: fixed;
+      bottom: 1.5rem;
+      right: clamp(1rem, 6vw, 6rem);
+      z-index: 50;
+      padding: 0.75rem 1.25rem;
+      border-radius: var(--r-2);
+      background: var(--ink);
+      color: var(--surface);
+      font-size: 0.875rem;
+      font-weight: 600;
       opacity: 0;
-      transform: translateY(8px);
-      transition: opacity 180ms ease, transform 180ms ease;
+      transform: translateY(12px);
+      transition: opacity 0.2s var(--motion-ease, cubic-bezier(.2,.8,.2,1)), transform 0.2s var(--motion-ease, cubic-bezier(.2,.8,.2,1));
+      pointer-events: none;
     }
-    [data-toast][data-state="visible"] {
+    [data-toast-root][data-state="visible"] {
       opacity: 1;
       transform: translateY(0);
     }
-    article[data-confidential-root] {
-      --resume-surface-odd: color-mix(in srgb, var(--surface) 88%, transparent);
-      --resume-surface-even: color-mix(in srgb, var(--surface) 80%, transparent);
-    }
   </style>
   <article
-    class="flex flex-col gap-16"
+    class="flex flex-col gap-12"
     data-confidential-root
-    data-confidential-state={isConfidential ? "confidential" : "public"}
+    data-confidential-state={isConfidentialInitial ? "confidential" : "public"}
   >
-    <Hero hero={resume.hero} email={email} metrics={resume.metrics} bio={resume.bioShort}>
-      <ConfidentialToggle slot="mode-toggle" isConfidential={isConfidential} />
+    <Hero hero={resume.hero} kpis={resume.kpis}>
+      <ConfidentialToggle slot="mode-toggle" isConfidential={isConfidentialInitial} />
     </Hero>
+    <BeforeAfter items={resume.beforeAfter} />
+    <ExperimentGallery items={resume.experiments} />
     <ImpactTapestry items={resume.tapestry} />
-    <ExperienceTimeline experiences={experiences} />
     <CaseStudyGrid caseStudies={resume.caseStudies} />
-    <section class="rounded-3xl border border-border/60 bg-[color:var(--resume-surface-even)] p-6 shadow-soft">
-      <span class="text-xs font-semibold uppercase tracking-[0.32em] text-text-muted">Focus areas</span>
-      <KeywordChips keywords={resume.keywords} activeTags={activeTags} />
-    </section>
+    <ExperienceTimeline experiences={experiences} />
+    <CapabilitiesMap capabilities={resume.capabilities} />
   </article>
-  <ActionDock email={email} bio={resume.bioShort} />
-  <div aria-live="polite" data-toast class="pointer-events-none fixed bottom-24 right-6 z-50 rounded-full bg-text-primary px-4 py-2 text-sm font-medium text-background shadow-soft"></div>
+  <ActionDock email={email} bio={resume.bioShort} jsonExport={resume} textExport={textExport} />
+  <div aria-live="polite" data-toast-root></div>
   <script type="module">
-import { parseTags, serializeTags } from '../utils/filters.ts';
-
-const initialTags = {initialTagsLiteral};
-let activeTags = new Set(initialTags);
-let printBound = false;
-
-const applyFilters = () => {
-  const tags = Array.from(activeTags);
-  document.querySelectorAll('[data-keyword-chip]').forEach((chip) => {
-    const tag = chip.getAttribute('data-tag');
-    const isActive = tag ? tags.includes(tag) : false;
-    chip.setAttribute('data-active', isActive ? 'true' : 'false');
-    chip.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-  });
-  document.querySelectorAll('[data-experience-item]').forEach((item) => {
-    const tagAttr = item.getAttribute('data-tags') ?? '';
-    const tagList = tagAttr
-      .split(',')
-      .map((tag) => tag.trim().toLowerCase())
-      .filter(Boolean);
-    const visible = tags.length === 0 || tagList.some((tag) => tags.includes(tag));
-    if (!visible) {
-      item.setAttribute('hidden', 'true');
-    } else {
-      item.removeAttribute('hidden');
-    }
-    const details = item.querySelector('[data-experience-card]');
-    if (details) {
-      details.setAttribute('aria-hidden', visible ? 'false' : 'true');
-      if (!visible) {
-        details.setAttribute('hidden', 'true');
-        details.removeAttribute('open');
-      } else {
-        details.removeAttribute('hidden');
-      }
-    }
-  });
-  document.querySelectorAll('[data-case-study-card]').forEach((card) => {
-    const tagAttr = card.getAttribute('data-tags') ?? '';
-    const tagList = tagAttr
-      .split(',')
-      .map((tag) => tag.trim().toLowerCase())
-      .filter(Boolean);
-    const visible = tags.length === 0 || tagList.some((tag) => tags.includes(tag));
-    card.setAttribute('aria-hidden', visible ? 'false' : 'true');
-    if (!visible) {
-      card.setAttribute('hidden', 'true');
-    } else {
-      card.removeAttribute('hidden');
-    }
-  });
-};
-
-const updateUrl = () => {
-  const url = new URL(window.location.href);
-  if (activeTags.size > 0) {
-    url.searchParams.set('tags', serializeTags(Array.from(activeTags)));
-  } else {
-    url.searchParams.delete('tags');
+const storageKey = 'resume_confidential';
+const root = document.querySelector<HTMLElement>('[data-confidential-root]');
+const toggle = document.querySelector<HTMLButtonElement>('[data-confidential-toggle]');
+const url = new URL(window.location.href);
+const modeParam = url.searchParams.get('mode');
+let state = root?.getAttribute('data-confidential-state') !== 'public';
+if (modeParam) {
+  state = modeParam !== 'public';
+  localStorage.setItem(storageKey, state ? 'true' : 'false');
+} else {
+  const stored = localStorage.getItem(storageKey);
+  if (stored !== null) {
+    state = stored !== 'false';
   }
-  history.replaceState(history.state, '', url.toString());
+}
+const apply = () => {
+  if (!root || !toggle) return;
+  root.setAttribute('data-confidential-state', state ? 'confidential' : 'public');
+  toggle.dataset.state = state ? 'confidential' : 'public';
+  const icon = toggle.querySelector('[data-icon]');
+  const label = toggle.querySelector('[data-label]');
+  if (icon) icon.textContent = state ? '🔒' : '🔓';
+  if (label) label.textContent = state ? 'Confidential' : 'Public';
 };
-
-const bindKeywordChips = () => {
-  document.querySelectorAll('[data-keyword-chip]').forEach((chip) => {
-    if (chip.dataset.bound === 'true') return;
-    chip.dataset.bound = 'true';
-    chip.addEventListener('click', () => {
-      const tag = chip.getAttribute('data-tag');
-      if (!tag) return;
-      if (activeTags.has(tag)) {
-        activeTags.delete(tag);
-      } else {
-        activeTags.add(tag);
-      }
-      applyFilters();
-      updateUrl();
-    });
+apply();
+if (toggle) {
+  toggle.addEventListener('click', () => {
+    state = !state;
+    localStorage.setItem(storageKey, state ? 'true' : 'false');
+    if (state) {
+      url.searchParams.set('mode', 'confidential');
+    } else {
+      url.searchParams.set('mode', 'public');
+    }
+    history.replaceState(history.state, '', url.toString());
+    apply();
   });
-};
-
-const bindPrintExpansion = () => {
-  if (printBound) return;
-  let previousState = new Map();
-  window.addEventListener('beforeprint', () => {
-    previousState = new Map();
-    document.querySelectorAll('[data-experience-card]').forEach((detail) => {
-      previousState.set(detail, detail.hasAttribute('open'));
-      detail.setAttribute('open', 'true');
-    });
-  });
-  window.addEventListener('afterprint', () => {
-    previousState.forEach((wasOpen, detail) => {
-      if (!wasOpen) {
-        detail.removeAttribute('open');
-      }
-    });
-  });
-  printBound = true;
-};
-
-const initialize = () => {
-  bindKeywordChips();
-  bindPrintExpansion();
-  applyFilters();
-};
-
-initialize();
-
-document.addEventListener('astro:page-load', () => {
-  const url = new URL(window.location.href);
-  activeTags = new Set(parseTags(url.searchParams.get('tags')));
-  bindKeywordChips();
-  applyFilters();
-});
+}
   </script>
 </AppShell>
