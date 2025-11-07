@@ -6,3 +6,8 @@ dist
 .DS_Store
 .vscode
 .idea
+public/images/
+*.jpg
+*.jpeg
+*.png
+*.webp
