@@ -22,6 +22,19 @@ const navLinks = [
 ];
 
 const { hideNavigation = false, hideSearch = false } = Astro.props as Props;
+const normalizePath = (value: string) => {
+  if (!value) return "/";
+  const trimmed = value.replace(/\/+$/, "");
+  return trimmed === "" ? "/" : trimmed;
+};
+const currentPath = normalizePath(Astro.url.pathname);
+const isActive = (href: string) => {
+  const target = normalizePath(href);
+  if (target === "/") {
+    return currentPath === "/";
+  }
+  return currentPath === target || currentPath.startsWith(`${target}/`);
+};
 ---
 
 <!DOCTYPE html>
@@ -61,7 +74,11 @@ const { hideNavigation = false, hideSearch = false } = Astro.props as Props;
               <a
                 transition:animate
                 href={link.href}
-                class="rounded-full px-4 py-2 text-text-secondary transition-all hover:bg-accent-soft hover:text-text-primary"
+                class:list={[
+                  "rounded-full px-4 py-2 transition-all hover:bg-accent-soft hover:text-text-primary",
+                  isActive(link.href) ? "bg-accent-soft text-text-primary" : "text-text-secondary"
+                ]}
+                aria-current={isActive(link.href) ? "page" : undefined}
                 data-astro-transition="animate"
               >
                 {link.label}
