@@ -18,116 +18,114 @@ interface CaseStudyItem {
 }
 
 const { caseStudies } = Astro.props as { caseStudies: CaseStudyItem[] };
+const hasData = caseStudies.length > 0;
 ---
-<section class="flex flex-col gap-6" id="case-studies">
-  <div class="flex flex-col gap-2">
-    <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Case studies</span>
-    <p class="max-w-3xl text-sm text-[color:var(--ink-2)]">
-      Anchors into longer-form engagements. Hover or focus to lift the tile; activate to unpack the story.
-    </p>
-  </div>
-  <div class="grid gap-4 lg:grid-cols-2" data-case-study-grid>
-    {caseStudies.map((study) => (
-      <details
-        id={`case-${study.id}`}
-        class="group overflow-hidden rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_96%,transparent)] shadow-[0_32px_80px_-60px_rgba(12,20,32,0.45)] transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(.2,.8,.2,1)] open:text-[color:var(--ink-2)]"
-        data-case-study
-        data-tags={study.tags?.join(",") ?? ""}
-        data-filter-item
-        data-motion
-      >
-        <summary class="flex cursor-pointer flex-col gap-4 px-5 py-4 outline-none">
-          <div class="overflow-hidden rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_10%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_92%,transparent)]">
-            {study.thumb ? (
-              <img
-                src={study.thumb}
-                alt=""
-                loading="lazy"
-                decoding="async"
-                class={`h-36 w-full object-cover transition duration-200 ease-[cubic-bezier(.2,.8,.2,1)] group-open:scale-[1.02] group-hover:scale-[1.02] ${study.sensitive ? "public-only" : ""}`}
-                style="filter: saturate(0) contrast(1.05);"
-              />
-            ) : (
-              <div class="h-36 w-full bg-[color:color-mix(in_srgb,var(--ink)_6%,transparent)]"></div>
-            )}
-            {study.sensitive && (
-              <div class="confidential-only flex h-36 w-full items-center justify-center bg-[color:color-mix(in_srgb,var(--ink)_8%,transparent)] text-sm font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
-                Masked
-              </div>
-            )}
-          </div>
-          <div class="flex flex-col gap-1">
-            <h3 class="text-lg font-semibold text-[color:var(--ink)] group-open:text-[color:var(--accent)]">{study.title}</h3>
-            <p class="text-sm text-[color:var(--ink-2)]">{study.problem}</p>
-          </div>
-        </summary>
-        <div class="flex flex-col gap-4 px-5 pb-5 text-sm text-[color:var(--ink-2)]">
-          <div>
-            <span class="font-semibold text-[color:var(--ink)]">Approach</span>
-            <p class="mt-2 leading-relaxed">{study.approach}</p>
-          </div>
-          <div>
-            <span class="font-semibold text-[color:var(--ink)]">Outcome</span>
-            <p class="mt-2 leading-relaxed">{study.outcome}</p>
-          </div>
-          {study.receipts && study.receipts.length > 0 && (
-            <div class="flex flex-col gap-2">
-              <span class="text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">Receipts</span>
-              <div class="flex flex-wrap gap-2">
-                {study.receipts.map((receipt) => (
-                  <a
-                    href={receipt.url}
-                    class={`inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink)] transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_srgb,var(--accent)_28%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)] ${receipt.sensitive ? "public-only" : ""}`}
-                  >
-                    {receipt.label}
-                  </a>
-                ))}
-                {study.receipts.some((receipt) => receipt.sensitive) && (
-                  <span class="confidential-only inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
-                    Confidential
-                  </span>
-                )}
-              </div>
+{hasData && (
+  <section class="flex flex-col gap-6" id="case-studies" data-band data-motion>
+    <div class="flex flex-col gap-2">
+      <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Case studies</span>
+      <p class="max-w-3xl text-sm text-[color:var(--ink-2)]">
+        High-leverage narratives from experimentation, IA, checkout, and consent modernization. Activate to reveal context.
+      </p>
+    </div>
+    <div class="grid gap-3 lg:grid-cols-2" data-case-study-grid>
+      {caseStudies.map((study) => (
+        <details
+          id={`case-${study.id}`}
+          class="group overflow-hidden rounded-[var(--radius-3)] border border-[color:color-mix(in_lab,var(--ink) 10%, transparent)] bg-[color:color-mix(in_lab,var(--surface) 94%, transparent)]"
+          data-case-study
+          data-tags={study.tags?.map((tag) => tag.toLowerCase()).join(",") ?? ""}
+          data-filter-item
+          data-motion
+        >
+          <summary class="flex cursor-pointer flex-col gap-4 px-5 py-4 text-left outline-none transition-[background,transform] duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:bg-[color:color-mix(in_lab,var(--surface) 90%, transparent)] focus-visible:bg-[color:color-mix(in_lab,var(--surface) 90%, transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]">
+            <div class="overflow-hidden rounded-[var(--radius-2)] border border-[color:color-mix(in_lab,var(--ink) 10%, transparent)] bg-[color:color-mix(in_lab,var(--surface) 90%, transparent)]">
+              {study.thumb ? (
+                <>
+                  <img
+                    src={study.thumb}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    class={`h-40 w-full object-cover transition duration-200 ease-[cubic-bezier(.2,.8,.2,1)] group-open:scale-[1.02] group-hover:scale-[1.02] ${study.sensitive ? "public-only" : ""}`}
+                    style="filter: saturate(0.6) contrast(1.05);"
+                  />
+                  {study.sensitive && (
+                    <div class="confidential-only flex h-40 w-full items-center justify-center bg-[color:color-mix(in_lab,var(--ink) 12%, transparent)] text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
+                      Redacted in confidential mode
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div class="flex h-40 w-full items-center justify-center bg-[color:color-mix(in_lab,var(--ink) 8%, transparent)] text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
+                  Preview unavailable
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </details>
-    ))}
-  </div>
-</section>
+            <div class="flex flex-col gap-1">
+              <h3 class="text-lg font-semibold text-[color:var(--ink)] group-open:text-[color:var(--accent)]">{study.title}</h3>
+              <p class="text-sm text-[color:var(--ink-2)]">{study.problem}</p>
+            </div>
+          </summary>
+          <div class="flex flex-col gap-4 px-5 pb-5 text-sm leading-relaxed text-[color:var(--ink-2)]">
+            <div>
+              <span class="font-semibold text-[color:var(--ink)]">Approach</span>
+              <p class="mt-2">{study.approach}</p>
+            </div>
+            <div>
+              <span class="font-semibold text-[color:var(--ink)]">Outcome</span>
+              <p class="mt-2">{study.outcome}</p>
+            </div>
+            {study.receipts && study.receipts.length > 0 && (
+              <div class="flex flex-col gap-2">
+                <span class="text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">Artifacts</span>
+                <div class="flex flex-wrap gap-2">
+                  {study.receipts.map((receipt) => (
+                    <a
+                      href={receipt.url}
+                      class={`inline-flex items-center gap-2 rounded-full border border-[color:var(--keyline)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--ink)] transition-[border,background,color] duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_lab,var(--accent) 40%, transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)] ${receipt.sensitive ? "public-only" : ""}`}
+                    >
+                      {receipt.label}
+                    </a>
+                  ))}
+                  {study.receipts.some((receipt) => receipt.sensitive) && (
+                    <span class="confidential-only inline-flex items-center gap-2 rounded-full border border-[color:var(--keyline)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
+                      Redacted
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </details>
+      ))}
+    </div>
+  </section>
+)}
 <script type="module">
-import { prefersReducedMotion } from "../../utils/motion";
-
-const details = document.querySelectorAll<HTMLDetailsElement>("[data-case-study]");
-const supportsViewTransition = typeof (document as any).startViewTransition === "function";
-
-const enhance = (detail: HTMLDetailsElement) => {
-  const summary = detail.querySelector("summary");
-  if (!summary || summary.dataset.bound === "true") return;
-  summary.dataset.bound = "true";
-  summary.addEventListener("click", (event) => {
-    if (!supportsViewTransition || prefersReducedMotion()) return;
-    event.preventDefault();
-    const willOpen = !detail.open;
-    (document as any).startViewTransition(() => {
-      detail.open = willOpen;
-    });
-  });
-  summary.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" || event.key === " ") {
-      if (!supportsViewTransition || prefersReducedMotion()) return;
-      event.preventDefault();
-      const willOpen = !detail.open;
-      (document as any).startViewTransition(() => {
-        detail.open = willOpen;
+  const bindDetails = () => {
+    document.querySelectorAll<HTMLDetailsElement>("[data-case-study]").forEach((detail) => {
+      if (detail.dataset.bound === "true") return;
+      detail.dataset.bound = "true";
+      const summary = detail.querySelector("summary");
+      if (summary) {
+        summary.setAttribute("role", "button");
+        summary.setAttribute("aria-expanded", detail.open ? "true" : "false");
+        summary.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            detail.open = !detail.open;
+          }
+        });
+      }
+      detail.addEventListener("toggle", () => {
+        const summary = detail.querySelector("summary");
+        if (!summary) return;
+        summary.setAttribute("aria-expanded", detail.open ? "true" : "false");
       });
-    }
-  });
-};
+    });
+  };
 
-details.forEach(enhance);
-
-document.addEventListener("astro:page-load", () => {
-  document.querySelectorAll<HTMLDetailsElement>("[data-case-study]").forEach(enhance);
-});
+  bindDetails();
+  document.addEventListener("astro:page-load", bindDetails);
 </script>

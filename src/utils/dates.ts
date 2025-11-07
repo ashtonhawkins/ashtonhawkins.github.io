@@ -40,15 +40,12 @@ export const formatApproxDuration = (start?: string | null, end?: string | null)
   return `~${label} year${label === "1" ? "" : "s"}`;
 };
 
-export const durationYears = (start?: string | null, end?: string | null) => {
+export const formatApproxYears = (start?: string | null, end?: string | null) => {
   const months = monthsBetween(start, end);
-  if (!months) return 0;
-  return Math.round((months / 12) * 10) / 10;
-};
-
-export const formatConfidentialRange = (start?: string | null, end?: string | null) => {
-  const tenure = formatApproxDuration(start, end);
-  const precise = formatPreciseRange(start, end);
-  if (!tenure) return precise;
-  return `${tenure} (${precise})`;
+  if (!months) return "~0.0 years";
+  const years = Math.max(0, months / 12);
+  const rounded = Math.round(years * 10) / 10;
+  const label = rounded.toFixed(1);
+  const plural = label === "1.0" ? "year" : "years";
+  return `~${label} ${plural}`;
 };

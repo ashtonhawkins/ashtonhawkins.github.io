@@ -1,0 +1,73 @@
+---
+---
+<button
+  type="button"
+  class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--keyline)] bg-[color:color-mix(in_lab,var(--surface) 92%, transparent)] text-sm text-[color:var(--ink-2)] transition-[border,background,color,transform] duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_lab,var(--accent) 40%, transparent)] hover:text-[color:var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+  data-resume-theme-toggle
+  aria-pressed="false"
+  aria-label="Toggle dark mode"
+>
+  <span aria-hidden="true" data-theme-icon class="text-lg">🌙</span>
+</button>
+<script type="module">
+  const STORAGE_KEY = "theme";
+  const LEGACY_KEY = "site-theme";
+  const toggle = document.querySelector("[data-resume-theme-toggle]");
+  if (!toggle) return;
+
+  const applyTheme = (theme) => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.dataset.theme = theme;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, theme);
+      window.localStorage.setItem(LEGACY_KEY, theme);
+    } catch (error) {
+      /* noop */
+    }
+    toggle.dataset.state = theme;
+    toggle.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+    toggle.setAttribute("aria-label", theme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+    const icon = toggle.querySelector("[data-theme-icon]");
+    if (icon) icon.textContent = theme === "dark" ? "☀️" : "🌙";
+  };
+
+  const resolveTheme = () => {
+    try {
+      const stored = window.localStorage.getItem(STORAGE_KEY) ?? window.localStorage.getItem(LEGACY_KEY);
+      if (stored === "light" || stored === "dark") return stored;
+    } catch (error) {
+      /* noop */
+    }
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  };
+
+  let current = resolveTheme();
+  applyTheme(current);
+
+  toggle.addEventListener("click", () => {
+    current = current === "dark" ? "light" : "dark";
+    applyTheme(current);
+  });
+
+  toggle.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      current = current === "dark" ? "light" : "dark";
+      applyTheme(current);
+    }
+  });
+
+  const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const handleMedia = (event) => {
+    try {
+      const stored = window.localStorage.getItem(STORAGE_KEY) ?? window.localStorage.getItem(LEGACY_KEY);
+      if (stored === "light" || stored === "dark") return;
+    } catch (error) {
+      /* noop */
+    }
+    current = event.matches ? "dark" : "light";
+    applyTheme(current);
+  };
+  mediaQuery.addEventListener("change", handleMedia);
+  document.addEventListener("astro:before-swap", () => mediaQuery.removeEventListener("change", handleMedia), { once: true });
+</script>

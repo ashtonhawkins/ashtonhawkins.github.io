@@ -1,4 +1,7 @@
 const STORAGE_KEY = "resume_confidential";
+const PARAM_KEY = "mode";
+
+type ConfidentialMode = "confidential" | "public";
 
 declare global {
   interface Document {
@@ -6,17 +9,32 @@ declare global {
   }
 }
 
-const parseModeParam = (value: string | null) => {
+const parseModeParam = (value: string | null): ConfidentialMode | null => {
   if (!value) return null;
-  if (value.toLowerCase() === "public") return false;
-  if (value.toLowerCase() === "confidential") return true;
+  const normalized = value.toLowerCase();
+  if (normalized === "public") return "public";
+  if (normalized === "confidential") return "confidential";
   return null;
 };
 
-const commitUrlParam = (state: boolean) => {
+const commitUrlParam = (mode: ConfidentialMode) => {
   const url = new URL(window.location.href);
-  url.searchParams.set("mode", state ? "confidential" : "public");
+  url.searchParams.set(PARAM_KEY, mode);
   window.history.replaceState(window.history.state, "", url.toString());
+};
+
+const updateToggle = (toggle: HTMLButtonElement | null, mode: ConfidentialMode) => {
+  if (!toggle) return;
+  toggle.dataset.state = mode;
+  toggle.setAttribute("aria-pressed", mode === "confidential" ? "true" : "false");
+  toggle.setAttribute(
+    "aria-label",
+    mode === "confidential" ? "Switch to public mode" : "Switch to confidential mode"
+  );
+  const icon = toggle.querySelector<HTMLElement>("[data-lock-icon]");
+  const label = toggle.querySelector<HTMLElement>("[data-lock-label]");
+  if (icon) icon.textContent = mode === "confidential" ? "🔒" : "🔓";
+  if (label) label.textContent = mode === "confidential" ? "Confidential" : "Public";
 };
 
 interface ConfidentialOptions {
@@ -26,17 +44,6 @@ interface ConfidentialOptions {
   announcerSelector?: string;
 }
 
-const updateToggle = (toggle: HTMLButtonElement | null, state: boolean) => {
-  if (!toggle) return;
-  toggle.dataset.state = state ? "confidential" : "public";
-  toggle.setAttribute("aria-pressed", state ? "true" : "false");
-  toggle.setAttribute("aria-label", state ? "Switch to public mode" : "Switch to confidential mode");
-  const icon = toggle.querySelector<HTMLElement>("[data-lock-icon]");
-  const label = toggle.querySelector<HTMLElement>("[data-lock-label]");
-  if (icon) icon.textContent = state ? "🔒" : "🔓";
-  if (label) label.textContent = state ? "Confidential" : "Public";
-};
-
 export const initializeConfidentialMode = ({
   defaultState,
   rootSelector = "[data-confidential-root]",
@@ -45,40 +52,62 @@ export const initializeConfidentialMode = ({
 }: ConfidentialOptions) => {
   const root = document.querySelector<HTMLElement>(rootSelector);
   if (!root) return;
-  const toggle = document.querySelector<HTMLButtonElement>(toggleSelector);
+
+  const toggles = Array.from(document.querySelectorAll<HTMLButtonElement>(toggleSelector));
   const announcer = document.querySelector<HTMLElement>(announcerSelector);
 
-  const currentParam = parseModeParam(new URL(window.location.href).searchParams.get("mode"));
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  let state = defaultState;
-  if (currentParam !== null) state = currentParam;
-  else if (stored !== null) state = stored === "true";
-
-  const applyState = (next: boolean, announce = false) => {
-    state = next;
-    root.dataset.confidentialState = state ? "confidential" : "public";
-    document.documentElement.dataset.confidential = state ? "confidential" : "public";
-    window.localStorage.setItem(STORAGE_KEY, state ? "true" : "false");
-    commitUrlParam(state);
-    updateToggle(toggle, state);
-    if (announce && announcer) {
-      announcer.textContent = state ? "Confidential mode enabled" : "Confidential mode disabled";
+  const resolveInitialMode = (): ConfidentialMode => {
+    const urlMode = parseModeParam(new URL(window.location.href).searchParams.get(PARAM_KEY));
+    if (urlMode) {
+      try {
+        window.localStorage.setItem(STORAGE_KEY, urlMode === "confidential" ? "true" : "false");
+      } catch (error) {
+        /* noop */
+      }
+      return urlMode;
     }
-    document.dispatchEvent(new CustomEvent("resume:confidential-change", { detail: { state } }));
+    try {
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      if (stored === "true") return "confidential";
+      if (stored === "false") return "public";
+    } catch (error) {
+      /* noop */
+    }
+    return defaultState ? "confidential" : "public";
   };
 
-  applyState(state);
+  let mode = resolveInitialMode();
 
-  if (toggle && toggle.dataset.bound !== "true") {
+  const applyMode = (next: ConfidentialMode, announce = false) => {
+    mode = next;
+    root.dataset.confidentialState = mode;
+    document.documentElement.dataset.confidential = mode;
+    toggles.forEach((toggle) => updateToggle(toggle, mode));
+    try {
+      window.localStorage.setItem(STORAGE_KEY, mode === "confidential" ? "true" : "false");
+    } catch (error) {
+      /* noop */
+    }
+    commitUrlParam(mode);
+    if (announce && announcer) {
+      announcer.textContent = mode === "confidential" ? "Confidential mode enabled" : "Public mode enabled";
+    }
+    document.dispatchEvent(new CustomEvent("resume:confidential-change", { detail: { mode } }));
+  };
+
+  applyMode(mode);
+
+  toggles.forEach((toggle) => {
+    if (toggle.dataset.bound === "true") return;
     toggle.dataset.bound = "true";
-    toggle.addEventListener("click", () => applyState(!state, true));
+    toggle.addEventListener("click", () => applyMode(mode === "confidential" ? "public" : "confidential", true));
     toggle.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        applyState(!state, true);
+        applyMode(mode === "confidential" ? "public" : "confidential", true);
       }
     });
-  }
+  });
 
   if (!document.__confidentialHotkeyBound) {
     document.__confidentialHotkeyBound = true;
@@ -96,7 +125,7 @@ export const initializeConfidentialMode = ({
       ) {
         return;
       }
-      applyState(!state, true);
+      applyMode(mode === "confidential" ? "public" : "confidential", true);
     });
   }
 };

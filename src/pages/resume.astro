@@ -1,23 +1,24 @@
 ---
 import AppShell from "../layouts/AppShell.astro";
 import SEO from "../components/SEO.astro";
-import Hero from "../components/resume/Hero.astro";
 import ConfidentialToggle from "../components/resume/ConfidentialToggle.astro";
-import BeforeAfter from "../components/resume/BeforeAfter.astro";
-import ExperimentGallery from "../components/resume/ExperimentGallery.astro";
+import ThemeToggle from "../components/resume/ThemeToggle.astro";
+import Scoreboard from "../components/resume/Scoreboard.astro";
 import ImpactTapestry from "../components/resume/ImpactTapestry.astro";
+import ExperimentGallery from "../components/resume/ExperimentGallery.astro";
 import CaseStudyGrid from "../components/resume/CaseStudyGrid.astro";
 import ExperienceTimeline from "../components/resume/ExperienceTimeline.astro";
-import CapabilitiesMap from "../components/resume/CapabilitiesMap.astro";
+import KeywordChips from "../components/resume/KeywordChips.astro";
 import ActionDock from "../components/resume/ActionDock.astro";
 import resume from "../data/resume.json";
 import printStyles from "../styles/print.css?url";
-import { formatPreciseRange, formatApproxDuration } from "../utils/dates";
+import { formatPreciseRange, formatApproxYears } from "../utils/dates";
 import { meetsMetricGate } from "../utils/metrics";
 
 const searchParams = Astro.url.searchParams;
 const modeParam = searchParams.get("mode");
-const isConfidentialInitial = modeParam ? modeParam !== "public" : true;
+const isConfidentialInitial = modeParam === "public" ? false : true;
+const initialTags = searchParams.get("tags")?.split(",").map((tag) => tag.trim()).filter(Boolean) ?? [];
 
 const caseStudyTags: Record<string, string[]> = {
   "cs-checkout-simplification": ["Checkout", "CRO", "Optimizely"],
@@ -52,16 +53,20 @@ const experiences = resume.experience.map((experience) => {
           sensitive: caseStudy!.sensitive ?? false
         }))
     : [];
-  const metrics = experience.metrics.filter((metric) => meetsMetricGate(metric));
+
   return {
     ...experience,
-    metrics,
+    metrics: experience.metrics.filter((metric) => meetsMetricGate(metric)),
     rangePublic: formatPreciseRange(experience.start, experience.end),
-    rangeConfidential: formatApproxDuration(experience.start, experience.end),
+    rangeConfidential: formatApproxYears(experience.start, experience.end),
     caseStudies: caseStudyRefs,
     tags: experienceTags[experience.id] ?? []
   };
 });
+
+const experiments = resume.experiments.map((experiment) => ({
+  ...experiment
+}));
 
 const email = "hello@ashtonhawkins.com";
 const title = "Ashton Hawkins · Resume";
@@ -81,21 +86,58 @@ const textExport = [
 ---
 <AppShell>
   <SEO slot="head" title={title} description={description} ogTitle={title} canonical={canonicalUrl} />
+  <Fragment slot="head">
+    <meta name="color-scheme" content="light dark" />
+    <script is:inline>
+      (() => {
+        const storageKey = "theme";
+        const legacyKey = "site-theme";
+        try {
+          const stored = window.localStorage.getItem(storageKey) ?? window.localStorage.getItem(legacyKey);
+          const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          const theme = stored === "light" || stored === "dark" ? stored : prefersDark ? "dark" : "light";
+          document.documentElement.classList.toggle("dark", theme === "dark");
+          document.documentElement.dataset.theme = theme;
+          window.localStorage.setItem(storageKey, theme);
+          window.localStorage.setItem(legacyKey, theme);
+        } catch (error) {
+          const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.classList.toggle("dark", prefersDark);
+          document.documentElement.dataset.theme = prefersDark ? "dark" : "light";
+        }
+      })();
+    </script>
+  </Fragment>
   <link rel="stylesheet" href={printStyles} media="print" />
   <style is:inline>
     :root {
-      --ink: #0b1120;
-      --ink-2: rgba(11, 17, 32, 0.72);
-      --surface: #f6f7f9;
+      color-scheme: light;
+      --ink: #0f172a;
+      --ink-2: rgba(15, 23, 42, 0.72);
+      --surface: #f8fafc;
       --surface-alt: #ffffff;
+      --surface-faint: rgba(15, 23, 42, 0.08);
       --accent: #0f7bf2;
-      --r-2: 0.75rem;
-      --r-3: 1rem;
-      --r-4: 1.5rem;
-      --shadow-soft: 0 48px 120px -80px rgba(11, 17, 32, 0.65);
+      --keyline: color-mix(in_lab, var(--ink) 12%, transparent);
+      --radius-2: 0.75rem;
+      --radius-3: 1rem;
+      --radius-4: 1.5rem;
+      --shadow-soft: 0 48px 120px -80px rgba(15, 23, 42, 0.5);
+    }
+    html.dark {
+      color-scheme: dark;
+      --ink: #f1f5f9;
+      --ink-2: rgba(226, 232, 240, 0.68);
+      --surface: #0b1120;
+      --surface-alt: #111c33;
+      --surface-faint: rgba(15, 23, 42, 0.32);
+      --accent: #60a5fa;
+      --keyline: color-mix(in_lab, var(--ink) 18%, transparent);
+      --shadow-soft: 0 48px 120px -80px rgba(15, 23, 42, 0.85);
     }
     body {
-      background: radial-gradient(circle at 0 0, rgba(15, 123, 242, 0.08), transparent 45%), radial-gradient(circle at 100% 0, rgba(15, 123, 242, 0.06), transparent 50%), var(--surface);
+      background: var(--surface);
+      color: var(--ink);
     }
     main {
       position: relative;
@@ -105,11 +147,23 @@ const textExport = [
       position: fixed;
       inset: 0;
       pointer-events: none;
-      background: linear-gradient(var(--surface), var(--surface)), conic-gradient(from 90deg at 1px 1px, rgba(12, 20, 32, 0.05) 0deg, rgba(12, 20, 32, 0.05) 90deg, transparent 90deg, transparent 180deg);
-      background-size: 100% 100%, 48px 48px;
-      mix-blend-mode: multiply;
-      opacity: 0.6;
+      background: radial-gradient(circle at 0 0, var(--surface-faint), transparent 45%), radial-gradient(circle at 100% 0, var(--surface-faint), transparent 50%);
+      opacity: 0.7;
       z-index: -1;
+    }
+    [data-confidential-root] {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(2rem, 4vw, 3.5rem);
+    }
+    [data-confidential-root] > section,
+    [data-confidential-root] > article,
+    [data-confidential-root] > div[data-band] {
+      background: var(--surface-alt);
+      border: 1px solid var(--keyline);
+      border-radius: var(--radius-4);
+      box-shadow: var(--shadow-soft);
+      padding: clamp(1.75rem, 2vw, 2.5rem);
     }
     [data-confidential-root][data-confidential-state="confidential"] .public-only {
       display: none !important;
@@ -120,15 +174,35 @@ const textExport = [
     [data-motion] {
       opacity: 0;
       transform: translateY(24px);
-      transition: opacity 0.32s cubic-bezier(.2,.8,.2,1), transform 0.32s cubic-bezier(.2,.8,.2,1);
+      transition: opacity 200ms cubic-bezier(.2,.8,.2,1), transform 200ms cubic-bezier(.2,.8,.2,1);
     }
     [data-motion].is-visible {
       opacity: 1;
       transform: translateY(0);
     }
+    [data-toast-root] {
+      position: fixed;
+      bottom: 1.5rem;
+      right: clamp(1rem, 6vw, 6rem);
+      z-index: 60;
+      padding: 0.75rem 1.25rem;
+      border-radius: var(--radius-2);
+      background: var(--ink);
+      color: var(--surface-alt);
+      font-size: 0.875rem;
+      font-weight: 600;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 200ms cubic-bezier(.2,.8,.2,1), transform 200ms cubic-bezier(.2,.8,.2,1);
+      pointer-events: none;
+    }
+    [data-toast-root][data-state="visible"] {
+      opacity: 1;
+      transform: translateY(0);
+    }
     [data-action-dock],
     [data-action-pill] {
-      transition: opacity 0.2s cubic-bezier(.2,.8,.2,1), transform 0.2s cubic-bezier(.2,.8,.2,1);
+      transition: opacity 200ms cubic-bezier(.2,.8,.2,1), transform 200ms cubic-bezier(.2,.8,.2,1);
     }
     [data-action-dock][data-state="hidden"],
     [data-action-pill][data-state="hidden"] {
@@ -141,188 +215,146 @@ const textExport = [
       opacity: 1;
       transform: translateY(0);
     }
-    [data-toast-root] {
-      position: fixed;
-      bottom: 1.5rem;
-      right: clamp(1rem, 6vw, 6rem);
-      z-index: 50;
-      padding: 0.75rem 1.25rem;
-      border-radius: var(--r-2);
-      background: var(--ink);
-      color: var(--surface);
-      font-size: 0.875rem;
-      font-weight: 600;
-      opacity: 0;
-      transform: translateY(12px);
-      transition: opacity 0.2s cubic-bezier(.2,.8,.2,1), transform 0.2s cubic-bezier(.2,.8,.2,1);
-      pointer-events: none;
-    }
-    [data-toast-root][data-state="visible"] {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    [data-filter-item][data-filter-hidden="true"] {
-      display: none !important;
-    }
-    [data-tag-chip] {
-      transition: transform 0.2s cubic-bezier(.2,.8,.2,1), background 0.2s cubic-bezier(.2,.8,.2,1), border-color 0.2s cubic-bezier(.2,.8,.2,1);
-    }
-    [data-tag-chip][data-active="true"] {
-      background: color-mix(in srgb, var(--accent) 16%, transparent);
-      color: var(--ink);
-      border-color: color-mix(in srgb, var(--accent) 32%, transparent);
-      transform: translateY(-2px);
-    }
-    [data-case-study] summary {
-      transition: transform 0.2s cubic-bezier(.2,.8,.2,1), box-shadow 0.2s cubic-bezier(.2,.8,.2,1);
-    }
-    [data-case-study]:is(:hover, :focus-within) summary {
-      transform: translateY(-2px);
-    }
-    dialog[data-methodology-dialog]::backdrop {
-      background: rgba(11, 17, 32, 0.48);
-      backdrop-filter: blur(12px);
-    }
-    @media (prefers-reduced-motion: reduce) {
-      [data-motion] {
-        opacity: 1;
-        transform: none;
-        transition: none;
-      }
-      [data-tag-chip] {
-        transition: none;
-      }
-      [data-case-study] summary {
-        transition: none;
-      }
-    }
   </style>
   <article
-    class="flex flex-col gap-12"
     data-confidential-root
     data-confidential-state={isConfidentialInitial ? "confidential" : "public"}
+    data-tags-initial={initialTags.map((tag) => tag.toLowerCase()).join(",")}
   >
-    <Hero hero={resume.hero} kpis={resume.kpis}>
-      <ConfidentialToggle slot="mode-toggle" isConfidential={isConfidentialInitial} />
-    </Hero>
-    <section class="flex flex-col gap-4" id="keywords">
-      <div class="flex flex-col gap-2">
-        <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Keywords</span>
-        <p class="max-w-2xl text-sm text-[color:var(--ink-2)]">Filter experience and case studies by focus area. Toggle via keyboard with Enter or Space.</p>
-      </div>
-      <div class="flex flex-wrap gap-2" data-tag-cloud>
-        {resume.keywords.map((keyword) => (
-          <button
-            type="button"
-            class="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_94%,transparent)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
-            data-tag-chip={keyword}
-            aria-pressed="false"
-          >
-            {keyword}
-          </button>
-        ))}
+    <section data-band class="relative overflow-hidden" data-motion>
+      <div data-hero-sentinel aria-hidden="true" class="absolute inset-x-0 top-0 h-1"></div>
+      <div class="absolute inset-0 -z-10 bg-[conic-gradient(from_90deg_at_1px_1px,var(--surface-faint)_0deg,var(--surface-faint)_90deg,transparent_90deg,transparent_180deg)] bg-[length:42px_42px]"></div>
+      <header class="flex flex-col gap-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.32em] text-[var(--ink-2)]">
+            <span class="inline-flex items-center gap-2 rounded-full border border-[color:var(--keyline)] bg-[color:color-mix(in_lab,var(--surface) 92%, transparent)] px-3 py-1 text-[var(--ink)]">
+              Resume
+            </span>
+            <span class="inline-flex items-center gap-2 rounded-full border border-[color:var(--keyline)] bg-[color:color-mix(in_lab,var(--surface) 94%, transparent)] px-3 py-1">
+              <span class="confidential-only inline-flex items-center gap-2">🔒 Confidential</span>
+              <span class="public-only inline-flex items-center gap-2">🔓 Public</span>
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <ThemeToggle />
+            <ConfidentialToggle isConfidential={isConfidentialInitial} />
+          </div>
+        </div>
+        <div class="flex flex-col gap-4">
+          <h1 class="text-4xl font-semibold leading-tight tracking-[-0.02em] text-[color:var(--ink)] sm:text-5xl">
+            {resume.hero.headline}
+          </h1>
+          <p class="max-w-3xl text-base leading-relaxed text-[color:var(--ink-2)] sm:text-lg">
+            {resume.hero.subhead}
+          </p>
+        </div>
+      </header>
+      <div class="mt-8">
+        <Scoreboard items={resume.kpis} />
       </div>
     </section>
-    <BeforeAfter items={resume.beforeAfter} />
-    <ExperimentGallery items={resume.experiments} />
+
+    <KeywordChips keywords={resume.keywords} activeTags={initialTags} />
+
     <ImpactTapestry items={resume.tapestry} />
+
+    <ExperimentGallery experiments={experiments} />
+
     <CaseStudyGrid caseStudies={caseStudies} />
+
     <ExperienceTimeline experiences={experiences} />
-    <CapabilitiesMap capabilities={resume.capabilities} />
+
+    <ActionDock
+      email={email}
+      bio={resume.hero.subhead}
+      jsonExport={resume}
+      textExport={textExport}
+    />
   </article>
-  <ActionDock email={email} bio={resume.bioShort} jsonExport={resume} textExport={textExport} />
-  <div aria-live="polite" data-toast-root data-state="hidden"></div>
+  <div data-toast-root data-state="hidden" aria-live="polite"></div>
   <script type="module">
-import { initializeConfidentialMode } from "../utils/confidential";
-import { onceVisible, prefersReducedMotion } from "../utils/motion";
-import { parseTags, toggleTag, serializeTags, matchesAnyTag } from "../utils/filters";
+    import { initializeConfidentialMode } from "../utils/confidential";
+    import { observeVisibility } from "../utils/motion";
 
-const defaultConfidential = ${isConfidentialInitial};
-initializeConfidentialMode({ defaultState: defaultConfidential, rootSelector: "[data-confidential-root]" });
+    const motionNodes = () => document.querySelectorAll<HTMLElement>("[data-motion]");
+    const applyMotion = () => {
+      observeVisibility(motionNodes(), (entry) => {
+        entry.target.classList.add("is-visible");
+      }, { threshold: 0.4, once: true });
+    };
 
-const motionTargets = document.querySelectorAll("[data-motion]");
-onceVisible(motionTargets, (target) => target.classList.add("is-visible"), 0.4);
+    const initConfidential = () => {
+      initializeConfidentialMode({
+        defaultState: isConfidentialInitial,
+        rootSelector: "[data-confidential-root]",
+        toggleSelector: "[data-confidential-toggle]",
+        announcerSelector: "[data-confidential-announcer]"
+      });
+    };
 
-const url = new URL(window.location.href);
-const initialTags = parseTags(url.searchParams.get("tags"));
-let activeTags = [...initialTags];
+    const initFilters = () => {
+      const root = document.querySelector<HTMLElement>("[data-confidential-root]");
+      if (!root) return;
+      const chips = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-keyword-chip]"));
+      const items = Array.from(root.querySelectorAll<HTMLElement>("[data-filter-item]"));
+      const initial = root.dataset.tagsInitial ? root.dataset.tagsInitial.split(",").filter(Boolean) : [];
+      let active = new Set(initial);
 
-const chips = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-tag-chip]"));
-const updateChipStates = () => {
-  chips.forEach((chip) => {
-    const tag = chip.dataset.tagChip ?? "";
-    const isActive = activeTags.includes(tag.toLowerCase());
-    chip.setAttribute("aria-pressed", isActive ? "true" : "false");
-    chip.dataset.active = isActive ? "true" : "false";
-  });
-};
+      const apply = () => {
+        if (!items.length) return;
+        const tags = Array.from(active);
+        const params = new URLSearchParams(window.location.search);
+        items.forEach((item) => {
+          const itemTags = item.dataset.tags ? item.dataset.tags.split(",").map((tag) => tag.trim().toLowerCase()).filter(Boolean) : [];
+          const shouldShow = tags.length === 0 || itemTags.some((tag) => tags.includes(tag));
+          item.dataset.filterHidden = shouldShow ? "false" : "true";
+          item.toggleAttribute("hidden", !shouldShow);
+        });
+        chips.forEach((chip) => {
+          const tag = chip.dataset.tag ?? "";
+          const isActive = active.has(tag);
+          chip.dataset.active = isActive ? "true" : "false";
+          chip.setAttribute("aria-pressed", isActive ? "true" : "false");
+        });
+        if (tags.length) {
+          params.set("tags", tags.join(","));
+        } else {
+          params.delete("tags");
+        }
+        window.history.replaceState(window.history.state, "", `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`);
+      };
 
-const targets = Array.from(document.querySelectorAll<HTMLElement>("[data-filter-item]"));
-const applyFilters = () => {
-  targets.forEach((target) => {
-    const tags = target.dataset.tags ? target.dataset.tags.split(",").map((tag) => tag.trim()) : [];
-    const matches = matchesAnyTag(tags, activeTags);
-    target.dataset.filterHidden = matches ? "false" : "true";
-  });
-};
+      const toggle = (tag: string) => {
+        if (!tag) return;
+        if (active.has(tag)) active.delete(tag);
+        else active.add(tag);
+        apply();
+      };
 
-const commitState = () => {
-  const serialized = serializeTags(activeTags);
-  if (serialized) {
-    url.searchParams.set("tags", serialized);
-  } else {
-    url.searchParams.delete("tags");
-  }
-  window.history.replaceState(window.history.state, "", url.toString());
-  updateChipStates();
-  applyFilters();
-};
+      chips.forEach((chip) => {
+        if (chip.dataset.bound === "true") return;
+        chip.dataset.bound = "true";
+        chip.addEventListener("click", () => toggle(chip.dataset.tag ?? ""));
+        chip.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            toggle(chip.dataset.tag ?? "");
+          }
+        });
+      });
 
-chips.forEach((chip) => {
-  if (chip.dataset.bound === "true") return;
-  chip.dataset.bound = "true";
-  chip.addEventListener("click", () => {
-    activeTags = toggleTag(activeTags, chip.dataset.tagChip ?? "");
-    commitState();
-  });
-  chip.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      activeTags = toggleTag(activeTags, chip.dataset.tagChip ?? "");
-      commitState();
-    }
-  });
-});
+      apply();
+      document.addEventListener("resume:confidential-change", apply);
+    };
 
-commitState();
+    applyMotion();
+    initConfidential();
+    initFilters();
 
-if (prefersReducedMotion()) {
-  motionTargets.forEach((target) => target.classList.add("is-visible"));
-}
-
-window.addEventListener("popstate", () => {
-  const refreshed = parseTags(new URL(window.location.href).searchParams.get("tags"));
-  activeTags = [...refreshed];
-  commitState();
-});
-
-const expandForPrint = () => {
-  document.querySelectorAll<HTMLDetailsElement>("[data-experience-card]").forEach((card) => {
-    card.dataset.printWasOpen = card.open ? "true" : "false";
-    card.open = true;
-  });
-};
-
-const resetAfterPrint = () => {
-  document.querySelectorAll<HTMLDetailsElement>("[data-experience-card]").forEach((card) => {
-    if (card.dataset.printWasOpen !== "true") {
-      card.open = false;
-    }
-    delete card.dataset.printWasOpen;
-  });
-};
-
-window.addEventListener("beforeprint", expandForPrint);
-window.addEventListener("afterprint", resetAfterPrint);
+    document.addEventListener("astro:page-load", () => {
+      applyMotion();
+      initConfidential();
+      initFilters();
+    });
   </script>
 </AppShell>

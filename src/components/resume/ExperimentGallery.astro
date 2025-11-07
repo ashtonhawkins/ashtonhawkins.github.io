@@ -1,107 +1,100 @@
 ---
 import { meetsMetricGate, formatSample } from "../../utils/metrics";
 
+interface ChartConfig {
+  type: "bullet" | "spark";
+  values: number[];
+}
+
 interface ExperimentItem {
   id: string;
   title: string;
   problem: string;
   bet: string;
   outcome: string;
-  chart?: {
-    type: "spark" | "bullet";
-    values: number[];
-  };
+  chart?: ChartConfig;
   sample?: number;
   confidence?: string;
 }
 
-const { items } = Astro.props as { items: ExperimentItem[] };
+const { experiments } = Astro.props as { experiments: ExperimentItem[] };
+const hasData = experiments.length > 0;
 ---
-<section class="flex flex-col gap-6" id="experiments">
-  <div class="flex flex-col gap-2">
-    <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Experiment gallery</span>
-    <p class="max-w-3xl text-sm text-[color:var(--ink-2)]">
-      A sampling of the bets that moved revenue, retention, and data capture.
-    </p>
-  </div>
-  <div class="grid gap-4 lg:grid-cols-2">
-    {items.map((experiment) => {
-      const gated = meetsMetricGate({ sample: experiment.sample, confidence: experiment.confidence ?? null });
-      return (
-        <article
-          class="flex flex-col gap-4 rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_96%,transparent)] p-5 shadow-[0_32px_80px_-60px_rgba(12,20,32,0.45)]"
-          data-motion
-        >
-          <header class="flex flex-wrap items-start justify-between gap-3">
-            <div class="flex flex-col gap-2">
+{hasData && (
+  <section class="flex flex-col gap-6" data-band data-motion>
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="flex flex-col gap-1">
+        <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Experiment gallery</span>
+        <h2 class="text-lg font-semibold text-[color:var(--ink)]">High-signal trials</h2>
+      </div>
+    </div>
+    <div class="grid gap-3 lg:grid-cols-2" role="list">
+      {experiments.map((experiment) => {
+        const gated = meetsMetricGate({ sample: experiment.sample, confidence: experiment.confidence });
+        return (
+          <article
+            class="flex flex-col gap-4 rounded-[var(--radius-3)] border border-[color:color-mix(in_lab,var(--ink) 10%, transparent)] bg-[color:color-mix(in_lab,var(--surface) 94%, transparent)] p-5"
+            role="listitem"
+            data-motion
+          >
+            <header class="flex flex-col gap-2">
               <h3 class="text-base font-semibold text-[color:var(--ink)]">{experiment.title}</h3>
-              <div class="flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">
-                <span class="inline-flex items-center gap-1 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1">
-                  Problem
-                </span>
-                <span class="inline-flex items-center gap-1 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1">
-                  Bet
-                </span>
-                <span class="inline-flex items-center gap-1 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1">
-                  Outcome
-                </span>
+              <div class="flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
+                <span class="inline-flex items-center gap-1 rounded-full border border-[color:var(--keyline)] bg-[color:color-mix(in_lab,var(--surface) 92%, transparent)] px-2 py-1">Problem</span>
+                <span class="inline-flex items-center gap-1 rounded-full border border-[color:var(--keyline)] bg-[color:color-mix(in_lab,var(--surface) 92%, transparent)] px-2 py-1">Bet</span>
+                <span class="inline-flex items-center gap-1 rounded-full border border-[color:var(--keyline)] bg-[color:color-mix(in_lab,var(--surface) 92%, transparent)] px-2 py-1">Outcome</span>
               </div>
+            </header>
+            <div class="flex flex-col gap-3 text-sm leading-relaxed text-[color:var(--ink-2)]">
+              <p><strong class="text-[color:var(--ink)]">Problem:</strong> {experiment.problem}</p>
+              <p><strong class="text-[color:var(--ink)]">Bet:</strong> {experiment.bet}</p>
+              <p><strong class="text-[color:var(--ink)]">Outcome:</strong> {experiment.outcome}</p>
             </div>
-            {experiment.chart && experiment.chart.type === "spark" && (
+            {experiment.chart && experiment.chart.type === "bullet" && experiment.chart.values.length >= 2 ? (
               <div
-                class="h-14 w-32 text-[color:var(--accent)]"
-                data-sparkline
-                data-points={JSON.stringify(experiment.chart.values)}
-                data-width="128"
-                data-height="56"
-                data-label={`Experiment ${experiment.title} sparkline`}
-              ></div>
-            )}
-            {experiment.chart && experiment.chart.type === "bullet" && (
-              <div
-                class="h-6 w-32 text-[color:var(--accent)]"
+                class="h-12 text-[color:var(--accent)]"
                 data-bullet
-                data-values={JSON.stringify(experiment.chart.values)}
-                data-width="132"
+                data-width="160"
                 data-height="24"
-                data-label={`Experiment ${experiment.title} bullet baseline`}
+                data-values={JSON.stringify(experiment.chart.values)}
+                data-label={`${experiment.title} bullet chart`}
               ></div>
+            ) : null}
+            {experiment.chart && experiment.chart.type === "spark" && experiment.chart.values.length > 1 ? (
+              <div
+                class="h-16 text-[color:var(--accent)]"
+                data-sparkline
+                data-width="160"
+                data-height="48"
+                data-points={JSON.stringify(experiment.chart.values)}
+                data-label={`${experiment.title} sparkline`}
+              ></div>
+            ) : null}
+            {gated && (
+              <div class="flex flex-wrap gap-2 text-xs text-[color:var(--ink-2)]">
+                {experiment.sample && experiment.sample >= 1000 && <span>{formatSample(experiment.sample)}</span>}
+                {experiment.confidence && (
+                  <span class="inline-flex items-center gap-2 rounded-full border border-[color:var(--keyline)] bg-[color:color-mix(in_lab,var(--surface) 90%, transparent)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.24em]">
+                    {experiment.confidence}
+                  </span>
+                )}
+              </div>
             )}
-          </header>
-          <div class="grid gap-3 text-sm text-[color:var(--ink-2)]">
-            <div>
-              <span class="font-semibold text-[color:var(--ink)]">Problem</span>
-              <p class="mt-1 leading-relaxed">{experiment.problem}</p>
-            </div>
-            <div>
-              <span class="font-semibold text-[color:var(--ink)]">Bet</span>
-              <p class="mt-1 leading-relaxed">{experiment.bet}</p>
-            </div>
-            <div>
-              <span class="font-semibold text-[color:var(--ink)]">Outcome</span>
-              <p class="mt-1 leading-relaxed">{experiment.outcome}</p>
-            </div>
-          </div>
-          {gated && (
-            <div class="flex flex-wrap gap-2 text-xs text-[color:var(--ink-2)]">
-              {experiment.sample && <span class="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1">{formatSample(experiment.sample)}</span>}
-              {experiment.confidence && <span class="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1">{experiment.confidence}</span>}
-            </div>
-          )}
-        </article>
-      );
-    })}
-  </div>
-</section>
+          </article>
+        );
+      })}
+    </div>
+  </section>
+)}
 <script type="module">
-import { bootSparklines } from "../ui/Sparkline";
-import { bootBullets } from "../ui/BulletGraph";
+  import { bootSparklines } from "../ui/Sparkline";
+  import { bootBullets } from "../ui/BulletGraph";
 
-bootSparklines();
-bootBullets();
+  const initCharts = () => {
+    bootSparklines();
+    bootBullets();
+  };
 
-document.addEventListener("astro:page-load", () => {
-  bootSparklines();
-  bootBullets();
-});
+  initCharts();
+  document.addEventListener("astro:page-load", initCharts);
 </script>
