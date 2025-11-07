@@ -30,43 +30,10 @@ const caseStudyTags: Record<string, string[]> = {
 };
 
 const experienceTags: Record<string, string[]> = {
-  "exp-retail-portfolio": [
-    "CRO",
-    "Checkout",
-    "Search",
-    "Navigation",
-    "Taxonomy",
-    "Program governance",
-    "Dashboards",
-    "Data layer",
-    "Optimizely",
-    "GA4",
-    "BigQuery",
-    "Cloudflare"
-  ],
-  "exp-saas-commerce": [
-    "Onboarding",
-    "CRO",
-    "Experiment design",
-    "Consent Mode v2",
-    "Segment",
-    "Amplitude",
-    "Astro",
-    "Program governance"
-  ],
-  "exp-dtc-health": [
-    "PDP",
-    "CRO",
-    "Monetate",
-    "GA4",
-    "Program governance"
-  ],
-  "exp-independent": [
-    "Astro",
-    "Tailwind",
-    "Cloudflare",
-    "Data layer"
-  ]
+  "exp-retail-portfolio": ["CRO", "Checkout", "Search", "Navigation", "Taxonomy", "Program governance", "Dashboards", "Data layer", "Optimizely", "GA4", "BigQuery", "Cloudflare"],
+  "exp-saas-commerce": ["Onboarding", "CRO", "Experiment design", "Consent Mode v2", "Segment", "Amplitude", "Astro", "Program governance"],
+  "exp-dtc-health": ["PDP", "CRO", "Monetate", "GA4", "Program governance"],
+  "exp-independent": ["Astro", "Tailwind", "Cloudflare", "Data layer"]
 };
 
 const caseStudies = resume.caseStudies.map((caseStudy) => ({
@@ -118,8 +85,8 @@ const textExport = [
   <style is:inline>
     :root {
       --ink: #0b1120;
-      --ink-2: rgba(11, 17, 32, 0.74);
-      --surface: #f7f7f9;
+      --ink-2: rgba(11, 17, 32, 0.72);
+      --surface: #f6f7f9;
       --surface-alt: #ffffff;
       --accent: #0f7bf2;
       --r-2: 0.75rem;
@@ -159,12 +126,9 @@ const textExport = [
       opacity: 1;
       transform: translateY(0);
     }
-    @media (prefers-reduced-motion: reduce) {
-      [data-motion] {
-        opacity: 1;
-        transform: none;
-        transition: none;
-      }
+    [data-action-dock],
+    [data-action-pill] {
+      transition: opacity 0.2s cubic-bezier(.2,.8,.2,1), transform 0.2s cubic-bezier(.2,.8,.2,1);
     }
     [data-action-dock][data-state="hidden"],
     [data-action-pill][data-state="hidden"] {
@@ -200,10 +164,37 @@ const textExport = [
     [data-filter-item][data-filter-hidden="true"] {
       display: none !important;
     }
+    [data-tag-chip] {
+      transition: transform 0.2s cubic-bezier(.2,.8,.2,1), background 0.2s cubic-bezier(.2,.8,.2,1), border-color 0.2s cubic-bezier(.2,.8,.2,1);
+    }
     [data-tag-chip][data-active="true"] {
-      background: color-mix(in srgb, var(--accent) 18%, transparent);
+      background: color-mix(in srgb, var(--accent) 16%, transparent);
       color: var(--ink);
       border-color: color-mix(in srgb, var(--accent) 32%, transparent);
+      transform: translateY(-2px);
+    }
+    [data-case-study] summary {
+      transition: transform 0.2s cubic-bezier(.2,.8,.2,1), box-shadow 0.2s cubic-bezier(.2,.8,.2,1);
+    }
+    [data-case-study]:is(:hover, :focus-within) summary {
+      transform: translateY(-2px);
+    }
+    dialog[data-methodology-dialog]::backdrop {
+      background: rgba(11, 17, 32, 0.48);
+      backdrop-filter: blur(12px);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      [data-motion] {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+      [data-tag-chip] {
+        transition: none;
+      }
+      [data-case-study] summary {
+        transition: none;
+      }
     }
   </style>
   <article
@@ -217,13 +208,13 @@ const textExport = [
     <section class="flex flex-col gap-4" id="keywords">
       <div class="flex flex-col gap-2">
         <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Keywords</span>
-        <p class="max-w-2xl text-sm text-[color:var(--ink-2)]">Filter experience and case studies by focus area. Keyboard toggle with Enter or Space.</p>
+        <p class="max-w-2xl text-sm text-[color:var(--ink-2)]">Filter experience and case studies by focus area. Toggle via keyboard with Enter or Space.</p>
       </div>
       <div class="flex flex-wrap gap-2" data-tag-cloud>
         {resume.keywords.map((keyword) => (
           <button
             type="button"
-            class="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_94%,transparent)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)] transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+            class="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_94%,transparent)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
             data-tag-chip={keyword}
             aria-pressed="false"
           >
@@ -240,7 +231,7 @@ const textExport = [
     <CapabilitiesMap capabilities={resume.capabilities} />
   </article>
   <ActionDock email={email} bio={resume.bioShort} jsonExport={resume} textExport={textExport} />
-  <div aria-live="polite" data-toast-root></div>
+  <div aria-live="polite" data-toast-root data-state="hidden"></div>
   <script type="module">
 import { initializeConfidentialMode } from "../utils/confidential";
 import { onceVisible, prefersReducedMotion } from "../utils/motion";

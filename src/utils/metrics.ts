@@ -1,5 +1,6 @@
 const numberFormatter = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
 const compactFormatter = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
+const preciseFormatter = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
 
 export const meetsMetricGate = (metric: { sample?: number; confidence?: string | null }) => {
   if (typeof metric.sample === "number" && metric.sample >= 1000) return true;
@@ -27,4 +28,18 @@ export const formatBaseline = (baseline?: number) => {
   if (baseline < 1) return `Baseline ${baseline}`;
   if (baseline < 10) return `Baseline ${baseline.toFixed(1)}`;
   return `Baseline ${numberFormatter.format(baseline)}`;
+};
+
+export const inferSuffix = (item: { suffix?: string; label?: string }) => {
+  if (item.suffix) return item.suffix;
+  const label = item.label?.toLowerCase() ?? "";
+  if (label.includes("pp")) return " pp";
+  if (label.includes("%") || label.includes("lift") || label.includes("rate") || label.includes("delta")) return "%";
+  return "";
+};
+
+export const formatKpiValue = (value: number, suffix = "") => {
+  if (!Number.isFinite(value)) return suffix ? `0${suffix}` : "0";
+  const decimals = Math.abs(value) < 10 ? 1 : 0;
+  return `${preciseFormatter.format(Number(value.toFixed(decimals)))}${suffix}`;
 };

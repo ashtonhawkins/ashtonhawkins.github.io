@@ -7,63 +7,105 @@ interface ActionDockProps {
 }
 
 const props = Astro.props as ActionDockProps;
-const { email } = props;
 ---
-<div
-  class="fixed right-[clamp(1rem,8vw,6rem)] top-6 z-40 hidden flex-col gap-3 rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_94%,transparent)] p-4 shadow-[0_24px_80px_-56px_rgba(12,20,32,0.7)] sm:flex"
-  data-action-dock
-  data-state="hidden"
->
-  <span class="text-[11px] font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Actions</span>
-  <div class="flex flex-col gap-2 text-sm text-[color:var(--ink)]">
-    <a
-      href={`mailto:${email}`}
-      class="inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] px-3 py-2 transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_srgb,var(--accent)_32%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
-      data-action-email
+<div class="contents" data-action-root>
+  <aside
+    class="pointer-events-none hidden sm:block"
+  >
+    <div
+      class="pointer-events-auto sticky top-8 flex flex-col gap-3 self-end rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_96%,transparent)] p-4 shadow-[0_32px_80px_-60px_rgba(12,20,32,0.5)]"
+      data-action-dock
+      data-state="hidden"
     >
-      ✉️ Email
-    </a>
-    <button
-      type="button"
-      class="inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] px-3 py-2 text-left transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_srgb,var(--accent)_32%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
-      data-action-print
+      <span class="text-[11px] font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Action dock</span>
+      <div class="flex flex-col gap-2 text-sm text-[color:var(--ink)]">
+        <a
+          href={`mailto:${props.email}`}
+          class="inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] px-3 py-2 transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_srgb,var(--accent)_28%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+          data-action-email
+        >
+          ✉️ Email
+        </a>
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] px-3 py-2 text-left transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_srgb,var(--accent)_28%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+          data-action-print
+        >
+          🖨️ Download PDF
+        </button>
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] px-3 py-2 text-left transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_srgb,var(--accent)_28%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+          data-action-copy
+        >
+          📋 Copy bio
+        </button>
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] px-3 py-2 text-left transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_srgb,var(--accent)_28%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+          data-action-json
+        >
+          🗂️ Export JSON
+        </button>
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] px-3 py-2 text-left transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_srgb,var(--accent)_28%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+          data-action-text
+        >
+          📝 Export TXT
+        </button>
+      </div>
+    </div>
+  </aside>
+  <div class="fixed inset-x-0 bottom-4 z-40 flex justify-center sm:hidden">
+    <div
+      class="flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_96%,transparent)] px-4 py-2 text-sm text-[color:var(--ink)] shadow-[0_24px_60px_-48px_rgba(12,20,32,0.55)]"
+      data-action-pill
+      data-state="hidden"
+      role="group"
+      aria-label="Quick actions"
     >
-      🖨️ Download PDF
-    </button>
-    <button
-      type="button"
-      class="inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] px-3 py-2 text-left transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_srgb,var(--accent)_32%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
-      data-action-copy
-    >
-      📋 Copy bio
-    </button>
-    <button
-      type="button"
-      class="inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] px-3 py-2 text-left transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_srgb,var(--accent)_32%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
-      data-action-json
-    >
-      🗂️ Export JSON
-    </button>
-    <button
-      type="button"
-      class="inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] px-3 py-2 text-left transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_srgb,var(--accent)_32%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
-      data-action-text
-    >
-      📝 Export TXT
-    </button>
-  </div>
-</div>
-<div
-  class="fixed inset-x-0 bottom-4 z-40 flex justify-center sm:hidden"
-  data-action-pill
-  data-state="hidden"
->
-  <div class="flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_94%,transparent)] px-4 py-2 text-sm shadow-[0_24px_60px_-48px_rgba(12,20,32,0.7)]">
-    <a href={`mailto:${email}`} class="rounded-full px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]">✉️</a>
-    <button type="button" data-action-print class="rounded-full px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]">🖨️</button>
-    <button type="button" data-action-copy class="rounded-full px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]">📋</button>
-    <button type="button" data-action-json class="rounded-full px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]">🗂️</button>
-    <button type="button" data-action-text class="rounded-full px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]">📝</button>
+      <a
+        href={`mailto:${props.email}`}
+        class="rounded-full px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+        data-action-email
+      >
+        ✉️
+        <span class="sr-only">Email</span>
+      </a>
+      <button
+        type="button"
+        class="rounded-full px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+        data-action-print
+        aria-label="Download PDF"
+      >
+        🖨️
+      </button>
+      <button
+        type="button"
+        class="rounded-full px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+        data-action-copy
+        aria-label="Copy bio"
+      >
+        📋
+      </button>
+      <button
+        type="button"
+        class="rounded-full px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+        data-action-json
+        aria-label="Export JSON"
+      >
+        🗂️
+      </button>
+      <button
+        type="button"
+        class="rounded-full px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+        data-action-text
+        aria-label="Export text"
+      >
+        📝
+      </button>
+    </div>
   </div>
 </div>
 <script type="application/json" id="resume-bio">{JSON.stringify(props.bio)}</script>
@@ -71,29 +113,19 @@ const { email } = props;
 <script type="application/json" id="resume-export-text">{JSON.stringify(props.textExport)}</script>
 <script type="module">
 import { Toast } from "../ui/Toast";
+import { bindVisibilityState } from "../../utils/motion";
 
+const root = document.querySelector("[data-action-root]");
+const dock = root?.querySelector<HTMLElement>("[data-action-dock]");
+const pill = root?.querySelector<HTMLElement>("[data-action-pill]");
 const hero = document.querySelector("[data-hero-anchor]");
-const dock = document.querySelector<HTMLElement>("[data-action-dock]");
-const pill = document.querySelector<HTMLElement>("[data-action-pill]");
 const toast = new Toast(document.querySelector<HTMLElement>("[data-toast-root]"));
 
-const updateState = (visible: boolean) => {
-  const state = visible ? "hidden" : "visible";
-  if (dock) dock.dataset.state = state;
-  if (pill) pill.dataset.state = state;
-};
+if (dock) dock.dataset.state = "hidden";
+if (pill) pill.dataset.state = "hidden";
 
-if (hero) {
-  const observer = new IntersectionObserver(
-    (entries) => {
-      const entry = entries[0];
-      if (!entry) return;
-      updateState(entry.isIntersecting && entry.intersectionRatio > 0.5);
-    },
-    { threshold: [0, 0.5, 1] }
-  );
-  observer.observe(hero);
-}
+bindVisibilityState(hero, dock, 0.5);
+bindVisibilityState(hero, pill, 0.5);
 
 const bioNode = document.getElementById("resume-bio");
 const jsonNode = document.getElementById("resume-export-json");
@@ -111,22 +143,29 @@ const triggerDownload = (content: string, type: string, filename: string) => {
   document.body.append(anchor);
   anchor.click();
   anchor.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  setTimeout(() => URL.revokeObjectURL(url), 1200);
 };
 
 const bindAction = (selector: string, handler: () => void) => {
-  document.querySelectorAll<HTMLButtonElement | HTMLAnchorElement>(selector).forEach((node) => {
+  root?.querySelectorAll<HTMLButtonElement | HTMLAnchorElement>(selector).forEach((node) => {
     if (node.dataset.bound === "true") return;
     node.dataset.bound = "true";
     node.addEventListener("click", (event) => {
-      if (node.tagName === "A") return;
+      if (node instanceof HTMLAnchorElement) return;
       event.preventDefault();
       handler();
+    });
+    node.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        handler();
+      }
     });
   });
 };
 
 bindAction('[data-action-print]', () => window.print());
+
 const copyHandler = async () => {
   try {
     await navigator.clipboard.writeText(bioPayload);
@@ -135,6 +174,7 @@ const copyHandler = async () => {
     toast.show("Copy unavailable");
   }
 };
+
 bindAction('[data-action-copy]', copyHandler);
 bindAction('[data-action-json]', () => triggerDownload(JSON.stringify(jsonPayload, null, 2), "application/json", "resume.json"));
 bindAction('[data-action-text]', () => triggerDownload(textPayload, "text/plain", "resume.txt"));
