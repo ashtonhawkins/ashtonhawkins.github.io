@@ -13,7 +13,9 @@
   [data-action-dock],
   [data-action-pill],
   [data-toast-root],
-  [data-confidential-toggle] {
+  [data-confidential-toggle],
+  [data-methodology-dialog],
+  [data-methodology-trigger] {
     display: none !important;
   }
   article[data-confidential-root] {
@@ -21,6 +23,8 @@
   }
   article[data-confidential-root] > * {
     break-inside: avoid;
+    box-shadow: none !important;
+    background: #ffffff !important;
   }
   section,
   .grid,
@@ -28,6 +32,7 @@
   details {
     box-shadow: none !important;
     background: #ffffff !important;
+    border-color: #00000022 !important;
   }
   .grid,
   .flex {
@@ -37,7 +42,6 @@
     display: block !important;
   }
   details {
-    border: 1px solid #00000022 !important;
     padding-bottom: 0.5rem;
   }
   details > summary {
@@ -49,5 +53,11 @@
   a::after {
     content: " (" attr(href) ")";
     font-size: 0.75em;
+  }
+  img {
+    filter: none !important;
+  }
+  [data-confidential-root][data-confidential-state="confidential"] .confidential-only {
+    display: block !important;
   }
 }

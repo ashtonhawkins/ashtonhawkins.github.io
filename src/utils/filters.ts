@@ -20,6 +20,7 @@ export const serializeTags = (tags: string[]) =>
   tags
     .map((tag) => normalize(tag))
     .filter((value, index, array) => value && array.indexOf(value) === index)
+    .sort()
     .join(",");
 
 export const matchesAnyTag = (itemTags: string[] = [], selected: string[] = []) => {

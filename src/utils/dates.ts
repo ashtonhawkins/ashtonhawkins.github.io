@@ -45,3 +45,10 @@ export const durationYears = (start?: string | null, end?: string | null) => {
   if (!months) return 0;
   return Math.round((months / 12) * 10) / 10;
 };
+
+export const formatConfidentialRange = (start?: string | null, end?: string | null) => {
+  const tenure = formatApproxDuration(start, end);
+  const precise = formatPreciseRange(start, end);
+  if (!tenure) return precise;
+  return `${tenure} (${precise})`;
+};
