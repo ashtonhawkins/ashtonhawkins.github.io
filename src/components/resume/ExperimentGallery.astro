@@ -1,100 +1,63 @@
 ---
-import { meetsMetricGate, formatSample } from "../../utils/metrics";
-
-interface ChartConfig {
-  type: "bullet" | "spark";
-  values: number[];
-}
-
-interface ExperimentItem {
-  id: string;
-  title: string;
-  problem: string;
-  bet: string;
-  outcome: string;
-  chart?: ChartConfig;
-  sample?: number;
-  confidence?: string;
-}
-
-const { experiments } = Astro.props as { experiments: ExperimentItem[] };
-const hasData = experiments.length > 0;
+import type resumeData from "../../data/resume.json";
+import { buildSparkPath } from "../ui/Sparkline";
+import { bulletMetrics } from "../ui/BulletGraph";
+import { meetsEvidenceThreshold } from "../../utils/metrics";
+const { experiments } = Astro.props as { experiments: typeof resumeData.experiments };
 ---
-{hasData && (
-  <section class="flex flex-col gap-6" data-band data-motion>
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div class="flex flex-col gap-1">
-        <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Experiment gallery</span>
-        <h2 class="text-lg font-semibold text-[color:var(--ink)]">High-signal trials</h2>
-      </div>
+<section class="rounded-3xl border border-[color-mix(in_srgb,var(--ink)_10%,transparent)] bg-[var(--surface-alt)] p-8 shadow-lg shadow-black/10">
+  <div class="flex flex-col gap-6">
+    <div class="flex items-center justify-between">
+      <h2 class="text-xl font-semibold text-[var(--ink)]">Experiment Gallery</h2>
+      <span class="text-xs text-[var(--ink-2)]">Signals with evidence</span>
     </div>
-    <div class="grid gap-3 lg:grid-cols-2" role="list">
-      {experiments.map((experiment) => {
-        const gated = meetsMetricGate({ sample: experiment.sample, confidence: experiment.confidence });
+    <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      {experiments.map((exp) => {
+        const evidence = meetsEvidenceThreshold(exp.sample, exp.confidence);
+        const chart = exp.chart.type === "spark"
+          ? { type: "spark", path: buildSparkPath(exp.chart.values) }
+          : { type: "bullet", metrics: bulletMetrics(exp.chart.values) };
         return (
-          <article
-            class="flex flex-col gap-4 rounded-[var(--radius-3)] border border-[color:color-mix(in_lab,var(--ink) 10%, transparent)] bg-[color:color-mix(in_lab,var(--surface) 94%, transparent)] p-5"
-            role="listitem"
-            data-motion
-          >
-            <header class="flex flex-col gap-2">
-              <h3 class="text-base font-semibold text-[color:var(--ink)]">{experiment.title}</h3>
-              <div class="flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
-                <span class="inline-flex items-center gap-1 rounded-full border border-[color:var(--keyline)] bg-[color:color-mix(in_lab,var(--surface) 92%, transparent)] px-2 py-1">Problem</span>
-                <span class="inline-flex items-center gap-1 rounded-full border border-[color:var(--keyline)] bg-[color:color-mix(in_lab,var(--surface) 92%, transparent)] px-2 py-1">Bet</span>
-                <span class="inline-flex items-center gap-1 rounded-full border border-[color:var(--keyline)] bg-[color:color-mix(in_lab,var(--surface) 92%, transparent)] px-2 py-1">Outcome</span>
+          <article class="card flex flex-col gap-4 rounded-2xl border border-[color-mix(in_srgb,var(--ink)_10%,transparent)] bg-[color-mix(in_srgb,var(--surface)_96%,var(--accent)_4%)] p-6 shadow-inner shadow-black/5" key={exp.id}>
+            <div class="flex flex-col gap-2">
+              <h3 class="text-lg font-semibold text-[var(--ink)]">{exp.title}</h3>
+              <div class="flex flex-wrap gap-2 text-[11px] uppercase tracking-wide text-[var(--ink-2)]">
+                <span class="rounded-full bg-[color-mix(in_srgb,var(--ink)_6%,transparent)] px-2 py-1">Problem</span>
+                <span class="rounded-full bg-[color-mix(in_srgb,var(--ink)_6%,transparent)] px-2 py-1">Bet</span>
+                <span class="rounded-full bg-[color-mix(in_srgb,var(--ink)_6%,transparent)] px-2 py-1">Outcome</span>
               </div>
-            </header>
-            <div class="flex flex-col gap-3 text-sm leading-relaxed text-[color:var(--ink-2)]">
-              <p><strong class="text-[color:var(--ink)]">Problem:</strong> {experiment.problem}</p>
-              <p><strong class="text-[color:var(--ink)]">Bet:</strong> {experiment.bet}</p>
-              <p><strong class="text-[color:var(--ink)]">Outcome:</strong> {experiment.outcome}</p>
             </div>
-            {experiment.chart && experiment.chart.type === "bullet" && experiment.chart.values.length >= 2 ? (
-              <div
-                class="h-12 text-[color:var(--accent)]"
-                data-bullet
-                data-width="160"
-                data-height="24"
-                data-values={JSON.stringify(experiment.chart.values)}
-                data-label={`${experiment.title} bullet chart`}
-              ></div>
-            ) : null}
-            {experiment.chart && experiment.chart.type === "spark" && experiment.chart.values.length > 1 ? (
-              <div
-                class="h-16 text-[color:var(--accent)]"
-                data-sparkline
-                data-width="160"
-                data-height="48"
-                data-points={JSON.stringify(experiment.chart.values)}
-                data-label={`${experiment.title} sparkline`}
-              ></div>
-            ) : null}
-            {gated && (
-              <div class="flex flex-wrap gap-2 text-xs text-[color:var(--ink-2)]">
-                {experiment.sample && experiment.sample >= 1000 && <span>{formatSample(experiment.sample)}</span>}
-                {experiment.confidence && (
-                  <span class="inline-flex items-center gap-2 rounded-full border border-[color:var(--keyline)] bg-[color:color-mix(in_lab,var(--surface) 90%, transparent)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.24em]">
-                    {experiment.confidence}
-                  </span>
-                )}
-              </div>
-            )}
+            <div class="space-y-3 text-sm text-[var(--ink-2)]">
+              <p><span class="font-medium text-[var(--ink)]">Problem:</span> {exp.problem}</p>
+              <p><span class="font-medium text-[var(--ink)]">Bet:</span> {exp.bet}</p>
+              <p><span class="font-medium text-[var(--ink)]">Outcome:</span> {exp.outcome}</p>
+            </div>
+            <div class="flex items-center justify-between">
+              {chart.type === "spark" ? (
+                <svg viewBox="0 0 100 100" class="h-16 w-32 text-[var(--accent)]">
+                  <polyline points={chart.path.replace(/M|L/g, "").replace(/ /g, " ")} fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              ) : (
+                <div class="flex h-16 w-full flex-col justify-center gap-2">
+                  <div class="relative h-2 w-full overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--ink)_8%,transparent)]">
+                    <span style={{ width: `${chart.metrics.baseline}%` }} class="absolute inset-y-0 left-0 rounded-full bg-[color-mix(in_srgb,var(--ink)_20%,transparent)]"></span>
+                    <span style={{ width: `${chart.metrics.variant}%` }} class="absolute inset-y-0 left-0 rounded-full bg-[var(--accent)]"></span>
+                  </div>
+                  <div class="text-xs text-[var(--ink-2)]">Baseline vs Variant</div>
+                </div>
+              )}
+              {evidence ? (
+                <div class="ml-auto flex flex-col items-end text-xs text-[var(--ink-2)]">
+                  {exp.sample ? <span>{exp.sample.toLocaleString()} sample</span> : null}
+                  {exp.confidence ? <span>{exp.confidence}</span> : null}
+                </div>
+              ) : (
+                <span class="text-xs text-[var(--ink-2)]">Directional</span>
+              )}
+            </div>
           </article>
         );
       })}
     </div>
-  </section>
-)}
-<script type="module">
-  import { bootSparklines } from "../ui/Sparkline";
-  import { bootBullets } from "../ui/BulletGraph";
-
-  const initCharts = () => {
-    bootSparklines();
-    bootBullets();
-  };
-
-  initCharts();
-  document.addEventListener("astro:page-load", initCharts);
-</script>
+  </div>
+</section>

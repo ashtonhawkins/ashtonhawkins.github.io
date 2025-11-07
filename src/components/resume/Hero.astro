@@ -1,62 +1,35 @@
 ---
-import Scoreboard from "./Scoreboard.astro";
-
-interface HeroData {
-  headline: string;
-  subhead: string;
-}
-
-interface HeroProps {
-  hero: HeroData;
-  kpis: {
-    key: string;
-    label: string;
-    value: number;
-    suffix?: string;
-    sample?: number;
-    confidence?: string;
-  }[];
-}
-
-const { hero, kpis } = Astro.props as HeroProps;
+import ThemeToggle from "./ThemeToggle.astro";
+import ConfidentialToggle from "./ConfidentialToggle.astro";
+import type { ConfidentialMode } from "../../utils/confidential";
+const { hero, bioShort, initialMode } = Astro.props as {
+  hero: { headline: string; subhead: string };
+  bioShort: string;
+  initialMode: ConfidentialMode;
+};
 ---
-<section
-  class="relative flex flex-col gap-8 overflow-hidden rounded-[var(--r-4)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_96%,transparent)] p-6 shadow-[0_40px_100px_-70px_rgba(12,20,32,0.55)] sm:p-10"
-  data-hero-anchor
->
-  <div class="absolute inset-0 -z-10 bg-[conic-gradient(from_90deg_at_1px_1px,rgba(12,20,32,0.05)_0deg,rgba(12,20,32,0.05)_90deg,transparent_90deg,transparent_180deg)] bg-[length:42px_42px]"></div>
-  <header class="flex flex-col gap-6">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">
-        <span class="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--accent)_42%,transparent)] bg-[color:color-mix(in_srgb,var(--accent)_14%,transparent)] px-3 py-1 text-[color:var(--accent)]">
-          Resume
-        </span>
-        <span class="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_88%,transparent)] px-3 py-1">
-          <span class="inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--accent)]" aria-hidden="true"></span>
-          <span class="confidential-only">Confidential</span>
-          <span class="public-only">Public</span>
-        </span>
-      </div>
-      <slot name="mode-toggle" />
-    </div>
+<section id="hero-sentinel" class="relative flex flex-col gap-6 rounded-3xl border border-[color-mix(in_srgb,var(--ink)_10%,transparent)] bg-[var(--surface-alt)] p-8 shadow-lg shadow-black/10">
+  <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
     <div class="flex flex-col gap-4">
-      <div class="flex flex-wrap items-center gap-3">
-        <h1 class="text-4xl font-semibold leading-tight tracking-[-0.02em] text-[color:var(--ink)] sm:text-5xl">
-          {hero.headline}
-        </h1>
-        <div
-          class="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_90%,transparent)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]"
-          aria-hidden="true"
-        >
-          <span class="confidential-only">🔒</span>
-          <span class="public-only">🔓</span>
-          <span>Mode</span>
-        </div>
-      </div>
-      <p class="max-w-3xl text-base leading-relaxed text-[color:var(--ink-2)] sm:text-lg">
-        {hero.subhead}
-      </p>
+      <p class="text-xs uppercase tracking-[0.3em] text-[color-mix(in_srgb,var(--ink)_40%,transparent)]">Resume</p>
+      <h1 class="text-4xl font-semibold leading-tight text-[var(--ink)] lg:text-5xl">{hero.headline}</h1>
+      <p class="max-w-2xl text-lg text-[var(--ink-2)]">{hero.subhead}</p>
     </div>
-  </header>
-  <Scoreboard items={kpis} />
+    <div class="flex flex-col items-end gap-3 md:items-end">
+      <ThemeToggle />
+      <ConfidentialToggle initialMode={initialMode} />
+    </div>
+  </div>
+  <div class="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+    <p class="text-base leading-relaxed text-[var(--ink)]">{bioShort}</p>
+    <div class="rounded-2xl border border-dashed border-[color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color-mix(in_srgb,var(--ink)_4%,transparent)] p-4 text-sm text-[var(--ink-2)]">
+      <p class="font-medium text-[var(--ink)]">Focus areas</p>
+      <ul class="mt-3 grid grid-cols-2 gap-2 text-xs uppercase tracking-wide text-[var(--ink-2)]">
+        <li>Experimentation</li>
+        <li>Taxonomy</li>
+        <li>Analytics</li>
+        <li>Performance</li>
+      </ul>
+    </div>
+  </div>
 </section>
