@@ -1,34 +1,15 @@
 ---
-import AppShell from "../layouts/AppShell.astro";
-import SEO from "../components/SEO.astro";
-
-const currentYear = new Date().getFullYear();
+import "../styles/global.css";
 ---
-
-<AppShell hideNavigation hideSearch>
-  <SEO
-    slot="head"
-    title="Ashton Hawkins · Coming Soon"
-    description="A new digital home for Ashton Hawkins is on the way."
-    ogTitle="Ashton Hawkins"
-  />
-  <main class="flex min-h-[70vh] flex-col items-center justify-center gap-8 text-center">
-    <span class="text-sm uppercase tracking-[0.3em] text-text-muted">Site update in progress</span>
-    <h1 class="max-w-3xl text-balance text-4xl font-semibold leading-tight md:text-5xl">
-      Something new is on the way.
-    </h1>
-    <p class="max-w-xl text-lg text-text-secondary">
-      I’m crafting a refreshed space to share projects, process, and experiments. Check back soon for the
-      full experience—or reach out if you’d like to collaborate in the meantime.
-    </p>
-    <a
-      class="rounded-full border border-border bg-background px-6 py-3 text-sm font-medium text-text-primary transition hover:border-accent hover:bg-accent-soft hover:text-accent"
-      href="mailto:hello@ashtonhawkins.com"
-    >
-      Say hello
-    </a>
-  </main>
-  <footer class="pb-16 text-center text-xs text-text-muted">
-    © {currentYear} Ashton Hawkins. All rights reserved.
-  </footer>
-</AppShell>
+<html lang="en">
+  <head>
+    <meta http-equiv="refresh" content="0; url=/resume" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Redirecting…</title>
+  </head>
+  <body class="min-h-screen bg-neutral-950 text-neutral-100">
+    <main class="grid h-screen place-items-center">
+      <p>Redirecting to <a href="/resume">/resume</a>…</p>
+    </main>
+  </body>
+</html>

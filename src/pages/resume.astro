@@ -1,183 +1,93 @@
 ---
-import AppShell from "../layouts/AppShell.astro";
+import "../styles/global.css";
+import { getEntry } from "astro:content";
 import SEO from "../components/SEO.astro";
-import data from "../data/resume.json";
-import Hero from "../components/resume/Hero.astro";
-import Scoreboard from "../components/resume/Scoreboard.astro";
-import BeforeAfter from "../components/resume/BeforeAfter.astro";
-import ExperimentGallery from "../components/resume/ExperimentGallery.astro";
-import ImpactTapestry from "../components/resume/ImpactTapestry.astro";
-import CaseStudyGrid from "../components/resume/CaseStudyGrid.astro";
-import ExperienceTimeline from "../components/resume/ExperienceTimeline.astro";
-import CapabilitiesMap from "../components/resume/CapabilitiesMap.astro";
-import ActionDock from "../components/resume/ActionDock.astro";
-import KeywordFilters from "../components/resume/KeywordFilters.astro";
-import { approxYears, formatRange } from "../utils/dates";
-import printHref from "../styles/print.css?url";
+import BeforeAfter from "../components/BeforeAfter";
+import ExperienceTimeline from "../components/ExperienceTimeline";
+import CommandPalette from "../components/CommandPalette";
+import ShaderBackdrop from "../components/ShaderBackdrop";
 
-const initialMode = "confidential";
+const resume = await getEntry('resume', 'data');
+const data = resume.data;
+const pageTitle = `${data.person.name} · ${data.person.title}`;
+const desc = data.person.blurb;
 
-const caseStudyTags: Record<string, string[]> = {
-  "cs-checkout-simplification": ["Checkout", "CRO", "Optimizely", "Experiment design"],
-  "cs-taxonomy-ia": ["SEO", "Taxonomy", "Information Architecture", "Navigation"],
-  "cs-search": ["Search", "SEO", "Core Web Vitals"],
-  "cs-consent": ["Consent Mode v2", "GA4", "Data layer"],
-  "cs-attach-wizard": ["Onboarding", "Experiment design", "Optimizely"],
-  "cs-program": ["Program governance", "RICE prioritization", "Dashboards"]
-};
-
-const experienceTags: Record<string, string[]> = {
-  "exp-retail-portfolio": ["CRO", "Checkout", "SEO", "Taxonomy", "Optimizely", "GA4", "BigQuery", "Program governance"],
-  "exp-saas-commerce": ["Onboarding", "Experiment design", "Consent Mode v2", "Optimizely", "Amplitude", "GA4"],
-  "exp-dtc-health": ["PDP", "Experiment design", "Monetate", "GA4"],
-  "exp-independent": ["Astro", "Tailwind", "Cloudflare", "Dashboards"]
-};
-
-const caseStudies = data.caseStudies.map((study) => ({
-  ...study,
-  tags: caseStudyTags[study.id] ?? []
-}));
-
-const experiences = data.experience.map((exp) => ({
-  ...exp,
-  durationApprox: approxYears(exp.start, exp.end),
-  rangeExact: formatRange(exp.start, exp.end),
-  tags: experienceTags[exp.id]?.filter(Boolean) ?? []
-}));
+const actions = [
+  { id:"email", label:`Email ${data.person.name}`, href:`mailto:${data.person.email}` },
+  { id:"pdf", label:"Print / Save PDF", href:"#print" },
+  { id:"json", label:"Export JSON", href:"/api/resume.json" },
+  ...(data.person.urls.site ? [{ id:"site", label:"Open Website", href:data.person.urls.site }] : []),
+  ...(data.person.urls.linkedin ? [{ id:"li", label:"Open LinkedIn", href:data.person.urls.linkedin }] : []),
+  ...(data.person.urls.github ? [{ id:"gh", label:"Open GitHub", href:data.person.urls.github }] : []),
+];
 ---
-<AppShell>
-  <SEO
-    slot="head"
-    title="Resume · Ashton Hawkins"
-    description="Evidence, case studies, and capabilities from Ashton Hawkins."
-  />
-  <link slot="head" rel="stylesheet" href={printHref} media="print" />
-  <script slot="head" is:inline>
-    (() => {
-      const root = document.documentElement;
-      if (!root.dataset.confidential) {
-        root.dataset.confidential = "confidential";
-      }
-      try {
-        const params = new URLSearchParams(window.location.search);
-        const forced = params.get("mode");
-        const storageKey = "resume_confidential";
-        const stored = window.localStorage.getItem(storageKey);
-        let mode = root.dataset.confidential;
-        if (forced === "public" || forced === "confidential") {
-          mode = forced;
-          window.localStorage.setItem(storageKey, mode);
-        } else if (stored === "public" || stored === "confidential") {
-          mode = stored;
-        } else {
-          window.localStorage.setItem(storageKey, mode ?? "confidential");
-        }
-        root.dataset.confidential = mode ?? "confidential";
-      } catch (error) {
-        document.documentElement.dataset.confidential = "confidential";
-      }
-    })();
-  </script>
-  <style>
-    :global(:root) {
-      --ink: #0b0b0f;
-      --ink-2: #4a4a57;
-      --surface: #f6f6f8;
-      --surface-alt: #ffffff;
-      --accent: #3b6ef5;
-      color-scheme: light dark;
-    }
-    :global(:root.dark) {
-      --ink: #f8f8fb;
-      --ink-2: #a9a9c5;
-      --surface: #0b0b0f;
-      --surface-alt: #161621;
-      --accent: #7da7ff;
-      color-scheme: dark light;
-    }
-    :global(body) {
-      background: var(--surface);
-      color: var(--ink);
-      font-family: "Inter", "system-ui", sans-serif;
-      min-height: 100vh;
-    }
-    :global(::selection) {
-      background: color-mix(in srgb, var(--accent) 40%, transparent);
-      color: var(--surface);
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .resume-page,
-      .resume-page * {
-        animation-duration: 1ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 1ms !important;
-        scroll-behavior: auto !important;
-      }
-    }
-    :global(:root:not([data-confidential="public"])) .public-only {
-      display: none !important;
-    }
-    :global(:root:not([data-confidential="confidential"])) .confidential-only {
-      display: none !important;
-    }
-    :global(:root[data-confidential="confidential"]) .sensitive-link {
-      display: none !important;
-    }
-    .resume-page {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 6rem 1.5rem 6rem;
-      display: flex;
-      flex-direction: column;
-      gap: 3rem;
-    }
-    @media (min-width: 1024px) {
-      .resume-page {
-        padding-left: 2rem;
-        padding-right: 2rem;
-        gap: 4rem;
-      }
-    }
-    .resume-section {
-      display: flex;
-      flex-direction: column;
-      gap: 3rem;
-    }
-    @media (min-width: 1024px) {
-      .resume-section {
-        gap: 4rem;
-      }
-    }
-    .resume-section[data-single] {
-      gap: 0;
-    }
-  </style>
-  <div class="resume-page">
-    <section id="overview" class="resume-section" data-single>
-      <div class="relative">
-        <Hero hero={data.hero} bioShort={data.bioShort} initialMode={initialMode} />
-        <div class="lg:absolute lg:right-0 lg:top-8 lg:z-40">
-          <ActionDock data={data} bio={data.bioShort} />
-        </div>
+<html lang="en">
+  <head>
+    <SEO title={pageTitle} description={desc} url="https://www.ashtonhawkins.com/resume" person={data.person} resume={data} />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body class="min-h-screen bg-neutral-950 text-neutral-100">
+    <ShaderBackdrop client:visible />
+    <header class="relative z-10 mx-auto max-w-5xl px-6 py-16">
+      <h1 class="text-4xl md:text-6xl font-bold tracking-tight">{data.person.title}</h1>
+      <p class="mt-4 max-w-2xl text-neutral-300">{data.person.blurb}</p>
+      <p class="mt-2 text-sm text-neutral-400">{data.person.location}</p>
+
+      <div class="mt-6 flex gap-3 text-sm">
+        <a href={`mailto:${data.person.email}`} class="px-3 py-1 rounded bg-white/10 hover:bg-white/20">Email</a>
+        <a href="/api/resume.json" class="px-3 py-1 rounded bg-white/10 hover:bg-white/20">Export JSON</a>
+        <a href="#print" class="px-3 py-1 rounded bg-white/10 hover:bg-white/20">Print / Save PDF</a>
       </div>
-    </section>
-    <section id="keywords" class="resume-section" data-single>
-      <KeywordFilters keywords={data.keywords} />
-    </section>
-    <section id="proof" class="resume-section">
-      <Scoreboard kpis={data.kpis} />
-      <BeforeAfter items={data.beforeAfter} />
-      <ExperimentGallery experiments={data.experiments} />
-      <ImpactTapestry items={data.tapestry} />
-    </section>
-    <section id="cases" class="resume-section" data-single>
-      <CaseStudyGrid caseStudies={caseStudies} />
-    </section>
-    <section id="experience" class="resume-section" data-single>
-      <ExperienceTimeline experience={experiences} />
-    </section>
-    <section id="capabilities" class="resume-section" data-single>
-      <CapabilitiesMap capabilities={data.capabilities} />
-    </section>
-  </div>
-</AppShell>
+    </header>
+
+    <main class="relative z-10 mx-auto max-w-5xl px-6 pb-24">
+      <section id="keywords" class="mb-10">
+        <h2 class="text-xl font-semibold">Filter by keyword</h2>
+        <p class="text-neutral-400 text-sm">Syncs to URL</p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          {data.keywords.map(k => <a href={`?q=${encodeURIComponent(k)}`} class="text-xs px-2 py-1 rounded border border-white/10 hover:bg-white/10">{k}</a>)}
+        </div>
+      </section>
+
+      <section id="before-after" class="mb-16">
+        <h2 class="text-xl font-semibold">Before / After</h2>
+        <p class="text-neutral-400 text-sm mb-4">Drag to compare</p>
+        <BeforeAfter client:visible before="/images/before.jpg" after="/images/after.jpg" altBefore="Before" altAfter="After" />
+      </section>
+
+      <section id="timeline" class="mb-16">
+        <h2 class="text-xl font-semibold">Experience Timeline</h2>
+        <ExperienceTimeline client:visible items={data.work} />
+      </section>
+
+      <section id="projects" class="mb-16">
+        <h2 class="text-xl font-semibold">Selected Projects</h2>
+        <div class="mt-6 grid gap-6 md:grid-cols-2">
+          {data.projects.map(p => (
+            <article class="rounded-lg border border-white/10 p-4 card">
+              <h3 class="font-medium">{p.name}</h3>
+              <p class="text-sm text-neutral-400">{p.period}</p>
+              <p class="mt-2 text-neutral-300">{p.summary}</p>
+              <div class="mt-3 flex flex-wrap gap-2">
+                {p.tags.map(t => <span class="text-xs px-2 py-1 rounded bg-white/5">{t}</span>)}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    </main>
+
+    <CommandPalette client:idle actions={actions} />
+
+    <script>
+      document.addEventListener('click', (e) => {
+        const a = e.target.closest('a');
+        if (!a) return;
+        if (a.getAttribute('href') === '#print' || a.hash === '#print') {
+          e.preventDefault();
+          window.print();
+        }
+      });
+    </script>
+  </body>
+</html>

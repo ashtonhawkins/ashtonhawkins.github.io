@@ -21,6 +21,8 @@ const navLinks = [
   { href: "/activity", label: "Activity" }
 ];
 
+const commandPaletteActions: { id: string; label: string; href: string }[] = [];
+
 const { hideNavigation = false, hideSearch = false } = Astro.props as Props;
 const normalizePath = (value: string) => {
   if (!value) return "/";
@@ -52,7 +54,7 @@ const isActive = (href: string) => {
     </script>
   </head>
   <body class="min-h-screen bg-background text-text-primary">
-    {!hideSearch && <CommandPalette client:idle />}
+    {!hideSearch && <CommandPalette client:idle actions={commandPaletteActions} />}
     <a
       href="#main"
       class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:rounded-full focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:shadow-ring"
