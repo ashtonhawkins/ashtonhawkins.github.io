@@ -9,109 +9,19 @@
     { "key": "testing_velocity_per_qtr", "label": "Experiment cadence / qtr", "value": 18, "confidence": "audited" }
   ],
   "beforeAfter": [
-    {
-      "id": "ba-checkout",
-      "title": "Checkout friction reduction",
-      "beforeImg": "https://dummyimage.com/1280x720/111/fff&text=Checkout+Before",
-      "afterImg": "https://dummyimage.com/1280x720/0a0a0a/ffffff&text=Checkout+After",
-      "note": "Reduced steps from 5→3, simplified address validation"
-    },
-    {
-      "id": "ba-nav",
-      "title": "Navigation & taxonomy overhaul",
-      "beforeImg": "https://dummyimage.com/1280x720/111/fff&text=Nav+Before",
-      "afterImg": "https://dummyimage.com/1280x720/0a0a0a/ffffff&text=Nav+After",
-      "note": "Introduced topic-first IA and auto-generated landing pages"
-    },
-    {
-      "id": "ba-search",
-      "title": "Search relevance + UX",
-      "beforeImg": "https://dummyimage.com/1280x720/111/fff&text=Search+Before",
-      "afterImg": "https://dummyimage.com/1280x720/0a0a0a/ffffff&text=Search+After",
-      "note": "Query understanding + synonym graph + result density"
-    }
+    { "id": "ba-checkout", "title": "Checkout friction reduction", "beforeImg": "https://dummyimage.com/1280x720/111/fff&text=Checkout+Before", "afterImg": "https://dummyimage.com/1280x720/0a0a0a/ffffff&text=Checkout+After", "note": "Reduced steps from 5→3, simplified address validation" },
+    { "id": "ba-nav", "title": "Navigation & taxonomy overhaul", "beforeImg": "https://dummyimage.com/1280x720/111/fff&text=Nav+Before", "afterImg": "https://dummyimage.com/1280x720/0a0a0a/ffffff&text=Nav+After", "note": "Introduced topic-first IA and auto-generated landing pages" },
+    { "id": "ba-search", "title": "Search relevance + UX", "beforeImg": "https://dummyimage.com/1280x720/111/fff&text=Search+Before", "afterImg": "https://dummyimage.com/1280x720/0a0a0a/ffffff&text=Search+After", "note": "Query understanding + synonym graph + result density" }
   ],
   "experiments": [
-    {
-      "id": "exp-hero-dual-cta",
-      "title": "Dual-CTA hero",
-      "problem": "Primary CTA was low intent; email capture underused",
-      "bet": "Add secondary ‘Email me the guide’ next to ‘Start free trial’",
-      "outcome": "+11.8% order CVR; +6.2% email capture",
-      "chart": { "type": "bullet", "values": [2.9, 3.24] },
-      "sample": 84000,
-      "confidence": "97.3%"
-    },
-    {
-      "id": "exp-sticky-cart",
-      "title": "Sticky cart summary",
-      "problem": "Users lost context on fees and total",
-      "bet": "Keep price/fees sticky on scroll with trust copy",
-      "outcome": "+6.1% checkout start",
-      "chart": { "type": "spark", "values": [0.0, 1.0, 1.2, 1.18, 1.23, 1.27, 1.29] },
-      "sample": 102000,
-      "confidence": "95%"
-    },
-    {
-      "id": "exp-upsell-wizard",
-      "title": "Library upsell in onboarding",
-      "problem": "Attach rate low among trial starters",
-      "bet": "Curated 3-item library offer after plan selection",
-      "outcome": "+3.4 pp attach among converters",
-      "chart": { "type": "bullet", "values": [21.3, 24.7] },
-      "sample": 39000,
-      "confidence": "p<0.05"
-    },
-    {
-      "id": "exp-consent-v2",
-      "title": "Consent Mode v2 hardening",
-      "problem": "Analytics coverage gaps post-consent",
-      "bet": "Server hints + modeled conversions + region logic",
-      "outcome": "+12% event coverage; stable CVR read",
-      "chart": { "type": "spark", "values": [0.78, 0.80, 0.86, 0.89, 0.90] },
-      "sample": 250000,
-      "confidence": "audited"
-    },
-    {
-      "id": "exp-pdp-trust",
-      "title": "PDP trust pattern",
-      "problem": "Low add-to-cart for high-price SKUs",
-      "bet": "Guarantee + returns window + UGC proof block",
-      "outcome": "+4.2% add-to-cart",
-      "chart": { "type": "spark", "values": [1.0, 1.04, 1.05, 1.042] },
-      "sample": 61000,
-      "confidence": "93%"
-    },
-    {
-      "id": "exp-shipping-threshold",
-      "title": "Free shipping threshold copy",
-      "problem": "Under-communication of threshold rules",
-      "bet": "Dynamic threshold progress with localized copy",
-      "outcome": "+$1.20 AOV; neutral CVR",
-      "chart": { "type": "bullet", "values": [48.4, 49.6] },
-      "sample": 57000,
-      "confidence": "95%"
-    },
-    {
-      "id": "exp-result-density",
-      "title": "Search result density",
-      "problem": "Low scroll depth; sparse SERP above the fold",
-      "bet": "Compact cards + meta emphasis + quick filters",
-      "outcome": "+17% click-through to PDP",
-      "chart": { "type": "spark", "values": [1.0, 1.08, 1.12, 1.17] },
-      "sample": 93000,
-      "confidence": "96%"
-    },
-    {
-      "id": "exp-quickbuy-removal",
-      "title": "Quick-Buy removal on PDP",
-      "problem": "Bypass hurt attach and upsell discovery",
-      "bet": "Remove quick-buy for subscriptions; emphasize bundle",
-      "outcome": "+2.1 pp attach; −0.4% CVR (ns)",
-      "chart": { "type": "bullet", "values": [23.0, 25.1] },
-      "sample": 52000,
-      "confidence": "not-sig on CVR"
-    }
+    { "id": "exp-hero-dual-cta", "title": "Dual-CTA hero", "problem": "Primary CTA was low intent; email capture underused", "bet": "Add secondary ‘Email me the guide’ next to ‘Start free trial’", "outcome": "+11.8% order CVR; +6.2% email capture", "chart": { "type": "bullet", "values": [2.9, 3.24] }, "sample": 84000, "confidence": "97.3%" },
+    { "id": "exp-sticky-cart", "title": "Sticky cart summary", "problem": "Users lost context on fees and total", "bet": "Keep price/fees sticky on scroll with trust copy", "outcome": "+6.1% checkout start", "chart": { "type": "spark", "values": [0.0, 1.0, 1.2, 1.18, 1.23, 1.27, 1.29] }, "sample": 102000, "confidence": "95%" },
+    { "id": "exp-upsell-wizard", "title": "Library upsell in onboarding", "problem": "Attach rate low among trial starters", "bet": "Curated 3-item library offer after plan selection", "outcome": "+3.4 pp attach among converters", "chart": { "type": "bullet", "values": [21.3, 24.7] }, "sample": 39000, "confidence": "p<0.05" },
+    { "id": "exp-consent-v2", "title": "Consent Mode v2 hardening", "problem": "Analytics coverage gaps post-consent", "bet": "Server hints + modeled conversions + region logic", "outcome": "+12% event coverage; stable CVR read", "chart": { "type": "spark", "values": [0.78, 0.80, 0.86, 0.89, 0.90] }, "sample": 250000, "confidence": "audited" },
+    { "id": "exp-pdp-trust", "title": "PDP trust pattern", "problem": "Low add-to-cart for high-price SKUs", "bet": "Guarantee + returns window + UGC proof block", "outcome": "+4.2% add-to-cart", "chart": { "type": "spark", "values": [1.0, 1.04, 1.05, 1.042] }, "sample": 61000, "confidence": "93%" },
+    { "id": "exp-shipping-threshold", "title": "Free shipping threshold copy", "problem": "Under-communication of threshold rules", "bet": "Dynamic threshold progress with localized copy", "outcome": "+$1.20 AOV; neutral CVR", "chart": { "type": "bullet", "values": [48.4, 49.6] }, "sample": 57000, "confidence": "95%" },
+    { "id": "exp-result-density", "title": "Search result density", "problem": "Low scroll depth; sparse SERP above the fold", "bet": "Compact cards + meta emphasis + quick filters", "outcome": "+17% click-through to PDP", "chart": { "type": "spark", "values": [1.0, 1.08, 1.12, 1.17] }, "sample": 93000, "confidence": "96%" },
+    { "id": "exp-quickbuy-removal", "title": "Quick-Buy removal on PDP", "problem": "Bypass hurt attach and upsell discovery", "bet": "Remove quick-buy for subscriptions; emphasize bundle", "outcome": "+2.1 pp attach; −0.4% CVR (ns)", "chart": { "type": "bullet", "values": [23.0, 25.1] }, "sample": 52000, "confidence": "not-sig on CVR" }
   ],
   "tapestry": [
     { "label": "Non-brand sessions YoY", "value": "+177%", "timeseries": [1.0, 1.04, 1.07, 1.13, 1.22, 1.38, 1.52, 1.77] },
@@ -124,187 +34,18 @@
     { "label": "Indexable catalog lift", "value": "+22%", "timeseries": [1.0, 1.05, 1.12, 1.22] }
   ],
   "caseStudies": [
-    {
-      "id": "cs-checkout-simplification",
-      "title": "Checkout simplification",
-      "thumb": "https://dummyimage.com/800x520/0d0d0d/e6e6e6&text=Checkout",
-      "problem": "High abandonment between shipping and payment",
-      "approach": "Consolidated steps, inline validation, wallet prioritization",
-      "outcome": "+11.8% order CVR; −21% form errors",
-      "receipts": [
-        { "label": "Experiment plan", "url": "#", "sensitive": false },
-        { "label": "Dashboard", "url": "#", "sensitive": true }
-      ],
-      "sensitive": false
-    },
-    {
-      "id": "cs-taxonomy-ia",
-      "title": "Navigation & taxonomy system",
-      "thumb": "https://dummyimage.com/800x520/0d0d0d/e6e6e6&text=Taxonomy",
-      "problem": "Unclear category structure and thin landing pages",
-      "approach": "Topic-first IA, auto-generated hubs, schema & internal links",
-      "outcome": "+177% non-brand sessions; +19.4% revenue",
-      "receipts": [
-        { "label": "IA map", "url": "#", "sensitive": false },
-        { "label": "SEO spec", "url": "#", "sensitive": false }
-      ],
-      "sensitive": false
-    },
-    {
-      "id": "cs-search",
-      "title": "Search relevance upgrade",
-      "thumb": "https://dummyimage.com/800x520/0d0d0d/e6e6e6&text=Search",
-      "problem": "Low SERP CTR; irrelevant top results",
-      "approach": "Query intent model, synonym graph, density + facets",
-      "outcome": "+17% PDP click-through; +7% revenue from search",
-      "receipts": [
-        { "label": "Relevance eval", "url": "#", "sensitive": true }
-      ],
-      "sensitive": false
-    },
-    {
-      "id": "cs-consent",
-      "title": "Consent Mode v2 + analytics reliability",
-      "thumb": "https://dummyimage.com/800x520/0d0d0d/e6e6e6&text=Consent",
-      "problem": "Post-consent data gaps causing under-measurement",
-      "approach": "Server hints, region logic, modeled conversions",
-      "outcome": "+12% event coverage; stable CVR read",
-      "receipts": [
-        { "label": "Tracking plan", "url": "#", "sensitive": false }
-      ],
-      "sensitive": true
-    },
-    {
-      "id": "cs-attach-wizard",
-      "title": "Attach through onboarding wizard",
-      "thumb": "https://dummyimage.com/800x520/0d0d0d/e6e6e6&text=Onboarding",
-      "problem": "Low attach among new subscribers",
-      "approach": "Persona-curated 3-item library offer post-plan",
-      "outcome": "+3.4 pp attach; neutral churn at 60 days",
-      "receipts": [
-        { "label": "Figma flow", "url": "#", "sensitive": false }
-      ],
-      "sensitive": false
-    },
-    {
-      "id": "cs-program",
-      "title": "Experimentation program setup",
-      "thumb": "https://dummyimage.com/800x520/0d0d0d/e6e6e6&text=Program",
-      "problem": "Ad-hoc testing; no intake/prioritization",
-      "approach": "RICE pipeline, design QA, results repo, governance",
-      "outcome": "18 tests/qtr; 41% win rate; +$3.1M modeled rev",
-      "receipts": [
-        { "label": "Playbook", "url": "#", "sensitive": false },
-        { "label": "Backlog", "url": "#", "sensitive": true }
-      ],
-      "sensitive": false
-    }
+    { "id": "cs-checkout-simplification", "title": "Checkout simplification", "thumb": "https://dummyimage.com/800x520/0d0d0d/e6e6e6&text=Checkout", "problem": "High abandonment between shipping and payment", "approach": "Consolidated steps, inline validation, wallet prioritization", "outcome": "+11.8% order CVR; −21% form errors", "receipts": [{ "label": "Experiment plan", "url": "#", "sensitive": false }, { "label": "Dashboard", "url": "#", "sensitive": true }], "sensitive": false },
+    { "id": "cs-taxonomy-ia", "title": "Navigation & taxonomy system", "thumb": "https://dummyimage.com/800x520/0d0d0d/e6e6e6&text=Taxonomy", "problem": "Unclear category structure and thin landing pages", "approach": "Topic-first IA, auto-generated hubs, schema & internal links", "outcome": "+177% non-brand sessions; +19.4% revenue", "receipts": [{ "label": "IA map", "url": "#", "sensitive": false }, { "label": "SEO spec", "url": "#", "sensitive": false }], "sensitive": false },
+    { "id": "cs-search", "title": "Search relevance upgrade", "thumb": "https://dummyimage.com/800x520/0d0d0d/e6e6e6&text=Search", "problem": "Low SERP CTR; irrelevant top results", "approach": "Query intent model, synonym graph, density + facets", "outcome": "+17% PDP click-through; +7% revenue from search", "receipts": [{ "label": "Relevance eval", "url": "#", "sensitive": true }], "sensitive": false },
+    { "id": "cs-consent", "title": "Consent Mode v2 + analytics reliability", "thumb": "https://dummyimage.com/800x520/0d0d0d/e6e6e6&text=Consent", "problem": "Post-consent data gaps causing under-measurement", "approach": "Server hints, region logic, modeled conversions", "outcome": "+12% event coverage; stable CVR read", "receipts": [{ "label": "Tracking plan", "url": "#", "sensitive": false }], "sensitive": true },
+    { "id": "cs-attach-wizard", "title": "Attach through onboarding wizard", "thumb": "https://dummyimage.com/800x520/0d0d0d/e6e6e6&text=Onboarding", "problem": "Low attach among new subscribers", "approach": "Persona-curated 3-item library offer post-plan", "outcome": "+3.4 pp attach; neutral churn at 60 days", "receipts": [{ "label": "Figma flow", "url": "#", "sensitive": false }], "sensitive": false },
+    { "id": "cs-program", "title": "Experimentation program setup", "thumb": "https://dummyimage.com/800x520/0d0d0d/e6e6e6&text=Program", "problem": "Ad-hoc testing; no intake/prioritization", "approach": "RICE pipeline, design QA, results repo, governance", "outcome": "18 tests/qtr; 41% win rate; +$3.1M modeled rev", "receipts": [{ "label": "Playbook", "url": "#", "sensitive": false }, { "label": "Backlog", "url": "#", "sensitive": true }], "sensitive": false }
   ],
   "experience": [
-    {
-      "id": "exp-retail-portfolio",
-      "org_public": "Omnichannel Retail Portfolio",
-      "org_confidential": "Fortune 100 Retailer (multi-brand)",
-      "role_public": "Portfolio Lead, Digital Growth",
-      "role_confidential": "Portfolio Lead — Retail",
-      "start": "2019-02-01",
-      "end": "2023-08-01",
-      "team_size": 7,
-      "budget_band": "$4–6M/yr",
-      "surfaces": "Home, PLP/PDP, Search, Checkout, Loyalty",
-      "stack": ["Optimizely", "GA4", "GTM", "BigQuery", "Cloudflare"],
-      "metrics": [
-        { "label": "Revenue", "delta_pct": 19.4, "baseline": 100, "sample": 275000, "confidence": "95% CI ±1.6" },
-        { "label": "Order CVR (Δ pp)", "delta_pct": 1.8, "baseline": 2.9, "sample": 180000, "confidence": "p<0.01" },
-        { "label": "Attach rate (Δ pp)", "delta_pct": 3.4, "baseline": 21.3, "sample": 39000, "confidence": "p<0.05" }
-      ],
-      "impacts": [
-        "Reduced checkout steps and error states; +11.8% order CVR",
-        "Launched topic-first IA; +177% non-brand sessions",
-        "Established experimentation program; 18 tests/qtr"
-      ],
-      "artifacts": [
-        { "label": "Growth playbook", "url": "#", "sensitive": false },
-        { "label": "Program dashboard", "url": "#", "sensitive": true }
-      ],
-      "caseStudyIds": ["cs-checkout-simplification", "cs-taxonomy-ia", "cs-program"]
-    },
-    {
-      "id": "exp-saas-commerce",
-      "org_public": "Faith-focused SaaS & Commerce",
-      "org_confidential": "Faith software + ecommerce",
-      "role_public": "Optimization Lead",
-      "role_confidential": "Optimization Lead",
-      "start": "2023-10-01",
-      "end": "2025-06-01",
-      "team_size": 5,
-      "budget_band": "$1.5–2M/yr",
-      "surfaces": "Storefront, Onboarding Wizard, Account",
-      "stack": ["Optimizely", "GA4", "Segment", "Amplitude", "Astro"],
-      "metrics": [
-        { "label": "Library attach (Δ pp)", "delta_pct": 2.7, "baseline": 22.0, "sample": 24000, "confidence": "p<0.1" },
-        { "label": "Trial→Paid CVR", "delta_pct": 9.6, "baseline": 12.5, "sample": 38000, "confidence": "95%" }
-      ],
-      "impacts": [
-        "Curated library upsell; +2.7 pp attach",
-        "Onboarding simplification; +9.6% trial→paid",
-        "Consent v2 rollout; +12% event coverage"
-      ],
-      "artifacts": [
-        { "label": "Onboarding spec", "url": "#", "sensitive": false },
-        { "label": "Experiment repo", "url": "#", "sensitive": true }
-      ],
-      "caseStudyIds": ["cs-attach-wizard", "cs-consent"]
-    },
-    {
-      "id": "exp-dtc-health",
-      "org_public": "DTC Health Brands (2)",
-      "org_confidential": "Two direct-to-consumer health brands",
-      "role_public": "Growth Consultant",
-      "role_confidential": "Growth Consultant",
-      "start": "2024-02-01",
-      "end": "2025-03-01",
-      "team_size": 3,
-      "budget_band": "$600k/yr",
-      "surfaces": "PDP, Subscription, Email landing",
-      "stack": ["Monetate", "GA4", "Klaviyo", "Next.js"],
-      "metrics": [
-        { "label": "Add-to-cart", "delta_pct": 4.2, "baseline": 7.9, "sample": 61000, "confidence": "93%" },
-        { "label": "Subscription start", "delta_pct": 6.9, "baseline": 5.3, "sample": 21000, "confidence": "95%" }
-      ],
-      "impacts": [
-        "Trust pattern on PDP; +4.2% ATC",
-        "Subscription pitch test; +6.9% start rate"
-      ],
-      "artifacts": [
-        { "label": "Trust block spec", "url": "#", "sensitive": false }
-      ],
-      "caseStudyIds": ["cs-pdp-trust", "cs-program"]
-    },
-    {
-      "id": "exp-independent",
-      "org_public": "Independent Consulting",
-      "org_confidential": "Consulting",
-      "role_public": "Principal",
-      "role_confidential": "Principal",
-      "start": "2025-03-01",
-      "end": "2025-11-01",
-      "team_size": 1,
-      "budget_band": "Engagement-based",
-      "surfaces": "Audit, Roadmaps, Prototypes",
-      "stack": ["Astro", "Tailwind", "Cloudflare", "Vercel"],
-      "metrics": [
-        { "label": "Win rate", "delta_pct": 41.0, "baseline": 0, "sample": 39, "confidence": "program" }
-      ],
-      "impacts": [
-        "Set up test governance and analytics hardening",
-        "Delivered executive-facing opportunity maps and prototypes"
-      ],
-      "artifacts": [
-        { "label": "Opportunity map", "url": "#", "sensitive": false }
-      ],
-      "caseStudyIds": ["cs-program"]
-    }
+    { "id": "exp-retail-portfolio", "org_public": "Omnichannel Retail Portfolio", "org_confidential": "Fortune 100 Retailer (multi-brand)", "role_public": "Portfolio Lead, Digital Growth", "role_confidential": "Portfolio Lead — Retail", "start": "2019-02-01", "end": "2023-08-01", "team_size": 7, "budget_band": "$4–6M/yr", "surfaces": "Home, PLP/PDP, Search, Checkout, Loyalty", "stack": ["Optimizely", "GA4", "GTM", "BigQuery", "Cloudflare"], "metrics": [{ "label": "Revenue", "delta_pct": 19.4, "baseline": 100, "sample": 275000, "confidence": "95% CI ±1.6" }, { "label": "Order CVR (Δ pp)", "delta_pct": 1.8, "baseline": 2.9, "sample": 180000, "confidence": "p<0.01" }, { "label": "Attach rate (Δ pp)", "delta_pct": 3.4, "baseline": 21.3, "sample": 39000, "confidence": "p<0.05" }], "impacts": ["Reduced checkout steps and error states; +11.8% order CVR", "Launched topic-first IA; +177% non-brand sessions", "Established experimentation program; 18 tests/qtr"], "artifacts": [{ "label": "Growth playbook", "url": "#", "sensitive": false }, { "label": "Program dashboard", "url": "#", "sensitive": true }], "caseStudyIds": ["cs-checkout-simplification", "cs-taxonomy-ia", "cs-program"] },
+    { "id": "exp-saas-commerce", "org_public": "Faith-focused SaaS & Commerce", "org_confidential": "Faith software + ecommerce", "role_public": "Optimization Lead", "role_confidential": "Optimization Lead", "start": "2023-10-01", "end": "2025-06-01", "team_size": 5, "budget_band": "$1.5–2M/yr", "surfaces": "Storefront, Onboarding Wizard, Account", "stack": ["Optimizely", "GA4", "Segment", "Amplitude", "Astro"], "metrics": [{ "label": "Library attach (Δ pp)", "delta_pct": 2.7, "baseline": 22.0, "sample": 24000, "confidence": "p<0.1" }, { "label": "Trial→Paid CVR", "delta_pct": 9.6, "baseline": 12.5, "sample": 38000, "confidence": "95%" }], "impacts": ["Curated library upsell; +2.7 pp attach", "Onboarding simplification; +9.6% trial→paid", "Consent v2 rollout; +12% event coverage"], "artifacts": [{ "label": "Onboarding spec", "url": "#", "sensitive": false }, { "label": "Experiment repo", "url": "#", "sensitive": true }], "caseStudyIds": ["cs-attach-wizard", "cs-consent"] },
+    { "id": "exp-dtc-health", "org_public": "DTC Health Brands (2)", "org_confidential": "Two direct-to-consumer health brands", "role_public": "Growth Consultant", "role_confidential": "Growth Consultant", "start": "2024-02-01", "end": "2025-03-01", "team_size": 3, "budget_band": "$600k/yr", "surfaces": "PDP, Subscription, Email landing", "stack": ["Monetate", "GA4", "Klaviyo", "Next.js"], "metrics": [{ "label": "Add-to-cart", "delta_pct": 4.2, "baseline": 7.9, "sample": 61000, "confidence": "93%" }, { "label": "Subscription start", "delta_pct": 6.9, "baseline": 5.3, "sample": 21000, "confidence": "95%" }], "impacts": ["Trust pattern on PDP; +4.2% ATC", "Subscription pitch test; +6.9% start rate"], "artifacts": [{ "label": "Trust block spec", "url": "#", "sensitive": false }], "caseStudyIds": ["cs-pdp-trust", "cs-program"] },
+    { "id": "exp-independent", "org_public": "Independent Consulting", "org_confidential": "Consulting", "role_public": "Principal", "role_confidential": "Principal", "start": "2025-03-01", "end": "2025-11-01", "team_size": 1, "budget_band": "Engagement-based", "surfaces": "Audit, Roadmaps, Prototypes", "stack": ["Astro", "Tailwind", "Cloudflare", "Vercel"], "metrics": [{ "label": "Win rate", "delta_pct": 41.0, "baseline": 0, "sample": 39, "confidence": "program" }], "impacts": ["Set up test governance and analytics hardening", "Delivered executive-facing opportunity maps and prototypes"], "artifacts": [{ "label": "Opportunity map", "url": "#", "sensitive": false }], "caseStudyIds": ["cs-program"] }
   ],
   "capabilities": [
     { "area": "CRO", "depth": 5 },
@@ -313,8 +54,6 @@
     { "area": "Analytics & Instrumentation", "depth": 5 },
     { "area": "Platform & Performance", "depth": 3 }
   ],
-  "keywords": [
-    "CRO","A/B testing","Experiment design","GA4","GTM","BigQuery","Amplitude","Attribution","Consent Mode v2","Core Web Vitals","RUM","SEO","Taxonomy","Information Architecture","Navigation","Search","Checkout","PDP","Onboarding","Optimizely","Monetate","Astro","Next.js","Tailwind","Cloudflare","RICE prioritization","Program governance","Dashboards","Data layer"
-  ],
+  "keywords": ["CRO","A/B testing","Experiment design","GA4","GTM","BigQuery","Amplitude","Attribution","Consent Mode v2","Core Web Vitals","RUM","SEO","Taxonomy","Information Architecture","Navigation","Search","Checkout","PDP","Onboarding","Optimizely","Monetate","Astro","Next.js","Tailwind","Cloudflare","RICE prioritization","Program governance","Dashboards","Data layer"],
   "bioShort": "Digital experience and growth leader who builds high-performing web programs—experimentation, CRO/SEO, taxonomy, analytics—and turns messy ecosystems into compounding, organic-led revenue."
 }

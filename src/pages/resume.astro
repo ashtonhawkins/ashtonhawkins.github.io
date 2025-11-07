@@ -1,360 +1,82 @@
 ---
-import AppShell from "../layouts/AppShell.astro";
-import SEO from "../components/SEO.astro";
-import ConfidentialToggle from "../components/resume/ConfidentialToggle.astro";
-import ThemeToggle from "../components/resume/ThemeToggle.astro";
+import ResumeLayout from "../layouts/ResumeLayout.astro";
+import data from "../data/resume.json";
+import Hero from "../components/resume/Hero.astro";
 import Scoreboard from "../components/resume/Scoreboard.astro";
-import ImpactTapestry from "../components/resume/ImpactTapestry.astro";
+import BeforeAfter from "../components/resume/BeforeAfter.astro";
 import ExperimentGallery from "../components/resume/ExperimentGallery.astro";
+import ImpactTapestry from "../components/resume/ImpactTapestry.astro";
 import CaseStudyGrid from "../components/resume/CaseStudyGrid.astro";
 import ExperienceTimeline from "../components/resume/ExperienceTimeline.astro";
-import KeywordChips from "../components/resume/KeywordChips.astro";
+import CapabilitiesMap from "../components/resume/CapabilitiesMap.astro";
 import ActionDock from "../components/resume/ActionDock.astro";
-import resume from "../data/resume.json";
-import printStyles from "../styles/print.css?url";
-import { formatPreciseRange, formatApproxYears } from "../utils/dates";
-import { meetsMetricGate } from "../utils/metrics";
+import KeywordFilters from "../components/resume/KeywordFilters.astro";
+import { approxYears, formatRange } from "../utils/dates";
 
-const searchParams = Astro.url.searchParams;
-const modeParam = searchParams.get("mode");
-const isConfidentialInitial = modeParam === "public" ? false : true;
-const initialTags = searchParams.get("tags")?.split(",").map((tag) => tag.trim()).filter(Boolean) ?? [];
+const initialMode = "confidential";
 
 const caseStudyTags: Record<string, string[]> = {
-  "cs-checkout-simplification": ["Checkout", "CRO", "Optimizely"],
-  "cs-taxonomy-ia": ["SEO", "Taxonomy", "Navigation", "Information Architecture"],
-  "cs-search": ["Search", "Information Architecture"],
+  "cs-checkout-simplification": ["Checkout", "CRO", "Optimizely", "Experiment design"],
+  "cs-taxonomy-ia": ["SEO", "Taxonomy", "Information Architecture", "Navigation"],
+  "cs-search": ["Search", "SEO", "Core Web Vitals"],
   "cs-consent": ["Consent Mode v2", "GA4", "Data layer"],
-  "cs-attach-wizard": ["Onboarding", "Experiment design", "CRO"],
-  "cs-program": ["Program governance", "Dashboards", "Experiment design"],
-  "cs-pdp-trust": ["PDP", "Checkout", "CRO"]
+  "cs-attach-wizard": ["Onboarding", "Experiment design", "Optimizely"],
+  "cs-program": ["Program governance", "RICE prioritization", "Dashboards"]
 };
 
 const experienceTags: Record<string, string[]> = {
-  "exp-retail-portfolio": ["CRO", "Checkout", "Search", "Navigation", "Taxonomy", "Program governance", "Dashboards", "Data layer", "Optimizely", "GA4", "BigQuery", "Cloudflare"],
-  "exp-saas-commerce": ["Onboarding", "CRO", "Experiment design", "Consent Mode v2", "Segment", "Amplitude", "Astro", "Program governance"],
-  "exp-dtc-health": ["PDP", "CRO", "Monetate", "GA4", "Program governance"],
-  "exp-independent": ["Astro", "Tailwind", "Cloudflare", "Data layer"]
+  "exp-retail-portfolio": ["CRO", "Checkout", "SEO", "Taxonomy", "Optimizely", "GA4", "BigQuery", "Program governance"],
+  "exp-saas-commerce": ["Onboarding", "Experiment design", "Consent Mode v2", "Optimizely", "Amplitude", "GA4"],
+  "exp-dtc-health": ["PDP", "Experiment design", "Monetate", "GA4"],
+  "exp-independent": ["Astro", "Tailwind", "Cloudflare", "Dashboards"]
 };
 
-const caseStudies = resume.caseStudies.map((caseStudy) => ({
-  ...caseStudy,
-  tags: caseStudyTags[caseStudy.id] ?? []
+const caseStudies = data.caseStudies.map((study) => ({
+  ...study,
+  tags: caseStudyTags[study.id] ?? []
 }));
 
-const experiences = resume.experience.map((experience) => {
-  const caseStudyRefs = experience.caseStudyIds
-    ? experience.caseStudyIds
-        .map((id) => caseStudies.find((caseStudy) => caseStudy.id === id))
-        .filter(Boolean)
-        .map((caseStudy) => ({
-          id: caseStudy!.id,
-          title: caseStudy!.title,
-          sensitive: caseStudy!.sensitive ?? false
-        }))
-    : [];
-
-  return {
-    ...experience,
-    metrics: experience.metrics.filter((metric) => meetsMetricGate(metric)),
-    rangePublic: formatPreciseRange(experience.start, experience.end),
-    rangeConfidential: formatApproxYears(experience.start, experience.end),
-    caseStudies: caseStudyRefs,
-    tags: experienceTags[experience.id] ?? []
-  };
-});
-
-const experiments = resume.experiments.map((experiment) => ({
-  ...experiment
+const experiences = data.experience.map((exp) => ({
+  ...exp,
+  durationApprox: approxYears(exp.start, exp.end),
+  rangeExact: formatRange(exp.start, exp.end),
+  tags: experienceTags[exp.id]?.filter(Boolean) ?? []
 }));
-
-const email = "hello@ashtonhawkins.com";
-const title = "Ashton Hawkins · Resume";
-const description = resume.hero.subhead;
-const canonicalUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString() : Astro.url.href;
-
-const textExport = [
-  resume.hero.headline,
-  resume.hero.subhead,
-  "",
-  "Key Metrics:",
-  ...resume.kpis.map((kpi) => `${kpi.label}: ${kpi.value}${kpi.suffix ?? "%"}`),
-  "",
-  "Experiences:",
-  ...experiences.map((experience) => `${experience.role_public} @ ${experience.org_public} (${experience.rangePublic})`)
-].join("\n");
 ---
-<AppShell>
-  <SEO slot="head" title={title} description={description} ogTitle={title} canonical={canonicalUrl} />
-  <Fragment slot="head">
-    <meta name="color-scheme" content="light dark" />
-    <script is:inline>
-      (() => {
-        const storageKey = "theme";
-        const legacyKey = "site-theme";
-        try {
-          const stored = window.localStorage.getItem(storageKey) ?? window.localStorage.getItem(legacyKey);
-          const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-          const theme = stored === "light" || stored === "dark" ? stored : prefersDark ? "dark" : "light";
-          document.documentElement.classList.toggle("dark", theme === "dark");
-          document.documentElement.dataset.theme = theme;
-          window.localStorage.setItem(storageKey, theme);
-          window.localStorage.setItem(legacyKey, theme);
-        } catch (error) {
-          const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-          document.documentElement.classList.toggle("dark", prefersDark);
-          document.documentElement.dataset.theme = prefersDark ? "dark" : "light";
-        }
-      })();
-    </script>
-  </Fragment>
-  <link rel="stylesheet" href={printStyles} media="print" />
-  <style is:inline>
-    :root {
-      color-scheme: light;
-      --ink: #0f172a;
-      --ink-2: rgba(15, 23, 42, 0.72);
-      --surface: #f8fafc;
-      --surface-alt: #ffffff;
-      --surface-faint: rgba(15, 23, 42, 0.08);
-      --accent: #0f7bf2;
-      --keyline: color-mix(in_lab, var(--ink) 12%, transparent);
-      --radius-2: 0.75rem;
-      --radius-3: 1rem;
-      --radius-4: 1.5rem;
-      --shadow-soft: 0 48px 120px -80px rgba(15, 23, 42, 0.5);
-    }
-    html.dark {
-      color-scheme: dark;
-      --ink: #f1f5f9;
-      --ink-2: rgba(226, 232, 240, 0.68);
-      --surface: #0b1120;
-      --surface-alt: #111c33;
-      --surface-faint: rgba(15, 23, 42, 0.32);
-      --accent: #60a5fa;
-      --keyline: color-mix(in_lab, var(--ink) 18%, transparent);
-      --shadow-soft: 0 48px 120px -80px rgba(15, 23, 42, 0.85);
-    }
-    body {
-      background: var(--surface);
-      color: var(--ink);
-    }
+<ResumeLayout title="Resume — Ashton Hawkins">
+  <style>
     main {
-      position: relative;
-    }
-    main::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background: radial-gradient(circle at 0 0, var(--surface-faint), transparent 45%), radial-gradient(circle at 100% 0, var(--surface-faint), transparent 50%);
-      opacity: 0.7;
-      z-index: -1;
-    }
-    [data-confidential-root] {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 4rem 1.5rem 6rem;
       display: flex;
       flex-direction: column;
-      gap: clamp(2rem, 4vw, 3.5rem);
+      gap: 3rem;
     }
-    [data-confidential-root] > section,
-    [data-confidential-root] > article,
-    [data-confidential-root] > div[data-band] {
-      background: var(--surface-alt);
-      border: 1px solid var(--keyline);
-      border-radius: var(--radius-4);
-      box-shadow: var(--shadow-soft);
-      padding: clamp(1.75rem, 2vw, 2.5rem);
-    }
-    [data-confidential-root][data-confidential-state="confidential"] .public-only {
+    [data-confidential="confidential"] .public-only {
       display: none !important;
     }
-    [data-confidential-root][data-confidential-state="public"] .confidential-only {
+    [data-confidential="public"] .confidential-only {
       display: none !important;
     }
-    [data-motion] {
-      opacity: 0;
-      transform: translateY(24px);
-      transition: opacity 200ms cubic-bezier(.2,.8,.2,1), transform 200ms cubic-bezier(.2,.8,.2,1);
-    }
-    [data-motion].is-visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    [data-toast-root] {
-      position: fixed;
-      bottom: 1.5rem;
-      right: clamp(1rem, 6vw, 6rem);
-      z-index: 60;
-      padding: 0.75rem 1.25rem;
-      border-radius: var(--radius-2);
-      background: var(--ink);
-      color: var(--surface-alt);
-      font-size: 0.875rem;
-      font-weight: 600;
-      opacity: 0;
-      transform: translateY(12px);
-      transition: opacity 200ms cubic-bezier(.2,.8,.2,1), transform 200ms cubic-bezier(.2,.8,.2,1);
-      pointer-events: none;
-    }
-    [data-toast-root][data-state="visible"] {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    [data-action-dock],
-    [data-action-pill] {
-      transition: opacity 200ms cubic-bezier(.2,.8,.2,1), transform 200ms cubic-bezier(.2,.8,.2,1);
-    }
-    [data-action-dock][data-state="hidden"],
-    [data-action-pill][data-state="hidden"] {
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(16px);
-    }
-    [data-action-dock][data-state="visible"],
-    [data-action-pill][data-state="visible"] {
-      opacity: 1;
-      transform: translateY(0);
+    [data-confidential="confidential"] .sensitive-link {
+      display: none !important;
     }
   </style>
-  <article
-    data-confidential-root
-    data-confidential-state={isConfidentialInitial ? "confidential" : "public"}
-    data-tags-initial={initialTags.map((tag) => tag.toLowerCase()).join(",")}
-  >
-    <section data-band class="relative overflow-hidden" data-motion>
-      <div data-hero-sentinel aria-hidden="true" class="absolute inset-x-0 top-0 h-1"></div>
-      <div class="absolute inset-0 -z-10 bg-[conic-gradient(from_90deg_at_1px_1px,var(--surface-faint)_0deg,var(--surface-faint)_90deg,transparent_90deg,transparent_180deg)] bg-[length:42px_42px]"></div>
-      <header class="flex flex-col gap-6">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-          <div class="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.32em] text-[var(--ink-2)]">
-            <span class="inline-flex items-center gap-2 rounded-full border border-[color:var(--keyline)] bg-[color:color-mix(in_lab,var(--surface) 92%, transparent)] px-3 py-1 text-[var(--ink)]">
-              Resume
-            </span>
-            <span class="inline-flex items-center gap-2 rounded-full border border-[color:var(--keyline)] bg-[color:color-mix(in_lab,var(--surface) 94%, transparent)] px-3 py-1">
-              <span class="confidential-only inline-flex items-center gap-2">🔒 Confidential</span>
-              <span class="public-only inline-flex items-center gap-2">🔓 Public</span>
-            </span>
-          </div>
-          <div class="flex items-center gap-2">
-            <ThemeToggle />
-            <ConfidentialToggle isConfidential={isConfidentialInitial} />
-          </div>
-        </div>
-        <div class="flex flex-col gap-4">
-          <h1 class="text-4xl font-semibold leading-tight tracking-[-0.02em] text-[color:var(--ink)] sm:text-5xl">
-            {resume.hero.headline}
-          </h1>
-          <p class="max-w-3xl text-base leading-relaxed text-[color:var(--ink-2)] sm:text-lg">
-            {resume.hero.subhead}
-          </p>
-        </div>
-      </header>
-      <div class="mt-8">
-        <Scoreboard items={resume.kpis} />
+  <main>
+    <div class="relative">
+      <Hero hero={data.hero} bioShort={data.bioShort} initialMode={initialMode} />
+      <div class="lg:absolute lg:top-8 lg:right-8">
+        <ActionDock data={data} bio={data.bioShort} />
       </div>
-    </section>
-
-    <KeywordChips keywords={resume.keywords} activeTags={initialTags} />
-
-    <ImpactTapestry items={resume.tapestry} />
-
-    <ExperimentGallery experiments={experiments} />
-
+    </div>
+    <KeywordFilters keywords={data.keywords} />
+    <Scoreboard kpis={data.kpis} />
+    <BeforeAfter items={data.beforeAfter} />
+    <ExperimentGallery experiments={data.experiments} />
+    <ImpactTapestry items={data.tapestry} />
     <CaseStudyGrid caseStudies={caseStudies} />
-
-    <ExperienceTimeline experiences={experiences} />
-
-    <ActionDock
-      email={email}
-      bio={resume.hero.subhead}
-      jsonExport={resume}
-      textExport={textExport}
-    />
-  </article>
-  <div data-toast-root data-state="hidden" aria-live="polite"></div>
-  <script type="module">
-    import { initializeConfidentialMode } from "../utils/confidential";
-    import { observeVisibility } from "../utils/motion";
-
-    const motionNodes = () => document.querySelectorAll<HTMLElement>("[data-motion]");
-    const applyMotion = () => {
-      observeVisibility(motionNodes(), (entry) => {
-        entry.target.classList.add("is-visible");
-      }, { threshold: 0.4, once: true });
-    };
-
-    const initConfidential = () => {
-      initializeConfidentialMode({
-        defaultState: isConfidentialInitial,
-        rootSelector: "[data-confidential-root]",
-        toggleSelector: "[data-confidential-toggle]",
-        announcerSelector: "[data-confidential-announcer]"
-      });
-    };
-
-    const initFilters = () => {
-      const root = document.querySelector<HTMLElement>("[data-confidential-root]");
-      if (!root) return;
-      const chips = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-keyword-chip]"));
-      const items = Array.from(root.querySelectorAll<HTMLElement>("[data-filter-item]"));
-      const initial = root.dataset.tagsInitial ? root.dataset.tagsInitial.split(",").filter(Boolean) : [];
-      let active = new Set(initial);
-
-      const apply = () => {
-        if (!items.length) return;
-        const tags = Array.from(active);
-        const params = new URLSearchParams(window.location.search);
-        items.forEach((item) => {
-          const itemTags = item.dataset.tags ? item.dataset.tags.split(",").map((tag) => tag.trim().toLowerCase()).filter(Boolean) : [];
-          const shouldShow = tags.length === 0 || itemTags.some((tag) => tags.includes(tag));
-          item.dataset.filterHidden = shouldShow ? "false" : "true";
-          item.toggleAttribute("hidden", !shouldShow);
-        });
-        chips.forEach((chip) => {
-          const tag = chip.dataset.tag ?? "";
-          const isActive = active.has(tag);
-          chip.dataset.active = isActive ? "true" : "false";
-          chip.setAttribute("aria-pressed", isActive ? "true" : "false");
-        });
-        if (tags.length) {
-          params.set("tags", tags.join(","));
-        } else {
-          params.delete("tags");
-        }
-        window.history.replaceState(window.history.state, "", `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`);
-      };
-
-      const toggle = (tag: string) => {
-        if (!tag) return;
-        if (active.has(tag)) active.delete(tag);
-        else active.add(tag);
-        apply();
-      };
-
-      chips.forEach((chip) => {
-        if (chip.dataset.bound === "true") return;
-        chip.dataset.bound = "true";
-        chip.addEventListener("click", () => toggle(chip.dataset.tag ?? ""));
-        chip.addEventListener("keydown", (event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            toggle(chip.dataset.tag ?? "");
-          }
-        });
-      });
-
-      apply();
-      document.addEventListener("resume:confidential-change", apply);
-    };
-
-    applyMotion();
-    initConfidential();
-    initFilters();
-
-    document.addEventListener("astro:page-load", () => {
-      applyMotion();
-      initConfidential();
-      initFilters();
-    });
-  </script>
-</AppShell>
+    <ExperienceTimeline experience={experiences} />
+    <CapabilitiesMap capabilities={data.capabilities} />
+  </main>
+</ResumeLayout>
