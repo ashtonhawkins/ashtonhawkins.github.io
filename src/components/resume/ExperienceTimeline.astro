@@ -1,28 +1,100 @@
 ---
-import type resumeData from "../../data/resume.json";
 import ExperienceCard from "./ExperienceCard.astro";
-import ExperienceTimelineClient from "./ExperienceTimelineClient";
-const { experience } = Astro.props as {
-  experience: (typeof resumeData.experience[number] & {
-    durationApprox: string;
-    rangeExact: string;
-    tags: string[];
-  })[];
-};
-const buttonId = "expand-experience";
-const containerId = "experience-stack";
+
+interface ExperienceItem {
+  id: string;
+  org_public: string;
+  org_confidential: string;
+  role_public: string;
+  role_confidential: string;
+  start: string;
+  end: string;
+  rangePublic: string;
+  rangeConfidential: string;
+  team_size?: number;
+  budget_band?: string;
+  surfaces?: string;
+  stack?: string[];
+  metrics: {
+    label: string;
+    delta_pct: number;
+    baseline?: number;
+    sample?: number;
+    confidence?: string;
+    note?: string;
+  }[];
+  impacts: string[];
+  artifacts: {
+    label: string;
+    url: string;
+    sensitive?: boolean;
+  }[];
+  caseStudies?: {
+    id: string;
+    title: string;
+    sensitive?: boolean;
+  }[];
+  tags?: string[];
+}
+
+const { experiences } = Astro.props as { experiences: ExperienceItem[] };
 ---
-<section class="rounded-3xl border border-[color-mix(in_srgb,var(--ink)_10%,transparent)] bg-[var(--surface-alt)] p-8 shadow-lg shadow-black/10">
-  <div class="flex flex-col gap-6">
-    <div class="flex items-center justify-between">
-      <h2 class="text-xl font-semibold text-[var(--ink)]">Experience Timeline</h2>
-      <button id={buttonId} type="button" class="rounded-full border border-[color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1.5 text-xs font-medium text-[var(--ink)] hover:border-[color-mix(in_srgb,var(--accent)_40%,transparent)]">Expand all</button>
+<section class="flex flex-col gap-6" id="experience" data-band data-motion>
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex flex-col gap-2">
+      <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Experience</span>
+      <h2 class="text-lg font-semibold text-[color:var(--ink)]">Outcome-first leadership</h2>
+      <p class="max-w-3xl text-sm text-[color:var(--ink-2)]">
+        Retail, SaaS commerce, healthcare, and independent labs. Metrics reflect engagements that met gating thresholds.
+      </p>
     </div>
-    <div id={containerId} class="flex flex-col gap-4">
-      {experience.map((exp) => (
-        <ExperienceCard experience={exp} key={exp.id} />
-      ))}
-    </div>
+    <button
+      type="button"
+      class="inline-flex items-center gap-2 rounded-full border border-[color:var(--keyline)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink)] transition-[border,background,color] duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_lab,var(--accent) 40%, transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+      data-expand-all
+    >
+      Expand all
+    </button>
   </div>
-  <ExperienceTimelineClient client:load buttonId={buttonId} containerId={containerId} />
+  <div class="flex flex-col gap-4" data-experience-list>
+    {experiences.map((experience) => (
+      <ExperienceCard experience={experience} />
+    ))}
+  </div>
 </section>
+<script type="module">
+  const initExpandAll = () => {
+    const button = document.querySelector<HTMLButtonElement>("[data-expand-all]");
+    const list = document.querySelector<HTMLElement>("[data-experience-list]");
+    if (!button || !list) return;
+    if (button.dataset.bound === "true") return;
+    button.dataset.bound = "true";
+    const expandAll = () => {
+      const cards = Array.from(list.querySelectorAll<HTMLDetailsElement>("[data-experience-card]"));
+      if (!cards.length) return;
+      cards.forEach((card) => {
+        if (card.hasAttribute("hidden")) return;
+        card.open = true;
+        if (!card.hasAttribute("tabindex")) card.setAttribute("tabindex", "-1");
+      });
+      const firstVisible = cards.find((card) => !card.hasAttribute("hidden"));
+      firstVisible?.focus();
+    };
+    const activate = (event?: Event) => {
+      if (event) {
+        event.preventDefault();
+      }
+      expandAll();
+    };
+    button.addEventListener("click", activate);
+    button.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        expandAll();
+      }
+    });
+  };
+
+  initExpandAll();
+  document.addEventListener("astro:page-load", initExpandAll);
+</script>

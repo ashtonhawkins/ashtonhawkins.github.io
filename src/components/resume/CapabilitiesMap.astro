@@ -1,49 +1,47 @@
 ---
-import type resumeData from "../../data/resume.json";
-const { capabilities } = Astro.props as { capabilities: typeof resumeData.capabilities };
-const levels = [1, 2, 3, 4, 5];
+interface CapabilityItem {
+  area: string;
+  depth: number;
+}
+
+const { capabilities } = Astro.props as { capabilities: CapabilityItem[] };
+const columns = [1, 2, 3, 4, 5];
 ---
-<section class="rounded-3xl border border-[color-mix(in_srgb,var(--ink)_10%,transparent)] bg-[var(--surface-alt)] p-8 shadow-lg shadow-black/10">
-  <div class="flex flex-col gap-6">
-    <div class="flex items-center justify-between">
-      <h2 class="text-xl font-semibold text-[var(--ink)]">Capabilities Map</h2>
-      <span class="text-xs text-[var(--ink-2)]">Depth across practice areas</span>
+<section class="flex flex-col gap-6" id="capabilities-map">
+  <div class="flex flex-col gap-2">
+    <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Platform</span>
+    <h2 class="text-lg font-semibold text-[color:var(--ink)]">Capabilities Map</h2>
+    <p class="max-w-2xl text-sm text-[color:var(--ink-2)]">Depth map across CRO, SEO, IA, analytics, and platform craft. Each cell is keyboard focusable with descriptive labels.</p>
+  </div>
+  <div role="grid" aria-label="Capabilities depth" class="overflow-hidden rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)]">
+    <div class="grid grid-cols-[minmax(160px,1fr)_repeat(5,minmax(60px,1fr))] bg-[color:color-mix(in_srgb,var(--surface)_94%,transparent)] text-xs uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
+      <div class="px-4 py-3">Discipline</div>
+      {columns.map((column) => (
+        <div class="px-4 py-3 text-center">{column}</div>
+      ))}
     </div>
-    <div class="overflow-x-auto">
-      <table class="w-full min-w-[560px] border-separate border-spacing-0 text-sm">
-        <thead>
-          <tr>
-            <th class="sticky left-0 bg-[var(--surface-alt)] p-3 text-left text-xs uppercase tracking-wide text-[var(--ink-2)]">Discipline</th>
-            {levels.map((level) => (
-              <th class="p-3 text-xs uppercase tracking-wide text-[var(--ink-2)]" scope="col" key={level}>
-                Level {level}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {capabilities.map((cap) => (
-            <tr key={cap.area}>
-              <th scope="row" class="sticky left-0 bg-[var(--surface-alt)] p-3 text-left text-sm font-semibold text-[var(--ink)]">{cap.area}</th>
-              {levels.map((level) => (
-                <td key={level} class="p-3">
-                  <span
-                    class={`sr-only`}
-                  >
-                    {cap.area} level {level}
-                  </span>
-                  <span
-                    aria-hidden="true"
-                    class={`block h-8 rounded-full border border-[color-mix(in_srgb,var(--ink)_10%,transparent)] ${
-                      level <= cap.depth ? "bg-[var(--accent)]" : "bg-[color-mix(in_srgb,var(--ink)_6%,transparent)]"
-                    }`}
-                  ></span>
-                </td>
-              ))}
-            </tr>
+    <div class="divide-y divide-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_96%,transparent)]" role="rowgroup">
+      {capabilities.map((item) => (
+        <div role="row" class="grid grid-cols-[minmax(160px,1fr)_repeat(5,minmax(60px,1fr))]">
+          <div role="rowheader" class="px-4 py-3 text-sm font-semibold text-[color:var(--ink)]">{item.area}</div>
+          {columns.map((column) => (
+            <button
+              key={column}
+              type="button"
+              role="gridcell"
+              class={[
+                "flex items-center justify-center border-l border-[color:color-mix(in_srgb,var(--ink)_8%,transparent)] px-2 py-3 text-sm transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[color:var(--accent)]",
+                column <= item.depth
+                  ? "bg-[color:color-mix(in_srgb,var(--accent)_14%,transparent)] text-[color:var(--ink)]"
+                  : "text-[color:var(--ink-2)]"
+              ].join(" ")}
+              aria-label={`${item.area} depth ${column} of 5`}
+            >
+              {column <= item.depth ? "●" : "○"}
+            </button>
           ))}
-        </tbody>
-      </table>
+        </div>
+      ))}
     </div>
   </div>
 </section>
