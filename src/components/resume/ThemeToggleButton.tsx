@@ -2,56 +2,30 @@ import { useEffect, useState } from "react";
 
 type Theme = "light" | "dark";
 
-const STORAGE_KEY = "site-theme";
-
 const resolveTheme = (): Theme => {
-  if (typeof window === "undefined") return "light";
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  if (stored === "light" || stored === "dark") {
-    return stored;
-  }
-  const root = document.documentElement;
-  if (root.dataset.theme === "dark" || root.classList.contains("dark")) {
-    return "dark";
-  }
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  if (typeof document === "undefined") return "light";
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
 };
 
 const applyTheme = (theme: Theme) => {
-  if (typeof document === "undefined") return;
   const root = document.documentElement;
   root.classList.toggle("dark", theme === "dark");
-  root.dataset.theme = theme;
   root.style.setProperty("color-scheme", theme === "dark" ? "dark light" : "light dark");
-  if (typeof window !== "undefined") {
-    window.localStorage.setItem(STORAGE_KEY, theme);
-  }
+  localStorage.setItem("theme", theme);
 };
 
 export default function ThemeToggleButton() {
   const [theme, setTheme] = useState<Theme>(() => resolveTheme());
 
   useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    const sync = () => {
-      const current = root.dataset.theme === "dark" ? "dark" : "light";
-      setTheme((prev) => (prev === current ? prev : current));
-    };
-    sync();
-    if (typeof MutationObserver === "undefined") {
-      return;
-    }
-    const observer = new MutationObserver(sync);
-    observer.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => observer.disconnect();
+    const mode = resolveTheme();
+    setTheme(mode);
   }, []);
 
   const toggle = () => {
-    setTheme((current) => (current === "dark" ? "light" : "dark"));
+    const next = theme === "dark" ? "light" : "dark";
+    applyTheme(next);
+    setTheme(next);
   };
 
   return (
