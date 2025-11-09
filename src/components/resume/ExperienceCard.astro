@@ -1,5 +1,6 @@
 ---
-import { formatDelta, formatSample, formatBaseline, inferSuffix } from "../../utils/metrics";
+import { formatPreciseRange, formatApproxDuration } from "../../utils/dates";
+import { formatDelta, formatSample, formatBaseline, meetsMetricGate } from "../../utils/metrics";
 
 interface MetricItem {
   label: string;
@@ -30,8 +31,6 @@ interface ExperienceItem {
   role_confidential: string;
   start: string;
   end: string;
-  rangePublic: string;
-  rangeConfidential: string;
   team_size?: number;
   budget_band?: string;
   surfaces?: string;
@@ -44,21 +43,23 @@ interface ExperienceItem {
 }
 
 const { experience } = Astro.props as { experience: ExperienceItem };
+const preciseRange = formatPreciseRange(experience.start, experience.end);
+const approxRange = formatApproxDuration(experience.start, experience.end);
+const metrics = experience.metrics.filter((metric) => meetsMetricGate(metric));
 const meta: string[] = [];
 if (experience.team_size) meta.push(`Team ${experience.team_size}`);
 if (experience.budget_band) meta.push(experience.budget_band);
 if (experience.surfaces) meta.push(experience.surfaces);
 if (experience.stack && experience.stack.length) meta.push(experience.stack.join(" · "));
-const hasMetrics = experience.metrics.length > 0;
 ---
 <details
-  class="group overflow-hidden rounded-[var(--radius-3)] border border-[color:color-mix(in_lab,var(--ink) 10%, transparent)] bg-[color:color-mix(in_lab,var(--surface) 94%, transparent)]"
+  class="group overflow-hidden rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_96%,transparent)] shadow-[0_32px_80px_-60px_rgba(12,20,32,0.45)]"
   data-experience-card
-  data-tags={experience.tags?.map((tag) => tag.toLowerCase()).join(",") ?? ""}
+  data-tags={experience.tags?.join(",") ?? ""}
   data-filter-item
   data-motion
 >
-  <summary class="flex cursor-pointer flex-col gap-3 px-5 py-4 text-left outline-none transition-[background,transform] duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:bg-[color:color-mix(in_lab,var(--surface) 90%, transparent)] focus-visible:bg-[color:color-mix(in_lab,var(--surface) 90%, transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]">
+  <summary class="flex cursor-pointer flex-col gap-3 px-5 py-4 text-left outline-none transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:bg-[color:color-mix(in_srgb,var(--surface)_92%,transparent)] focus-visible:bg-[color:color-mix(in_srgb,var(--surface)_92%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div class="flex flex-col gap-1">
         <span class="text-base font-semibold text-[color:var(--ink)]">
@@ -71,14 +72,14 @@ const hasMetrics = experience.metrics.length > 0;
         </span>
       </div>
       <div class="flex flex-col items-end gap-1 text-xs uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
-        <span class="public-only">{experience.rangePublic}</span>
-        <span class="confidential-only">{experience.rangeConfidential}</span>
+        <span class="public-only">{preciseRange}</span>
+        <span class="confidential-only">{approxRange}</span>
       </div>
     </div>
     {experience.tags && experience.tags.length > 0 && (
       <div class="flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
         {experience.tags.map((tag) => (
-          <span class="inline-flex items-center gap-2 rounded-full border border-[color:var(--keyline)] px-3 py-1">{tag}</span>
+          <span class="rounded-full border border-[color:color-mix(in_srgb,var(--ink)_10%,transparent)] px-3 py-1">{tag}</span>
         ))}
       </div>
     )}
@@ -87,20 +88,23 @@ const hasMetrics = experience.metrics.length > 0;
     {meta.length > 0 && (
       <div class="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
         {meta.map((item) => (
-          <span class="inline-flex items-center gap-2 rounded-full border border-[color:var(--keyline)] px-3 py-1">{item}</span>
+          <span class="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1">{item}</span>
         ))}
       </div>
     )}
-    {hasMetrics && (
-      <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {experience.metrics.map((metric) => (
-          <div class="flex flex-col gap-2 rounded-[var(--radius-2)] border border-[color:color-mix(in_lab,var(--ink) 12%, transparent)] bg-[color:color-mix(in_lab,var(--surface) 96%, transparent)] p-4">
+    {metrics.length > 0 && (
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {metrics.map((metric) => (
+          <div class="flex flex-col gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_94%,transparent)] p-4">
             <span class="text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">{metric.label}</span>
-            <span class="text-lg font-semibold text-[color:var(--ink)]">{formatDelta(metric.delta_pct)}{inferSuffix(metric)}</span>
+            <span class="text-lg font-semibold text-[color:var(--ink)]">
+              {formatDelta(metric.delta_pct)}
+              {metric.label.toLowerCase().includes("pp") ? " pp" : "%"}
+            </span>
             <div class="flex flex-col gap-1 text-xs text-[color:var(--ink-2)]">
-              {metric.baseline !== undefined && <span>{formatBaseline(metric.baseline)}</span>}
-              {metric.sample && metric.sample >= 1000 && <span>{formatSample(metric.sample)}</span>}
               {metric.confidence && <span>{metric.confidence}</span>}
+              {metric.sample && <span>{formatSample(metric.sample)}</span>}
+              {metric.baseline && <span>{formatBaseline(metric.baseline)}</span>}
               {metric.note && <span>{metric.note}</span>}
             </div>
           </div>
@@ -117,19 +121,19 @@ const hasMetrics = experience.metrics.length > 0;
     </div>
     {experience.caseStudies && experience.caseStudies.length > 0 && (
       <div class="flex flex-col gap-2">
-        <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Related case studies</span>
+        <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Case studies</span>
         <div class="flex flex-wrap gap-2">
           {experience.caseStudies.map((caseStudy) => (
             <a
               href={`#case-${caseStudy.id}`}
-              class={`inline-flex items-center gap-2 rounded-full border border-[color:var(--keyline)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--ink)] transition-[border,background,color] duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_lab,var(--accent) 40%, transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)] ${caseStudy.sensitive ? "public-only" : ""}`}
+              class={`inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink)] transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_srgb,var(--accent)_28%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)] ${caseStudy.sensitive ? "public-only" : ""}`}
             >
               {caseStudy.title}
             </a>
           ))}
           {experience.caseStudies.some((caseStudy) => caseStudy.sensitive) && (
-            <span class="confidential-only inline-flex items-center gap-2 rounded-full border border-[color:var(--keyline)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
-              Redacted
+            <span class="confidential-only inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
+              Confidential
             </span>
           )}
         </div>
@@ -144,14 +148,14 @@ const hasMetrics = experience.metrics.length > 0;
               href={artifact.url}
               target="_blank"
               rel="noreferrer"
-              class={`inline-flex items-center gap-2 rounded-full border border-[color:var(--keyline)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--ink)] transition-[border,background,color] duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_lab,var(--accent) 40%, transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)] ${artifact.sensitive ? "public-only" : ""}`}
+              class={`inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink)] transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_srgb,var(--accent)_28%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)] ${artifact.sensitive ? "public-only" : ""}`}
             >
               {artifact.label}
             </a>
           ))}
           {experience.artifacts.some((artifact) => artifact.sensitive) && (
-            <span class="confidential-only inline-flex items-center gap-2 rounded-full border border-[color:var(--keyline)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
-              Redacted
+            <span class="confidential-only inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
+              Confidential
             </span>
           )}
         </div>

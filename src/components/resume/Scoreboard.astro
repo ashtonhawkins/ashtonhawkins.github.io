@@ -11,11 +11,12 @@ interface KpiItem {
 }
 
 const { items } = Astro.props as { items: KpiItem[] };
-const filtered = items.filter((item) => meetsMetricGate(item));
+const filtered = items.filter((item) => meetsMetricGate(item)).slice(0, 3);
+const formatSuffix = (item: KpiItem) => inferSuffix(item);
 ---
 {filtered.length > 0 && (
-  <section class="flex flex-col gap-5" aria-labelledby="kpi-heading">
-    <div class="flex flex-wrap items-center justify-between gap-3">
+  <section class="flex flex-col gap-4" aria-labelledby="kpi-heading">
+    <div class="flex flex-wrap items-center justify-between gap-2">
       <span id="kpi-heading" class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">
         Signature Outcomes
       </span>
@@ -23,19 +24,19 @@ const filtered = items.filter((item) => meetsMetricGate(item));
     </div>
     <div class="grid gap-3 sm:grid-cols-3">
       {filtered.map((item) => {
-        const suffix = inferSuffix(item);
+        const suffix = formatSuffix(item);
         const formatted = formatKpiValue(item.value, suffix);
-        const sample = formatSample(item.sample);
+        const confidence = item.confidence ?? "";
         return (
           <article
-            class="relative flex flex-col gap-4 rounded-[var(--radius-3)] border border-[color:var(--keyline)] bg-[color:color-mix(in_lab,var(--surface) 92%, transparent)] p-5"
+            class="relative flex flex-col gap-3 rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_96%,transparent)] p-5 shadow-[0_32px_80px_-60px_rgba(12,20,32,0.45)]"
             data-motion
           >
             <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
               <span>{item.label}</span>
-              {item.confidence && (
-                <span class="inline-flex items-center gap-1 rounded-full border border-[color:var(--keyline)] bg-[color:color-mix(in_lab,var(--surface) 90%, transparent)] px-2 py-0.5 text-[10px] font-semibold text-[color:var(--ink-2)]">
-                  {item.confidence}
+              {confidence && (
+                <span class="inline-flex items-center gap-1 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_90%,transparent)] px-2 py-0.5 text-[10px] font-semibold text-[color:var(--ink-2)]">
+                  CI
                 </span>
               )}
             </div>
@@ -45,13 +46,14 @@ const filtered = items.filter((item) => meetsMetricGate(item));
                 data-kpi
                 data-final={item.value}
                 data-suffix={suffix}
-                data-animated="0"
+                data-confidence={confidence}
               >
                 {formatted}
               </span>
             </div>
             <div class="flex flex-wrap items-center gap-2 text-xs text-[color:var(--ink-2)]">
-              {sample && <span>{sample}</span>}
+              {formatSample(item.sample)}
+              {confidence && <span>{confidence}</span>}
             </div>
           </article>
         );
@@ -60,24 +62,25 @@ const filtered = items.filter((item) => meetsMetricGate(item));
   </section>
 )}
 <script type="module">
-  import { onceVisible, animateCounter, durations } from "../../utils/motion";
-  import { formatKpiValue } from "../../utils/metrics";
+import { onceVisible, animateCounter, durations } from "../../utils/motion";
+import { formatKpiValue } from "../../utils/metrics";
 
-  const hydrate = () => {
-    const nodes = document.querySelectorAll<HTMLElement>("[data-kpi]");
-    if (!nodes.length) return;
-    onceVisible(nodes, (node) => {
-      if (node.dataset.animated === "1") return;
-      const finalValue = Number(node.dataset.final ?? "0");
-      const suffix = node.dataset.suffix ?? "";
-      node.dataset.animated = "1";
-      animateCounter(node, finalValue, {
-        duration: durations.slow,
-        formatter: (value) => formatKpiValue(value, suffix)
-      });
-    }, 0.5);
-  };
+const hydrate = () => {
+  const nodes = document.querySelectorAll<HTMLElement>("[data-kpi]");
+  if (!nodes.length) return;
+  onceVisible(nodes, (node) => {
+    if (node.dataset.animated === "true") return;
+    const finalValue = Number(node.dataset.final ?? "0");
+    const suffix = node.dataset.suffix ?? "";
+    if (!Number.isFinite(finalValue)) return;
+    node.dataset.animated = "true";
+    animateCounter(node, finalValue, {
+      duration: durations.slow,
+      formatter: (value) => formatKpiValue(value, suffix)
+    });
+  }, 0.6);
+};
 
-  hydrate();
-  document.addEventListener("astro:page-load", hydrate);
+hydrate();
+document.addEventListener("astro:page-load", hydrate);
 </script>

@@ -1,19 +1,20 @@
 ---
 const { isConfidential } = Astro.props as { isConfidential: boolean };
 ---
-<div class="relative inline-flex items-center" data-confidential-toggle-wrapper>
+<div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
   <button
     type="button"
-    class="inline-flex items-center gap-2 rounded-full border border-[color:var(--keyline)] bg-[color:color-mix(in_lab,var(--surface) 92%, transparent)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--ink)] transition-[border,background,color] duration-200 ease-[cubic-bezier(.2,.8,.2,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+    class="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_22%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_90%,transparent)] px-4 py-1 text-[11px] font-semibold tracking-[0.24em] text-[color:var(--ink)] transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
     data-confidential-toggle
     data-state={isConfidential ? "confidential" : "public"}
     aria-pressed={isConfidential ? "true" : "false"}
     aria-label={isConfidential ? "Switch to public mode" : "Switch to confidential mode"}
   >
-    <span aria-hidden="true" data-lock-icon class="text-base leading-none">
+    <span aria-hidden="true" data-lock-icon class="text-base">
       {isConfidential ? "🔒" : "🔓"}
     </span>
     <span data-lock-label>{isConfidential ? "Confidential" : "Public"}</span>
+    <span class="sr-only">Press to toggle confidentiality</span>
   </button>
 </div>
 <span data-confidential-announcer aria-live="polite" class="sr-only"></span>
