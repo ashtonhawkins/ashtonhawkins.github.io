@@ -1,0 +1,116 @@
+{
+  "$schema": "https://jsonresume.org/schema",
+  "basics": {
+    "name": "Ashton Hawkins",
+    "label": "Product Designer & Engineer",
+    "email": "ashton@example.com",
+    "phone": "+1 (555) 123-4567",
+    "url": "https://ashtonhawkins.com",
+    "summary": "Hybrid designer-engineer building thoughtful digital products that balance craft, performance, and clarity.",
+    "location": {
+      "city": "Austin",
+      "region": "Texas",
+      "countryCode": "US"
+    },
+    "profiles": [
+      {
+        "network": "LinkedIn",
+        "username": "ashtonhawkins",
+        "url": "https://www.linkedin.com/in/ashtonhawkins"
+      },
+      {
+        "network": "GitHub",
+        "username": "ashtonhawkins",
+        "url": "https://github.com/ashtonhawkins"
+      }
+    ]
+  },
+  "work": [
+    {
+      "name": "Studio Meridian",
+      "position": "Founder & Principal Designer",
+      "url": "https://studiomeridian.com",
+      "startDate": "2020-01-01",
+      "summary": "Lead multi-disciplinary client engagements from discovery through launch, shaping product vision, interaction patterns, and shipping reliable systems.",
+      "highlights": [
+        "Scaled a design system that reduced feature delivery time by 35% across three product teams.",
+        "Facilitated research sprints that informed roadmap priorities for executive stakeholders.",
+        "Delivered spatial computing prototypes to validate next-generation collaboration workflows."
+      ]
+    },
+    {
+      "name": "Northwind Labs",
+      "position": "Senior Product Engineer",
+      "url": "https://northwindlabs.io",
+      "startDate": "2016-06-01",
+      "endDate": "2019-12-01",
+      "summary": "Partnered with design and data science teams to craft responsive web apps focused on rich media publishing and analytics.",
+      "highlights": [
+        "Shipped a modular front-end architecture adopted by four internal product lines.",
+        "Championed accessibility standards resulting in WCAG 2.1 AA compliance across flagship properties.",
+        "Mentored cross-functional team members through code reviews and design critiques."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Parsons School of Design",
+      "area": "Communication Design",
+      "studyType": "BFA",
+      "startDate": "2011-09-01",
+      "endDate": "2015-05-01",
+      "summary": "Focused on interactive systems, human-centered research, and digital fabrication.",
+      "courses": [
+        "Interaction Design Studio",
+        "Visual Systems",
+        "Creative Coding"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Signal Atlas",
+      "description": "Mapping toolkit helping distributed teams align around product signals and qualitative research findings.",
+      "highlights": [
+        "Built as an internal-first tool and later productized for enterprise clients.",
+        "Integrated AI summarization workflows to accelerate research synthesis."
+      ],
+      "keywords": ["Design Systems", "Spatial Interfaces", "Research Ops"],
+      "url": "https://signalatlas.app",
+      "roles": ["Product Strategy", "Design", "Engineering"]
+    },
+    {
+      "name": "Field Notes",
+      "description": "A publication and toolkit series sharing experiments in slow web practices and creative tooling.",
+      "highlights": [
+        "Grew newsletter audience to 5k+ independent builders.",
+        "Collaborated with guest contributors for themed issues focused on prototyping and systems thinking."
+      ],
+      "keywords": ["Publishing", "Tooling", "Community"],
+      "url": "https://fieldnotes.studio",
+      "roles": ["Editor", "Designer", "Developer"]
+    }
+  ],
+  "skills": [
+    {
+      "name": "Design",
+      "level": "Expert",
+      "keywords": [
+        "Product Discovery",
+        "Design Systems",
+        "Interaction Design",
+        "Prototyping"
+      ]
+    },
+    {
+      "name": "Engineering",
+      "level": "Advanced",
+      "keywords": [
+        "TypeScript",
+        "Astro",
+        "React",
+        "Node.js"
+      ]
+    }
+  ]
+}

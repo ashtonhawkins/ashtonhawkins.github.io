@@ -1,10 +1,39 @@
-@import "./print.css";
+@import "./tokens.css";
+@import "./typography.css";
+@import "./effects.css";
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* App base */
-:root { color-scheme: dark; }
-html, body { height: 100%; }
-body { background: #0a0a0a; color: #f3f3f3; }
+html {
+  scroll-behavior: smooth;
+  background-color: var(--bg);
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg);
+  color: var(--text-1);
+}
+
+a {
+  transition: color 200ms ease, background-color 200ms ease;
+}
+
+main {
+  flex: 1;
+}
+
+[data-theme="dark"] body,
+html.dark body {
+  background-color: var(--bg);
+  color: var(--text-1);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
