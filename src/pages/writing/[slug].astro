@@ -1,0 +1,48 @@
+---
+import AppShell from "../../layouts/AppShell.astro";
+import SEO from "../../components/SEO.astro";
+import dayjs from "dayjs";
+import { getCollection, getEntry } from "astro:content";
+
+const { slug } = Astro.params;
+if (!slug) {
+  throw new Error("Missing writing slug");
+}
+
+const entry = await getEntry("writing", slug);
+if (!entry || entry.data.draft) {
+  return Astro.redirect("/writing");
+}
+
+const { Content } = await entry.render();
+const { title, summary, date, ogTitle, tags } = entry.data;
+
+export async function getStaticPaths() {
+  const entries = await getCollection("writing", ({ data }) => !data.draft);
+  return entries.map((post) => ({ params: { slug: post.slug } }));
+}
+---
+
+<AppShell>
+  <SEO
+    slot="head"
+    title={`${ogTitle ?? title} · Writing · Ashton Hawkins`}
+    description={summary}
+    ogTitle={ogTitle ?? title}
+  />
+  <article class="prose prose-neutral mx-auto max-w-prose text-base text-text-secondary">
+    <p class="text-xs uppercase tracking-[0.3em] text-text-muted">
+      {dayjs(date).format("MMMM D, YYYY")}
+    </p>
+    <h1 class="mb-4 text-4xl font-semibold text-text-primary">{title}</h1>
+    <p class="text-sm text-text-muted">{summary}</p>
+    <div class="mt-6 flex flex-wrap gap-2 text-xs text-text-muted">
+      {tags.map((tag) => (
+        <span class="rounded-full bg-accent-soft px-3 py-1 font-medium text-accent">#{tag}</span>
+      ))}
+    </div>
+    <div class="mt-10 space-y-6">
+      <Content />
+    </div>
+  </article>
+</AppShell>

@@ -1,0 +1,53 @@
+---
+import AppShell from "../../layouts/AppShell.astro";
+import SEO from "../../components/SEO.astro";
+import { getCollection } from "astro:content";
+import dayjs from "dayjs";
+
+const writing = (await getCollection("writing", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+---
+
+<AppShell>
+  <SEO
+    slot="head"
+    title="Writing · Ashton Hawkins"
+    description="Essays, field notes, and observations from Ashton Hawkins."
+  />
+  <section class="space-y-10">
+    <header class="max-w-prose space-y-4">
+      <h1 class="text-4xl font-semibold text-text-primary">Writing</h1>
+      <p class="text-lg text-text-secondary">
+        Long-form explorations, workshop notes, and occasional dispatches from the studio. Expect a
+        mix of product thinking, motion systems, and creative technology experiments.
+      </p>
+    </header>
+    <div class="space-y-8">
+      {writing.length ? (
+        writing.map((entry) => (
+          <article class="rounded-3xl border border-border/60 bg-surface/80 p-6 shadow-soft transition hover:-translate-y-1 hover:border-accent">
+            <a
+              href={`/writing/${entry.slug}`}
+              class="grid gap-3"
+              data-astro-transition="animate"
+            >
+              <span class="text-xs uppercase tracking-[0.3em] text-text-muted">
+                {dayjs(entry.data.date).format("MMM D, YYYY")}
+              </span>
+              <h2 class="text-2xl font-semibold text-text-primary">{entry.data.title}</h2>
+              <p class="text-sm text-text-secondary">{entry.data.summary}</p>
+              <div class="flex flex-wrap gap-2 text-xs text-text-muted">
+                {entry.data.tags.map((tag) => (
+                  <span class="rounded-full bg-accent-soft px-3 py-1 font-medium text-accent">#{tag}</span>
+                ))}
+              </div>
+            </a>
+          </article>
+        ))
+      ) : (
+        <p class="text-sm text-text-muted">Nothing published yet. Drafts are in the oven.</p>
+      )}
+    </div>
+  </section>
+</AppShell>
