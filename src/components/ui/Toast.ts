@@ -1,19 +1,12 @@
-export class Toast {
-  private root: HTMLElement | null;
-  private timeoutId: number | null = null;
+const state: { timeout?: number } = {};
 
-  constructor(root?: HTMLElement | null) {
-    this.root = root ?? document.querySelector<HTMLElement>("[data-toast-root]");
-  }
-
-  show(message: string, duration = 2400) {
-    if (!this.root) return;
-    this.root.textContent = message;
-    this.root.dataset.state = "visible";
-    if (this.timeoutId) window.clearTimeout(this.timeoutId);
-    this.timeoutId = window.setTimeout(() => {
-      if (!this.root) return;
-      this.root.dataset.state = "hidden";
-    }, duration);
-  }
-}
+export const showToast = (message: string, duration = 2400) => {
+  const host = document.querySelector<HTMLElement>("[data-toast-root]");
+  if (!host) return;
+  window.clearTimeout(state.timeout);
+  host.textContent = message;
+  host.setAttribute("data-state", "visible");
+  state.timeout = window.setTimeout(() => {
+    host.removeAttribute("data-state");
+  }, duration);
+};

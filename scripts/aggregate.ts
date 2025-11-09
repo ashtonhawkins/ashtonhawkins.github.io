@@ -13,58 +13,10 @@ const rootDir = path.resolve(__dirname, "..");
 const outputPath = path.join(rootDir, "public", "data", "activity.json");
 const githubUser = "ashtonhawkins";
 
-type GithubEventCommit = {
-  url?: string | null;
-  sha?: string | null;
-};
-
-type GithubEventPage = {
-  html_url?: string | null;
-};
-
-type GithubEventIssue = {
-  title?: string | null;
-  html_url?: string | null;
-};
-
-type GithubEventPullRequest = {
-  title?: string | null;
-  html_url?: string | null;
-};
-
-type GithubEventComment = {
-  html_url?: string | null;
-};
-
-type GithubEventRelease = {
-  name?: string | null;
-  tag_name?: string | null;
-  html_url?: string | null;
-};
-
-type GithubEventPayload = {
-  ref?: string | null;
-  commits?: GithubEventCommit[] | null;
-  issue?: GithubEventIssue | null;
-  pull_request?: GithubEventPullRequest | null;
-  comment?: GithubEventComment | null;
-  release?: GithubEventRelease | null;
-  pages?: GithubEventPage[] | null;
-  action?: string | null;
-  ref_type?: string | null;
-};
-
-type GithubEvent = {
-  type: string;
-  repo?: { name?: string | null } | null;
-  payload?: GithubEventPayload | null;
-  created_at?: string | null;
-};
-
-const GITHUB_EVENT_TITLES: Record<string, (event: GithubEvent) => string> = {
+const GITHUB_EVENT_TITLES: Record<string, (event: any) => string> = {
   PushEvent: (event) => {
     const repo = event.repo?.name ?? "repository";
-    const branch = event.payload?.ref ? event.payload.ref.split("/").pop() : undefined;
+    const branch = event.payload?.ref?.split("/").pop();
     const commitCount = event.payload?.commits?.length ?? 0;
     const commitText = commitCount === 1 ? "commit" : "commits";
     const branchText = branch ? ` on ${branch}` : "";
@@ -128,34 +80,9 @@ type LastFmActivity = {
 
 type ActivityItem = GithubActivity | RssActivity | LastFmActivity;
 
-type LastFmArtist = {
-  ["#text"]?: string;
-  name?: string;
-};
-
-type LastFmTrack = {
-  artist?: LastFmArtist;
-  name?: string;
-  url?: string;
-  date?: { uts?: string };
-};
-
-type LastFmResponse = {
-  recenttracks?: {
-    track?: LastFmTrack[];
-  };
-};
-
 function capitalize(value: string): string {
   if (!value) return "";
   return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
-function isGithubEvent(value: unknown): value is GithubEvent {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-  return typeof (value as { type?: unknown }).type === "string";
 }
 
 async function fetchGithubEvents(): Promise<GithubActivity[]> {
@@ -174,18 +101,14 @@ async function fetchGithubEvents(): Promise<GithubActivity[]> {
       return [];
     }
 
-    const raw = (await response.json()) as unknown;
-    if (!Array.isArray(raw)) {
-      return [];
-    }
+    const events = (await response.json()) as any[];
 
-    return raw
-      .filter(isGithubEvent)
-      .filter((event) => Boolean(event.created_at))
+    return events
+      .filter((event) => event?.created_at)
       .map((event) => {
         const repoName: string | null = event.repo?.name ?? null;
         const createdAt: string = event.created_at ?? new Date().toISOString();
-        const titleResolver = GITHUB_EVENT_TITLES[event.type];
+        const titleResolver = GITHUB_EVENT_TITLES[event.type as string];
         const title = titleResolver ? titleResolver(event) : formatDefaultGithubTitle(event.type, repoName);
 
         return {
@@ -210,26 +133,22 @@ function formatDefaultGithubTitle(type: string, repo: string | null): string {
   return type;
 }
 
-function resolveGithubUrl(event: GithubEvent): string | null {
+function resolveGithubUrl(event: any): string | null {
   const repoName: string | null = event.repo?.name ?? null;
   const repoHtmlUrl = repoName ? `https://github.com/${repoName}` : null;
 
-  const payload = event.payload ?? undefined;
+  const payload = event.payload ?? {};
 
-  if (payload?.issue?.html_url) return payload.issue.html_url;
-  if (payload?.pull_request?.html_url) return payload.pull_request.html_url;
-  if (payload?.comment?.html_url) return payload.comment.html_url;
-  if (payload?.release?.html_url) return payload.release.html_url;
-
-  const pages = payload?.pages;
-  if (Array.isArray(pages)) {
-    const pageWithUrl = pages.find((page) => typeof page?.html_url === "string");
-    if (pageWithUrl?.html_url) return pageWithUrl.html_url;
+  if (payload.issue?.html_url) return payload.issue.html_url;
+  if (payload.pull_request?.html_url) return payload.pull_request.html_url;
+  if (payload.comment?.html_url) return payload.comment.html_url;
+  if (payload.release?.html_url) return payload.release.html_url;
+  if (payload.pages?.length) {
+    const page = payload.pages.find((p: any) => p.html_url);
+    if (page?.html_url) return page.html_url;
   }
-
-  const commits = payload?.commits;
-  if (Array.isArray(commits) && commits.length > 0) {
-    const commit = commits[0];
+  if (payload.commits?.length) {
+    const commit = payload.commits[0];
     if (commit?.url && repoName) {
       const sha = commit.sha ?? "";
       return `https://github.com/${repoName}/commit/${sha}`;
@@ -298,7 +217,7 @@ async function fetchLastFm(): Promise<LastFmActivity[]> {
       return [];
     }
 
-    const data = (await response.json()) as LastFmResponse;
+    const data = (await response.json()) as any;
     const track = data?.recenttracks?.track?.[0];
     if (!track) return [];
 

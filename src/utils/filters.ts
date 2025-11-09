@@ -1,15 +1,13 @@
-const normalize = (value: string) => value.trim().toLowerCase();
-
 export const parseTags = (value?: string | null) => {
   if (!value) return [];
   return value
     .split(",")
-    .map((tag) => normalize(tag))
+    .map((tag) => tag.trim().toLowerCase())
     .filter(Boolean);
 };
 
 export const toggleTag = (current: string[], tag: string) => {
-  const normalized = normalize(tag);
+  const normalized = tag.toLowerCase();
   if (current.includes(normalized)) {
     return current.filter((item) => item !== normalized);
   }
@@ -18,12 +16,18 @@ export const toggleTag = (current: string[], tag: string) => {
 
 export const serializeTags = (tags: string[]) =>
   tags
-    .map((tag) => normalize(tag))
-    .filter((value, index, array) => value && array.indexOf(value) === index)
+    .map((tag) => tag.trim().toLowerCase())
+    .filter(Boolean)
     .join(",");
 
-export const matchesAnyTag = (itemTags: string[] = [], selected: string[] = []) => {
-  if (!selected.length) return true;
-  const normalizedItemTags = itemTags.map((tag) => normalize(tag));
-  return selected.some((tag) => normalizedItemTags.includes(normalize(tag)));
+interface MetricGateLike {
+  sample?: number;
+  confidence?: string | null;
+}
+
+export const meetsMetricGate = (metric: MetricGateLike) => {
+  const sample = typeof metric.sample === "number" ? metric.sample : undefined;
+  const hasSample = typeof sample === "number" && sample >= 1000;
+  const hasConfidence = Boolean(metric.confidence);
+  return hasSample || hasConfidence;
 };

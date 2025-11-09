@@ -15,38 +15,43 @@ interface HeroProps {
     suffix?: string;
     sample?: number;
     confidence?: string;
-    ciLabel?: string;
   }[];
 }
 
 const { hero, kpis } = Astro.props as HeroProps;
+const words = hero.headline.split(" ");
 ---
 <section
-  class="relative flex flex-col gap-10 overflow-hidden rounded-[var(--r-4)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_96%,transparent)] p-6 shadow-[0_40px_80px_-60px_rgba(12,20,32,0.65)] sm:p-10"
+  class="flex flex-col gap-8 rounded-[var(--r-4)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_94%,transparent)] p-6 sm:p-8"
   data-hero-anchor
 >
-  <div class="absolute inset-0 -z-10 bg-[conic-gradient(from_90deg_at_1px_1px,rgba(12,20,32,0.06)_0deg,rgba(12,20,32,0.06)_90deg,transparent_90deg,transparent_180deg)] bg-[length:42px_42px]"></div>
   <header class="flex flex-col gap-6">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <div class="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">
-        <span class="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--accent)_42%,transparent)] bg-[color:color-mix(in_srgb,var(--accent)_16%,transparent)] px-3 py-1 text-[color:var(--accent)]">
-          Resume
-        </span>
-        <span class="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_18%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_86%,transparent)] px-3 py-1">
-          <span class="inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--accent)]" aria-hidden="true"></span>
-          <span class="confidential-only">Confidential</span>
-          <span class="public-only">Public</span>
-        </span>
-      </div>
-      <slot name="mode-toggle" />
-    </div>
     <div class="flex flex-col gap-4">
-      <h1 class="text-4xl font-semibold leading-tight tracking-[-0.02em] text-[color:var(--ink)] sm:text-5xl">
-        {hero.headline}
-      </h1>
-      <p class="max-w-3xl text-base leading-relaxed text-[color:var(--ink-2)] sm:text-lg">
-        {hero.subhead}
-      </p>
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <span class="inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)]/40 bg-[color:color-mix(in_srgb,var(--accent)_18%,transparent)] px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-[color:var(--accent)]">
+            Resume
+          </span>
+          <span class="inline-flex items-center gap-2 rounded-full border border-[color:var(--ink-2)]/30 bg-[color:color-mix(in_srgb,var(--surface-alt)_82%,transparent)] px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
+            <span class="inline-flex h-2 w-2 rounded-full bg-[color:var(--accent)]" aria-hidden="true"></span>
+            <span class="confidential-only">Confidential</span>
+            <span class="public-only">Public</span>
+          </span>
+        </div>
+        <slot name="mode-toggle" />
+      </div>
+      <div class="flex flex-col gap-3">
+        <h1 class="text-4xl font-semibold leading-tight tracking-tight text-[color:var(--ink)] sm:text-5xl">
+          <span class="flex flex-wrap gap-x-2">
+            {words.map((word, index) => (
+              <span key={`${word}-${index}`} class={index % 2 === 1 ? "text-[color:var(--ink-2)]" : undefined}>
+                {word}
+              </span>
+            ))}
+          </span>
+        </h1>
+        <p class="max-w-2xl text-base text-[color:var(--ink-2)] sm:text-lg">{hero.subhead}</p>
+      </div>
     </div>
   </header>
   <Scoreboard items={kpis} />
