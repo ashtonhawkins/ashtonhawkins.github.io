@@ -1,6 +1,5 @@
 ---
-import AppShell from "../layouts/AppShell.astro";
-import SEO from "../components/SEO.astro";
+import ResumeLayout from "../layouts/ResumeLayout.astro";
 import data from "../data/resume.json";
 import Hero from "../components/resume/Hero.astro";
 import Scoreboard from "../components/resume/Scoreboard.astro";
@@ -13,7 +12,6 @@ import CapabilitiesMap from "../components/resume/CapabilitiesMap.astro";
 import ActionDock from "../components/resume/ActionDock.astro";
 import KeywordFilters from "../components/resume/KeywordFilters.astro";
 import { approxYears, formatRange } from "../utils/dates";
-import printHref from "../styles/print.css?url";
 
 const initialMode = "confidential";
 
@@ -45,139 +43,40 @@ const experiences = data.experience.map((exp) => ({
   tags: experienceTags[exp.id]?.filter(Boolean) ?? []
 }));
 ---
-<AppShell>
-  <SEO
-    slot="head"
-    title="Resume · Ashton Hawkins"
-    description="Evidence, case studies, and capabilities from Ashton Hawkins."
-  />
-  <link slot="head" rel="stylesheet" href={printHref} media="print" />
-  <script slot="head" is:inline>
-    (() => {
-      const root = document.documentElement;
-      if (!root.dataset.confidential) {
-        root.dataset.confidential = "confidential";
-      }
-      try {
-        const params = new URLSearchParams(window.location.search);
-        const forced = params.get("mode");
-        const storageKey = "resume_confidential";
-        const stored = window.localStorage.getItem(storageKey);
-        let mode = root.dataset.confidential;
-        if (forced === "public" || forced === "confidential") {
-          mode = forced;
-          window.localStorage.setItem(storageKey, mode);
-        } else if (stored === "public" || stored === "confidential") {
-          mode = stored;
-        } else {
-          window.localStorage.setItem(storageKey, mode ?? "confidential");
-        }
-        root.dataset.confidential = mode ?? "confidential";
-      } catch (error) {
-        document.documentElement.dataset.confidential = "confidential";
-      }
-    })();
-  </script>
+<ResumeLayout title="Resume — Ashton Hawkins">
   <style>
-    :global(:root) {
-      --ink: #0b0b0f;
-      --ink-2: #4a4a57;
-      --surface: #f6f6f8;
-      --surface-alt: #ffffff;
-      --accent: #3b6ef5;
-      color-scheme: light dark;
-    }
-    :global(:root.dark) {
-      --ink: #f8f8fb;
-      --ink-2: #a9a9c5;
-      --surface: #0b0b0f;
-      --surface-alt: #161621;
-      --accent: #7da7ff;
-      color-scheme: dark light;
-    }
-    :global(body) {
-      background: var(--surface);
-      color: var(--ink);
-      font-family: "Inter", "system-ui", sans-serif;
-      min-height: 100vh;
-    }
-    :global(::selection) {
-      background: color-mix(in srgb, var(--accent) 40%, transparent);
-      color: var(--surface);
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .resume-page,
-      .resume-page * {
-        animation-duration: 1ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 1ms !important;
-        scroll-behavior: auto !important;
-      }
-    }
-    :global(:root:not([data-confidential="public"])) .public-only {
-      display: none !important;
-    }
-    :global(:root:not([data-confidential="confidential"])) .confidential-only {
-      display: none !important;
-    }
-    :global(:root[data-confidential="confidential"]) .sensitive-link {
-      display: none !important;
-    }
-    .resume-page {
+    main {
       max-width: 1120px;
       margin: 0 auto;
-      padding: 6rem 1.5rem 6rem;
+      padding: 4rem 1.5rem 6rem;
       display: flex;
       flex-direction: column;
       gap: 3rem;
     }
-    @media (min-width: 1024px) {
-      .resume-page {
-        padding-left: 2rem;
-        padding-right: 2rem;
-        gap: 4rem;
-      }
+    [data-confidential="confidential"] .public-only {
+      display: none !important;
     }
-    .resume-section {
-      display: flex;
-      flex-direction: column;
-      gap: 3rem;
+    [data-confidential="public"] .confidential-only {
+      display: none !important;
     }
-    @media (min-width: 1024px) {
-      .resume-section {
-        gap: 4rem;
-      }
-    }
-    .resume-section[data-single] {
-      gap: 0;
+    [data-confidential="confidential"] .sensitive-link {
+      display: none !important;
     }
   </style>
-  <div class="resume-page">
-    <section id="overview" class="resume-section" data-single>
-      <div class="relative">
-        <Hero hero={data.hero} bioShort={data.bioShort} initialMode={initialMode} />
-        <div class="lg:absolute lg:right-0 lg:top-8 lg:z-40">
-          <ActionDock data={data} bio={data.bioShort} />
-        </div>
+  <main>
+    <div class="relative">
+      <Hero hero={data.hero} bioShort={data.bioShort} initialMode={initialMode} />
+      <div class="lg:absolute lg:top-8 lg:right-8">
+        <ActionDock data={data} bio={data.bioShort} />
       </div>
-    </section>
-    <section id="keywords" class="resume-section" data-single>
-      <KeywordFilters keywords={data.keywords} />
-    </section>
-    <section id="proof" class="resume-section">
-      <Scoreboard kpis={data.kpis} />
-      <BeforeAfter items={data.beforeAfter} />
-      <ExperimentGallery experiments={data.experiments} />
-      <ImpactTapestry items={data.tapestry} />
-    </section>
-    <section id="cases" class="resume-section" data-single>
-      <CaseStudyGrid caseStudies={caseStudies} />
-    </section>
-    <section id="experience" class="resume-section" data-single>
-      <ExperienceTimeline experience={experiences} />
-    </section>
-    <section id="capabilities" class="resume-section" data-single>
-      <CapabilitiesMap capabilities={data.capabilities} />
-    </section>
-  </div>
-</AppShell>
+    </div>
+    <KeywordFilters keywords={data.keywords} />
+    <Scoreboard kpis={data.kpis} />
+    <BeforeAfter items={data.beforeAfter} />
+    <ExperimentGallery experiments={data.experiments} />
+    <ImpactTapestry items={data.tapestry} />
+    <CaseStudyGrid caseStudies={caseStudies} />
+    <ExperienceTimeline experience={experiences} />
+    <CapabilitiesMap capabilities={data.capabilities} />
+  </main>
+</ResumeLayout>
