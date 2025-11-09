@@ -1,51 +1,73 @@
-:root {
-  color-scheme: light;
-}
-
 @media print {
+  :root {
+    color-scheme: light;
+  }
   body {
-    background: #fff !important;
-    color: #000 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 12px;
+    line-height: 1.5;
   }
-  main {
-    max-width: none !important;
-    padding: 0 !important;
-  }
-  .print\:block {
-    display: block !important;
-  }
-  .print\:hidden {
+  main::before,
+  [data-action-dock],
+  [data-action-pill],
+  [data-toast-root],
+  [data-methodology-dialog],
+  [data-methodology-trigger],
+  [data-theme-toggle],
+  [data-resume-theme-toggle],
+  [data-confidential-toggle] {
     display: none !important;
   }
-  .layout-grid {
+  [data-confidential-root] {
+    gap: 1rem !important;
+  }
+  [data-confidential-root] > * {
+    box-shadow: none !important;
+    border: 1px solid #00000022 !important;
+    background: #ffffff !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  section,
+  article,
+  details,
+  .grid,
+  .flex {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-color: #00000022 !important;
+  }
+  .grid,
+  .flex {
     display: block !important;
   }
-  .card {
-    box-shadow: none !important;
-    border: 1px solid #0000001a !important;
+  [data-filter-item][hidden] {
+    display: block !important;
   }
   details {
-    border: 1px solid #0000001a !important;
+    padding-bottom: 0.5rem;
   }
-  details > summary::marker {
-    content: "";
+  summary {
+    display: none !important;
   }
-  details {
-    padding: 0.5rem 0.75rem;
+  details > * {
+    display: block !important;
   }
-  details > summary {
-    font-weight: 600;
+  ul {
+    margin-block: 0.5rem;
   }
-  details[data-print-open] {
-    display: block;
+  a::after {
+    content: " (" attr(href) ")";
+    font-size: 0.75em;
   }
-  details[data-print-open] > summary {
-    display: none;
+  img {
+    filter: none !important;
   }
-  details[data-print-open] > * {
-    display: block;
+  [data-confidential-root][data-confidential-state="confidential"] .confidential-only {
+    display: block !important;
   }
-  .confidential-placeholder::after {
-    content: "Confidential: Fortune 100 Retailer";
+  [data-confidential-root][data-confidential-state="confidential"] .public-only {
+    display: none !important;
   }
 }

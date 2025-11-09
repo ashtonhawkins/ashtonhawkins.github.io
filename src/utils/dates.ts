@@ -1,24 +1,51 @@
-export const formatRange = (start: string, end: string) => {
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  const intl = new Intl.DateTimeFormat("en", { month: "short", year: "numeric" });
-  return `${intl.format(startDate)} – ${intl.format(endDate)}`;
+const monthFormatter = new Intl.DateTimeFormat("en", { month: "short" });
+const yearFormatter = new Intl.DateTimeFormat("en", { year: "numeric" });
+
+const toDate = (value?: string | null) => {
+  if (!value) return undefined;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return undefined;
+  return date;
 };
 
-export const approxYears = (start: string, end: string) => {
-  const startDate = new Date(start);
-  const endDate = new Date(end);
+export const formatPreciseRange = (start?: string | null, end?: string | null) => {
+  const startDate = toDate(start);
+  const endDate = toDate(end);
+  if (!startDate && !endDate) return "";
+  const startLabel = startDate ? `${monthFormatter.format(startDate)} ${yearFormatter.format(startDate)}` : "";
+  const endLabel = endDate ? `${monthFormatter.format(endDate)} ${yearFormatter.format(endDate)}` : "Present";
+  if (!startLabel) return endLabel;
+  return `${startLabel} – ${endLabel}`;
+};
+
+const monthsBetween = (start?: string | null, end?: string | null) => {
+  const startDate = toDate(start);
+  const endDate = toDate(end) ?? new Date();
+  if (!startDate) return 0;
   const diff = endDate.getTime() - startDate.getTime();
-  const years = diff / (1000 * 60 * 60 * 24 * 365.25);
-  const rounded = Math.round(years * 10) / 10;
-  return `~${rounded} years`;
+  if (diff <= 0) return 0;
+  return diff / (1000 * 60 * 60 * 24 * 30.4375);
 };
 
-export const sinceToNow = (start: string) => {
-  const startDate = new Date(start);
-  const now = new Date();
-  const diff = now.getTime() - startDate.getTime();
-  const years = diff / (1000 * 60 * 60 * 24 * 365.25);
+export const formatApproxDuration = (start?: string | null, end?: string | null) => {
+  const months = monthsBetween(start, end);
+  if (!months) return "~tenure";
+  if (months < 12) {
+    const rounded = Math.max(1, Math.round(months));
+    return `~${rounded} month${rounded === 1 ? "" : "s"}`;
+  }
+  const years = months / 12;
+  const roundedYears = Math.round(years * 10) / 10;
+  const label = Number.isInteger(roundedYears) ? Math.round(roundedYears).toString() : roundedYears.toFixed(1);
+  return `~${label} year${label === "1" ? "" : "s"}`;
+};
+
+export const formatApproxYears = (start?: string | null, end?: string | null) => {
+  const months = monthsBetween(start, end);
+  if (!months) return "~0.0 years";
+  const years = Math.max(0, months / 12);
   const rounded = Math.round(years * 10) / 10;
-  return `~${rounded} years`;
+  const label = rounded.toFixed(1);
+  const plural = label === "1.0" ? "year" : "years";
+  return `~${label} ${plural}`;
 };
