@@ -1,22 +1,12 @@
 ---
 const { isConfidential } = Astro.props as { isConfidential: boolean };
 ---
-<div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
-  <span class="hidden sm:inline">Mode</span>
-  <button
-    type="button"
-    class="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_24%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_88%,transparent)] px-3 py-1 text-[11px] font-semibold tracking-[0.28em] text-[color:var(--ink)] transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
-    data-confidential-toggle
-    data-state={isConfidential ? "confidential" : "public"}
-    aria-pressed={isConfidential ? "true" : "false"}
-    aria-label={isConfidential ? "Disable confidential mode" : "Enable confidential mode"}
-  >
-    <span aria-hidden="true" data-icon class="text-base">
-      {isConfidential ? "🔒" : "🔓"}
-    </span>
-    <span data-label class="tracking-[0.2em]">
-      {isConfidential ? "Confidential" : "Public"}
-    </span>
-  </button>
-</div>
-<span data-confidential-announcer aria-live="polite" class="sr-only"></span>
+<button
+  type="button"
+  class="inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_18%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_96%,transparent)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--ink)]"
+  data-confidential-toggle
+  data-state={isConfidential ? "confidential" : "public"}
+>
+  <span aria-hidden="true" data-icon>{isConfidential ? "🔒" : "🔓"}</span>
+  <span data-label>{isConfidential ? "Confidential" : "Public"}</span>
+</button>

@@ -5,89 +5,116 @@ interface Receipt {
   sensitive?: boolean;
 }
 
-interface CaseStudyItem {
+interface CaseStudy {
   id: string;
   title: string;
   thumb: string;
   problem: string;
   approach: string;
   outcome: string;
+  url: string;
   receipts: Receipt[];
   sensitive?: boolean;
-  tags?: string[];
 }
 
-const { caseStudies } = Astro.props as { caseStudies: CaseStudyItem[] };
+const { caseStudies } = Astro.props as { caseStudies: CaseStudy[] };
+const backgroundMap: Record<string, string> = {
+  commerce: "linear-gradient(135deg, rgba(8,132,255,0.22), rgba(8,132,255,0.06)), repeating-linear-gradient(45deg, rgba(255,255,255,0.08) 0, rgba(255,255,255,0.08) 1px, transparent 1px, transparent 18px)",
+  merch: "linear-gradient(135deg, rgba(255,152,0,0.22), rgba(255,152,0,0.08)), repeating-linear-gradient(-45deg, rgba(255,255,255,0.08) 0, rgba(255,255,255,0.08) 1px, transparent 1px, transparent 16px)",
+  lifecycle: "linear-gradient(135deg, rgba(0,184,148,0.18), rgba(0,184,148,0.08)), repeating-linear-gradient(0deg, rgba(255,255,255,0.08) 0, rgba(255,255,255,0.08) 1px, transparent 1px, transparent 20px)",
+  revops: "linear-gradient(135deg, rgba(142,68,173,0.22), rgba(142,68,173,0.08)), repeating-linear-gradient(90deg, rgba(255,255,255,0.08) 0, rgba(255,255,255,0.08) 1px, transparent 1px, transparent 14px)",
+  marketplace: "linear-gradient(135deg, rgba(52,152,219,0.18), rgba(52,152,219,0.08)), repeating-linear-gradient(45deg, rgba(255,255,255,0.08) 0, rgba(255,255,255,0.08) 1px, transparent 1px, transparent 22px)",
+  abm: "linear-gradient(135deg, rgba(231,76,60,0.22), rgba(231,76,60,0.08)), repeating-linear-gradient(-45deg, rgba(255,255,255,0.08) 0, rgba(255,255,255,0.08) 1px, transparent 1px, transparent 18px)",
+  pmf: "linear-gradient(135deg, rgba(26,188,156,0.22), rgba(26,188,156,0.08)), repeating-linear-gradient(0deg, rgba(255,255,255,0.08) 0, rgba(255,255,255,0.08) 1px, transparent 1px, transparent 24px)",
+  design: "linear-gradient(135deg, rgba(241,196,15,0.22), rgba(241,196,15,0.08)), repeating-linear-gradient(45deg, rgba(255,255,255,0.1) 0, rgba(255,255,255,0.1) 1px, transparent 1px, transparent 18px)",
+  personalization: "linear-gradient(135deg, rgba(52,73,94,0.22), rgba(52,73,94,0.08)), repeating-linear-gradient(-45deg, rgba(255,255,255,0.1) 0, rgba(255,255,255,0.1) 1px, transparent 1px, transparent 14px)"
+};
+const iconMap: Record<string, string> = {
+  PR: "🧾",
+  Dashboard: "📊",
+  Doc: "📄"
+};
 ---
 <section class="flex flex-col gap-6" id="case-studies">
   <div class="flex flex-col gap-2">
-    <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Portfolio</span>
-    <h2 class="text-lg font-semibold text-[color:var(--ink)]">Case Studies</h2>
-    <p class="max-w-3xl text-sm text-[color:var(--ink-2)]">Mode-aware narratives from checkout, taxonomy, search, consent, and program design. Receipts surface when allowed.</p>
+    <h2 class="text-lg font-semibold text-[color:var(--ink)]">Portfolio Case Studies</h2>
+    <p class="text-sm text-[color:var(--ink-2)]">Story-driven programs with receipts across delivery, analytics, and adoption.</p>
   </div>
-  <div class="grid gap-6 md:grid-cols-2" data-case-grid>
+  <div class="grid gap-5 md:grid-cols-2">
     {caseStudies.map((item) => {
       const allReceiptsSensitive = item.receipts.length > 0 && item.receipts.every((receipt) => receipt.sensitive);
       return (
         <article
           id={`case-${item.id}`}
-          class="group flex h-full flex-col gap-4 overflow-hidden rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_94%,transparent)] shadow-[0_32px_80px_-64px_rgba(12,20,32,0.7)] transition-transform duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:-translate-y-1 focus-within:-translate-y-1"
-          style={`view-transition-name:case-${item.id}`}
-          data-tags={item.tags?.join(",") ?? ""}
-          data-filter-item
-          data-motion
+          class="group flex flex-col gap-4 rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_94%,transparent)] p-5 shadow-[0_20px_60px_-36px_rgba(12,20,32,0.55)] transition-transform duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:-translate-y-1 focus-within:-translate-y-1"
+          style={`view-transition-name:case-${item.id};`}
+          data-case-study-card
         >
-          <div class="relative h-48 overflow-hidden border-b border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_92%,transparent)]">
-            <img
-              src={item.thumb}
-              alt={`Diagram for ${item.title}`}
-              loading="lazy"
-              class={`h-full w-full object-cover transition-opacity duration-200 ease-[cubic-bezier(.2,.8,.2,1)] ${item.sensitive ? "public-only" : ""}`}
-            />
+          <div class="flex items-center justify-between text-xs uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
+            <span>{item.title}</span>
             {item.sensitive && (
-              <div class="confidential-only absolute inset-0 flex items-center justify-center bg-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] text-sm font-semibold text-[color:var(--ink-2)]">
-                Visual redacted
-              </div>
+              <span class="rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-2 py-1">
+                <span class="confidential-only">Confidential</span>
+                <span class="public-only">Public-ready</span>
+              </span>
             )}
           </div>
-          <div class="flex flex-col gap-3 px-5 pb-5 pt-2 text-sm text-[color:var(--ink-2)]">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <h3 class="text-base font-semibold text-[color:var(--ink)]">{item.title}</h3>
-              {item.sensitive && (
-                <span class="rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
-                  <span class="confidential-only">Confidential</span>
-                  <span class="public-only">Public</span>
-                </span>
-              )}
-            </div>
+          <div class="relative h-40 overflow-hidden rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)]">
+            {item.sensitive ? (
+              <>
+                <div class="confidential-only flex h-full w-full items-center justify-center bg-[color:color-mix(in_srgb,var(--surface-alt)_88%,transparent)] text-sm font-semibold text-[color:var(--ink-2)]">
+                  Confidential preview
+                </div>
+                <div class="public-only h-full w-full" style={`background:${backgroundMap[item.thumb] ?? backgroundMap.commerce};`}></div>
+              </>
+            ) : (
+              <div class="h-full w-full" style={`background:${backgroundMap[item.thumb] ?? backgroundMap.commerce};`}></div>
+            )}
+          </div>
+          <div class="flex flex-col gap-2 text-sm text-[color:var(--ink-2)]">
             <p><strong class="text-[color:var(--ink)]">Problem:</strong> {item.problem}</p>
             <p><strong class="text-[color:var(--ink)]">Approach:</strong> {item.approach}</p>
             <p><strong class="text-[color:var(--ink)]">Outcome:</strong> {item.outcome}</p>
-            <div class="flex flex-wrap items-center gap-2 pt-2 text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
-              <span>Receipts</span>
-              {item.receipts.map((receipt) => (
-                <div class="flex items-center gap-2">
-                  <a
-                    href={receipt.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    class={`inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-3 py-1.5 text-[color:var(--ink)] transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_srgb,var(--accent)_28%,transparent)] ${receipt.sensitive ? "public-only" : ""}`}
-                  >
-                    {receipt.label}
-                  </a>
-                  {receipt.sensitive && (
-                    <span class="confidential-only rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-3 py-1.5 text-[color:var(--ink-2)]">Confidential</span>
-                  )}
-                </div>
-              ))}
-              {allReceiptsSensitive && <span class="confidential-only">Hidden</span>}
-            </div>
-            {item.tags && item.tags.length > 0 && (
-              <div class="flex flex-wrap gap-2 pt-2 text-[11px] uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
-                {item.tags.map((tag) => (
-                  <span class="rounded-full border border-[color:color-mix(in_srgb,var(--ink)_10%,transparent)] px-3 py-1">{tag}</span>
-                ))}
-              </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
+            <span>Receipts</span>
+            {item.receipts.map((receipt) => (
+              <a
+                href={receipt.url}
+                class={`inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-3 py-2 text-[color:var(--ink)] hover:border-[color:color-mix(in_srgb,var(--accent)_32%,transparent)] ${receipt.sensitive ? "public-only" : ""}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <span aria-hidden="true">{iconMap[receipt.label] ?? "🔗"}</span>
+                {receipt.label}
+              </a>
+            ))}
+            {allReceiptsSensitive && <span class="confidential-only">Hidden</span>}
+          </div>
+          <div class="mt-auto">
+            {item.sensitive ? (
+              <>
+                <button type="button" class="confidential-only inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-4 py-2 text-sm font-semibold text-[color:var(--ink-2)]" disabled>
+                  Confidential ON
+                </button>
+                <a
+                  href={item.url}
+                  class="public-only inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-4 py-2 text-sm font-semibold text-[color:var(--ink)] transition-transform duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:-translate-y-0.5"
+                  data-astro-transition="animate"
+                >
+                  View story
+                  <span aria-hidden="true">↗</span>
+                </a>
+              </>
+            ) : (
+              <a
+                href={item.url}
+                class="inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-4 py-2 text-sm font-semibold text-[color:var(--ink)] transition-transform duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:-translate-y-0.5"
+                data-astro-transition="animate"
+              >
+                View story
+                <span aria-hidden="true">↗</span>
+              </a>
             )}
           </div>
         </article>
