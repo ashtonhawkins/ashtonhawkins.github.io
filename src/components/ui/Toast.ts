@@ -4,9 +4,6 @@ export class Toast {
 
   constructor(root?: HTMLElement | null) {
     this.root = root ?? document.querySelector<HTMLElement>("[data-toast-root]");
-    if (this.root) {
-      this.root.setAttribute("role", "status");
-    }
   }
 
   show(message: string, duration = 2400) {
@@ -14,11 +11,9 @@ export class Toast {
     this.root.textContent = message;
     this.root.dataset.state = "visible";
     if (this.timeoutId) window.clearTimeout(this.timeoutId);
-    this.timeoutId = window.setTimeout(() => this.hide(), duration);
-  }
-
-  hide() {
-    if (!this.root) return;
-    this.root.dataset.state = "hidden";
+    this.timeoutId = window.setTimeout(() => {
+      if (!this.root) return;
+      this.root.dataset.state = "hidden";
+    }, duration);
   }
 }

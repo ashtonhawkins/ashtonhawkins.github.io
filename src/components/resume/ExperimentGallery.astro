@@ -1,5 +1,12 @@
 ---
-import { meetsMetricGate, formatSample } from "../../utils/metrics";
+import { getSparklineData } from "../ui/Sparkline";
+import { getBulletGraphData } from "../ui/BulletGraph";
+import { formatSample, meetsMetricGate } from "../../utils/metrics";
+
+interface ExperimentChart {
+  type: "spark" | "bullet";
+  values: number[];
+}
 
 interface ExperimentItem {
   id: string;
@@ -7,101 +14,88 @@ interface ExperimentItem {
   problem: string;
   bet: string;
   outcome: string;
-  chart?: {
-    type: "spark" | "bullet";
-    values: number[];
-  };
+  chart?: ExperimentChart;
   sample?: number;
   confidence?: string;
 }
 
 const { items } = Astro.props as { items: ExperimentItem[] };
 ---
-<section class="flex flex-col gap-6" id="experiments">
+<section class="flex flex-col gap-6" id="experiment-gallery">
   <div class="flex flex-col gap-2">
-    <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Experiment gallery</span>
-    <p class="max-w-3xl text-sm text-[color:var(--ink-2)]">
-      A sampling of the bets that moved revenue, retention, and data capture.
-    </p>
+    <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Proof</span>
+    <h2 class="text-lg font-semibold text-[color:var(--ink)]">Experiment Gallery</h2>
+    <p class="max-w-3xl text-sm text-[color:var(--ink-2)]">High-signal A/B and multi-variant tests across funnels with clear problem framing, test bets, and measurable outcomes.</p>
   </div>
-  <div class="grid gap-4 lg:grid-cols-2">
-    {items.map((experiment) => {
-      const gated = meetsMetricGate({ sample: experiment.sample, confidence: experiment.confidence ?? null });
+  <div class="grid gap-5 lg:grid-cols-3">
+    {items.map((item) => {
+      const gated = meetsMetricGate(item);
+      const chartLabel = `${item.title} experiment trend`;
+      const spark = item.chart?.type === "spark" ? getSparklineData(item.chart.values) : null;
+      const bullet = item.chart?.type === "bullet" ? getBulletGraphData(item.chart.values) : null;
       return (
         <article
-          class="flex flex-col gap-4 rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_96%,transparent)] p-5 shadow-[0_32px_80px_-60px_rgba(12,20,32,0.45)]"
+          class="flex flex-col gap-4 rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_94%,transparent)] p-5 shadow-[0_24px_60px_-48px_rgba(12,20,32,0.6)]"
           data-motion
         >
-          <header class="flex flex-wrap items-start justify-between gap-3">
-            <div class="flex flex-col gap-2">
-              <h3 class="text-base font-semibold text-[color:var(--ink)]">{experiment.title}</h3>
-              <div class="flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">
-                <span class="inline-flex items-center gap-1 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1">
-                  Problem
-                </span>
-                <span class="inline-flex items-center gap-1 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1">
-                  Bet
-                </span>
-                <span class="inline-flex items-center gap-1 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1">
-                  Outcome
-                </span>
-              </div>
-            </div>
-            {experiment.chart && experiment.chart.type === "spark" && (
-              <div
-                class="h-14 w-32 text-[color:var(--accent)]"
-                data-sparkline
-                data-points={JSON.stringify(experiment.chart.values)}
-                data-width="128"
-                data-height="56"
-                data-label={`Experiment ${experiment.title} sparkline`}
-              ></div>
-            )}
-            {experiment.chart && experiment.chart.type === "bullet" && (
-              <div
-                class="h-6 w-32 text-[color:var(--accent)]"
-                data-bullet
-                data-values={JSON.stringify(experiment.chart.values)}
-                data-width="132"
-                data-height="24"
-                data-label={`Experiment ${experiment.title} bullet baseline`}
-              ></div>
-            )}
-          </header>
-          <div class="grid gap-3 text-sm text-[color:var(--ink-2)]">
-            <div>
-              <span class="font-semibold text-[color:var(--ink)]">Problem</span>
-              <p class="mt-1 leading-relaxed">{experiment.problem}</p>
-            </div>
-            <div>
-              <span class="font-semibold text-[color:var(--ink)]">Bet</span>
-              <p class="mt-1 leading-relaxed">{experiment.bet}</p>
-            </div>
-            <div>
-              <span class="font-semibold text-[color:var(--ink)]">Outcome</span>
-              <p class="mt-1 leading-relaxed">{experiment.outcome}</p>
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="text-base font-semibold text-[color:var(--ink)]">{item.title}</h3>
+            <div class="flex flex-col items-end gap-1 text-xs text-[color:var(--ink-2)]">
+              {gated && <span>{formatSample(item.sample)}</span>}
+              {item.confidence && <span>{item.confidence}</span>}
             </div>
           </div>
-          {gated && (
-            <div class="flex flex-wrap gap-2 text-xs text-[color:var(--ink-2)]">
-              {experiment.sample && <span class="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1">{formatSample(experiment.sample)}</span>}
-              {experiment.confidence && <span class="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1">{experiment.confidence}</span>}
-            </div>
+          {spark && (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox={`0 0 ${spark.width} ${spark.height}`}
+              width={spark.width}
+              height={spark.height}
+              role="img"
+              aria-label={chartLabel}
+              class="text-[color:var(--accent)]"
+            >
+              <polyline
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                points={spark.points}
+              />
+            </svg>
           )}
+          {bullet && (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox={`0 0 ${bullet.width} ${bullet.height}`}
+              width={bullet.width}
+              height={bullet.height}
+              role="img"
+              aria-label={chartLabel}
+              class="text-[color:var(--accent)]"
+            >
+              <rect x="0" y={bullet.height / 4} width={bullet.trackWidth} height={bullet.height / 2} fill="rgba(15,15,25,0.08)" rx={bullet.height / 4} />
+              <rect x="0" y={bullet.height / 4} width={bullet.targetWidth} height={bullet.height / 2} fill="currentColor" rx={bullet.height / 4} />
+              <line x1={bullet.baselineX} y1="0" x2={bullet.baselineX} y2={bullet.height} stroke="#0b1120" stroke-width="2" stroke-linecap="round" opacity="0.6" />
+            </svg>
+          )}
+          <dl class="flex flex-col gap-3 text-sm text-[color:var(--ink-2)]">
+            <div class="flex flex-col gap-1">
+              <dt class="text-[11px] font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Problem</dt>
+              <dd>{item.problem}</dd>
+            </div>
+            <div class="flex flex-col gap-1">
+              <dt class="text-[11px] font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Bet</dt>
+              <dd>{item.bet}</dd>
+            </div>
+            <div class="flex flex-col gap-1">
+              <dt class="text-[11px] font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Outcome</dt>
+              <dd>{item.outcome}</dd>
+            </div>
+          </dl>
         </article>
       );
     })}
   </div>
 </section>
-<script type="module">
-import { bootSparklines } from "../ui/Sparkline";
-import { bootBullets } from "../ui/BulletGraph";
-
-bootSparklines();
-bootBullets();
-
-document.addEventListener("astro:page-load", () => {
-  bootSparklines();
-  bootBullets();
-});
-</script>
