@@ -2,7 +2,6 @@ import defaultTheme from "tailwindcss/defaultTheme";
 import typography from "@tailwindcss/typography";
 
 export default {
-  darkMode: "class",
   content: [
     "./src/**/*.{astro,html,js,jsx,md,mdx,mjs,ts,tsx}",
     "./public/**/*.html"

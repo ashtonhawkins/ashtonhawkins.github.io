@@ -9,8 +9,6 @@ interface ExperienceItem {
   role_confidential: string;
   start: string;
   end: string;
-  rangePublic: string;
-  rangeConfidential: string;
   team_size?: number;
   budget_band?: string;
   surfaces?: string;
@@ -39,18 +37,16 @@ interface ExperienceItem {
 
 const { experiences } = Astro.props as { experiences: ExperienceItem[] };
 ---
-<section class="flex flex-col gap-6" id="experience" data-band data-motion>
+<section class="flex flex-col gap-6" id="experience">
   <div class="flex flex-wrap items-center justify-between gap-4">
     <div class="flex flex-col gap-2">
       <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Experience</span>
-      <h2 class="text-lg font-semibold text-[color:var(--ink)]">Outcome-first leadership</h2>
-      <p class="max-w-3xl text-sm text-[color:var(--ink-2)]">
-        Retail, SaaS commerce, healthcare, and independent labs. Metrics reflect engagements that met gating thresholds.
-      </p>
+      <h2 class="text-lg font-semibold text-[color:var(--ink)]">Timeline</h2>
+      <p class="max-w-3xl text-sm text-[color:var(--ink-2)]">Outcome-led engagements across enterprise portfolios, SaaS commerce, DTC health, and independent labs.</p>
     </div>
     <button
       type="button"
-      class="inline-flex items-center gap-2 rounded-full border border-[color:var(--keyline)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink)] transition-[border,background,color] duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_lab,var(--accent) 40%, transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+      class="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink)] transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_srgb,var(--accent)_28%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
       data-expand-all
     >
       Expand all
@@ -63,38 +59,32 @@ const { experiences } = Astro.props as { experiences: ExperienceItem[] };
   </div>
 </section>
 <script type="module">
-  const initExpandAll = () => {
-    const button = document.querySelector<HTMLButtonElement>("[data-expand-all]");
-    const list = document.querySelector<HTMLElement>("[data-experience-list]");
-    if (!button || !list) return;
-    if (button.dataset.bound === "true") return;
-    button.dataset.bound = "true";
-    const expandAll = () => {
-      const cards = Array.from(list.querySelectorAll<HTMLDetailsElement>("[data-experience-card]"));
-      if (!cards.length) return;
-      cards.forEach((card) => {
-        if (card.hasAttribute("hidden")) return;
-        card.open = true;
-        if (!card.hasAttribute("tabindex")) card.setAttribute("tabindex", "-1");
-      });
-      const firstVisible = cards.find((card) => !card.hasAttribute("hidden"));
-      firstVisible?.focus();
-    };
-    const activate = (event?: Event) => {
-      if (event) {
-        event.preventDefault();
-      }
-      expandAll();
-    };
-    button.addEventListener("click", activate);
-    button.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        expandAll();
-      }
-    });
-  };
+const button = document.querySelector<HTMLButtonElement>("[data-expand-all]");
+const list = document.querySelector("[data-experience-list]");
 
-  initExpandAll();
-  document.addEventListener("astro:page-load", initExpandAll);
+const expand = () => {
+  if (!list) return;
+  const cards = Array.from(list.querySelectorAll<HTMLDetailsElement>("[data-experience-card]"));
+  if (!cards.length) return;
+  cards.forEach((card) => {
+    card.open = true;
+    if (!card.hasAttribute("tabindex")) card.setAttribute("tabindex", "-1");
+  });
+  cards[0].focus();
+};
+
+const bind = () => {
+  if (!button || button.dataset.bound === "true") return;
+  button.dataset.bound = "true";
+  button.addEventListener("click", expand);
+  button.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      expand();
+    }
+  });
+};
+
+bind();
+document.addEventListener("astro:page-load", bind);
 </script>
