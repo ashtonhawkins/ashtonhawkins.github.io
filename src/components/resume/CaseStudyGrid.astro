@@ -1,5 +1,5 @@
 ---
-interface ReceiptItem {
+interface Receipt {
   label: string;
   url: string;
   sensitive?: boolean;
@@ -8,11 +8,11 @@ interface ReceiptItem {
 interface CaseStudyItem {
   id: string;
   title: string;
-  thumb?: string;
+  thumb: string;
   problem: string;
   approach: string;
   outcome: string;
-  receipts?: ReceiptItem[];
+  receipts: Receipt[];
   sensitive?: boolean;
   tags?: string[];
 }
@@ -21,113 +21,77 @@ const { caseStudies } = Astro.props as { caseStudies: CaseStudyItem[] };
 ---
 <section class="flex flex-col gap-6" id="case-studies">
   <div class="flex flex-col gap-2">
-    <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Case studies</span>
-    <p class="max-w-3xl text-sm text-[color:var(--ink-2)]">
-      Anchors into longer-form engagements. Hover or focus to lift the tile; activate to unpack the story.
-    </p>
+    <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Portfolio</span>
+    <h2 class="text-lg font-semibold text-[color:var(--ink)]">Case Studies</h2>
+    <p class="max-w-3xl text-sm text-[color:var(--ink-2)]">Mode-aware narratives from checkout, taxonomy, search, consent, and program design. Receipts surface when allowed.</p>
   </div>
-  <div class="grid gap-4 lg:grid-cols-2" data-case-study-grid>
-    {caseStudies.map((study) => (
-      <details
-        id={`case-${study.id}`}
-        class="group overflow-hidden rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_96%,transparent)] shadow-[0_32px_80px_-60px_rgba(12,20,32,0.45)] transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(.2,.8,.2,1)] open:text-[color:var(--ink-2)]"
-        data-case-study
-        data-tags={study.tags?.join(",") ?? ""}
-        data-filter-item
-        data-motion
-      >
-        <summary class="flex cursor-pointer flex-col gap-4 px-5 py-4 outline-none">
-          <div class="overflow-hidden rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_10%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_92%,transparent)]">
-            {study.thumb ? (
-              <img
-                src={study.thumb}
-                alt=""
-                loading="lazy"
-                decoding="async"
-                class={`h-36 w-full object-cover transition duration-200 ease-[cubic-bezier(.2,.8,.2,1)] group-open:scale-[1.02] group-hover:scale-[1.02] ${study.sensitive ? "public-only" : ""}`}
-                style="filter: saturate(0) contrast(1.05);"
-              />
-            ) : (
-              <div class="h-36 w-full bg-[color:color-mix(in_srgb,var(--ink)_6%,transparent)]"></div>
-            )}
-            {study.sensitive && (
-              <div class="confidential-only flex h-36 w-full items-center justify-center bg-[color:color-mix(in_srgb,var(--ink)_8%,transparent)] text-sm font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
-                Masked
+  <div class="grid gap-6 md:grid-cols-2" data-case-grid>
+    {caseStudies.map((item) => {
+      const allReceiptsSensitive = item.receipts.length > 0 && item.receipts.every((receipt) => receipt.sensitive);
+      return (
+        <article
+          id={`case-${item.id}`}
+          class="group flex h-full flex-col gap-4 overflow-hidden rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_94%,transparent)] shadow-[0_32px_80px_-64px_rgba(12,20,32,0.7)] transition-transform duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:-translate-y-1 focus-within:-translate-y-1"
+          style={`view-transition-name:case-${item.id}`}
+          data-tags={item.tags?.join(",") ?? ""}
+          data-filter-item
+          data-motion
+        >
+          <div class="relative h-48 overflow-hidden border-b border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_92%,transparent)]">
+            <img
+              src={item.thumb}
+              alt={`Diagram for ${item.title}`}
+              loading="lazy"
+              class={`h-full w-full object-cover transition-opacity duration-200 ease-[cubic-bezier(.2,.8,.2,1)] ${item.sensitive ? "public-only" : ""}`}
+            />
+            {item.sensitive && (
+              <div class="confidential-only absolute inset-0 flex items-center justify-center bg-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] text-sm font-semibold text-[color:var(--ink-2)]">
+                Visual redacted
               </div>
             )}
           </div>
-          <div class="flex flex-col gap-1">
-            <h3 class="text-lg font-semibold text-[color:var(--ink)] group-open:text-[color:var(--accent)]">{study.title}</h3>
-            <p class="text-sm text-[color:var(--ink-2)]">{study.problem}</p>
-          </div>
-        </summary>
-        <div class="flex flex-col gap-4 px-5 pb-5 text-sm text-[color:var(--ink-2)]">
-          <div>
-            <span class="font-semibold text-[color:var(--ink)]">Approach</span>
-            <p class="mt-2 leading-relaxed">{study.approach}</p>
-          </div>
-          <div>
-            <span class="font-semibold text-[color:var(--ink)]">Outcome</span>
-            <p class="mt-2 leading-relaxed">{study.outcome}</p>
-          </div>
-          {study.receipts && study.receipts.length > 0 && (
-            <div class="flex flex-col gap-2">
-              <span class="text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">Receipts</span>
-              <div class="flex flex-wrap gap-2">
-                {study.receipts.map((receipt) => (
+          <div class="flex flex-col gap-3 px-5 pb-5 pt-2 text-sm text-[color:var(--ink-2)]">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h3 class="text-base font-semibold text-[color:var(--ink)]">{item.title}</h3>
+              {item.sensitive && (
+                <span class="rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
+                  <span class="confidential-only">Confidential</span>
+                  <span class="public-only">Public</span>
+                </span>
+              )}
+            </div>
+            <p><strong class="text-[color:var(--ink)]">Problem:</strong> {item.problem}</p>
+            <p><strong class="text-[color:var(--ink)]">Approach:</strong> {item.approach}</p>
+            <p><strong class="text-[color:var(--ink)]">Outcome:</strong> {item.outcome}</p>
+            <div class="flex flex-wrap items-center gap-2 pt-2 text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
+              <span>Receipts</span>
+              {item.receipts.map((receipt) => (
+                <div class="flex items-center gap-2">
                   <a
                     href={receipt.url}
-                    class={`inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink)] transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_srgb,var(--accent)_28%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)] ${receipt.sensitive ? "public-only" : ""}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    class={`inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-3 py-1.5 text-[color:var(--ink)] transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_srgb,var(--accent)_28%,transparent)] ${receipt.sensitive ? "public-only" : ""}`}
                   >
                     {receipt.label}
                   </a>
-                ))}
-                {study.receipts.some((receipt) => receipt.sensitive) && (
-                  <span class="confidential-only inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
-                    Confidential
-                  </span>
-                )}
-              </div>
+                  {receipt.sensitive && (
+                    <span class="confidential-only rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-3 py-1.5 text-[color:var(--ink-2)]">Confidential</span>
+                  )}
+                </div>
+              ))}
+              {allReceiptsSensitive && <span class="confidential-only">Hidden</span>}
             </div>
-          )}
-        </div>
-      </details>
-    ))}
+            {item.tags && item.tags.length > 0 && (
+              <div class="flex flex-wrap gap-2 pt-2 text-[11px] uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
+                {item.tags.map((tag) => (
+                  <span class="rounded-full border border-[color:color-mix(in_srgb,var(--ink)_10%,transparent)] px-3 py-1">{tag}</span>
+                ))}
+              </div>
+            )}
+          </div>
+        </article>
+      );
+    })}
   </div>
 </section>
-<script type="module">
-import { prefersReducedMotion } from "../../utils/motion";
-
-const details = document.querySelectorAll<HTMLDetailsElement>("[data-case-study]");
-const supportsViewTransition = typeof (document as any).startViewTransition === "function";
-
-const enhance = (detail: HTMLDetailsElement) => {
-  const summary = detail.querySelector("summary");
-  if (!summary || summary.dataset.bound === "true") return;
-  summary.dataset.bound = "true";
-  summary.addEventListener("click", (event) => {
-    if (!supportsViewTransition || prefersReducedMotion()) return;
-    event.preventDefault();
-    const willOpen = !detail.open;
-    (document as any).startViewTransition(() => {
-      detail.open = willOpen;
-    });
-  });
-  summary.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" || event.key === " ") {
-      if (!supportsViewTransition || prefersReducedMotion()) return;
-      event.preventDefault();
-      const willOpen = !detail.open;
-      (document as any).startViewTransition(() => {
-        detail.open = willOpen;
-      });
-    }
-  });
-};
-
-details.forEach(enhance);
-
-document.addEventListener("astro:page-load", () => {
-  document.querySelectorAll<HTMLDetailsElement>("[data-case-study]").forEach(enhance);
-});
-</script>

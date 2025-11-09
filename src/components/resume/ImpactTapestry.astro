@@ -1,111 +1,114 @@
 ---
+import { getSparklineData } from "../ui/Sparkline";
+
 interface TapestryItem {
   label: string;
   value: string;
   timeseries?: number[];
-  methodology?: string;
 }
 
 const { items } = Astro.props as { items: TapestryItem[] };
-const formatter = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
-const describeSeries = (series?: number[]) => {
-  if (!series || series.length < 2) return "";
-  const first = formatter.format(series[0]);
-  const last = formatter.format(series[series.length - 1]);
-  return `Trend from ${first} to ${last}`;
-};
 ---
 <section class="flex flex-col gap-6" id="impact-tapestry">
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <div class="flex flex-col gap-2">
-      <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Impact tapestry</span>
-      <p class="max-w-2xl text-sm text-[color:var(--ink-2)]">
-        Portfolio signals across experimentation, growth, and analytics programs.
-      </p>
-    </div>
-    <button
-      type="button"
-      class="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_92%,transparent)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink)] transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] hover:border-[color:color-mix(in_srgb,var(--accent)_28%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
-      data-methodology-trigger
-    >
-      Methodology
-    </button>
-  </div>
-  <div class="rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_10%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_97%,transparent)] p-5 shadow-[inset_0_1px_0_0_color-mix(in_srgb,var(--ink)_10%,transparent)]">
-    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {items.map((item) => (
-        <article
-          class="flex flex-col gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_94%,transparent)] p-4 text-sm text-[color:var(--ink-2)]"
-          data-motion
-        >
-          <div class="flex items-center justify-between gap-2">
-            <span class="text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">{item.label}</span>
-            {item.timeseries && (
-              <span
-                class="text-[10px] uppercase tracking-[0.28em] text-[color:var(--ink-2)]"
-              >
-                {item.timeseries.length} pts
-              </span>
-            )}
-          </div>
-          <div class="flex items-end gap-2">
-            <span class="text-xl font-semibold text-[color:var(--ink)]">{item.value}</span>
-            {item.timeseries && <span class="sr-only">{describeSeries(item.timeseries)}</span>}
-          </div>
-          {item.timeseries && (
-            <div
-              class="h-8 text-[color:var(--accent)]"
-              data-sparkline
-              data-points={JSON.stringify(item.timeseries)}
-              data-width="120"
-              data-height="32"
-              data-label={`Sparkline for ${item.label}: ${describeSeries(item.timeseries)}`}
-            ></div>
-          )}
-        </article>
-      ))}
-    </div>
-  </div>
-  <dialog
-    class="w-[min(90vw,420px)] rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_98%,transparent)] p-5 text-sm text-[color:var(--ink-2)] shadow-[0_40px_120px_-80px_rgba(12,20,32,0.55)]"
-    data-methodology-dialog
-    aria-labelledby="methodology-title"
-    aria-describedby="methodology-body"
-  >
-    <div class="flex items-start justify-between gap-4">
-      <h3 id="methodology-title" class="text-base font-semibold text-[color:var(--ink)]">Methodology</h3>
+  <div class="flex flex-col gap-2">
+    <span class="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--ink-2)]">Proof</span>
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h2 class="text-lg font-semibold text-[color:var(--ink)]">Impact Tapestry</h2>
       <button
         type="button"
-        class="rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
-        data-methodology-close
+        class="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_90%,transparent)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink)] transition-colors duration-150 ease-[cubic-bezier(.2,.8,.2,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+        data-methodology-open
       >
-        Close
+        Methodology
       </button>
     </div>
-    <div id="methodology-body" class="mt-4 space-y-3 leading-relaxed">
-      <p>
-        Signals consolidated from audited programs with sample sizes meeting statistical confidence. All KPIs use two-tailed significance and were validated by independent analysts.
-      </p>
-      <p>
-        Sparklines represent indexed performance with seasonality smoothed; bullet markers indicate baseline reference.
-      </p>
+    <p class="max-w-3xl text-sm text-[color:var(--ink-2)]">Scroll-snap signals from acquisition, performance, and measurement pillars. Each sparkline is normalized to its own baseline.</p>
+  </div>
+  <div class="relative overflow-hidden rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_94%,transparent)]">
+    <div class="absolute inset-0 -z-10 bg-[conic-gradient(from_90deg_at_1px_1px,rgba(12,20,32,0.04)_0deg,rgba(12,20,32,0.04)_90deg,transparent_90deg,transparent_180deg)] bg-[length:38px_38px]"></div>
+    <div class="flex snap-x snap-mandatory gap-4 overflow-x-auto p-4" data-tapestry-track>
+      {items.map((item) => {
+        const spark = item.timeseries ? getSparklineData(item.timeseries, { width: 120, height: 32 }) : null;
+        return (
+          <div
+            class="min-w-[220px] snap-start rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_92%,transparent)] px-4 py-3 text-sm shadow-[0_16px_40px_-36px_rgba(12,20,32,0.6)]"
+          >
+            <div class="flex items-baseline justify-between gap-2">
+              <span class="text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">{item.label}</span>
+              <span class="text-sm font-semibold text-[color:var(--ink)]">{item.value}</span>
+            </div>
+            {spark && (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox={`0 0 ${spark.width} ${spark.height}`}
+                width={spark.width}
+                height={spark.height}
+                role="img"
+                aria-label={`${item.label} trend`}
+                class="mt-2 text-[color:var(--accent)]"
+              >
+                <polyline
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  points={spark.points}
+                />
+              </svg>
+            )}
+          </div>
+        );
+      })}
     </div>
-  </dialog>
+  </div>
+  <div
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-6"
+    role="none"
+    data-methodology-dialog
+  >
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="methodology-title"
+      aria-describedby="methodology-copy"
+      class="relative max-w-lg rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_18%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-alt)_96%,transparent)] p-6 shadow-[0_48px_120px_-60px_rgba(12,20,32,0.68)]"
+    >
+      <div class="flex items-center justify-between gap-4">
+        <h3 id="methodology-title" class="text-base font-semibold text-[color:var(--ink)]">Measurement methodology</h3>
+        <button
+          type="button"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] text-sm text-[color:var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+          data-methodology-close
+          aria-label="Close methodology dialog"
+        >
+          ✕
+        </button>
+      </div>
+      <div id="methodology-copy" class="mt-4 space-y-3 text-sm text-[color:var(--ink-2)]">
+        <p>Signals span organic acquisition, experimentation, consent resilience, and performance hardening. Each data point is normalized by baseline to surface slope over absolute value.</p>
+        <p>Inputs combine GA4 modeled conversions, Optimizely statistics, and platform telemetry. Confidential mode redacts sensitive cohorts but preserves directional lift.</p>
+        <p class="confidential-only">Receipts and charts referencing protected programs are generalized when confidential mode is enabled.</p>
+      </div>
+    </div>
+  </div>
 </section>
 <script type="module">
-import { bootSparklines } from "../ui/Sparkline";
+import { prefersReducedMotion } from "../../utils/motion";
 
-const dialog = document.querySelector<HTMLDialogElement>("[data-methodology-dialog]");
-const trigger = document.querySelector<HTMLButtonElement>("[data-methodology-trigger]");
+const dialog = document.querySelector<HTMLElement>("[data-methodology-dialog]");
+const openBtn = document.querySelector<HTMLButtonElement>("[data-methodology-open]");
 const closeBtn = document.querySelector<HTMLButtonElement>("[data-methodology-close]");
-const focusableSelector = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
+let lastFocused: HTMLElement | null = null;
+
+const focusable = () => (dialog ? Array.from(dialog.querySelectorAll<HTMLElement>("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])")) : []);
 
 const trapFocus = (event: KeyboardEvent) => {
-  if (!dialog || !dialog.open || event.key !== "Tab") return;
-  const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector));
-  if (!focusable.length) return;
-  const first = focusable[0];
-  const last = focusable[focusable.length - 1];
+  if (event.key !== "Tab" || !dialog) return;
+  const items = focusable();
+  if (!items.length) return;
+  const first = items[0];
+  const last = items[items.length - 1];
   if (event.shiftKey && document.activeElement === first) {
     event.preventDefault();
     last.focus();
@@ -117,53 +120,53 @@ const trapFocus = (event: KeyboardEvent) => {
 
 const openDialog = () => {
   if (!dialog) return;
-  dialog.showModal();
-  dialog.addEventListener("keydown", trapFocus);
-  const focusTarget = dialog.querySelector<HTMLElement>(focusableSelector);
-  focusTarget?.focus();
+  lastFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  dialog.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  document.addEventListener("keydown", trapFocus);
+  document.addEventListener("keydown", handleEscape, { once: true });
+  setTimeout(() => {
+    const items = focusable();
+    if (items[0]) items[0].focus();
+  }, prefersReducedMotion() ? 0 : 40);
 };
 
 const closeDialog = () => {
   if (!dialog) return;
-  dialog.removeEventListener("keydown", trapFocus);
-  dialog.close();
-  trigger?.focus();
+  dialog.classList.add("hidden");
+  document.body.style.overflow = "";
+  document.removeEventListener("keydown", trapFocus);
+  if (lastFocused) lastFocused.focus();
 };
 
-trigger?.addEventListener("click", openDialog);
-trigger?.addEventListener("keydown", (event) => {
-  if (event.key === "Enter" || event.key === " ") {
-    event.preventDefault();
-    openDialog();
-  }
-});
-
-closeBtn?.addEventListener("click", closeDialog);
-closeBtn?.addEventListener("keydown", (event) => {
-  if (event.key === "Enter" || event.key === " ") {
-    event.preventDefault();
+const handleEscape = (event: KeyboardEvent) => {
+  if (event.key === "Escape") {
     closeDialog();
+  } else {
+    document.addEventListener("keydown", handleEscape, { once: true });
   }
-});
+};
 
-dialog?.addEventListener("cancel", (event) => {
-  event.preventDefault();
-  closeDialog();
-});
-
-dialog?.addEventListener("click", (event) => {
-  if (!dialog) return;
-  const rect = dialog.getBoundingClientRect();
-  const isInDialog =
-    event.clientX >= rect.left &&
-    event.clientX <= rect.right &&
-    event.clientY >= rect.top &&
-    event.clientY <= rect.bottom;
-  if (!isInDialog) {
-    closeDialog();
+const bind = () => {
+  if (openBtn && openBtn.dataset.bound !== "true") {
+    openBtn.dataset.bound = "true";
+    openBtn.addEventListener("click", openDialog);
   }
-});
+  if (closeBtn && closeBtn.dataset.bound !== "true") {
+    closeBtn.dataset.bound = "true";
+    closeBtn.addEventListener("click", closeDialog);
+  }
+};
 
-bootSparklines();
-document.addEventListener("astro:page-load", bootSparklines);
+bind();
+
+if (dialog) {
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) {
+      closeDialog();
+    }
+  });
+}
+
+document.addEventListener("astro:page-load", bind);
 </script>

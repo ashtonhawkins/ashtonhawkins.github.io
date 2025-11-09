@@ -71,6 +71,10 @@ const structuredDataScripts = structuredDataStrings.map((json, index) => ({
   id: `schema-${index}`,
   json,
 }));
+
+const renderStructuredData = (schema: { json: string }) => (
+  <script type="application/ld+json" is:inline>{schema.json}</script>
+);
 ---
 <title>{title}</title>
 <meta name="description" content={description} />
@@ -83,8 +87,4 @@ const structuredDataScripts = structuredDataStrings.map((json, index) => ({
 <meta name="twitter:card" content="summary" />
 <meta name="twitter:title" content={openGraphTitle} />
 <meta name="twitter:description" content={description} />
-{structuredDataScripts.map((schema) => (
-  <script type="application/ld+json" is:inline id={schema.id}>
-    {schema.json}
-  </script>
-))}
+  {structuredDataScripts.map(renderStructuredData)}
