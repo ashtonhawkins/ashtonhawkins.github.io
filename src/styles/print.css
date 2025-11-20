@@ -48,4 +48,7 @@
     content: " (" attr(href) ")";
     font-size: 0.75em;
   }
+  [data-confidential-root][data-confidential-state="confidential"] [data-confidential-obscure="true"] .confidential-token {
+    display: inline-flex !important;
+  }
 }

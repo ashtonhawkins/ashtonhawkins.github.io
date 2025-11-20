@@ -27,12 +27,7 @@ const experiences = resume.experience.map((item) => ({
   caseStudies: item.caseStudyIds
     .map((id) => caseStudyMap.get(id))
     .filter(Boolean)
-    .map((caseStudy) => ({
-      id: caseStudy!.id,
-      title: caseStudy!.title,
-      url: caseStudy!.url,
-      sensitive: caseStudy!.sensitive ?? false
-    }))
+    .map((caseStudy) => ({ id: caseStudy!.id, title: caseStudy!.title, url: caseStudy!.url }))
 }));
 
 const email = "hello@ashtonhawkins.com";
@@ -65,18 +60,47 @@ const initialTagsLiteral = JSON.stringify(activeTags);
       --resume-surface-odd: color-mix(in srgb, var(--surface) 88%, transparent);
       --resume-surface-even: color-mix(in srgb, var(--surface) 80%, transparent);
     }
+    [data-confidential-root][data-confidential-state="confidential"] [data-confidential-sensitive="true"] {
+      display: none;
+    }
+    [data-confidential-root][data-confidential-state="confidential"] [data-confidential-obscure="true"] .public-token {
+      display: none;
+    }
+    [data-confidential-root][data-confidential-state="confidential"] [data-confidential-obscure="true"] .confidential-token {
+      display: flex;
+    }
   </style>
   <article
     class="flex flex-col gap-16"
     data-confidential-root
     data-confidential-state={isConfidential ? "confidential" : "public"}
   >
-    <Hero hero={resume.hero} email={email} metrics={resume.metrics} bio={resume.bioShort}>
+    <Hero hero={resume.hero} email={email} metrics={resume.metrics}>
       <ConfidentialToggle slot="mode-toggle" isConfidential={isConfidential} />
     </Hero>
     <ImpactTapestry items={resume.tapestry} />
     <ExperienceTimeline experiences={experiences} />
     <CaseStudyGrid caseStudies={resume.caseStudies} />
+    <section id="exports" class="flex flex-col gap-4 rounded-3xl border border-border/60 bg-[color:var(--resume-surface-odd)] p-6 shadow-soft">
+      <span class="text-xs font-semibold uppercase tracking-[0.32em] text-text-muted">Exports</span>
+      <h2 class="text-lg font-semibold text-text-primary">Takeaways</h2>
+      <div class="flex flex-wrap gap-3">
+        <button
+          type="button"
+          class="rounded-full border border-border px-5 py-2 text-sm font-medium text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          data-download-json
+        >
+          Download JSON
+        </button>
+        <button
+          type="button"
+          class="rounded-full border border-border px-5 py-2 text-sm font-medium text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          data-download-text
+        >
+          Download .txt
+        </button>
+      </div>
+    </section>
     <section class="rounded-3xl border border-border/60 bg-[color:var(--resume-surface-even)] p-6 shadow-soft">
       <span class="text-xs font-semibold uppercase tracking-[0.32em] text-text-muted">Focus areas</span>
       <KeywordChips keywords={resume.keywords} activeTags={activeTags} />
@@ -84,12 +108,20 @@ const initialTagsLiteral = JSON.stringify(activeTags);
   </article>
   <ActionDock email={email} bio={resume.bioShort} />
   <div aria-live="polite" data-toast class="pointer-events-none fixed bottom-24 right-6 z-50 rounded-full bg-text-primary px-4 py-2 text-sm font-medium text-background shadow-soft"></div>
+  <script id="resume-payload" type="application/json" is:inline>{JSON.stringify(resume)}</script>
   <script type="module">
 import { parseTags, serializeTags } from '../utils/filters.ts';
 
 const initialTags = {initialTagsLiteral};
 let activeTags = new Set(initialTags);
 let printBound = false;
+
+const meetsMetricGate = (metric) => {
+  const sample = typeof metric.sample === 'number' ? metric.sample : undefined;
+  const hasSample = typeof sample === 'number' && sample >= 1000;
+  const hasConfidence = Boolean(metric.confidence);
+  return hasSample || hasConfidence;
+};
 
 const applyFilters = () => {
   const tags = Array.from(activeTags);
@@ -166,6 +198,101 @@ const bindKeywordChips = () => {
   });
 };
 
+const resumePayloadElement = document.getElementById('resume-payload');
+const getResumePayload = () => {
+  try {
+    return resumePayloadElement ? JSON.parse(resumePayloadElement.textContent ?? '{}') : {};
+  } catch (error) {
+    return {};
+  }
+};
+
+const downloadFile = (filename, content, mime) => {
+  const blob = new Blob([content], { type: mime });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  window.setTimeout(() => {
+    URL.revokeObjectURL(link.href);
+    document.body.removeChild(link);
+  }, 200);
+};
+
+const buildTextResume = (data) => {
+  let text = `${data.hero.headline}\n${data.hero.subhead}\n\n`;
+  if (Array.isArray(data.metrics)) {
+    const gated = data.metrics.filter((metric) => meetsMetricGate(metric)).slice(0, 3);
+    if (gated.length > 0) {
+      text += 'Scoreboard:\n';
+      gated.forEach((metric) => {
+        text += `- ${metric.label}: ${metric.value}`;
+        if (metric.confidence) text += ` (${metric.confidence})`;
+        text += '\n';
+      });
+      text += '\n';
+    }
+  }
+  if (Array.isArray(data.tapestry)) {
+    text += 'Impact Tapestry:\n';
+    data.tapestry.forEach((item) => {
+      text += `- ${item.label}: ${item.value}\n`;
+    });
+    text += '\n';
+  }
+  if (Array.isArray(data.experience)) {
+    data.experience.forEach((experience) => {
+      text += `${experience.role_public} at ${experience.org_public}\n`;
+      text += `  Scope: ${experience.scope.team}; ${experience.scope.budget}; ${experience.scope.surfaces}\n`;
+      if (Array.isArray(experience.metrics)) {
+        const gated = experience.metrics.filter((metric) => meetsMetricGate(metric));
+        gated.forEach((metric) => {
+          text += `  Metric ${metric.label}: ${metric.delta_pct}%`;
+          if (metric.baseline !== undefined) text += ` (baseline ${metric.baseline}%)`;
+          if (metric.sample !== undefined) text += ` [n=${metric.sample}]`;
+          if (metric.confidence) text += ` ${metric.confidence}`;
+          text += '\n';
+        });
+      }
+      experience.impacts.forEach((impact) => {
+        text += `  - ${impact}\n`;
+      });
+      text += '\n';
+    });
+  }
+  if (Array.isArray(data.caseStudies)) {
+    text += 'Case Studies:\n';
+    data.caseStudies.forEach((caseStudy) => {
+      text += `- ${caseStudy.title}: Problem ${caseStudy.problem} | Approach ${caseStudy.approach} | Outcome ${caseStudy.outcome}\n`;
+    });
+    text += '\n';
+  }
+  if (Array.isArray(data.keywords)) {
+    text += `Keywords: ${data.keywords.join(', ')}\n`;
+  }
+  text += `Bio: ${data.bioShort}\n`;
+  return text;
+};
+
+const bindDownloads = () => {
+  const data = getResumePayload();
+  document.querySelectorAll('[data-download-json]').forEach((button) => {
+    if (button.dataset.bound === 'true') return;
+    button.dataset.bound = 'true';
+    button.addEventListener('click', () => {
+      downloadFile('ashton-hawkins-resume.json', JSON.stringify(data, null, 2), 'application/json');
+    });
+  });
+  document.querySelectorAll('[data-download-text]').forEach((button) => {
+    if (button.dataset.bound === 'true') return;
+    button.dataset.bound = 'true';
+    button.addEventListener('click', () => {
+      downloadFile('ashton-hawkins-resume.txt', buildTextResume(data), 'text/plain');
+    });
+  });
+};
+
 const bindPrintExpansion = () => {
   if (printBound) return;
   let previousState = new Map();
@@ -188,6 +315,7 @@ const bindPrintExpansion = () => {
 
 const initialize = () => {
   bindKeywordChips();
+  bindDownloads();
   bindPrintExpansion();
   applyFilters();
 };
@@ -198,6 +326,7 @@ document.addEventListener('astro:page-load', () => {
   const url = new URL(window.location.href);
   activeTags = new Set(parseTags(url.searchParams.get('tags')));
   bindKeywordChips();
+  bindDownloads();
   applyFilters();
 });
   </script>

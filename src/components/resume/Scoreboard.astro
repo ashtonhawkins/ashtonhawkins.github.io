@@ -13,12 +13,9 @@ const { metrics } = Astro.props as { metrics: Metric[] };
 const eligible = metrics.filter((metric) => meetsMetricGate(metric)).slice(0, 3);
 ---
 
-<dl
-  class="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [scrollbar-width:thin]"
-  data-scoreboard
->
+<dl class="grid grid-cols-1 gap-4 sm:grid-cols-3" data-scoreboard>
   {eligible.map((metric) => (
-    <div class="flex min-w-[16rem] flex-col gap-2 rounded-2xl border border-border/50 bg-surface/70 px-6 py-5 shadow-soft transition-transform duration-150 ease-out hover:-translate-y-1 hover:shadow-ring focus-within:-translate-y-1 focus-within:shadow-ring">
+    <div class="flex flex-col gap-2 rounded-2xl border border-border/50 bg-surface/70 px-6 py-5 shadow-soft transition-transform duration-150 ease-out hover:-translate-y-1 hover:shadow-ring focus-within:-translate-y-1 focus-within:shadow-ring">
       <dt class="text-xs font-semibold uppercase tracking-[0.3em] text-text-muted">{metric.label}</dt>
       <dd class="text-3xl font-semibold text-text-primary" data-score-value data-value={metric.value}>{metric.value}</dd>
       {metric.confidence && (

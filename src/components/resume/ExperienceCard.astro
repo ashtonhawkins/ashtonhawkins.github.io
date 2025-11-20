@@ -11,7 +11,6 @@ interface CaseStudyLink {
   id: string;
   title: string;
   url: string;
-  sensitive?: boolean;
 }
 
 interface ExperienceMetric {
@@ -163,25 +162,15 @@ const stackLabel = experience.stack.join(", ");
       <div class="flex flex-col gap-2" aria-label="Linked case studies">
         <span class="text-xs font-semibold uppercase tracking-[0.32em] text-text-muted">Case studies</span>
         <div class="flex flex-wrap gap-2">
-          {experience.caseStudies.map((caseStudy) => {
-            const isSensitive = caseStudy.sensitive === true;
-            return (
-              <div class="contents">
-                <a
-                  href={caseStudy.url}
-                  data-astro-transition="animate"
-                  class={`inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-semibold text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${isSensitive ? "public-only" : ""}`}
-                >
-                  {caseStudy.title}
-                </a>
-                {isSensitive && (
-                  <span class="confidential-only inline-flex items-center rounded-full border border-dashed border-border/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">
-                    Confidential case study
-                  </span>
-                )}
-              </div>
-            );
-          })}
+          {experience.caseStudies.map((caseStudy) => (
+            <a
+              href={caseStudy.url}
+              data-astro-transition="animate"
+              class="inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-semibold text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              {caseStudy.title}
+            </a>
+          ))}
         </div>
       </div>
     )}
@@ -189,25 +178,16 @@ const stackLabel = experience.stack.join(", ");
       <div class="flex flex-col gap-2" aria-label="Artifacts">
         <span class="text-xs font-semibold uppercase tracking-[0.32em] text-text-muted">Artifacts</span>
         <div class="flex flex-wrap gap-2">
-          {experience.artifacts.map((artifact) => {
-            const isSensitive = artifact.sensitive === true;
-            return (
-              <div class="contents">
-                <a
-                  href={artifact.url}
-                  data-astro-transition="animate"
-                  class={`inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-semibold text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${isSensitive ? "public-only" : ""}`}
-                >
-                  {artifact.label}
-                </a>
-                {isSensitive && (
-                  <span class="confidential-only inline-flex items-center rounded-full border border-dashed border-border/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">
-                    Confidential artifact
-                  </span>
-                )}
-              </div>
-            );
-          })}
+          {experience.artifacts.map((artifact) => (
+            <a
+              href={artifact.url}
+              data-astro-transition="animate"
+              class="inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-semibold text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              data-confidential-sensitive={artifact.sensitive ? "true" : "false"}
+            >
+              {artifact.label}
+            </a>
+          ))}
         </div>
       </div>
     )}
