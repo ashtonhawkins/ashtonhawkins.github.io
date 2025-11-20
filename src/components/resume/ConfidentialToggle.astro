@@ -1,12 +1,55 @@
 ---
 const { isConfidential } = Astro.props as { isConfidential: boolean };
+const defaultStateLiteral = isConfidential ? "true" : "false";
 ---
-<button
-  type="button"
-  class="inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_18%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_96%,transparent)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--ink)]"
-  data-confidential-toggle
-  data-state={isConfidential ? "confidential" : "public"}
->
-  <span aria-hidden="true" data-icon>{isConfidential ? "🔒" : "🔓"}</span>
-  <span data-label>{isConfidential ? "Confidential" : "Public"}</span>
-</button>
+
+<div class="flex flex-col items-end gap-1" data-confidential-controls>
+  <button
+    type="button"
+    role="switch"
+    aria-checked={isConfidential ? "true" : "false"}
+    class="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/90 px-3 py-1 text-xs font-semibold text-text-secondary shadow-soft transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+    data-confidential-toggle
+    data-state={isConfidential ? "confidential" : "public"}
+  >
+    <span class="flex h-6 w-6 items-center justify-center rounded-full bg-accent-soft text-accent" aria-hidden="true">
+      <span class="confidential-only text-base leading-none">🔒</span>
+      <span class="public-only text-base leading-none">🔓</span>
+    </span>
+    <span class="tracking-[0.32em] uppercase">Confidential</span>
+  </button>
+  <span class="text-[10px] font-medium uppercase tracking-[0.24em] text-text-muted" data-confidential-status>
+    {isConfidential ? "On" : "Off"}
+  </span>
+  <span class="sr-only" data-confidential-announcer aria-live="polite"></span>
+</div>
+
+<script type="module">
+import { initializeConfidentialMode } from '../../utils/confidential.ts';
+
+const defaultState = {defaultStateLiteral};
+let statusBound = false;
+
+const bindStatus = () => {
+  if (statusBound) return;
+  document.addEventListener('resume:confidential-change', (event) => {
+    const detail = event.detail?.state;
+    const status = document.querySelector('[data-confidential-status]');
+    if (typeof detail === 'boolean' && status) {
+      status.textContent = detail ? 'On' : 'Off';
+    }
+  });
+  statusBound = true;
+};
+
+const initConfidential = () => {
+  initializeConfidentialMode({ defaultState, rootSelector: '[data-confidential-root]' });
+};
+
+initConfidential();
+bindStatus();
+document.addEventListener('astro:page-load', () => {
+  initConfidential();
+  bindStatus();
+});
+</script>

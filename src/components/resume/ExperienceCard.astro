@@ -1,5 +1,20 @@
 ---
-interface Metric {
+import { meetsMetricGate } from "../../utils/filters";
+
+interface Scope {
+  team: string;
+  budget: string;
+  surfaces: string;
+}
+
+interface CaseStudyLink {
+  id: string;
+  title: string;
+  url: string;
+  sensitive?: boolean;
+}
+
+interface ExperienceMetric {
   label: string;
   delta_pct: number;
   baseline?: number;
@@ -8,132 +23,193 @@ interface Metric {
   note?: string;
 }
 
-interface Artifact {
+interface ArtifactLink {
   label: string;
   url: string;
   sensitive?: boolean;
 }
 
-interface CaseStudyRef {
-  id: string;
-  title: string;
-  sensitive?: boolean;
-}
-
-interface ExperienceItem {
+interface ExperienceWithComputed {
   id: string;
   org_public: string;
   org_confidential: string;
   role_public: string;
   role_confidential: string;
+  start?: string | null;
+  end?: string | null;
+  scope: Scope;
+  impacts: string[];
+  metrics: ExperienceMetric[];
+  budget_band: string;
+  stack: string[];
+  tags: string[];
+  artifacts?: ArtifactLink[];
+  caseStudies: CaseStudyLink[];
   rangePublic: string;
   rangeConfidential: string;
-  team_size: string;
-  budget_band: string;
-  surfaces: string;
-  stack: string[];
-  metrics: Metric[];
-  impacts: string[];
-  artifacts: Artifact[];
-  caseStudies: CaseStudyRef[];
 }
 
-const compactFormatter = new Intl.NumberFormat("en-US", {
-  notation: "compact",
-  maximumFractionDigits: 1
-});
-
-const { experience } = Astro.props as { experience: ExperienceItem };
-const allCaseSensitive = experience.caseStudies.length > 0 && experience.caseStudies.every((item) => item.sensitive);
-const allArtifactSensitive = experience.artifacts.length > 0 && experience.artifacts.every((artifact) => artifact.sensitive);
-const toDelta = (value: number) => {
-  const prefix = value > 0 ? "+" : "";
-  const decimals = Math.abs(value) < 10 && Math.round(value * 10) !== value * 10 ? 1 : 0;
-  return `${prefix}${value.toFixed(decimals)}%`;
+const { experience } = Astro.props as {
+  experience: ExperienceWithComputed;
 };
+
+const scopeLine = [experience.scope.team, experience.scope.budget, experience.scope.surfaces]
+  .filter(Boolean)
+  .join(" • ");
+
+const gatedMetrics = experience.metrics.filter((metric) => meetsMetricGate(metric));
+
+const formatDelta = (value: number) => {
+  const formatter = new Intl.NumberFormat("en", { maximumFractionDigits: 1 });
+  const formatted = formatter.format(Math.abs(value));
+  if (value > 0) return `+${formatted}%`;
+  if (value < 0) return `-${formatted}%`;
+  return `${formatted}%`;
+};
+
+const formatBaseline = (value?: number) => {
+  if (typeof value !== "number") return null;
+  const formatter = new Intl.NumberFormat("en", { maximumFractionDigits: 1 });
+  return `${formatter.format(value)}%`;
+};
+
+const formatSample = (value?: number) => {
+  if (typeof value !== "number") return null;
+  if (value < 1000) return value.toString();
+  return new Intl.NumberFormat("en", { notation: "compact", compactDisplay: "short" }).format(value);
+};
+
+const stackLabel = experience.stack.join(", ");
 ---
-<li class="relative pl-8" data-experience-item>
-  <span class="absolute left-1 top-4 h-3 w-3 -translate-x-full rounded-full border border-[color:var(--accent)] bg-[color:var(--surface)]"></span>
-  <article class="flex flex-col gap-4 rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_94%,transparent)] p-5 shadow-[0_18px_48px_-32px_rgba(12,20,32,0.55)]">
-    <header class="flex flex-col gap-3">
-      <div class="flex flex-col gap-2">
-        <span class="text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-2)]">
-          <span class="public-only">{experience.rangePublic}</span>
-          <span class="confidential-only">{experience.rangeConfidential}</span>
-        </span>
-        <h3 class="text-xl font-semibold text-[color:var(--ink)]">
-          <span class="public-only">{experience.org_public}</span>
+
+<details
+  class="group flex flex-col gap-4 rounded-3xl border border-border/70 bg-background/85 p-6 shadow-soft transition-transform duration-100 ease-out open:shadow-ring hover:-translate-y-1 hover:shadow-ring"
+  data-experience-card
+  data-tags={experience.tags.join(",")}
+  data-case-ids={experience.caseStudies.map((link) => link.id).join(",")}
+>
+  <summary class="flex cursor-pointer list-none flex-col gap-3 text-left outline-none">
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+      <div class="flex flex-col">
+        <p class="text-sm font-medium text-text-secondary">
           <span class="confidential-only">{experience.org_confidential}</span>
-        </h3>
-        <p class="text-sm text-[color:var(--ink-2)]">
-          <span class="public-only">{experience.role_public}</span>
+          <span class="public-only">{experience.org_public}</span>
+        </p>
+        <p class="text-xl font-semibold text-text-primary">
           <span class="confidential-only">{experience.role_confidential}</span>
+          <span class="public-only">{experience.role_public}</span>
         </p>
       </div>
-      <div class="flex flex-wrap items-center gap-2 text-xs text-[color:var(--ink-2)]">
-        <span class="rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-3 py-1">{experience.team_size}</span>
-        <span class="rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-3 py-1">{experience.budget_band}</span>
-        <span class="rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-3 py-1">{experience.surfaces}</span>
-        <span class="rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-3 py-1">{experience.stack.join(" • ")}</span>
-      </div>
-    </header>
-    <ul class="flex flex-col gap-2 text-sm text-[color:var(--ink-2)]">
-      {experience.impacts.map((impact) => (
-        <li class="relative pl-5">
-          <span class="absolute left-0 top-2 h-1.5 w-1.5 rounded-full bg-[color:var(--accent)]"></span>
-          <span>{impact}</span>
-        </li>
-      ))}
-    </ul>
-    {experience.caseStudies.length > 0 && (
-      <div class="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--ink-2)]">
-        <span>Stories</span>
-        {experience.caseStudies.map((caseStudy) => (
-          <a
-            href={`#case-${caseStudy.id}`}
-            class={`rounded-full border border-[color:color-mix(in_srgb,var(--ink)_16%,transparent)] px-3 py-1 text-[color:var(--ink)] hover:border-[color:color-mix(in_srgb,var(--accent)_32%,transparent)] ${caseStudy.sensitive ? "public-only" : ""}`}
-            data-astro-transition="animate"
-          >
-            {caseStudy.title}
-          </a>
-        ))}
-        {allCaseSensitive && <span class="confidential-only">Hidden</span>}
+      <p class="text-sm font-medium text-text-muted">
+        <span class="confidential-only">{experience.rangeConfidential}</span>
+        <span class="public-only">{experience.rangePublic}</span>
+      </p>
+    </div>
+    <p class="text-sm text-text-secondary">{scopeLine}</p>
+    <div class="flex flex-wrap gap-2 text-xs text-text-muted">
+      <span class="inline-flex items-center gap-2 rounded-full bg-surface/70 px-3 py-1">
+        <span class="font-semibold uppercase tracking-[0.2em] text-text-muted">Team</span>
+        <span>{experience.scope.team}</span>
+      </span>
+      <span class="inline-flex items-center gap-2 rounded-full bg-surface/70 px-3 py-1">
+        <span class="font-semibold uppercase tracking-[0.2em] text-text-muted">Budget</span>
+        <span>{experience.budget_band}</span>
+      </span>
+      <span class="inline-flex items-center gap-2 rounded-full bg-surface/70 px-3 py-1">
+        <span class="font-semibold uppercase tracking-[0.2em] text-text-muted">Surfaces</span>
+        <span>{experience.scope.surfaces}</span>
+      </span>
+      <span class="inline-flex items-center gap-2 rounded-full bg-surface/70 px-3 py-1">
+        <span class="font-semibold uppercase tracking-[0.2em] text-text-muted">Stack</span>
+        <span>{stackLabel}</span>
+      </span>
+    </div>
+  </summary>
+  <div class="flex flex-col gap-5 border-t border-border/60 pt-4">
+    {gatedMetrics.length > 0 && (
+      <div class="flex flex-col gap-3" aria-label="Key metrics">
+        <span class="text-xs font-semibold uppercase tracking-[0.32em] text-text-muted">Metrics</span>
+        <div class="grid gap-3 md:grid-cols-2">
+          {gatedMetrics.map((metric) => {
+            const baseline = formatBaseline(metric.baseline);
+            const sample = formatSample(metric.sample);
+            return (
+              <div class="flex flex-col gap-1 rounded-2xl border border-border/50 bg-surface/70 p-3 shadow-soft">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-sm font-semibold text-text-primary">{metric.label}</span>
+                  <span class="text-sm font-semibold text-accent">{formatDelta(metric.delta_pct)}</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted">
+                  {baseline && <span>Baseline {baseline}</span>}
+                  {sample && <span>n={sample}</span>}
+                  {metric.confidence && <span>{metric.confidence}</span>}
+                  {metric.note && <span>{metric.note}</span>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     )}
-    <details class="rounded-[var(--r-3)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_96%,transparent)] p-4" data-experience-details>
-      <summary class="cursor-pointer text-sm font-semibold text-[color:var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]">Evidence stack</summary>
-      <div class="mt-4 flex flex-col gap-4">
-        <div class="grid gap-3 md:grid-cols-3">
-          {experience.metrics.map((metric) => (
-            <div class="flex flex-col gap-1 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface)_98%,transparent)] p-3">
-              <span class="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--ink-2)]">{metric.label}</span>
-              <span class="text-xl font-semibold text-[color:var(--ink)]">{toDelta(metric.delta_pct)}</span>
-              <span class="text-xs text-[color:var(--ink-2)]">
-                {metric.baseline !== undefined && <span>Baseline {metric.baseline} </span>}
-                {metric.sample && <span>· {compactFormatter.format(metric.sample)} sample </span>}
-                {metric.confidence && <span>· {metric.confidence}</span>}
-              </span>
-              {metric.note && <span class="text-xs text-[color:var(--ink-2)]">{metric.note}</span>}
-            </div>
-          ))}
+    <div class="flex flex-col gap-2">
+      <span class="text-xs font-semibold uppercase tracking-[0.32em] text-text-muted">Impact highlights</span>
+      <ul class="flex list-disc flex-col gap-2 pl-5 text-sm text-text-secondary">
+        {experience.impacts.map((impact) => (
+          <li>{impact}</li>
+        ))}
+      </ul>
+    </div>
+    {experience.caseStudies.length > 0 && (
+      <div class="flex flex-col gap-2" aria-label="Linked case studies">
+        <span class="text-xs font-semibold uppercase tracking-[0.32em] text-text-muted">Case studies</span>
+        <div class="flex flex-wrap gap-2">
+          {experience.caseStudies.map((caseStudy) => {
+            const isSensitive = caseStudy.sensitive === true;
+            return (
+              <div class="contents">
+                <a
+                  href={caseStudy.url}
+                  data-astro-transition="animate"
+                  class={`inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-semibold text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${isSensitive ? "public-only" : ""}`}
+                >
+                  {caseStudy.title}
+                </a>
+                {isSensitive && (
+                  <span class="confidential-only inline-flex items-center rounded-full border border-dashed border-border/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">
+                    Confidential case study
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
-        {experience.artifacts.length > 0 && (
-          <div class="flex flex-wrap items-center gap-3 text-sm text-[color:var(--ink)]">
-            {experience.artifacts.map((artifact) => (
-              <a
-                href={artifact.url}
-                class={`inline-flex items-center gap-2 rounded-[var(--r-2)] border border-[color:color-mix(in_srgb,var(--ink)_14%,transparent)] px-3 py-2 hover:border-[color:color-mix(in_srgb,var(--accent)_32%,transparent)] ${artifact.sensitive ? "public-only" : ""}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <span aria-hidden="true">📎</span>
-                {artifact.label}
-              </a>
-            ))}
-            {allArtifactSensitive && <span class="confidential-only text-xs uppercase tracking-[0.24em] text-[color:var(--ink-2)]">Artifacts secured</span>}
-          </div>
-        )}
       </div>
-    </details>
-  </article>
-</li>
+    )}
+    {Array.isArray(experience.artifacts) && experience.artifacts.length > 0 && (
+      <div class="flex flex-col gap-2" aria-label="Artifacts">
+        <span class="text-xs font-semibold uppercase tracking-[0.32em] text-text-muted">Artifacts</span>
+        <div class="flex flex-wrap gap-2">
+          {experience.artifacts.map((artifact) => {
+            const isSensitive = artifact.sensitive === true;
+            return (
+              <div class="contents">
+                <a
+                  href={artifact.url}
+                  data-astro-transition="animate"
+                  class={`inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-semibold text-text-secondary transition hover:border-accent hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${isSensitive ? "public-only" : ""}`}
+                >
+                  {artifact.label}
+                </a>
+                {isSensitive && (
+                  <span class="confidential-only inline-flex items-center rounded-full border border-dashed border-border/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">
+                    Confidential artifact
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    )}
+  </div>
+</details>
