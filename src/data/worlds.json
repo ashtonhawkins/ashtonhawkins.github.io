@@ -1,0 +1,26 @@
+[
+  {
+    "id": "travel-itineraries",
+    "title": "Travel & itineraries",
+    "description": "I like designing smart routes and trips—enough to have opinions on airports, hotels, and loyalty programs.",
+    "tags": ["routes", "airports", "loyalty", "systems"]
+  },
+  {
+    "id": "cycling-movement",
+    "title": "Cycling & movement",
+    "description": "Long-ish rides and regular movement to keep the system tuned.",
+    "tags": ["rides", "reset", "outdoors"]
+  },
+  {
+    "id": "recovery-experiments",
+    "title": "Recovery experiments",
+    "description": "Sleep, stress, and energy nudged in the right direction using wearable data—nothing obsessive, just enough to notice patterns.",
+    "tags": ["sleep", "oura", "health-data"]
+  },
+  {
+    "id": "product-systems",
+    "title": "Product & systems",
+    "description": "Designing and tuning flows—for ecommerce and beyond.",
+    "tags": ["flows", "experiments", "systems-thinking"]
+  }
+]

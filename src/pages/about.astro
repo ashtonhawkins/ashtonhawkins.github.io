@@ -1,41 +1,348 @@
 ---
 import AppShell from "../layouts/AppShell.astro";
 import SEO from "../components/SEO.astro";
+import MovementSwirlAvatar from "../components/MovementSwirlAvatar";
+import stats from "../data/stats.json";
+import worlds from "../data/worlds.json";
+import placeCategories from "../data/placeCategories.json";
+
+const statusTemplates = [
+  `In a typical month: ~${stats.movementDaysTypicalMonthApprox} days with meaningful movement and about ${stats.avgSleepHoursApprox.toFixed(1)} hours of sleep each night.`,
+  `Recently: enough time in motion and on the bike that the wearables are mostly happy, hovering around ~${stats.rideMilesYTDApprox} miles so far.`,
+  `Lately: a healthy mix of movement, rest, and low-key exploration without tracking every detail.`,
+  `The current pattern: movement most days, sleep in the mid-${Math.round(stats.avgSleepHoursApprox)}s, and curiosity levels running high.`,
+  `Right now: recovery trending steady, with ~${stats.movementDaysTypicalMonthApprox} movement days in a typical month and rides inching toward ~${stats.rideGoalYTDApprox} miles.`,
+];
+
+const randomStatus = statusTemplates[Math.floor(Math.random() * statusTemplates.length)];
+
+const statTiles = [
+  {
+    label: "Miles ridden this year",
+    value: `~${stats.rideMilesYTDApprox}+`,
+    note: "Plenty of room left before the soft goal.",
+  },
+  {
+    label: "Movement days in a typical month",
+    value: `low ${Math.floor(stats.movementDaysTypicalMonthApprox / 10) * 10}s`,
+    note: "Not streak-obsessed, just consistent enough.",
+  },
+  {
+    label: "Average nightly sleep",
+    value: `about ${stats.avgSleepHoursApprox.toFixed(1)} hrs`,
+    note: "Enough to feel human most mornings.",
+  },
+  {
+    label: "Exploration index",
+    value: stats.explorationIndex > 0.8 ? "high enough for airport opinions" : "steady wander mode",
+    note: "Abstracted on purpose—no routes shared.",
+  },
+  {
+    label: "Cities I’d happily rebook",
+    value: `${stats.citiesRebookCountApprox}ish`,
+    note: "Patterns, not pins on a map.",
+  },
+  {
+    label: "Experiments shipped (approx.)",
+    value: `${stats.experimentsShippedApprox}+`,
+    note: "Tiny launches and system tweaks included.",
+  },
+];
+
+const rideProgress = Math.min(Math.max(stats.rideMilesYTDApprox / stats.rideGoalYTDApprox, 0), 1);
+
+const radialBands = placeCategories.map((place, idx) => {
+  const baseRadius = 62 + idx * 18;
+  const circumference = 2 * Math.PI * baseRadius;
+  const filled = Math.round(circumference * (0.32 + place.intensity * 0.58));
+  const remaining = Math.max(circumference - filled, 0);
+  const offset = Math.round(Math.random() * circumference);
+  return {
+    ...place,
+    radius: baseRadius,
+    dash: `${filled} ${remaining}`,
+    offset,
+  };
+});
 ---
 
 <AppShell>
   <SEO
     slot="head"
     title="About · Ashton Hawkins"
-    description="The long-form story behind the work of Ashton Hawkins."
+    description="A personal operating system snapshot—movement, cycling, recovery, and exploration."
   />
-  <article class="prose prose-neutral max-w-prose text-base text-text-secondary">
-    <h1 class="font-semibold text-text-primary">About</h1>
-    <p>
-      I’m a hybrid designer-engineer who thrives in the messy middle—where strategy meets shipping
-      and storytelling meets systems. Over the last decade I’ve built internal tools, audience
-      platforms, and live event systems for teams from early-stage startups to global brands.
-    </p>
-    <p>
-      My practice is grounded in curiosity and craft. I sketch in code, iterate in public, and
-      obsess over the small touches that make digital experiences feel human. If a product moves,
-      I want it to move with intent.
-    </p>
-    <p>
-      Beyond client work, I’m exploring spatial computing, knowledge gardening, and how independent
-      teams can punch above their weight with the right tooling. This site is my hub for that
-      research—expect experiments, notes, and plenty of in-progress thinking.
-    </p>
-    <h2>What I’m great at</h2>
-    <ul>
-      <li>Designing adaptive systems and design languages that scale with teams.</li>
-      <li>Building performant, accessible web apps with Astro, React, and modern APIs.</li>
-      <li>Leading cross-disciplinary crews from discovery through launch.</li>
-      <li>Turning complex requirements into interfaces people actually enjoy.</li>
-    </ul>
-    <p>
-      Outside of screens you’ll find me running long-distance, playing piano, or tinkering with
-      modular synth patches. Let’s build something resonant together.
-    </p>
-  </article>
+
+  <main class="mx-auto flex max-w-6xl flex-col gap-16 px-4 py-12 sm:px-6 lg:px-8">
+    <section class="grid gap-8 lg:grid-cols-2 lg:items-center">
+      <div class="flex flex-col gap-6">
+        <div class="flex flex-col gap-3">
+          <p class="text-sm uppercase tracking-[0.12em] text-text-tertiary">Personal OS</p>
+          <h1 class="text-balance text-4xl font-semibold text-text-primary sm:text-5xl">
+            Ashton Hawkins
+          </h1>
+          <p class="text-lg leading-relaxed text-text-secondary sm:text-xl">
+            I optimize experiences, itineraries, and systems—for screens and real life.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2 text-sm text-text-secondary">
+          {[
+            "Movement & routes",
+            "Cycling",
+            "Recovery experiments",
+            "Product & systems",
+          ].map((mode) => (
+            <span
+              class="rounded-full border border-border bg-surface px-3 py-1 text-sm shadow-sm transition-colors duration-300 hover:border-primary/60 hover:text-text-primary"
+            >
+              {mode}
+            </span>
+          ))}
+        </div>
+        <p
+          id="status-line"
+          data-templates={JSON.stringify(statusTemplates)}
+          class="text-base leading-relaxed text-text-secondary"
+        >
+          {randomStatus}
+        </p>
+      </div>
+
+      <div class="flex justify-center lg:justify-end">
+        <MovementSwirlAvatar client:load stats={stats} placeCategories={placeCategories} className="w-full max-w-md" />
+      </div>
+    </section>
+
+    <section class="flex flex-col gap-6">
+      <div class="flex items-baseline justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-semibold text-text-primary sm:text-3xl">Worlds I move in</h2>
+          <p class="text-text-secondary">Systems and arenas that keep the operating system interesting.</p>
+        </div>
+      </div>
+      <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {worlds.map((world) => (
+          <article
+            class="group relative flex h-full flex-col gap-3 rounded-2xl border border-border/70 bg-surface p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/60 hover:shadow-lg"
+          >
+            <div class="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-primary/40 via-primary/20 to-primary/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+            <div class="flex items-center justify-between">
+              <h3 class="text-xl font-semibold text-text-primary">{world.title}</h3>
+              <span class="text-xs uppercase tracking-wide text-text-tertiary">{world.id.replace("-", " ")}</span>
+            </div>
+            <p class="text-base leading-relaxed text-text-secondary">{world.description}</p>
+            <div class="mt-auto flex flex-wrap gap-2">
+              {world.tags.map((tag) => (
+                <span
+                  class="rounded-full bg-gradient-to-r from-surface/80 to-surface/60 px-3 py-1 text-xs font-medium text-text-secondary ring-1 ring-border/60 transition duration-300 group-hover:translate-y-[-2px] group-hover:text-text-primary"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section class="flex flex-col gap-6">
+      <div class="flex items-baseline justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-semibold text-text-primary sm:text-3xl">Stats that probably say too much</h2>
+          <p class="text-text-secondary">Fuzzy signals instead of precise trackers.</p>
+        </div>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {statTiles.map((tile) => (
+          <article
+            class="group relative flex h-full flex-col gap-2 rounded-2xl border border-border/70 bg-surface px-5 py-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/60 hover:shadow-lg"
+          >
+            <div class="flex items-center gap-2 text-sm text-text-tertiary">
+              <span class="inline-flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-primary to-secondary/80 opacity-80" />
+              {tile.label}
+            </div>
+            <div class="text-2xl font-semibold text-text-primary sm:text-[1.75rem]">{tile.value}</div>
+            <p class="text-sm text-text-secondary">{tile.note}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section class="grid gap-8 lg:grid-cols-2 lg:items-stretch">
+      <article class="flex flex-col gap-4 rounded-3xl border border-border/70 bg-surface p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+          <h2 class="text-2xl font-semibold text-text-primary">Exploration profile</h2>
+          <span class="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">Abstracted</span>
+        </div>
+        <p class="text-text-secondary">A stylized view of the kinds of places that keep pulling me back—no coordinates, just vibes.</p>
+        <div class="grid gap-4 sm:grid-cols-[1.1fr_0.9fr] sm:items-center">
+          <div class="relative mx-auto flex w-full max-w-[360px] items-center justify-center">
+            <svg
+              viewBox="0 0 240 240"
+              class="aspect-square w-full max-w-[360px] drop-shadow-md"
+              role="img"
+              aria-label="Abstract radial bands showing preferred place types"
+            >
+              <defs>
+                <linearGradient id="place-band" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="hsl(210, 80%, 70%)" />
+                  <stop offset="100%" stop-color="hsl(280, 80%, 72%)" />
+                </linearGradient>
+              </defs>
+              <circle cx="120" cy="120" r="70" fill="url(#place-band)" opacity="0.12" />
+              {radialBands.map((band) => (
+                <circle
+                  cx="120"
+                  cy="120"
+                  r={band.radius}
+                  fill="none"
+                  stroke="url(#place-band)"
+                  stroke-width="10"
+                  stroke-dasharray={band.dash}
+                  stroke-dashoffset={band.offset}
+                  stroke-linecap="round"
+                  class="transition-all duration-700 motion-reduce:transition-none"
+                  opacity={0.45 + band.intensity * 0.4}
+                />
+              ))}
+              <circle cx="120" cy="120" r="38" fill="url(#place-band)" opacity="0.28" />
+            </svg>
+          </div>
+          <div class="flex flex-col gap-3">
+            {placeCategories.map((place) => (
+              <div class="flex items-center justify-between rounded-2xl border border-border/70 bg-surface/60 px-4 py-3 shadow-sm">
+                <div>
+                  <p class="text-sm uppercase tracking-[0.08em] text-text-tertiary">{place.id.replace("-", " ")}</p>
+                  <p class="text-base font-medium text-text-primary">{place.label}</p>
+                </div>
+                <div class="flex items-center gap-2 text-sm font-semibold text-text-secondary">
+                  <span class="h-2 w-12 rounded-full bg-gradient-to-r from-primary/80 to-secondary/80" />
+                  {(place.intensity * 10).toFixed(1)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </article>
+
+      <article class="flex flex-col gap-4 rounded-3xl border border-border/70 bg-surface p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+          <h2 class="text-2xl font-semibold text-text-primary">Movement & recovery</h2>
+          <span class="rounded-full bg-secondary/10 px-3 py-1 text-xs font-medium text-secondary">Approximate</span>
+        </div>
+        <p class="text-text-secondary">Cycling and recovery rendered as soft rings—more "how it feels" than exact numbers.</p>
+        <div class="grid gap-6 sm:grid-cols-2 sm:items-center">
+          <div class="relative mx-auto flex w-full max-w-[260px] items-center justify-center">
+            <svg
+              viewBox="0 0 240 240"
+              class="aspect-square w-full drop-shadow-md"
+              role="img"
+              aria-label="Cycling and recovery rings"
+            >
+              <defs>
+                <linearGradient id="movement-ring" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="hsl(160, 80%, 65%)" />
+                  <stop offset="100%" stop-color="hsl(220, 80%, 70%)" />
+                </linearGradient>
+                <linearGradient id="recovery-ring" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="hsl(280, 75%, 72%)" />
+                  <stop offset="100%" stop-color="hsl(330, 75%, 70%)" />
+                </linearGradient>
+              </defs>
+              <circle cx="120" cy="120" r="88" fill="none" stroke="url(#movement-ring)" stroke-width="14" opacity="0.22" />
+              <circle
+                cx="120"
+                cy="120"
+                r="88"
+                fill="none"
+                stroke="url(#movement-ring)"
+                stroke-width="16"
+                stroke-linecap="round"
+                stroke-dasharray={`${rideProgress * 2 * Math.PI * 88} ${2 * Math.PI * 88}`}
+                stroke-dashoffset="48"
+                class="motion-safe:animate-[spin_18s_linear_infinite] motion-reduce:animate-none"
+                opacity="0.7"
+              />
+
+              <circle cx="120" cy="120" r="58" fill="none" stroke="url(#recovery-ring)" stroke-width="12" opacity="0.22" />
+              <circle
+                cx="120"
+                cy="120"
+                r="58"
+                fill="none"
+                stroke="url(#recovery-ring)"
+                stroke-width="12"
+                stroke-linecap="round"
+                stroke-dasharray={`${stats.recoveryIndex * 2 * Math.PI * 58} ${2 * Math.PI * 58}`}
+                stroke-dashoffset="-32"
+                class="motion-safe:animate-[spin_22s_linear_infinite_reverse] motion-reduce:animate-none"
+                opacity="0.75"
+              />
+
+              <circle cx="120" cy="120" r="34" fill="url(#movement-ring)" opacity="0.5" />
+              <text x="120" y="110" text-anchor="middle" class="fill-current text-lg font-semibold" fill="currentColor">
+                Cycling
+              </text>
+              <text x="120" y="130" text-anchor="middle" class="fill-current text-sm" fill="currentColor">
+                ~{stats.rideMilesYTDApprox} mi YTD
+              </text>
+              <text x="120" y="148" text-anchor="middle" class="fill-current text-xs text-text-secondary" fill="currentColor">
+                Goal ~{stats.rideGoalYTDApprox} mi
+              </text>
+            </svg>
+          </div>
+          <div class="flex flex-col gap-3">
+            <div class="rounded-2xl border border-border/70 bg-surface/60 px-4 py-3 shadow-sm">
+              <p class="text-sm uppercase tracking-[0.08em] text-text-tertiary">Recovery baseline</p>
+              <p class="text-lg font-semibold text-text-primary">Recovery index sits around {(stats.recoveryIndex * 100).toFixed(0)}%</p>
+              <p class="text-sm text-text-secondary">Regular movement without chasing streaks keeps the system in a steady state.</p>
+            </div>
+            <div class="rounded-2xl border border-border/70 bg-surface/60 px-4 py-3 shadow-sm">
+              <p class="text-base font-medium text-text-primary">Most nights</p>
+              <p class="text-sm text-text-secondary">In bed at a reasonable hour with about {stats.avgSleepHoursApprox.toFixed(1)} hours of sleep.</p>
+            </div>
+            <div class="rounded-2xl border border-border/70 bg-surface/60 px-4 py-3 shadow-sm">
+              <p class="text-base font-medium text-text-primary">Movement cadence</p>
+              <p class="text-sm text-text-secondary">Regular rides plus walks keep the sensors happy—~{stats.movementDaysTypicalMonthApprox} days in motion during a typical month.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border/70 bg-surface px-5 py-4 shadow-sm">
+      <p class="text-base text-text-secondary">Where to next?</p>
+      <div class="flex flex-wrap gap-3">
+        <a
+          class="rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary/60 hover:text-primary"
+          href="/now"
+        >
+          See what I’m focused on now
+        </a>
+        <a
+          class="rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary/60 hover:text-primary"
+          href="/resume"
+        >
+          Dive into work and experiments
+        </a>
+      </div>
+    </section>
+  </main>
 </AppShell>
+
+<script type="module">
+  const statusEl = document.getElementById("status-line");
+  if (statusEl) {
+    try {
+      const templates = JSON.parse(statusEl.dataset.templates || "[]");
+      if (Array.isArray(templates) && templates.length) {
+        const pick = templates[Math.floor(Math.random() * templates.length)];
+        if (pick) {
+          statusEl.textContent = pick;
+        }
+      }
+    } catch (error) {
+      console.error("Status template parsing failed", error);
+    }
+  }
+</script>
