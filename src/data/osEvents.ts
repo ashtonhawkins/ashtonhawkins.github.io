@@ -15,14 +15,16 @@ export const osEvents: OsEvent[] = [
     displayTime: "Today",
     type: "movement",
     title: "Ride",
-    summary: "24.3 mi coastal loop before breakfast"
+    summary: "24.3 mi coastal loop before breakfast",
+    href: "/activity#movement"
   },
   {
     id: "experiment-cart",
     displayTime: "1d",
     type: "experiment",
     title: "Experiment",
-    summary: "Remove Quick Buy cleared 244K visitors"
+    summary: "Remove Quick Buy cleared 244K visitors",
+    href: "/activity#product"
   },
   {
     id: "sleep-trend",
@@ -45,21 +47,24 @@ export const osEvents: OsEvent[] = [
     displayTime: "5d",
     type: "movement",
     title: "Movement",
-    summary: "Cadence ~73% for the month"
+    summary: "Cadence ~73% for the month",
+    href: "/activity#movement"
   },
   {
     id: "experiment-fulfillment",
     displayTime: "6d",
     type: "work",
     title: "System",
-    summary: "Fulfillment latency audit patched two vendors"
+    summary: "Fulfillment latency audit patched two vendors",
+    href: "/projects"
   },
   {
     id: "hotel-kissimmee",
     displayTime: "1w",
     type: "travel",
     title: "Hotel",
-    summary: "Checked into Hampton Inn Kissimmee North"
+    summary: "Checked into Hampton Inn Kissimmee North",
+    href: "/activity#travel"
   },
   {
     id: "recovery-index",
@@ -74,14 +79,16 @@ export const osEvents: OsEvent[] = [
     displayTime: "9d",
     type: "experiment",
     title: "Experiment",
-    summary: "Navigation latency fix rolled to prod"
+    summary: "Navigation latency fix rolled to prod",
+    href: "/projects"
   },
   {
     id: "ride-bridge",
     displayTime: "2w",
     type: "movement",
     title: "Ride",
-    summary: "Sunrise bridge repeat set, negative split"
+    summary: "Sunrise bridge repeat set, negative split",
+    href: "/activity#movement"
   },
   {
     id: "profile-exploration",
