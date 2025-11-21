@@ -170,7 +170,9 @@ export const preferences = [
 
 export const navDestinations = [
   { label: "Now", href: "/now", meta: "Live" },
+  { label: "Portfolio", href: "/projects", meta: "Case studies" },
   { label: "Writing", href: "/writing", meta: "Essays" },
+  { label: "Activity", href: "/activity", meta: "Logs" },
 ];
 
 export { stats, worlds };

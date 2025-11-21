@@ -1,0 +1,92 @@
+---
+import AppShell from "../../layouts/AppShell.astro";
+import SEO from "../../components/SEO.astro";
+import dayjs from "dayjs";
+import { getCollection, getEntry } from "astro:content";
+
+const { slug } = Astro.params;
+if (!slug) {
+  throw new Error("Missing project slug");
+}
+
+const entry = await getEntry("projects", slug);
+if (!entry) {
+  return Astro.redirect("/projects");
+}
+
+const { Content } = await entry.render();
+const { title, summary, date, role, stack, links, impact, coverEmoji } = entry.data;
+
+export async function getStaticPaths() {
+  const entries = await getCollection("projects");
+  return entries.map((project) => ({ params: { slug: project.slug } }));
+}
+---
+
+<AppShell>
+  <SEO
+    slot="head"
+    title={`${title} · Projects · Ashton Hawkins`}
+    description={summary}
+    ogTitle={title}
+  />
+  <article class="prose prose-neutral mx-auto max-w-prose text-base text-text-secondary">
+    <div class="mb-6 flex items-center justify-between gap-4 text-sm text-text-muted">
+      <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-border/40 text-2xl">
+        {coverEmoji}
+      </span>
+      <span class="text-xs uppercase tracking-[0.3em]">{dayjs(date).format("MMMM YYYY")}</span>
+    </div>
+    <h1 class="mb-4 text-4xl font-semibold text-text-primary">{title}</h1>
+    <p class="text-sm text-text-muted">{summary}</p>
+    <div class="mt-6 grid gap-4 rounded-3xl border border-border/60 bg-surface/60 p-5 text-sm text-text-secondary">
+      <div>
+        <span class="text-xs font-semibold uppercase tracking-wide text-text-muted">Role</span>
+        <p class="mt-1 text-text-primary">{role}</p>
+      </div>
+      {stack.length ? (
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-wide text-text-muted">Stack</span>
+          <div class="mt-2 flex flex-wrap gap-2 text-xs text-text-muted">
+            {stack.map((tech) => (
+              <span class="rounded-full bg-border/40 px-3 py-1 font-medium">{tech}</span>
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {impact.length ? (
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-wide text-text-muted">Impact</span>
+          <ul class="mt-2 space-y-2">
+            {impact.map((item) => (
+              <li class="flex items-start gap-2">
+                <span class="mt-[6px] inline-block h-1.5 w-1.5 rounded-full bg-accent"></span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {links.length ? (
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-wide text-text-muted">Links</span>
+          <div class="mt-2 flex flex-wrap gap-2 text-xs">
+            {links.map((link) => (
+              <a
+                href={link.url}
+                target="_blank"
+                rel="noreferrer"
+                class="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 font-semibold text-text-inverted transition hover:bg-accent-strong"
+              >
+                {link.label} ↗
+              </a>
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </div>
+    <div class="mt-10 space-y-6">
+      <Content />
+    </div>
+  </article>
+</AppShell>

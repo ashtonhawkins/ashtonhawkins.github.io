@@ -7,6 +7,11 @@ const writingEntries = (await getCollection("writing", ({ data }) => !data.draft
   (a, b) => b.data.date.getTime() - a.data.date.getTime()
 );
 const latestWriting = writingEntries.slice(0, 3);
+
+const projectEntries = (await getCollection("projects", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+const latestProjects = projectEntries.slice(0, 3);
 ---
 
 <AppShell>
@@ -53,11 +58,18 @@ const latestWriting = writingEntries.slice(0, 3);
           </p>
           <div class="flex flex-wrap gap-3 text-sm" data-hero-animate>
             <a
-              href="/writing"
+              href="/projects"
               class="rounded-full border border-border bg-background px-5 py-2 font-medium text-text-primary transition hover:border-accent hover:bg-accent-soft hover:text-accent"
               data-astro-transition="animate"
             >
-              <span class="text-reveal" style="--text-reveal-base: var(--text-1)">Explore writing</span>
+              <span class="text-reveal" style="--text-reveal-base: var(--text-1)">Explore projects</span>
+            </a>
+            <a
+              href="/writing"
+              class="rounded-full border border-border/70 px-5 py-2 font-medium text-text-secondary transition hover:border-accent hover:text-text-primary"
+              data-astro-transition="animate"
+            >
+              Read the latest writing
             </a>
           </div>
         </div>
@@ -80,42 +92,84 @@ const latestWriting = writingEntries.slice(0, 3);
       </div>
     </div>
 
-    <section class="space-y-6">
-      <header class="flex items-center justify-between">
-        <h2 class="text-2xl font-semibold">Latest writing</h2>
-        <a href="/writing" class="text-sm text-text-muted transition hover:text-accent" data-astro-transition="animate">
-          View all
-        </a>
-      </header>
-      <div class="grid gap-5 md:grid-cols-2">
-        {latestWriting.length ? (
-          latestWriting.map((entry) => (
-            <article
-              class="group rounded-3xl border border-border/60 bg-surface/80 p-6 shadow-soft transition hover:-translate-y-1 hover:border-accent"
-            >
-              <a
-                href={`/writing/${entry.slug}`}
-                class="grid gap-3"
-                data-astro-transition="animate"
+
+    <section class="grid gap-12 md:grid-cols-[2fr,1.2fr]">
+      <div class="space-y-6">
+        <header class="flex items-center justify-between">
+          <h2 class="text-2xl font-semibold">Latest writing</h2>
+          <a href="/writing" class="text-sm text-text-muted transition hover:text-accent" data-astro-transition="animate">
+            View all
+          </a>
+        </header>
+        <div class="grid gap-5">
+          {latestWriting.length ? (
+            latestWriting.map((entry) => (
+              <article
+                class="group rounded-3xl border border-border/60 bg-surface/80 p-6 shadow-soft transition hover:-translate-y-1 hover:border-accent"
               >
-                <span class="text-xs uppercase tracking-[0.3em] text-text-muted">
-                  {dayjs(entry.data.date).format("MMM D, YYYY")}
-                </span>
-                <h3 class="text-xl font-semibold">{entry.data.title}</h3>
-                <p class="text-sm text-text-secondary">{entry.data.summary}</p>
-                <div class="flex flex-wrap gap-2">
-                  {entry.data.tags.map((tag) => (
-                    <span class="rounded-full bg-accent-soft px-3 py-1 text-xs font-medium text-accent" aria-label={`Tagged ${tag}`}>
-                      #{tag}
+                <a
+                  href={`/writing/${entry.slug}`}
+                  class="grid gap-3"
+                  data-astro-transition="animate"
+                >
+                  <span class="text-xs uppercase tracking-[0.3em] text-text-muted">
+                    {dayjs(entry.data.date).format("MMM D, YYYY")}
+                  </span>
+                  <h3 class="text-xl font-semibold">{entry.data.title}</h3>
+                  <p class="text-sm text-text-secondary">{entry.data.summary}</p>
+                  <div class="flex flex-wrap gap-2">
+                    {entry.data.tags.map((tag) => (
+                      <span class="rounded-full bg-accent-soft px-3 py-1 text-xs font-medium text-accent" aria-label={`Tagged ${tag}`}>
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                </a>
+              </article>
+            ))
+          ) : (
+            <p class="text-sm text-text-muted">Writing is brewing. Check back soon!</p>
+          )}
+        </div>
+      </div>
+      <div class="space-y-6">
+        <header class="flex items-center justify-between">
+          <h2 class="text-2xl font-semibold">Projects in motion</h2>
+          <a href="/projects" class="text-sm text-text-muted transition hover:text-accent" data-astro-transition="animate">
+            View all
+          </a>
+        </header>
+        <div class="grid gap-5">
+          {latestProjects.length ? (
+            latestProjects.map((entry) => (
+              <article
+                class="group rounded-3xl border border-border/60 bg-surface/80 p-6 shadow-soft transition hover:-translate-y-1 hover:border-accent"
+              >
+                <a
+                  href={`/projects/${entry.slug}`}
+                  class="grid gap-3"
+                  data-astro-transition="animate"
+                >
+                  <span class="text-xs uppercase tracking-[0.3em] text-text-muted">
+                    {dayjs(entry.data.date).format("MMM YYYY")}
+                  </span>
+                  <h3 class="text-xl font-semibold">{entry.data.title}</h3>
+                  <p class="text-sm text-text-secondary">{entry.data.summary}</p>
+                  <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-text-muted">
+                    <span class="rounded-full bg-border/40 px-3 py-1 uppercase tracking-wide text-[10px]">
+                      {entry.data.role}
                     </span>
-                  ))}
-                </div>
-              </a>
-            </article>
-          ))
-        ) : (
-          <p class="text-sm text-text-muted">Writing is brewing. Check back soon!</p>
-        )}
+                    {entry.data.stack.length ? (
+                      <span>{entry.data.stack.join(" · ")}</span>
+                    ) : null}
+                  </div>
+                </a>
+              </article>
+            ))
+          ) : (
+            <p class="text-sm text-text-muted">Projects are being archived. More soon.</p>
+          )}
+        </div>
       </div>
     </section>
   </section>
