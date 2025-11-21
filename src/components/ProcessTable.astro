@@ -1,0 +1,67 @@
+---
+import GaugeBar from "./GaugeBar.astro";
+
+interface ProcessItem {
+  name: string;
+  status: string;
+  load: number;
+  lane: "active" | "queued";
+}
+
+interface Props {
+  cpuLoad: number;
+  items: ProcessItem[];
+}
+
+const { cpuLoad, items = [] } = Astro.props;
+const active = items.filter((item) => item.lane === "active");
+const queued = items.filter((item) => item.lane === "queued");
+---
+<div class="rounded-3xl border border-border/70 bg-surface/90 p-6 shadow-sm">
+  <div class="flex items-center justify-between gap-3">
+    <div>
+      <h3 class="text-xl font-semibold text-text-primary">Processes</h3>
+      <p class="text-text-secondary">Quick readout of what’s running and what’s staged.</p>
+    </div>
+    <span class="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">Monitor</span>
+  </div>
+  <div class="mt-4 rounded-2xl border border-border/60 bg-surface/80 p-4">
+    <GaugeBar label="CPU utilization" description="Energy / attention load" current={cpuLoad} min={0} max={1} variant="inline" />
+  </div>
+  <div class="mt-5 grid gap-4 md:grid-cols-2">
+    <div class="flex flex-col gap-3">
+      <p class="text-[11px] uppercase tracking-[0.12em] text-text-tertiary">Active</p>
+      <div class="divide-y divide-border/70 overflow-hidden rounded-2xl border border-border/70 bg-surface/80">
+        {active.map((proc) => (
+          <div class="flex flex-col gap-2 px-4 py-3" data-process-row>
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <span class="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
+                <p class="text-sm font-semibold text-text-primary">{proc.name}</p>
+              </div>
+              <span class="text-[11px] uppercase tracking-[0.08em] text-text-tertiary">{proc.status}</span>
+            </div>
+            <GaugeBar label="Load" current={proc.load} min={0} max={1} variant="inline" />
+          </div>
+        ))}
+      </div>
+    </div>
+    <div class="flex flex-col gap-3">
+      <p class="text-[11px] uppercase tracking-[0.12em] text-text-tertiary">Queued / idle</p>
+      <div class="divide-y divide-border/70 overflow-hidden rounded-2xl border border-border/70 bg-surface/80">
+        {queued.map((proc) => (
+          <div class="flex flex-col gap-2 px-4 py-3" data-process-row>
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <span class="h-2 w-2 rounded-full bg-amber-400" aria-hidden="true" />
+                <p class="text-sm font-semibold text-text-primary">{proc.name}</p>
+              </div>
+              <span class="text-[11px] uppercase tracking-[0.08em] text-text-tertiary">{proc.status}</span>
+            </div>
+            <GaugeBar label="Load" current={proc.load} min={0} max={1} variant="inline" />
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</div>

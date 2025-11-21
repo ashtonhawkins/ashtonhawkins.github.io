@@ -1,92 +1,27 @@
 ---
 import AppShell from "../layouts/AppShell.astro";
 import SEO from "../components/SEO.astro";
-import MovementSwirlAvatar from "../components/MovementSwirlAvatar";
-import stats from "../data/stats.json";
-import worlds from "../data/worlds.json";
-import placeCategories from "../data/placeCategories.json";
-
-const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
-const rideProgress = clamp(stats.rideMilesYTDApprox / stats.rideGoalYTDApprox, 0, 1);
-
-const statusTemplates = [
-  `The current pattern: movement most days, sleep in the mid-${Math.round(stats.avgSleepHoursApprox)}s, and curiosity levels running high.`,
-  `Recently: enough time in motion and on the bike that the wearables are mostly happy—hovering around ~${stats.rideMilesYTDApprox} miles so far.`,
-  `In a typical month: ~${stats.movementDaysTypicalMonthApprox} days with meaningful movement and about ${stats.avgSleepHoursApprox.toFixed(1)} hours of sleep each night.`,
-  `Right now: recovery trending steady, with rides inching toward ~${stats.rideGoalYTDApprox} miles and sleep landing in the mid-7s.`,
-  `Lately: a healthy mix of movement, rest, and low-key exploration without tracking every detail.`,
-];
+import SystemDial from "../components/SystemDial.astro";
+import GaugeBar from "../components/GaugeBar.astro";
+import Sparkline from "../components/Sparkline.astro";
+import OrbitMap from "../components/OrbitMap.astro";
+import ProcessTable from "../components/ProcessTable.astro";
+import ToggleRow from "../components/ToggleRow.astro";
+import {
+  heroDial,
+  heroMetrics,
+  movementRecovery,
+  navDestinations,
+  orbitWorlds,
+  preferences,
+  processes,
+  sensorReadings,
+  statusTemplates,
+  explorationZones,
+  worlds,
+} from "../data/aboutConfig";
 
 const randomStatus = statusTemplates[Math.floor(Math.random() * statusTemplates.length)];
-
-const miniMetrics = [
-  {
-    label: "Movement days / typical month",
-    value: `low ${Math.floor(stats.movementDaysTypicalMonthApprox / 10) * 10}s cadence`,
-    percent: clamp(stats.movementDaysTypicalMonthApprox / 30, 0, 1),
-  },
-  {
-    label: "Average nightly sleep",
-    value: `about ${stats.avgSleepHoursApprox.toFixed(1)} hours`,
-    percent: clamp(stats.avgSleepHoursApprox / 9, 0, 1),
-  },
-  {
-    label: "Exploration index",
-    value: stats.explorationIndex > 0.8 ? "high enough for airport opinions" : "steady wander mode",
-    percent: clamp(stats.explorationIndex, 0, 1),
-  },
-];
-
-const heroMetrics = [
-  {
-    title: "Miles ridden this year",
-    value: `~${stats.rideMilesYTDApprox}+`,
-    detail: `Plenty of room left before the soft goal (~${stats.rideGoalYTDApprox} mi).`,
-  },
-  {
-    title: "Experiments shipped (approx.)",
-    value: `${stats.experimentsShippedApprox}+`,
-    detail: "Tiny launches and system tweaks included.",
-  },
-];
-
-const totalPlaceWeight = placeCategories.reduce((sum, place) => sum + place.intensity, 0) || 1;
-let currentAngle = -90;
-const palette = ["#7dd3fc", "#a78bfa", "#f5a524", "#34d399", "#f472b6", "#c084fc"];
-const placeSegments = placeCategories.map((place, index) => {
-  const sweep = (place.intensity / totalPlaceWeight) * 320; // leave a gap for breathing room
-  const start = currentAngle;
-  const end = currentAngle + sweep;
-  currentAngle = end + 6;
-  return { ...place, start, end, color: palette[index % palette.length] };
-});
-
-const segmentToPath = (segment: (typeof placeSegments)[number]) => {
-  const start = (Math.PI / 180) * segment.start;
-  const end = (Math.PI / 180) * segment.end;
-  const outer = 138;
-  const inner = 72;
-  const largeArc = end - start <= Math.PI ? 0 : 1;
-  const sx = 160 + outer * Math.cos(start);
-  const sy = 160 + outer * Math.sin(start);
-  const ex = 160 + outer * Math.cos(end);
-  const ey = 160 + outer * Math.sin(end);
-  const isx = 160 + inner * Math.cos(end);
-  const isy = 160 + inner * Math.sin(end);
-  const iex = 160 + inner * Math.cos(start);
-  const iey = 160 + inner * Math.sin(start);
-  return `M ${sx} ${sy} A ${outer} ${outer} 0 ${largeArc} 1 ${ex} ${ey} L ${isx} ${isy} A ${inner} ${inner} 0 ${largeArc} 0 ${iex} ${iey} Z`;
-};
-
-const placePaths = placeSegments.map((segment) => ({ ...segment, path: segmentToPath(segment) }));
-
-const formatPlaceIntensity = (intensity: number) => {
-  const scaled = Math.round(intensity * 10);
-  if (scaled >= 8) return "~7–8";
-  if (scaled >= 7) return "~7";
-  if (scaled >= 6) return "~6";
-  return "~5–6";
-};
 ---
 
 <AppShell>
@@ -96,142 +31,134 @@ const formatPlaceIntensity = (intensity: number) => {
     description="A personal operating system snapshot—movement, cycling, recovery, and exploration."
   />
 
-  <main class="mx-auto flex max-w-6xl flex-col gap-16 px-4 py-12 sm:px-6 lg:px-8">
-    <section class="grid items-center gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+  <main class="mx-auto flex max-w-6xl flex-col gap-14 px-4 py-12 sm:px-6 lg:px-8">
+    <section class="grid items-center gap-10 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
       <div class="flex flex-col gap-6">
         <div class="flex flex-col gap-3">
           <p class="text-sm uppercase tracking-[0.12em] text-text-tertiary">Personal OS</p>
-          <h1 class="text-balance text-4xl font-semibold text-text-primary sm:text-5xl">
-            Ashton Hawkins
-          </h1>
+          <h1 class="text-balance text-4xl font-semibold text-text-primary sm:text-5xl">Ashton Hawkins</h1>
           <p class="text-lg leading-relaxed text-text-secondary sm:text-xl">
             I optimize experiences, itineraries, and systems—for screens and real life.
           </p>
         </div>
         <div class="flex flex-wrap gap-2 text-sm text-text-secondary">
           {["Movement & routes", "Cycling", "Recovery experiments", "Product & systems"].map((mode) => (
-            <span class="rounded-full border border-border bg-surface px-3 py-1 text-sm shadow-sm">
-              {mode}
-            </span>
+            <span class="rounded-full border border-border bg-surface px-3 py-1 text-sm shadow-sm">{mode}</span>
           ))}
         </div>
         <p
           id="status-line"
           data-templates={JSON.stringify(statusTemplates)}
-          class="text-base leading-relaxed text-text-secondary"
+          class="rounded-2xl border border-border/70 bg-surface/90 px-4 py-3 text-base leading-relaxed text-text-secondary"
         >
           {randomStatus}
         </p>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="rounded-3xl border border-border/70 bg-surface/90 p-4 shadow-sm">
+            <p class="text-xs uppercase tracking-[0.14em] text-text-tertiary">System summary</p>
+            <div class="mt-3 grid gap-3 text-sm text-text-primary">
+              <div class="flex items-center justify-between rounded-2xl border border-border/60 bg-surface/70 px-3 py-2">
+                <span class="text-text-secondary">Hostname</span>
+                <span class="font-semibold">ASHTON</span>
+              </div>
+              <div class="flex items-center justify-between rounded-2xl border border-border/60 bg-surface/70 px-3 py-2">
+                <span class="text-text-secondary">OS</span>
+                <span class="font-semibold">Personal OS v1.x</span>
+              </div>
+              <div class="flex items-center justify-between rounded-2xl border border-border/60 bg-surface/70 px-3 py-2">
+                <span class="text-text-secondary">Mode</span>
+                <span class="font-semibold">High curiosity · steady movement</span>
+              </div>
+              <div class="flex items-center justify-between rounded-2xl border border-border/60 bg-surface/70 px-3 py-2">
+                <span class="text-text-secondary">Primary loops</span>
+                <span class="text-right font-semibold">Travel itineraries · cycling · recovery experiments · product systems</span>
+              </div>
+            </div>
+          </div>
+          <div class="rounded-3xl border border-border/70 bg-surface/90 p-4 shadow-sm">
+            <p class="text-xs uppercase tracking-[0.14em] text-text-tertiary">Sensors</p>
+            <div class="mt-3 flex flex-col gap-4">
+              {sensorReadings.map((sensor) => (
+                <GaugeBar
+                  label={sensor.label}
+                  description={sensor.description}
+                  current={sensor.current}
+                  min={sensor.min}
+                  max={sensor.max}
+                  variant={sensor.variant}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="flex flex-col items-center gap-3 lg:items-end">
-        <MovementSwirlAvatar client:load stats={stats} placeCategories={placeCategories} className="w-full max-w-[420px]" />
+      <div class="flex flex-col items-center gap-4 lg:items-end">
+        <SystemDial
+          rings={heroDial.rings}
+          centerTitle={heroDial.centerTitle}
+          centerSubtitle={heroDial.centerSubtitle}
+          ariaLabel="Movement, exploration, and recovery dial"
+        />
         <p class="max-w-md text-center text-xs text-text-tertiary lg:text-right">
-          Auto-generated snapshot of how much I’ve been exploring, moving, and recovering lately. Approximate by design.
+          Hover or focus a ring to thicken it; tooltips reveal the sensor label. Approximate, intentionally fuzzy readings.
         </p>
-        <div class="flex flex-wrap justify-center gap-3 text-[11px] text-text-secondary lg:justify-end">
-          <span class="inline-flex items-center gap-2 rounded-full border border-border/60 px-3 py-1">
-            <span class="h-2.5 w-2.5 rounded-full bg-primary" /> Movement
-          </span>
-          <span class="inline-flex items-center gap-2 rounded-full border border-border/60 px-3 py-1">
-            <span class="h-2.5 w-2.5 rounded-full bg-secondary" /> Exploration
-          </span>
-          <span class="inline-flex items-center gap-2 rounded-full border border-border/60 px-3 py-1">
-            <span class="h-2.5 w-2.5 rounded-full bg-amber-400" /> Recovery
-          </span>
-        </div>
       </div>
     </section>
 
-    <section class="rounded-3xl border border-border/70 bg-surface p-6 shadow-sm">
+    <section class="rounded-3xl border border-border/70 bg-surface/90 p-6 shadow-sm">
       <div class="flex items-center justify-between gap-4">
         <div>
-          <p class="text-xs uppercase tracking-[0.14em] text-text-tertiary">System summary</p>
-          <h2 class="text-xl font-semibold text-text-primary sm:text-2xl">About this Personal OS</h2>
+          <p class="text-xs uppercase tracking-[0.14em] text-text-tertiary">Hero metrics</p>
+          <h2 class="text-2xl font-semibold text-text-primary sm:text-3xl">Year-to-date signals</h2>
         </div>
-        <div class="hidden items-center gap-2 text-sm text-text-tertiary sm:flex">
+        <span class="flex items-center gap-2 text-sm text-text-tertiary">
           <span class="h-2 w-2 rounded-full bg-green-400" /> Stable
-        </div>
+        </span>
       </div>
-      <dl class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div class="flex flex-col gap-1 rounded-2xl border border-border/60 bg-surface/80 px-4 py-3">
-          <dt class="text-xs uppercase tracking-[0.08em] text-text-tertiary">Hostname</dt>
-          <dd class="text-base font-semibold text-text-primary">ASHTON</dd>
-        </div>
-        <div class="flex flex-col gap-1 rounded-2xl border border-border/60 bg-surface/80 px-4 py-3">
-          <dt class="text-xs uppercase tracking-[0.08em] text-text-tertiary">OS</dt>
-          <dd class="text-base font-semibold text-text-primary">Personal OS v1.x</dd>
-        </div>
-        <div class="flex flex-col gap-1 rounded-2xl border border-border/60 bg-surface/80 px-4 py-3">
-          <dt class="text-xs uppercase tracking-[0.08em] text-text-tertiary">Current mode</dt>
-          <dd class="text-base font-semibold text-text-primary">High curiosity · steady movement · decent sleep</dd>
-        </div>
-        <div class="flex flex-col gap-1 rounded-2xl border border-border/60 bg-surface/80 px-4 py-3">
-          <dt class="text-xs uppercase tracking-[0.08em] text-text-tertiary">Primary loops</dt>
-          <dd class="text-base font-semibold text-text-primary">Travel itineraries · cycling · recovery experiments · product systems</dd>
-        </div>
-      </dl>
+      <div class="mt-4 grid gap-4 lg:grid-cols-2">
+        {heroMetrics.map((metric) => (
+          <article class="rounded-2xl border border-border/60 bg-surface/80 p-5 shadow-sm">
+            <header class="flex items-center justify-between gap-3">
+              <p class="text-xs uppercase tracking-[0.08em] text-text-tertiary">{metric.title}</p>
+              <span class="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">Live</span>
+            </header>
+            <p class="text-3xl font-semibold text-text-primary">{metric.value}</p>
+            <p class="text-sm text-text-secondary">{metric.detail}</p>
+            <div class="mt-3">
+              <Sparkline values={metric.sparkline} />
+            </div>
+          </article>
+        ))}
+      </div>
     </section>
 
     <section class="flex flex-col gap-4">
       <div class="flex items-baseline justify-between gap-4">
         <div>
           <h2 class="text-2xl font-semibold text-text-primary sm:text-3xl">Worlds I move in</h2>
-          <p class="text-text-secondary">Systems and arenas that keep the operating system interesting.</p>
+          <p class="text-text-secondary">Sensors around the arenas that keep the system interesting.</p>
         </div>
       </div>
-      <div class="divide-y divide-border/70 rounded-3xl border border-border/70 bg-surface/80">
-        {worlds.map((world) => (
-          <article class="flex flex-col gap-2 px-5 py-5 sm:px-7">
-            <header class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-text-primary sm:text-xl">{world.title}</h3>
-              <span class="text-[11px] uppercase tracking-[0.1em] text-text-tertiary">{world.id.replace("-", " ")}</span>
-            </header>
-            <p class="text-sm leading-relaxed text-text-secondary sm:text-base">{world.description}</p>
-            <p class="text-xs uppercase tracking-[0.08em] text-text-tertiary">
-              {world.tags.join(" · ")}
-            </p>
-          </article>
-        ))}
-      </div>
-    </section>
-
-    <section class="flex flex-col gap-6">
-      <div class="flex items-baseline justify-between gap-4">
-        <div>
-          <h2 class="text-2xl font-semibold text-text-primary sm:text-3xl">System metrics</h2>
-          <p class="text-text-secondary">Fuzzy signals instead of precise trackers.</p>
+      <div class="grid gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-center">
+        <div class="flex justify-center lg:justify-start">
+          <OrbitMap nodes={orbitWorlds} targetId="worlds-grid" />
         </div>
-      </div>
-      <div class="grid gap-6 rounded-3xl border border-border/70 bg-surface/90 p-6 shadow-sm lg:grid-cols-[1fr_1fr]">
-        <div class="flex flex-col gap-4">
-          <p class="text-sm uppercase tracking-[0.08em] text-text-tertiary">Signals</p>
-          <div class="flex flex-col gap-4">
-            {miniMetrics.map((metric) => (
-              <div class="rounded-2xl border border-border/60 bg-surface/70 p-4">
-                <p class="text-sm font-medium text-text-primary">{metric.label}</p>
-                <p class="text-sm text-text-secondary">{metric.value}</p>
-                <div class="mt-3 h-2 rounded-full bg-border/40">
-                  <div
-                    class="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all duration-500 motion-reduce:transition-none"
-                    style={{ width: `${Math.max(metric.percent * 100, 6)}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div class="flex flex-col gap-4">
-          <p class="text-sm uppercase tracking-[0.08em] text-text-tertiary">Hero metrics</p>
-          <div class="grid gap-4 lg:grid-cols-1">
-            {heroMetrics.map((metric) => (
-              <div class="flex flex-col gap-2 rounded-2xl border border-border/60 bg-surface/70 p-5 shadow-sm">
-                <p class="text-sm uppercase tracking-[0.08em] text-text-tertiary">{metric.title}</p>
-                <p class="text-3xl font-semibold text-text-primary">{metric.value}</p>
-                <p class="text-sm text-text-secondary">{metric.detail}</p>
-              </div>
-            ))}
-          </div>
+        <div id="worlds-grid" class="divide-y divide-border/70 overflow-hidden rounded-3xl border border-border/70 bg-surface/80">
+          {worlds.map((world) => (
+            <article
+              class="flex flex-col gap-2 px-5 py-5 transition duration-300 data-[highlight='true']:bg-primary/5"
+              data-world-card
+              data-world-id={world.id}
+            >
+              <header class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-text-primary sm:text-xl">{world.title}</h3>
+                <span class="text-[11px] uppercase tracking-[0.1em] text-text-tertiary">{world.id.replace("-", " ")}</span>
+              </header>
+              <p class="text-sm leading-relaxed text-text-secondary sm:text-base">{world.description}</p>
+              <p class="text-xs uppercase tracking-[0.08em] text-text-tertiary">{world.tags.join(" · ")}</p>
+            </article>
+          ))}
         </div>
       </div>
     </section>
@@ -241,208 +168,56 @@ const formatPlaceIntensity = (intensity: number) => {
         <div class="flex items-center justify-between gap-3">
           <div>
             <h2 class="text-2xl font-semibold text-text-primary">Exploration profile</h2>
-            <p class="text-text-secondary">A stylized view of the kinds of places that keep pulling me back—no coordinates, just vibes.</p>
+            <p class="text-text-secondary">Zones I gravitate toward—rendered as lightweight gauges.</p>
           </div>
           <span class="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">Abstracted</span>
         </div>
-        <div class="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-          <div class="relative mx-auto flex w-full max-w-[360px] items-center justify-center">
-            <div
-              class="aspect-square w-full max-w-[360px] rounded-full border border-border/70 bg-surface/70 shadow-inner"
-              aria-hidden="true"
-            >
-              <svg viewBox="0 0 320 320" class="h-full w-full" role="img" aria-label="Radial diagram of preferred place types">
-                <defs>
-                  <radialGradient id="explore-core" cx="50%" cy="50%" r="60%">
-                    <stop offset="0%" stop-color="rgba(125, 211, 252, 0.35)" />
-                    <stop offset="100%" stop-color="rgba(167, 139, 250, 0.12)" />
-                  </radialGradient>
-                </defs>
-                <circle cx="160" cy="160" r="64" fill="url(#explore-core)" />
-                {placePaths.map((segment) => (
-                  <path
-                    key={segment.id}
-                    d={segment.path}
-                    fill={segment.color}
-                    fillOpacity={0.22}
-                    stroke={segment.color}
-                    strokeOpacity={0.6}
-                    strokeWidth={1.4}
-                    class="transition-transform duration-500 hover:scale-[1.01] motion-reduce:transition-none"
-                  />
-                ))}
-                <circle cx="160" cy="160" r="48" fill="rgba(255,255,255,0.04)" class="mix-blend-screen" />
-                <text x="160" y="154" text-anchor="middle" class="fill-current text-sm font-semibold" fill="currentColor">
-                  Exploration
-                </text>
-                <text x="160" y="172" text-anchor="middle" class="fill-current text-xs text-text-secondary" fill="currentColor">
-                  approximate zones
-                </text>
-              </svg>
-            </div>
-          </div>
-          <div class="flex flex-col gap-4">
-            <div class="grid gap-3">
-              {placeCategories.map((place, idx) => (
-                <div class="flex items-center justify-between rounded-2xl border border-border/60 bg-surface/70 px-4 py-3">
-                  <div class="flex items-center gap-3">
-                    <span
-                      class="h-9 w-1.5 rounded-full"
-                      style={{ backgroundColor: palette[idx % palette.length], opacity: 0.7 }}
-                    />
-                    <div>
-                      <p class="text-sm uppercase tracking-[0.08em] text-text-tertiary">{place.id.replace("-", " ")}</p>
-                      <p class="text-base font-medium text-text-primary">{place.label}</p>
-                    </div>
+        <div class="grid gap-3">
+          {explorationZones.map((zone) => (
+            <div class="rounded-2xl border border-border/60 bg-surface/70 px-4 py-3">
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <span class="h-8 w-1.5 rounded-full bg-gradient-to-b from-primary/70 to-secondary/70" aria-hidden="true" />
+                  <div>
+                    <p class="text-[11px] uppercase tracking-[0.08em] text-text-tertiary">{zone.id.replace("-", " ")}</p>
+                    <p class="text-base font-medium text-text-primary">{zone.label}</p>
                   </div>
-                  <p class="text-sm font-semibold text-text-secondary">{formatPlaceIntensity(place.intensity)}</p>
                 </div>
-              ))}
+                <span class="text-sm font-semibold text-text-secondary">{zone.descriptor}</span>
+              </div>
+              <div class="mt-2">
+                <GaugeBar label="Intensity" current={zone.scaled} min={0} max={1} variant="subtle" />
+              </div>
             </div>
-            <p class="text-xs text-text-tertiary">Approximate ranges only—no coordinates or dates stored here.</p>
-          </div>
+          ))}
         </div>
+        <p class="text-xs text-text-tertiary">Approximate ranges only—no coordinates or dates stored here.</p>
       </article>
 
       <article class="flex flex-col gap-4 rounded-3xl border border-border/70 bg-surface p-6 shadow-sm">
         <div class="flex items-center justify-between gap-3">
           <div>
             <h2 class="text-2xl font-semibold text-text-primary">Movement & recovery</h2>
-            <p class="text-text-secondary">Cycling and recovery rendered as soft rings—more "how it feels" than exact numbers.</p>
+            <p class="text-text-secondary">Cycling, rest, and cadence rendered as soft bars.</p>
           </div>
           <span class="rounded-full bg-secondary/10 px-3 py-1 text-xs font-medium text-secondary">Approximate</span>
         </div>
-        <div class="grid gap-6 md:grid-cols-2 md:items-center">
-          <div class="flex items-center justify-center gap-4">
-            <div class="relative flex h-52 w-52 items-center justify-center">
-              <svg viewBox="0 0 220 220" class="h-full w-full" role="img" aria-label="Cycling progress ring">
-                <defs>
-                  <linearGradient id="movement-ring" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stop-color="hsl(160, 80%, 65%)" />
-                    <stop offset="100%" stop-color="hsl(220, 80%, 70%)" />
-                  </linearGradient>
-                </defs>
-                <circle cx="110" cy="110" r="86" fill="none" stroke="url(#movement-ring)" stroke-width="14" opacity="0.18" />
-                <circle
-                  cx="110"
-                  cy="110"
-                  r="86"
-                  fill="none"
-                  stroke="url(#movement-ring)"
-                  stroke-width="16"
-                  stroke-linecap="round"
-                  stroke-dasharray={`${rideProgress * 2 * Math.PI * 86} ${2 * Math.PI * 86}`}
-                  stroke-dashoffset="38"
-                  class="transition-all duration-700 motion-reduce:transition-none"
-                  opacity="0.8"
-                />
-                <text x="110" y="102" text-anchor="middle" class="fill-current text-sm font-semibold" fill="currentColor">
-                  Cycling
-                </text>
-                <text x="110" y="120" text-anchor="middle" class="fill-current text-lg font-semibold" fill="currentColor">
-                  ~{stats.rideMilesYTDApprox} mi
-                </text>
-                <text x="110" y="138" text-anchor="middle" class="fill-current text-[11px] text-text-secondary" fill="currentColor">
-                  Goal: ~{stats.rideGoalYTDApprox} mi
-                </text>
-              </svg>
-            </div>
-            <div class="relative flex h-48 w-48 items-center justify-center">
-              <svg viewBox="0 0 200 200" class="h-full w-full" role="img" aria-label="Recovery baseline ring">
-                <defs>
-                  <linearGradient id="recovery-ring" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stop-color="hsl(280, 75%, 72%)" />
-                    <stop offset="100%" stop-color="hsl(330, 75%, 70%)" />
-                  </linearGradient>
-                </defs>
-                <circle cx="100" cy="100" r="70" fill="none" stroke="url(#recovery-ring)" stroke-width="12" opacity="0.18" />
-                <circle
-                  cx="100"
-                  cy="100"
-                  r="70"
-                  fill="none"
-                  stroke="url(#recovery-ring)"
-                  stroke-width="12"
-                  stroke-linecap="round"
-                  stroke-dasharray={`${clamp(stats.recoveryIndex, 0, 1) * 2 * Math.PI * 70} ${2 * Math.PI * 70}`}
-                  stroke-dashoffset="-28"
-                  class="transition-all duration-700 motion-reduce:transition-none"
-                  opacity="0.8"
-                />
-                <text x="100" y="94" text-anchor="middle" class="fill-current text-sm font-semibold" fill="currentColor">
-                  Recovery baseline
-                </text>
-                <text x="100" y="112" text-anchor="middle" class="fill-current text-[13px] font-semibold" fill="currentColor">
-                  mid-70s%
-                </text>
-                <text x="100" y="130" text-anchor="middle" class="fill-current text-[11px] text-text-secondary" fill="currentColor">
-                  roughly three-quarters full
-                </text>
-              </svg>
-            </div>
-          </div>
-          <div class="flex flex-col gap-3">
-            <div class="rounded-2xl border border-border/60 bg-surface/70 px-4 py-3 shadow-sm">
-              <p class="text-sm font-medium text-text-primary">Most nights</p>
-              <p class="text-sm text-text-secondary">In bed at a reasonable hour with about {stats.avgSleepHoursApprox.toFixed(1)} hours of sleep.</p>
-            </div>
-            <div class="rounded-2xl border border-border/60 bg-surface/70 px-4 py-3 shadow-sm">
-              <p class="text-sm font-medium text-text-primary">Movement cadence</p>
-              <p class="text-sm text-text-secondary">Regular rides plus walks—~{stats.movementDaysTypicalMonthApprox} days with meaningful motion in a typical month.</p>
-            </div>
-            <div class="rounded-2xl border border-border/60 bg-surface/70 px-4 py-3 shadow-sm">
-              <p class="text-sm font-medium text-text-primary">Recovery read</p>
-              <p class="text-sm text-text-secondary">Recovery index hovers in the mid-70s%, helped by steady sleep and not chasing streaks.</p>
-            </div>
-          </div>
+        <div class="grid gap-4">
+          {movementRecovery.gauges.map((gauge) => (
+            <GaugeBar
+              label={gauge.label}
+              description={gauge.description}
+              current={gauge.current}
+              min={gauge.min}
+              max={gauge.max}
+              variant={gauge.variant}
+            />
+          ))}
         </div>
       </article>
     </section>
 
-    <section class="flex flex-col gap-4">
-      <div class="flex items-baseline justify-between gap-4">
-        <div>
-          <h2 class="text-2xl font-semibold text-text-primary sm:text-3xl">Processes</h2>
-          <p class="text-text-secondary">A lightweight activity monitor for what’s running and what’s queued.</p>
-        </div>
-      </div>
-      <div class="grid gap-6 rounded-3xl border border-border/70 bg-surface/90 p-6 shadow-sm md:grid-cols-2">
-        <div class="flex flex-col gap-3">
-          <p class="text-xs uppercase tracking-[0.12em] text-text-tertiary">Active</p>
-          <div class="divide-y divide-border/70 rounded-2xl border border-border/70 bg-surface/80">
-            {["Ecommerce flows & experiments", "Cycling & movement routines", "Recovery experiments via wearables"].map((proc) => (
-              <div class="flex items-center justify-between px-4 py-3">
-                <div class="flex items-center gap-3">
-                  <span class="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
-                  <p class="text-sm font-medium text-text-primary">{proc}</p>
-                </div>
-                <div class="flex items-center gap-2 text-xs text-text-tertiary">
-                  <span class="h-1.5 w-10 rounded-full bg-gradient-to-r from-primary/70 to-secondary/70" />
-                  steady
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div class="flex flex-col gap-3">
-          <p class="text-xs uppercase tracking-[0.12em] text-text-tertiary">Queued / idle</p>
-          <div class="divide-y divide-border/70 rounded-2xl border border-border/70 bg-surface/80">
-            {["Long-form writing", "New travel patterns", "A hobby slot for whatever comes next"].map((proc) => (
-              <div class="flex items-center justify-between px-4 py-3">
-                <div class="flex items-center gap-3">
-                  <span class="h-2 w-2 rounded-full bg-amber-400" aria-hidden="true" />
-                  <p class="text-sm font-medium text-text-primary">{proc}</p>
-                </div>
-                <div class="flex items-center gap-2 text-xs text-text-tertiary">
-                  <span class="h-1.5 w-8 rounded-full bg-border" />
-                  idle
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
+    <ProcessTable cpuLoad={processes.cpuLoad} items={processes.items} />
 
     <section class="flex flex-col gap-4">
       <div class="flex items-baseline justify-between gap-4">
@@ -451,33 +226,31 @@ const formatPlaceIntensity = (intensity: number) => {
           <p class="text-text-secondary">Simple toggles that keep the system running smoothly.</p>
         </div>
       </div>
-      <div class="divide-y divide-border/70 rounded-3xl border border-border/70 bg-surface/90">
-        {["Notification style: low drama", "Work mode: async-friendly, deep work biased", "Planning horizon: weeks to months", "Tolerance for ambiguity: high"].map((pref) => (
-          <div class="flex items-center justify-between px-5 py-4">
-            <p class="text-sm font-medium text-text-primary sm:text-base">{pref}</p>
-            <span class="text-[11px] uppercase tracking-[0.1em] text-text-tertiary">set</span>
-          </div>
+      <div class="grid gap-3 rounded-3xl border border-border/70 bg-surface/90 p-5">
+        {preferences.map((pref) => (
+          <ToggleRow label={pref.label} value={pref.value} description={pref.description} />
         ))}
       </div>
     </section>
 
     <section class="flex flex-col gap-3 pb-4">
       <p class="text-sm uppercase tracking-[0.12em] text-text-tertiary">Where to next?</p>
-      <div class="flex flex-wrap justify-center gap-3 rounded-3xl border border-border/70 bg-surface/90 px-4 py-4 shadow-sm sm:justify-between">
-        {[
-          { label: "Now", href: "/now" },
-          { label: "Portfolio", href: "/projects" },
-          { label: "Writing", href: "/writing" },
-          { label: "Activity", href: "/activity" },
-        ].map((item) => (
+      <div class="grid gap-3 rounded-3xl border border-border/70 bg-surface/90 p-4 shadow-sm sm:grid-cols-2">
+        {navDestinations.map((item) => (
           <a
-            class="group flex items-center gap-2 rounded-2xl border border-border/70 bg-surface px-4 py-3 text-sm font-medium text-text-primary shadow-sm transition-transform duration-300 hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none"
+            class="group flex items-center justify-between rounded-2xl border border-border/70 bg-surface px-4 py-3 text-sm font-medium text-text-primary shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             href={item.href}
           >
-            <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-secondary/15 text-base font-semibold text-primary transition duration-300 group-hover:from-primary/25 group-hover:to-secondary/25">
-              ●
-            </span>
-            {item.label}
+            <div class="flex items-center gap-3">
+              <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-secondary/15 text-base font-semibold text-primary transition duration-300 group-hover:from-primary/25 group-hover:to-secondary/25">
+                ●
+              </span>
+              <div class="flex flex-col text-left">
+                <span class="text-base font-semibold text-text-primary">{item.label}</span>
+                <span class="text-xs text-text-secondary">{item.meta}</span>
+              </div>
+            </div>
+            <span class="text-[11px] uppercase tracking-[0.1em] text-text-tertiary">Open</span>
           </a>
         ))}
       </div>

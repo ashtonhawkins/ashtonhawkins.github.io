@@ -1,0 +1,29 @@
+---
+interface Props {
+  values: number[];
+  strokeClass?: string;
+}
+
+const { values = [], strokeClass = "stroke-primary" } = Astro.props;
+const width = 120;
+const height = 36;
+const safeValues = values.length ? values : [0.2, 0.4, 0.35, 0.6, 0.5, 0.7];
+const step = safeValues.length > 1 ? width / (safeValues.length - 1) : width;
+const points = safeValues.map((value, index) => {
+  const x = index * step;
+  const y = height - Math.min(Math.max(value, 0), 1) * height;
+  return `${x},${y}`;
+});
+const path = points.reduce((acc, point, index) => {
+  return index === 0 ? `M ${point}` : `${acc} L ${point}`;
+}, "");
+---
+<svg viewBox={`0 0 ${width} ${height}`} class="h-10 w-full" role="presentation" aria-hidden="true">
+  <path d={path} class={`fill-none ${strokeClass}`} strokeWidth="1.8" strokeLinecap="round" />
+  <path
+    d={`${path} L ${width} ${height} L 0 ${height} Z`}
+    class="fill-primary/8"
+    stroke="none"
+    opacity="0.4"
+  />
+</svg>

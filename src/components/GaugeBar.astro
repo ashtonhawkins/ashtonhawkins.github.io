@@ -1,0 +1,45 @@
+---
+interface Props {
+  label: string;
+  description?: string;
+  current: number;
+  min: number;
+  max: number;
+  variant?: "subtle" | "hero" | "inline";
+}
+
+const { label, description, current, min, max, variant = "subtle" } = Astro.props;
+const span = Math.max(max - min, 1);
+const percent = Math.min(Math.max((current - min) / span, 0), 1) * 100;
+const trackClass =
+  variant === "hero"
+    ? "bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10"
+    : variant === "inline"
+      ? "bg-border/60"
+      : "bg-border/50";
+const fillClass =
+  variant === "hero"
+    ? "from-primary to-secondary"
+    : variant === "inline"
+      ? "bg-primary/80"
+      : "bg-gradient-to-r from-primary to-secondary";
+const heightClass = variant === "inline" ? "h-1.5" : "h-2.5";
+---
+<div class="flex flex-col gap-1.5">
+  <div class="flex items-center justify-between text-sm text-text-secondary">
+    <p class="font-medium text-text-primary">{label}</p>
+    <span class="text-[11px] uppercase tracking-[0.08em] text-text-tertiary">{percent.toFixed(0)}%</span>
+  </div>
+  <div class={`relative w-full overflow-hidden rounded-full ${heightClass} ${trackClass}`} aria-label={`${label} gauge`} role="img">
+    <div
+      class={`absolute inset-y-0 left-0 rounded-full ${variant === "inline" ? "" : "bg-gradient-to-r"} ${fillClass}`}
+      style={{ width: `${Math.max(percent, 4)}%` }}
+    />
+    <div
+      class={`absolute -top-1.5 h-4 w-4 rounded-full border border-white/60 bg-surface shadow ${variant === "hero" ? "ring-1 ring-primary/30" : ""}`}
+      style={{ left: `${percent}%` }}
+      aria-hidden="true"
+    />
+  </div>
+  {description && <p class="text-xs text-text-secondary">{description}</p>}
+</div>
