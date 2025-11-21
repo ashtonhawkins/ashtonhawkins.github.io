@@ -1,7 +1,7 @@
 name: Build and Deploy (Astro → GitHub Pages)
 on:
   push:
-    branches: [main]
+    branches: [work]
   workflow_dispatch:
 permissions:
   contents: read
