@@ -22,8 +22,6 @@
     "@fontsource/geist": "^5.2.8",
     "@fontsource/geist-mono": "^5.2.7",
     "@radix-ui/react-dialog": "^1.1.15",
-    "@visx/scale": "^3.12.0",
-    "@visx/shape": "^3.12.0",
     "astro": "^5.14.1",
     "astro-pagefind": "^1.8.5",
     "cmdk": "^1.1.1",
