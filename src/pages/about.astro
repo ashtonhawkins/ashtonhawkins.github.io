@@ -3,11 +3,11 @@ import AppShell from "../layouts/AppShell.astro";
 import SEO from "../components/SEO.astro";
 import SystemFieldHero from "../components/personal/SystemFieldHero";
 import SystemSpecCard from "../components/personal/SystemSpecCard";
-import SignalRack from "../components/personal/SignalRack";
-import WorldsOrbit from "../components/personal/WorldsOrbit";
-import ExplorationQuadrantMap from "../components/personal/ExplorationQuadrantMap.astro";
-import MovementRecoveryWheel from "../components/personal/MovementRecoveryWheel";
-import ProcessMonitor from "../components/personal/ProcessMonitor";
+import SignalGrid from "../components/personal/SignalGrid";
+import WorldsDiagram from "../components/personal/WorldsDiagram";
+import ExplorationQuadrants from "../components/personal/ExplorationQuadrants";
+import MovementDial from "../components/personal/MovementDial";
+import ProcessLanes from "../components/personal/ProcessLanes";
 import SettingsBoard from "../components/personal/SettingsBoard.astro";
 import AppDock from "../components/personal/AppDock.astro";
 import ConsolePreview from "../components/personal/ConsolePreview.astro";
@@ -15,14 +15,14 @@ import {
   appDock,
   explorationQuadrants,
   heroBadge,
-  movementRecoveryWheel,
-  orbitWorlds,
+  movementDial,
   processes,
   settingsBoard,
-  signalRackConfig,
+  signalGrid,
   specSheet,
   statusTemplates,
   systemField,
+  worldsDiagram,
 } from "../data/personalOs";
 ---
 
@@ -34,15 +34,13 @@ import {
   />
 
   <main class="mx-auto flex max-w-6xl flex-col gap-14 px-4 py-12 sm:px-6 lg:px-8">
-    <section class="grid gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center">
-      <div class="flex flex-col gap-6">
-        <div class="flex flex-col gap-3">
-          <p class="text-sm uppercase tracking-[0.12em] text-text-tertiary">Personal OS</p>
-          <h1 class="text-balance text-4xl font-semibold text-text-primary sm:text-5xl">Ashton Hawkins</h1>
-          <p class="text-lg leading-relaxed text-text-secondary sm:text-xl">
-            I optimize experiences, itineraries, and systems—for screens and real life.
-          </p>
-        </div>
+    <section class="space-y-6">
+      <div class="flex flex-col gap-4">
+        <p class="text-sm uppercase tracking-[0.12em] text-text-tertiary">Personal OS</p>
+        <h1 class="text-balance text-4xl font-semibold text-text-primary sm:text-5xl">Ashton Hawkins</h1>
+        <p class="text-lg leading-relaxed text-text-secondary sm:text-xl">
+          I optimize experiences, itineraries, and systems—for screens and real life. This page is my flagship: a live-feeling operating system for how I move.
+        </p>
         <div class="flex flex-wrap gap-2 text-sm text-text-secondary">
           {heroBadge.tags.map((mode) => (
             <span class="rounded-full border border-border bg-surface px-3 py-1 text-sm shadow-sm">{mode}</span>
@@ -52,53 +50,64 @@ import {
           {statusTemplates[Math.floor(Math.random() * statusTemplates.length)]}
         </p>
       </div>
-      <SystemFieldHero
-        client:load
-        title={systemField.title}
-        version={systemField.version}
-        stability={systemField.stability}
-        clusters={systemField.clusters}
-      />
-    </section>
 
-    <SystemSpecCard
-      client:visible
-      hostname={specSheet.hostname}
-      os={specSheet.os}
-      mode={specSheet.mode}
-      loops={specSheet.loops}
-      health={specSheet.health}
-      modeHeat={specSheet.modeHeat}
-    />
-
-    <SignalRack client:visible gauges={signalRackConfig.gauges} chips={signalRackConfig.chips} />
-
-    <section class="flex flex-col gap-4">
-      <div class="flex items-baseline justify-between gap-4">
-        <div>
-          <h2 class="text-2xl font-semibold text-text-primary sm:text-3xl">Worlds I move in</h2>
-          <p class="text-text-secondary">Sensors around the arenas that keep the system interesting.</p>
+      <div class="space-y-10">
+        <div class="space-y-3">
+          <p class="text-xs uppercase tracking-[0.16em] text-text-tertiary">Chapter 1 · Identity & system state</p>
+          <p class="text-lg text-text-secondary">
+            Who I am, how I’m running, and what “Personal OS” means day to day. It starts with movement, mid-7s sleep, and a healthy curiosity loop.
+          </p>
         </div>
+        <SystemFieldHero
+          client:load
+          title={systemField.title}
+          version={systemField.version}
+          stability={systemField.stability}
+          clusters={systemField.clusters}
+        />
+        <SystemSpecCard
+          client:visible
+          hostname={specSheet.hostname}
+          os={specSheet.os}
+          mode={specSheet.mode}
+          loops={specSheet.loops}
+          health={specSheet.health}
+          modeHeat={specSheet.modeHeat}
+        />
       </div>
-      <WorldsOrbit client:visible worlds={orbitWorlds} />
     </section>
 
-    <ExplorationQuadrantMap quadrants={explorationQuadrants} />
+    <section class="space-y-8">
+      <div class="space-y-2">
+        <p class="text-xs uppercase tracking-[0.16em] text-text-tertiary">Chapter 2 · Worlds & signals</p>
+        <p class="text-lg text-text-secondary">
+          The arenas I operate in and the signals that keep them humming. Travel informs product sense, cycling steadies recovery, and all of it keeps exploration online.
+        </p>
+      </div>
+      <WorldsDiagram client:visible worlds={worldsDiagram} />
+      <SignalGrid client:visible gauges={signalGrid.gauges} heroMetrics={signalGrid.heroMetrics} />
+      <MovementDial
+        client:visible
+        ticks={movementDial.ticks}
+        filledTicks={movementDial.filledTicks}
+        cyclingProgress={movementDial.cyclingProgress}
+        recoveryProgress={movementDial.recoveryProgress}
+        label={movementDial.label}
+      />
+      <ExplorationQuadrants client:visible quadrants={explorationQuadrants} />
+    </section>
 
-    <MovementRecoveryWheel
-      client:visible
-      ticks={movementRecoveryWheel.ticks}
-      filledTicks={movementRecoveryWheel.filledTicks}
-      cyclingProgress={movementRecoveryWheel.cyclingProgress}
-      recoveryProgress={movementRecoveryWheel.recoveryProgress}
-      label={movementRecoveryWheel.label}
-    />
-
-    <ProcessMonitor client:visible cpuLoad={processes.cpuLoad} items={processes.items} />
-
-    <SettingsBoard settings={settingsBoard} />
-
-    <AppDock items={appDock} />
+    <section class="space-y-8">
+      <div class="space-y-2">
+        <p class="text-xs uppercase tracking-[0.16em] text-text-tertiary">Chapter 3 · How I operate</p>
+        <p class="text-lg text-text-secondary">
+          Processes that are running, the ones warming up, and the preferences that keep things steady. From here, you can hop to Now, Portfolio, Writing, or Activity.
+        </p>
+      </div>
+      <ProcessLanes client:visible cpuLoad={processes.cpuLoad} items={processes.items} />
+      <SettingsBoard settings={settingsBoard} />
+      <AppDock items={appDock} />
+    </section>
 
     <ConsolePreview />
   </main>
