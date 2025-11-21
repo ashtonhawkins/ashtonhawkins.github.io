@@ -268,7 +268,6 @@
       "approach": "Sequenced modular rollout with dual-track discovery.",
       "outcome": "+22% revenue lift and 14-point AOV increase.",
       "tags": ["cro", "commerce", "experimentation"],
-      "url": "/projects/commerce-replatform",
       "sensitive": false
     },
     {
@@ -279,7 +278,6 @@
       "approach": "Deployed predictive inventory scoring and alerts.",
       "outcome": "26% fewer stockouts and 9% sell-through lift.",
       "tags": ["merchandising", "analytics", "ai"],
-      "url": "/projects/merch-intelligence",
       "sensitive": true
     },
     {
@@ -290,7 +288,6 @@
       "approach": "Rebuilt segmentation and dynamic content system.",
       "outcome": "18% repeat purchase share uplift.",
       "tags": ["crm", "automation", "retention"],
-      "url": "/projects/lifecycle-reset",
       "sensitive": true
     },
     {
@@ -301,7 +298,6 @@
       "approach": "Centralized data model with live health scoring.",
       "outcome": "41% faster SQL velocity.",
       "tags": ["revops", "b2b", "analytics"],
-      "url": "/projects/revops-spine",
       "sensitive": false
     },
     {
@@ -312,7 +308,6 @@
       "approach": "Launched account pods with orchestrated signals.",
       "outcome": "3.2× enterprise ACV uplift.",
       "tags": ["abm", "b2b", "orchestration"],
-      "url": "/projects/enterprise-abm",
       "sensitive": false
     },
     {
@@ -323,7 +318,6 @@
       "approach": "Built liquidity scoring and localized GTM kits.",
       "outcome": "6× city footprint growth.",
       "tags": ["marketplace", "gtm", "ops"],
-      "url": "/projects/marketplace-flywheel",
       "sensitive": false
     },
     {
@@ -334,7 +328,6 @@
       "approach": "Ingested mixed-method data into weekly operating rhythm.",
       "outcome": "Retention inflection with 18-point NRR gain.",
       "tags": ["product", "research", "retention"],
-      "url": "/projects/pmf-loop",
       "sensitive": true
     }
   ],
