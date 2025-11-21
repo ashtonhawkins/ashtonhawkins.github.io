@@ -18,18 +18,18 @@ const { settings } = Astro.props as { settings: SettingRow[] };
   </div>
   <div class="grid gap-3 rounded-3xl border border-border/70 bg-surface/90 p-5">
     {settings.map((pref) => (
-      <div class="group grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-2xl border border-border/60 bg-surface/70 px-4 py-3 transition duration-300 hover:-translate-y-0.5 hover:border-primary/50">
-        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-secondary/15 text-lg">
+      <div class="group grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-2xl border border-border/60 bg-gradient-to-r from-surface/90 to-slate-950/80 px-4 py-3 transition duration-300 hover:-translate-y-0.5 hover:border-primary/50">
+        <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-secondary/15 text-lg">
           {pref.icon}
         </div>
         <div class="flex flex-col">
           <p class="text-sm font-semibold text-text-primary">{pref.label}</p>
           <p class="text-sm text-text-secondary">{pref.description}</p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-3">
           <span class="rounded-full bg-surface px-3 py-1 text-[11px] font-semibold text-text-secondary ring-1 ring-border/70">{pref.value}</span>
-          <span class="relative inline-flex h-6 w-12 items-center rounded-full bg-border/70">
-            <span class="absolute left-1 top-1 h-4 w-4 rounded-full bg-gradient-to-br from-primary/80 to-secondary/70 shadow ring-1 ring-border/70" />
+          <span class="relative inline-flex h-6 w-14 items-center rounded-full bg-border/70">
+            <span class="absolute left-1 top-1 h-4 w-4 rounded-full bg-gradient-to-br from-primary/80 to-secondary/70 shadow ring-1 ring-border/70 transition duration-300 group-hover:translate-x-6" />
           </span>
         </div>
       </div>
