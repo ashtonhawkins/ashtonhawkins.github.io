@@ -1,0 +1,42 @@
+---
+import {
+  movementSummary,
+  osSnapshot,
+  recoverySummary,
+  sleepSummary
+} from "../../data/osSnapshot";
+---
+
+<section class="rounded-3xl border border-border/70 bg-surface/90 p-6 shadow-soft">
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div class="space-y-2">
+      <p class="text-[11px] uppercase tracking-[0.16em] text-text-muted">Search the site</p>
+      <p class="text-base text-text-secondary">Personal OS status · online · recovery steady · movement stable</p>
+    </div>
+    <button
+      type="button"
+      class="inline-flex items-center gap-2 self-start rounded-full border border-border bg-accent-soft px-4 py-2 text-sm font-semibold text-accent shadow-soft transition hover:border-accent hover:bg-accent-soft/80"
+      data-command-button
+    >
+      <span>Open console</span>
+      <span class="rounded-full bg-background px-2 py-0.5 text-xs font-bold text-text-primary">⌘K</span>
+    </button>
+  </div>
+  <div class="mt-5 grid gap-3 sm:grid-cols-3">
+    <div class="rounded-2xl border border-border/60 bg-background/80 px-4 py-3">
+      <p class="text-[11px] uppercase tracking-[0.14em] text-text-muted">Sleep</p>
+      <p class="mt-1 text-lg font-semibold text-text-primary">~{osSnapshot.averageSleepHours} hrs avg</p>
+      <p class="text-sm text-text-secondary">{sleepSummary}</p>
+    </div>
+    <div class="rounded-2xl border border-border/60 bg-background/80 px-4 py-3">
+      <p class="text-[11px] uppercase tracking-[0.14em] text-text-muted">Movement</p>
+      <p class="mt-1 text-lg font-semibold text-text-primary">{movementSummary}</p>
+      <p class="text-sm text-text-secondary">Cadence ~{osSnapshot.movementCadencePercent}%</p>
+    </div>
+    <div class="rounded-2xl border border-border/60 bg-background/80 px-4 py-3">
+      <p class="text-[11px] uppercase tracking-[0.14em] text-text-muted">Recovery</p>
+      <p class="mt-1 text-lg font-semibold text-text-primary">Index ~{osSnapshot.recoveryIndexPercent}%</p>
+      <p class="text-sm text-text-secondary">{recoverySummary}</p>
+    </div>
+  </div>
+</section>
