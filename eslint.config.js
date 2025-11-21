@@ -11,11 +11,15 @@ export default tseslint.config(
       "dist",
       "node_modules",
       "public",
+      ".astro",
       "postcss.config.cjs",
       "tailwind.config.mjs",
       "astro.config.ts",
       "tsconfig.json",
-      "eslint.config.js"
+      "eslint.config.js",
+      "scripts/aggregate.ts",
+      "src/components/resume/**/*",
+      "src/pages/resume.astro"
     ]
   },
   js.configs.recommended,
