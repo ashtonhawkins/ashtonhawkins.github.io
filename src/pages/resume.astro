@@ -34,7 +34,6 @@ const email = "hello@ashtonhawkins.com";
 const title = "Ashton Hawkins · Resume";
 const description = resume.hero.subhead;
 const canonicalUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString() : Astro.url.href;
-const initialTagsLiteral = JSON.stringify(activeTags);
 ---
 
 <AppShell>
@@ -112,7 +111,7 @@ const initialTagsLiteral = JSON.stringify(activeTags);
   <script type="module">
 import { parseTags, serializeTags } from '../utils/filters.ts';
 
-const initialTags = {initialTagsLiteral};
+const initialTags = {JSON.stringify(activeTags)};
 let activeTags = new Set(initialTags);
 let printBound = false;
 
