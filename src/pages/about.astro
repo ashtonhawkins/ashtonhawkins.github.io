@@ -10,6 +10,7 @@ import MovementRecoveryWheel from "../components/personal/MovementRecoveryWheel"
 import ProcessMonitor from "../components/personal/ProcessMonitor";
 import SettingsBoard from "../components/personal/SettingsBoard.astro";
 import AppDock from "../components/personal/AppDock.astro";
+import ConsolePreview from "../components/personal/ConsolePreview.astro";
 import {
   appDock,
   explorationQuadrants,
@@ -98,5 +99,7 @@ import {
     <SettingsBoard settings={settingsBoard} />
 
     <AppDock items={appDock} />
+
+    <ConsolePreview />
   </main>
 </AppShell>

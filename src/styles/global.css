@@ -37,3 +37,22 @@ html.dark body {
 ::view-transition-new(root) {
   animation: none;
 }
+
+@keyframes os-ticker-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-os-ticker {
+  animation: os-ticker-scroll 34s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-os-ticker {
+    animation: none;
+  }
+}

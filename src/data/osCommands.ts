@@ -1,144 +1,148 @@
+import {
+  cyclingSummary,
+  experimentsSummary,
+  explorationSummary,
+  movementSummary,
+  osSnapshot,
+  recoverySummary
+} from "./osSnapshot";
+
+export type OsCommandSection = "Top" | "Worlds" | "Surfaces";
+
 export type OsCommand = {
   id: string;
   title: string;
-  description?: string;
+  subtitle?: string;
   href: string;
-  section: "Pages" | "Worlds" | "Activity" | "Highlights";
+  section: OsCommandSection;
   keywords?: string[];
   featured?: boolean;
 };
 
 export const osCommands: OsCommand[] = [
   {
-    id: "home",
-    title: "Home",
-    description: "Return to the console home",
-    href: "/",
-    section: "Pages",
-    keywords: ["root", "start"],
+    id: "movement-recovery",
+    title: "View Movement & recovery",
+    subtitle: `${cyclingSummary} · ${movementSummary} · ${recoverySummary}`,
+    href: "/activity#movement",
+    section: "Top",
+    keywords: ["movement", "recovery", "cycling", "cadence"],
     featured: true
   },
   {
-    id: "about",
-    title: "About",
-    description: "Origin story, operating principles",
-    href: "/about",
-    section: "Pages",
-    keywords: ["mission", "background", "operating system"],
+    id: "exploration-profile",
+    title: "View Exploration profile",
+    subtitle: explorationSummary,
+    href: "/about#travel-+-itineraries",
+    section: "Top",
+    keywords: ["exploration", "travel", "airports", "metros"],
     featured: true
   },
   {
-    id: "now",
-    title: "Now",
-    description: "Current focus and cycles",
-    href: "/now",
-    section: "Pages",
-    keywords: ["present", "focus", "cycles"],
-    featured: true
-  },
-  {
-    id: "resume",
-    title: "Resume",
-    description: "Career snapshots and roles",
-    href: "/resume",
-    section: "Pages",
-    keywords: ["work", "experience", "cv"],
-    featured: true
-  },
-  {
-    id: "writing",
-    title: "Writing",
-    description: "Essays, notes, and thinking",
-    href: "/writing",
-    section: "Pages",
-    keywords: ["essays", "notes"],
-    featured: true
-  },
-  {
-    id: "projects",
-    title: "Projects",
-    description: "Launches and experiments",
+    id: "experiments",
+    title: "View Experiments shipped",
+    subtitle: experimentsSummary,
     href: "/projects",
-    section: "Pages",
-    keywords: ["builds", "products"],
-    featured: true
-  },
-  {
-    id: "press",
-    title: "Press",
-    description: "Interviews and features",
-    href: "/press",
-    section: "Pages",
-    keywords: ["media", "quotes"],
-    featured: false
-  },
-  {
-    id: "activity",
-    title: "Activity",
-    description: "Recent motion and logs",
-    href: "/activity",
-    section: "Activity",
-    keywords: ["updates", "movement", "log"],
+    section: "Top",
+    keywords: ["experiments", "launches", "shipping"],
     featured: true
   },
   {
     id: "world-travel",
     title: "Travel & itineraries",
-    description: "Systems for moving fast and light",
+    subtitle: "Routes, airports, hotels, and loyalty patterns",
     href: "/about#travel-+-itineraries",
     section: "Worlds",
-    keywords: ["airports", "loyalty", "flights", "hotels"],
-    featured: true
+    keywords: ["airports", "loyalty", "flights", "hotels"]
   },
   {
     id: "world-cycling",
     title: "Cycling & movement",
-    description: "Mileage, cadence, and routes",
+    subtitle: `Long-ish rides and regular movement; cadence ~${osSnapshot.movementCadencePercent}%`,
     href: "/about#cycling-+-movement",
     section: "Worlds",
-    keywords: ["cycling", "movement", "training"],
-    featured: true
+    keywords: ["cycling", "movement", "training", "cadence"]
   },
   {
     id: "world-recovery",
     title: "Recovery experiments",
-    description: "Sleep, recovery, and systems",
+    subtitle: `Sleep ~${osSnapshot.averageSleepHours} hours; recovery in the mid-${osSnapshot.recoveryIndexPercent}s`,
     href: "/about#recovery-experiments",
     section: "Worlds",
-    keywords: ["sleep", "oura", "rest"],
-    featured: true
+    keywords: ["sleep", "oura", "rest", "recovery"]
   },
   {
     id: "world-product",
     title: "Product & systems",
-    description: "Designing tools and infrastructure",
+    subtitle: "Flows, experiments, and the plumbing that keeps them running",
     href: "/about#product-+-systems",
     section: "Worlds",
-    keywords: ["product", "systems", "design"],
-    featured: true
+    keywords: ["product", "systems", "design", "experiments"]
   },
   {
-    id: "movement-recovery",
-    title: "View Movement & recovery",
-    description: "See movement stats and recovery index",
-    href: "/activity",
-    section: "Highlights",
-    keywords: ["movement", "recovery", "stats"]
+    id: "surface-home",
+    title: "Home",
+    subtitle: "Return to the Personal OS home",
+    href: "/",
+    section: "Surfaces",
+    keywords: ["root", "start"]
   },
   {
-    id: "exploration-profile",
-    title: "View Exploration profile",
-    description: "Airports, routes, and decision rules",
-    href: "/about#travel-+-itineraries",
-    section: "Highlights",
-    keywords: ["exploration", "travel", "opinions"]
+    id: "surface-about",
+    title: "About",
+    subtitle: "Hostname, sensors, and story",
+    href: "/about",
+    section: "Surfaces",
+    keywords: ["origin", "profile", "system"]
   },
   {
-    id: "experiments",
-    title: "View Experiments shipped",
-    description: "Tiny launches, weekly experiments",
+    id: "surface-now",
+    title: "Now",
+    subtitle: "Current loops and focus areas",
+    href: "/now",
+    section: "Surfaces",
+    keywords: ["present", "focus", "cycles"]
+  },
+  {
+    id: "surface-resume",
+    title: "Resume",
+    subtitle: "Roles, teams, and snapshots",
+    href: "/resume",
+    section: "Surfaces",
+    keywords: ["work", "experience", "cv"]
+  },
+  {
+    id: "surface-writing",
+    title: "Writing",
+    subtitle: "Essays, notes, and thinking",
+    href: "/writing",
+    section: "Surfaces",
+    keywords: ["essays", "notes"]
+  },
+  {
+    id: "surface-projects",
+    title: "Projects",
+    subtitle: "Launches and experiments",
     href: "/projects",
-    section: "Highlights",
-    keywords: ["experiments", "launches", "shipping"]
+    section: "Surfaces",
+    keywords: ["builds", "products"]
+  },
+  {
+    id: "surface-press",
+    title: "Press",
+    subtitle: "Interviews and features",
+    href: "/press",
+    section: "Surfaces",
+    keywords: ["media", "quotes"]
+  },
+  {
+    id: "surface-activity",
+    title: "Activity",
+    subtitle: "Recent motion and logs",
+    href: "/activity",
+    section: "Surfaces",
+    keywords: ["updates", "movement", "log"]
   }
 ];
+
+export const osCommandSections: OsCommandSection[] = ["Top", "Worlds", "Surfaces"];
