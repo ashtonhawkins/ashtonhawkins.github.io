@@ -1,0 +1,6 @@
+[
+  { "id": "rainy-coastal", "label": "Rainy coastal cities", "intensity": 0.7 },
+  { "id": "sunny-waterfront", "label": "Sunny waterfronts", "intensity": 0.8 },
+  { "id": "historic-core", "label": "Walkable old towns", "intensity": 0.6 },
+  { "id": "transit-rich", "label": "Transit-rich metros", "intensity": 0.75 }
+]
