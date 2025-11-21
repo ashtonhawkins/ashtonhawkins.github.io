@@ -75,9 +75,19 @@ export default function WorldsOrbit({ worlds }: Props) {
                 strokeOpacity={0.4}
                 animate={{ scale: active === node.id ? 1.08 : 1 }}
                 transition={{ type: "spring", stiffness: 120, damping: 12 }}
-                className="cursor-pointer"
+                className="cursor-pointer focus:outline-none"
+                tabIndex={0}
+                role="button"
+                aria-label={`${node.title} focus area at intensity ${Math.round(node.intensity * 10)}/10`}
                 onMouseEnter={() => setActive(node.id)}
                 onFocus={() => setActive(node.id)}
+                onBlur={() => setActive(null)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setActive(node.id);
+                  }
+                }}
               />
               <motion.circle
                 cx={node.x}
