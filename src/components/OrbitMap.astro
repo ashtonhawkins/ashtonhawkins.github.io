@@ -1,0 +1,75 @@
+---
+interface OrbitNode {
+  id: string;
+  label: string;
+  intensity: number;
+}
+
+interface Props {
+  nodes: OrbitNode[];
+  targetId?: string;
+}
+
+const { nodes = [], targetId } = Astro.props;
+const size = 360;
+const center = size / 2;
+const radiusBase = 120;
+
+const positions = nodes.map((node, index) => {
+  const angle = (index / Math.max(nodes.length, 1)) * Math.PI * 2 - Math.PI / 2;
+  const distance = radiusBase + node.intensity * 30;
+  const x = center + Math.cos(angle) * distance;
+  const y = center + Math.sin(angle) * distance;
+  return { ...node, x, y };
+});
+---
+<div class="relative aspect-square w-full max-w-[420px]" data-orbit-map data-target={targetId ?? ""}>
+  <div class="absolute inset-0 rounded-full border border-border/70 bg-surface/50" aria-hidden="true"></div>
+  <div class="absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/30 bg-gradient-to-br from-primary/15 to-secondary/15 shadow-inner"></div>
+  <div class="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary shadow" aria-hidden="true"></div>
+  <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+    <p class="text-[11px] uppercase tracking-[0.14em] text-text-tertiary">Personal OS</p>
+    <p class="text-sm font-semibold text-text-primary">Worlds</p>
+  </div>
+  {positions.map((node) => (
+    <button
+      type="button"
+      data-orbit-node
+      data-node-id={node.id}
+      class="group absolute flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border border-border/60 bg-surface/90 text-center text-xs font-semibold text-text-primary shadow-sm transition duration-300 hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      style={{ left: `${node.x}px`, top: `${node.y}px`, boxShadow: `0 0 0 ${Math.max(node.intensity * 10, 6)}px rgba(125, 211, 252, 0.1)` }}
+      aria-label={`Highlight ${node.label}`}
+    >
+      <span class="pointer-events-none absolute inset-0 -z-[1] rounded-full bg-primary/10 opacity-0 blur group-data-[active='true']:opacity-100" />
+      <span class="text-[11px] uppercase tracking-[0.08em] text-text-tertiary">{node.label}</span>
+      <span class="text-xs text-text-secondary">Intensity {(node.intensity * 10).toFixed(1)}</span>
+    </button>
+  ))}
+</div>
+
+<script>
+  const map = document.currentScript?.parentElement?.querySelector('[data-orbit-map]');
+  if (map) {
+    const targetId = map.getAttribute('data-target') || '';
+    const target = targetId ? document.getElementById(targetId) : null;
+    const nodes = Array.from(map.querySelectorAll('[data-orbit-node]'));
+    const highlight = (id) => {
+      nodes.forEach((node) => {
+        node.dataset.active = node.dataset.nodeId === id ? 'true' : 'false';
+      });
+      if (target) {
+        target.dataset.activeWorld = id;
+        target.querySelectorAll('[data-world-card]').forEach((card) => {
+          const cardEl = card;
+          cardEl.dataset.highlight = cardEl.dataset.worldId === id ? 'true' : 'false';
+        });
+      }
+    };
+    nodes.forEach((node) => {
+      node.addEventListener('mouseenter', () => highlight(node.dataset.nodeId || ''));
+      node.addEventListener('focus', () => highlight(node.dataset.nodeId || ''));
+      node.addEventListener('click', () => highlight(node.dataset.nodeId || ''));
+    });
+    if (nodes[0]) highlight(nodes[0].dataset.nodeId || '');
+  }
+</script>
