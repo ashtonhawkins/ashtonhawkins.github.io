@@ -48,34 +48,34 @@ export const specSheet = {
   modeHeat: clamp(0.64, 0, 1),
 };
 
-export const signalRackConfig = {
+export const signalGrid = {
   gauges: [
     {
       id: "movement-days",
       label: "Movement days / typical month",
       value: clamp(stats.movementDaysTypicalMonthApprox / 30),
       detail: `${stats.movementDaysTypicalMonthApprox}d rhythm`,
-      description: "Tall gauge showing cadence",
+      descriptor: "Cadence stays above two-thirds.",
     },
     {
       id: "sleep",
       label: "Average nightly sleep",
       value: clamp((stats.avgSleepHoursApprox - 6) / 3),
       detail: `${stats.avgSleepHoursApprox.toFixed(1)}h`,
-      description: "Between 6–9 hours",
+      descriptor: "Mid-7s keeps the system even.",
     },
     {
       id: "exploration-index",
       label: "Exploration index",
       value: clamp(stats.explorationIndex),
       detail: "82%",
-      description: "Curiosity meter",
+      descriptor: "Airport opinions fully online.",
     },
   ],
-  chips: [
+  heroMetrics: [
     {
       id: "rides",
-      label: "Miles ridden this year",
+      label: "Miles ridden",
       value: stats.rideMilesYTDApprox,
       subtitle: `Soft goal ~${stats.rideGoalYTDApprox} mi`,
       sparkline: [0.1, 0.25, 0.35, 0.45, 0.48, 0.55, 0.62, 0.68, 0.72, 0.7],
@@ -90,7 +90,7 @@ export const signalRackConfig = {
   ],
 };
 
-export const orbitWorlds = (worlds as World[]).map((world, index) => ({
+export const worldsDiagram = (worlds as World[]).map((world, index) => ({
   ...world,
   intensity: [0.95, 0.85, 0.7, 0.8][index] ?? 0.75,
 }));
@@ -110,7 +110,7 @@ export const explorationQuadrants = (
   percentage: Math.round(clamp(zone.intensity, 0, 1) * 100),
 }));
 
-export const movementRecoveryWheel = {
+export const movementDial = {
   ticks: 31,
   filledTicks: 22,
   cyclingProgress: clamp(stats.rideMilesYTDApprox / stats.rideGoalYTDApprox),
