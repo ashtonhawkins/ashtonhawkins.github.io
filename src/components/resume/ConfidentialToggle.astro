@@ -1,5 +1,6 @@
 ---
 const { isConfidential } = Astro.props as { isConfidential: boolean };
+const defaultStateLiteral = isConfidential ? "true" : "false";
 ---
 
 <div class="flex flex-col items-end gap-1" data-confidential-controls>
@@ -26,7 +27,7 @@ const { isConfidential } = Astro.props as { isConfidential: boolean };
 <script type="module">
 import { initializeConfidentialMode } from '../../utils/confidential.ts';
 
-const defaultState = {isConfidential ? "true" : "false"};
+const defaultState = {defaultStateLiteral};
 let statusBound = false;
 
 const bindStatus = () => {
