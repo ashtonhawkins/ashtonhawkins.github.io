@@ -36,7 +36,7 @@ export default function ProcessMonitor({ cpuLoad, items }: Props) {
         </span>
       </div>
 
-      <div className="mt-4 space-y-3 rounded-2xl border border-border/60 bg-surface/80 p-4">
+      <div className="mt-4 space-y-3">
         <div className="flex items-center justify-between text-sm text-text-secondary">
           <span>CPU utilization</span>
           <span>{Math.round(cpuLoad * 100)}%</span>
@@ -48,14 +48,7 @@ export default function ProcessMonitor({ cpuLoad, items }: Props) {
             animate={{ width: inView ? `${cpuLoad * 100}%` : "0%" }}
             transition={{ duration: 1.1, ease: "easeOut" }}
           />
-          <motion.span
-            className="absolute -top-1.5 h-6 w-6 rounded-full border border-border/70 bg-surface shadow-soft"
-            initial={{ left: "0%" }}
-            animate={{ left: inView ? `${cpuLoad * 100}%` : "0%" }}
-            transition={{ duration: 1.1, ease: "easeOut" }}
-          />
         </div>
-        <p className="text-xs uppercase tracking-[0.1em] text-text-tertiary">Process lanes</p>
       </div>
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-border/70 bg-surface/80">
