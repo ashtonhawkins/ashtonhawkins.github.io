@@ -81,18 +81,23 @@ export default function SystemFieldHero({ title, version, stability, clusters }:
         {clusters.map((cluster, clusterIndex) => (
           <g
             key={cluster.id}
+            className="transition duration-300"
             role="button"
             tabIndex={0}
-            aria-label={`${cluster.label} signal: ${cluster.detail}`}
-            className="transition duration-300 focus:outline-none"
+            aria-pressed={active === cluster.id}
+            aria-label={`Focus ${cluster.label} cluster`}
             onMouseEnter={() => setActive(cluster.id)}
             onFocus={() => setActive(cluster.id)}
-            onMouseLeave={() => setActive(null)}
             onBlur={() => setActive(null)}
+            onMouseLeave={() => setActive(null)}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
-                setActive((current) => (current === cluster.id ? null : cluster.id));
+                setActive(cluster.id);
+              }
+
+              if (event.key === "Escape") {
+                setActive(null);
               }
             }}
           >
