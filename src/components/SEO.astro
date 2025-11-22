@@ -67,18 +67,21 @@ const structuredDataStrings = structuredData.map((schema) =>
   JSON.stringify(schema, (_key, value) => (value === undefined ? undefined : value))
 );
 
-  ---
-  <title>{title}</title>
-  <meta name="description" content={description} />
-  {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+const structuredDataEntries = structuredDataStrings.map((schemaJson) => ({ schemaJson }));
+
+const structuredDataScripts = structuredDataEntries.map(({ schemaJson }) => (
+  <script type="application/ld+json" is:inline>{schemaJson}</script>
+));
+---
+<title>{title}</title>
+<meta name="description" content={description} />
+{canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
 <meta property="og:type" content={isArticle ? "article" : "website"} />
 {siteName && <meta property="og:site_name" content={siteName} />}
 {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
 <meta property="og:title" content={openGraphTitle} />
-  <meta property="og:description" content={description} />
-  <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content={openGraphTitle} />
-  <meta name="twitter:description" content={description} />
-  {structuredDataStrings.map((schemaJson) => (
-    <script type="application/ld+json" is:inline set:html={schemaJson}></script>
-  ))}
+<meta property="og:description" content={description} />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content={openGraphTitle} />
+<meta name="twitter:description" content={description} />
+  {structuredDataScripts}
