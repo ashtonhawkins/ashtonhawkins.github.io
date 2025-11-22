@@ -21,15 +21,6 @@ export type OsCommand = {
 
 export const osCommands: OsCommand[] = [
   {
-    id: "movement-recovery",
-    title: "View Movement & recovery",
-    subtitle: `${cyclingSummary} · ${movementSummary} · ${recoverySummary}`,
-    href: "/activity#movement",
-    section: "Top",
-    keywords: ["movement", "recovery", "cycling", "cadence"],
-    featured: true
-  },
-  {
     id: "exploration-profile",
     title: "View Exploration profile",
     subtitle: explorationSummary,
@@ -42,7 +33,7 @@ export const osCommands: OsCommand[] = [
     id: "experiments",
     title: "View Experiments shipped",
     subtitle: experimentsSummary,
-    href: "/projects",
+    href: "/about#product-+-systems",
     section: "Top",
     keywords: ["experiments", "launches", "shipping"],
     featured: true
@@ -119,30 +110,6 @@ export const osCommands: OsCommand[] = [
     section: "Surfaces",
     keywords: ["essays", "notes"]
   },
-  {
-    id: "surface-projects",
-    title: "Projects",
-    subtitle: "Launches and experiments",
-    href: "/projects",
-    section: "Surfaces",
-    keywords: ["builds", "products"]
-  },
-  {
-    id: "surface-press",
-    title: "Press",
-    subtitle: "Interviews and features",
-    href: "/press",
-    section: "Surfaces",
-    keywords: ["media", "quotes"]
-  },
-  {
-    id: "surface-activity",
-    title: "Activity",
-    subtitle: "Recent motion and logs",
-    href: "/activity",
-    section: "Surfaces",
-    keywords: ["updates", "movement", "log"]
-  }
 ];
 
 export const osCommandSections: OsCommandSection[] = ["Top", "Worlds", "Surfaces"];
