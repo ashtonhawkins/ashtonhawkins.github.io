@@ -9,16 +9,16 @@ const { items } = Astro.props as { items: DockItem[] };
 ---
 <section class="flex flex-col gap-3 pb-4">
   <p class="text-sm uppercase tracking-[0.12em] text-text-tertiary">Where to next?</p>
-  <div class="grid gap-3 rounded-3xl border border-border/70 bg-gradient-to-br from-surface/95 via-slate-950/80 to-surface/90 p-4 shadow-soft sm:grid-cols-2">
+  <div class="grid gap-3 rounded-3xl border border-border/70 bg-surface/90 p-4 shadow-soft sm:grid-cols-2">
     {items.map((item) => (
       <a
-        class="group relative overflow-hidden rounded-2xl border border-border/70 bg-white/5 px-4 py-3 text-sm font-medium text-text-primary shadow-soft transition duration-300 hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-overlay focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        class="group relative overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-surface/90 to-slate-950/90 px-4 py-3 text-sm font-medium text-text-primary shadow-soft transition duration-300 hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-overlay focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         href={item.href}
       >
-        <div class="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/20 opacity-0 transition duration-300 group-hover:opacity-100" aria-hidden="true" />
+        <div class="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/10 opacity-0 transition duration-300 group-hover:opacity-100" aria-hidden="true" />
         <div class="relative flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-secondary/15 text-base font-semibold text-primary shadow-inner ring-1 ring-border/60">
+            <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-secondary/15 text-base font-semibold text-primary shadow-inner ring-1 ring-border/60">
               ●
             </span>
             <div class="flex flex-col text-left">

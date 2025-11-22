@@ -13,12 +13,12 @@ const { settings } = Astro.props as { settings: SettingRow[] };
   <div class="flex items-baseline justify-between gap-4">
     <div>
       <h2 class="text-2xl font-semibold text-text-primary sm:text-3xl">Config & preferences</h2>
-      <p class="text-text-secondary">How I like to work and live—steady defaults with playful toggles.</p>
+      <p class="text-text-secondary">Simple toggles that keep the system running smoothly.</p>
     </div>
   </div>
-  <div class="grid gap-3 rounded-3xl border border-border/70 bg-gradient-to-br from-surface/95 via-slate-950/80 to-surface/90 p-5 shadow-soft">
+  <div class="grid gap-3 rounded-3xl border border-border/70 bg-surface/90 p-5">
     {settings.map((pref) => (
-      <div class="group grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-2xl border border-border/60 bg-white/5 px-4 py-3 transition duration-300 hover:-translate-y-0.5 hover:border-primary/50">
+      <div class="group grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-2xl border border-border/60 bg-gradient-to-r from-surface/90 to-slate-950/80 px-4 py-3 transition duration-300 hover:-translate-y-0.5 hover:border-primary/50">
         <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-secondary/15 text-lg">
           {pref.icon}
         </div>
@@ -28,8 +28,8 @@ const { settings } = Astro.props as { settings: SettingRow[] };
         </div>
         <div class="flex items-center gap-3">
           <span class="rounded-full bg-surface px-3 py-1 text-[11px] font-semibold text-text-secondary ring-1 ring-border/70">{pref.value}</span>
-          <span class="relative inline-flex h-7 w-16 items-center rounded-full bg-border/70">
-            <span class="absolute left-1 top-1 h-5 w-5 rounded-full bg-gradient-to-br from-primary/80 to-secondary/70 shadow ring-1 ring-border/70 transition duration-300 group-hover:translate-x-7" />
+          <span class="relative inline-flex h-6 w-14 items-center rounded-full bg-border/70">
+            <span class="absolute left-1 top-1 h-4 w-4 rounded-full bg-gradient-to-br from-primary/80 to-secondary/70 shadow ring-1 ring-border/70 transition duration-300 group-hover:translate-x-6" />
           </span>
         </div>
       </div>
