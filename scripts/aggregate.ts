@@ -13,35 +13,7 @@ const rootDir = path.resolve(__dirname, "..");
 const outputPath = path.join(rootDir, "public", "data", "activity.json");
 const githubUser = "ashtonhawkins";
 
-type GithubCommit = {
-  sha?: string;
-  url?: string;
-};
-
-type GithubPage = {
-  html_url?: string;
-};
-
-type GithubEventPayload = {
-  action?: string;
-  ref?: string;
-  ref_type?: string;
-  issue?: { title?: string; html_url?: string };
-  pull_request?: { title?: string; html_url?: string };
-  comment?: { html_url?: string };
-  release?: { name?: string; tag_name?: string; html_url?: string };
-  pages?: GithubPage[];
-  commits?: GithubCommit[];
-};
-
-type GithubEvent = {
-  type?: string;
-  repo?: { name?: string };
-  payload?: GithubEventPayload;
-  created_at?: string;
-};
-
-const GITHUB_EVENT_TITLES: Record<string, (event: GithubEvent) => string> = {
+const GITHUB_EVENT_TITLES: Record<string, (event: any) => string> = {
   PushEvent: (event) => {
     const repo = event.repo?.name ?? "repository";
     const branch = event.payload?.ref?.split("/").pop();
@@ -129,7 +101,7 @@ async function fetchGithubEvents(): Promise<GithubActivity[]> {
       return [];
     }
 
-    const events = (await response.json()) as GithubEvent[];
+    const events = (await response.json()) as any[];
 
     return events
       .filter((event) => event?.created_at)
@@ -161,7 +133,7 @@ function formatDefaultGithubTitle(type: string, repo: string | null): string {
   return type;
 }
 
-function resolveGithubUrl(event: GithubEvent): string | null {
+function resolveGithubUrl(event: any): string | null {
   const repoName: string | null = event.repo?.name ?? null;
   const repoHtmlUrl = repoName ? `https://github.com/${repoName}` : null;
 
@@ -172,11 +144,11 @@ function resolveGithubUrl(event: GithubEvent): string | null {
   if (payload.comment?.html_url) return payload.comment.html_url;
   if (payload.release?.html_url) return payload.release.html_url;
   if (payload.pages?.length) {
-    const page = payload.pages.find((page) => page.html_url);
+    const page = payload.pages.find((p: any) => p.html_url);
     if (page?.html_url) return page.html_url;
   }
   if (payload.commits?.length) {
-      const commit = payload.commits[0];
+    const commit = payload.commits[0];
     if (commit?.url && repoName) {
       const sha = commit.sha ?? "";
       return `https://github.com/${repoName}/commit/${sha}`;
@@ -245,18 +217,7 @@ async function fetchLastFm(): Promise<LastFmActivity[]> {
       return [];
     }
 
-    type LastFmTrack = {
-      artist?: { "#text"?: string; name?: string };
-      name?: string;
-      date?: { uts?: string };
-      url?: unknown;
-    };
-
-    type LastFmResponse = {
-      recenttracks?: { track?: LastFmTrack[] };
-    };
-
-    const data = (await response.json()) as LastFmResponse;
+    const data = (await response.json()) as any;
     const track = data?.recenttracks?.track?.[0];
     if (!track) return [];
 

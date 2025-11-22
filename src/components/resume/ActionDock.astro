@@ -1,10 +1,7 @@
 ---
 const { email, bio } = Astro.props as { email: string; bio: string };
-const actionDockPayload = {
-  email: JSON.stringify(email),
-  bio: JSON.stringify(bio)
-};
-void actionDockPayload;
+const emailLiteral = JSON.stringify(email);
+const bioLiteral = JSON.stringify(bio);
 ---
 
 <div data-action-dock>
@@ -136,8 +133,8 @@ void actionDockPayload;
 <script type="module">
 import { createToastController } from '../ui/Toast.ts';
 
-const emailAddress = {actionDockPayload.email};
-const bioValue = {actionDockPayload.bio};
+const emailAddress = {emailLiteral};
+const bioValue = {bioLiteral};
 const bindDock = () => {
   const desktop = document.querySelector('[data-action-dock-desktop]');
   const mobile = document.querySelector('[data-action-dock-mobile]');
