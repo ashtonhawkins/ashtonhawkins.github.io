@@ -1,3 +1,4 @@
+import { scaleLinear } from "@visx/scale";
 import { motion, useInView } from "framer-motion";
 import { useMemo, useRef } from "react";
 
@@ -24,19 +25,11 @@ type Props = {
 
 const gaugeHeight = 260;
 
-const linearScale = (value: number, domain: [number, number], range: [number, number]) => {
-  const [d0, d1] = domain;
-  const [r0, r1] = range;
-  if (d1 === d0) return r0;
-  const ratio = (value - d0) / (d1 - d0);
-  return r0 + ratio * (r1 - r0);
-};
-
 function Sparkline({ values }: { values: number[] }) {
   const width = 220;
   const height = 74;
-  const xScale = (index: number) => linearScale(index, [0, values.length - 1], [8, width - 8]);
-  const yScale = (value: number) => linearScale(value, [0, Math.max(...values, 1)], [height - 10, 10]);
+  const xScale = scaleLinear({ domain: [0, values.length - 1], range: [8, width - 8] });
+  const yScale = scaleLinear({ domain: [0, Math.max(...values, 1)], range: [height - 10, 10] });
   const path = values
     .map((value, index) => `${index === 0 ? "M" : "L"}${xScale(index)},${yScale(value)}`)
     .join(" ");
@@ -80,7 +73,7 @@ export default function SignalRack({ gauges, chips }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
-  const yScale = useMemo(() => (value: number) => linearScale(value, [0, 1], [gaugeHeight - 10, 12]), []);
+  const yScale = useMemo(() => scaleLinear({ domain: [0, 1], range: [gaugeHeight - 10, 12] }), []);
 
   return (
     <section
