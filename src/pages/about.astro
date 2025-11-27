@@ -5,7 +5,7 @@ import SystemFieldHero from "../components/personal/SystemFieldHero";
 import SystemSpecCard from "../components/personal/SystemSpecCard";
 import SignalRack from "../components/personal/SignalRack";
 import WorldsOrbit from "../components/personal/WorldsOrbit";
-import ExplorationQuadrantMap from "../components/personal/ExplorationQuadrantMap.astro";
+import ExplorationQuadrantMap from "../components/personal/ExplorationQuadrantMap";
 import MovementRecoveryWheel from "../components/personal/MovementRecoveryWheel";
 import ProcessMonitor from "../components/personal/ProcessMonitor";
 import SettingsBoard from "../components/personal/SettingsBoard.astro";
@@ -23,6 +23,7 @@ import {
   specSheet,
   statusTemplates,
   systemField,
+  statusStrip,
 } from "../data/personalOs";
 ---
 
@@ -34,13 +35,16 @@ import {
   />
 
   <main class="mx-auto flex max-w-6xl flex-col gap-14 px-4 py-12 sm:px-6 lg:px-8">
-    <section class="grid gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center">
-      <div class="flex flex-col gap-6">
+    <section class="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center">
+      <div class="flex flex-col gap-5">
         <div class="flex flex-col gap-3">
           <p class="text-sm uppercase tracking-[0.12em] text-text-tertiary">Personal OS</p>
           <h1 class="text-balance text-4xl font-semibold text-text-primary sm:text-5xl">Ashton Hawkins</h1>
           <p class="text-lg leading-relaxed text-text-secondary sm:text-xl">
             I optimize experiences, itineraries, and systems—for screens and real life.
+          </p>
+          <p class="text-base leading-relaxed text-text-secondary">
+            This page is a snapshot of how my life and habits behave as a system.
           </p>
         </div>
         <div class="flex flex-wrap gap-2 text-sm text-text-secondary">
@@ -48,17 +52,25 @@ import {
             <span class="rounded-full border border-border bg-surface px-3 py-1 text-sm shadow-sm">{mode}</span>
           ))}
         </div>
-        <p class="rounded-2xl border border-border/70 bg-surface/90 px-4 py-3 text-base leading-relaxed text-text-secondary">
-          {statusTemplates[Math.floor(Math.random() * statusTemplates.length)]}
-        </p>
+        <div class="flex flex-col gap-2 rounded-2xl border border-border/70 bg-surface/90 px-4 py-3 text-base leading-relaxed text-text-secondary">
+          <div class="flex flex-wrap items-center gap-2 text-sm uppercase tracking-[0.12em] text-text-tertiary">
+            <span>Personal OS · {systemField.version}</span>
+            <span class="rounded-full bg-surface px-2 py-1 text-[11px] font-semibold text-text-secondary ring-1 ring-border/70">ASHTON — {systemField.stability}</span>
+          </div>
+          <p class="text-text-primary">Movement · Exploration · Recovery online</p>
+          <p class="text-sm text-text-secondary">{statusTemplates[Math.floor(Math.random() * statusTemplates.length)]}</p>
+        </div>
       </div>
-      <SystemFieldHero
-        client:load
-        title={systemField.title}
-        version={systemField.version}
-        stability={systemField.stability}
-        clusters={systemField.clusters}
-      />
+      <div class="flex flex-col gap-3">
+        <SystemFieldHero
+          client:load
+          title={systemField.title}
+          version={systemField.version}
+          stability={systemField.stability}
+          clusters={systemField.clusters}
+        />
+        <p class="text-sm text-text-secondary">System field: which parts of my life are loudest right now.</p>
+      </div>
     </section>
 
     <SystemSpecCard
@@ -69,6 +81,8 @@ import {
       loops={specSheet.loops}
       health={specSheet.health}
       modeHeat={specSheet.modeHeat}
+      summary={specSheet.summary}
+      interpretation={specSheet.interpretation}
     />
 
     <SignalRack client:visible gauges={signalRackConfig.gauges} chips={signalRackConfig.chips} />
@@ -92,6 +106,7 @@ import {
       cyclingProgress={movementRecoveryWheel.cyclingProgress}
       recoveryProgress={movementRecoveryWheel.recoveryProgress}
       label={movementRecoveryWheel.label}
+      summary={movementRecoveryWheel.summary}
     />
 
     <ProcessMonitor client:visible cpuLoad={processes.cpuLoad} items={processes.items} />
@@ -99,6 +114,15 @@ import {
     <SettingsBoard settings={settingsBoard} />
 
     <AppDock items={appDock} />
+
+    <div
+      class="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-surface/80 px-4 py-3 text-sm text-text-secondary"
+      role="status"
+      aria-label={statusStrip.ariaLabel}
+    >
+      <span class="text-xs uppercase tracking-[0.14em] text-text-tertiary">Status strip</span>
+      <p class="text-sm text-text-primary">{statusStrip.summary}</p>
+    </div>
 
     <ConsolePreview />
   </main>

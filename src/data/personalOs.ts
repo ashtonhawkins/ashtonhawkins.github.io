@@ -7,6 +7,13 @@ type PlaceCategory = (typeof placeCategories)[number];
 
 const clamp = (value: number, min = 0, max = 1) => Math.min(Math.max(value, min), max);
 
+export const systemPalette = {
+  movement: "#7dd3fc",
+  exploration: "#c084fc",
+  recovery: "#fbbf24",
+  systems: "#38bdf8",
+};
+
 export const systemField = {
   title: "Personal OS",
   version: "v1.x",
@@ -18,7 +25,7 @@ export const systemField = {
       value: clamp(stats.rideMilesYTDApprox / stats.rideGoalYTDApprox),
       detail: `~${stats.rideMilesYTDApprox} / ~${stats.rideGoalYTDApprox} mi`,
       description: "~70% toward the soft goal",
-      color: "#7dd3fc",
+      color: systemPalette.movement,
     },
     {
       id: "exploration",
@@ -26,7 +33,7 @@ export const systemField = {
       value: clamp(stats.explorationIndex),
       detail: "airport-opinionated",
       description: "~82% curiosity intensity",
-      color: "#c084fc",
+      color: systemPalette.exploration,
     },
     {
       id: "recovery",
@@ -34,7 +41,15 @@ export const systemField = {
       value: clamp(stats.recoveryIndex),
       detail: "~0.75 fullness",
       description: "~76% recovery fullness",
-      color: "#fbbf24",
+      color: systemPalette.recovery,
+    },
+    {
+      id: "systems",
+      label: "Product & systems",
+      value: 0.68,
+      detail: "steady loops",
+      description: "Product thinking and tidy workflows",
+      color: systemPalette.systems,
     },
   ],
 };
@@ -46,46 +61,61 @@ export const specSheet = {
   loops: "Travel itineraries · cycling · recovery experiments · product systems",
   health: clamp(0.78, 0, 1),
   modeHeat: clamp(0.64, 0, 1),
+  summary:
+    "In a typical month, I move meaningfully about 22 days and average ~7.4 hours of sleep each night.",
+  interpretation: "Overall health: stable, with room for deeper rest and focus.",
 };
 
 export const signalRackConfig = {
   gauges: [
     {
       id: "movement-days",
-      label: "Movement days / typical month",
+      label: "Movement rhythm",
       value: clamp(stats.movementDaysTypicalMonthApprox / 30),
-      detail: `${stats.movementDaysTypicalMonthApprox}d rhythm`,
-      description: "Tall gauge showing cadence",
+      detail: `${stats.movementDaysTypicalMonthApprox} days / month`,
+      description: "~73% cadence that feels steady",
     },
     {
       id: "sleep",
-      label: "Average nightly sleep",
+      label: "Sleep depth",
       value: clamp((stats.avgSleepHoursApprox - 6) / 3),
-      detail: `${stats.avgSleepHoursApprox.toFixed(1)}h`,
-      description: "Between 6–9 hours",
+      detail: `${stats.avgSleepHoursApprox.toFixed(1)} hours`,
+      description: "Most nights land between 6–9 hours",
     },
     {
       id: "exploration-index",
       label: "Exploration index",
       value: clamp(stats.explorationIndex),
       detail: "82%",
-      description: "Curiosity meter",
+      description: "Curiosity runs warm and airport-friendly",
     },
   ],
   chips: [
     {
       id: "rides",
-      label: "Miles ridden this year",
+      label: "Cycling focus",
       value: stats.rideMilesYTDApprox,
-      subtitle: `Soft goal ~${stats.rideGoalYTDApprox} mi`,
-      sparkline: [0.1, 0.25, 0.35, 0.45, 0.48, 0.55, 0.62, 0.68, 0.72, 0.7],
+      subtitle:
+        stats.rideMilesYTDApprox === 0
+          ? "Planning the next block of rides"
+          : `Soft goal ~${stats.rideGoalYTDApprox} mi`,
+      sparkline:
+        stats.rideMilesYTDApprox === 0
+          ? [0.05, 0.08, 0.12, 0.08, 0.1, 0.12, 0.14, 0.12, 0.1, 0.08]
+          : [0.1, 0.25, 0.35, 0.45, 0.48, 0.55, 0.62, 0.68, 0.72, 0.7],
     },
     {
       id: "experiments",
       label: "Experiments shipped",
       value: stats.experimentsShippedApprox,
-      subtitle: "Tiny launches, UX tweaks, system experiments",
-      sparkline: [0.08, 0.12, 0.22, 0.28, 0.33, 0.4, 0.52, 0.6, 0.66, 0.74],
+      subtitle:
+        stats.experimentsShippedApprox === 0
+          ? "Next small release is queued up"
+          : "Tiny launches, UX tweaks, system experiments",
+      sparkline:
+        stats.experimentsShippedApprox === 0
+          ? [0.05, 0.08, 0.1, 0.12, 0.14, 0.16, 0.18, 0.2, 0.18, 0.16]
+          : [0.08, 0.12, 0.22, 0.28, 0.33, 0.4, 0.52, 0.6, 0.66, 0.74],
     },
   ],
 };
@@ -115,7 +145,8 @@ export const movementRecoveryWheel = {
   filledTicks: 22,
   cyclingProgress: clamp(stats.rideMilesYTDApprox / stats.rideGoalYTDApprox),
   recoveryProgress: clamp(stats.recoveryIndex),
-  label: `~22 movement days / month · Recovery mid-70s%`,
+  label: `~22 movement days / month · recovery mid-70s%`,
+  summary: "A rough month: enough days in motion to feel good, with recovery strong enough that it doesn’t feel brittle.",
 };
 
 export const processes = {
@@ -176,4 +207,10 @@ export const statusTemplates = [
 
 export const heroBadge = {
   tags: ["Movement & routes", "Cycling", "Recovery experiments", "Product & systems"],
+};
+
+export const statusStrip = {
+  summary: "OS online · Sleep ~7.4 hrs/night · Movement ~22 days/month · Recovery index mid-70s",
+  ariaLabel:
+    "Status strip summarizing sleep around 7.4 hours per night, movement about 22 days each month, and recovery index in the mid-70s.",
 };

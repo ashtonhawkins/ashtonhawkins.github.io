@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { useMemo, useState } from "react";
 
 export type SystemCluster = {
@@ -39,12 +39,14 @@ function generateClusterPoints(seed: number, centerX: number, centerY: number) {
 
 export default function SystemFieldHero({ title, version, stability, clusters }: Props) {
   const [active, setActive] = useState<string | null>(null);
+  const prefersReducedMotion = useReducedMotion();
 
   const positions = useMemo(
     () => [
       { x: 220, y: 210 },
       { x: 620, y: 160 },
       { x: 960, y: 260 },
+      { x: 760, y: 360 },
     ],
     [],
   );
@@ -60,10 +62,20 @@ export default function SystemFieldHero({ title, version, stability, clusters }:
   const activeCluster = clusters.find((cluster) => cluster.id === active);
 
   return (
-    <div className="relative overflow-hidden rounded-[28px] border border-border/70 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white shadow-overlay">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(96,165,250,0.12)_0,_transparent_40%),_radial-gradient(circle_at_25%_60%,_rgba(236,72,153,0.08)_0,_transparent_30%),_radial-gradient(circle_at_80%_70%,_rgba(14,165,233,0.1)_0,_transparent_35%)]" aria-hidden />
-      <svg viewBox="0 0 1200 480" role="img" aria-labelledby="system-field-title" className="h-full w-full">
-        <title id="system-field-title">System Field visualization showing clusters for movement, exploration, and recovery.</title>
+    <div className="relative overflow-hidden rounded-[28px] border border-border/70 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white shadow-overlay">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(125,211,252,0.08)_0,_transparent_42%),_radial-gradient(circle_at_30%_70%,_rgba(192,132,252,0.08)_0,_transparent_32%),_radial-gradient(circle_at_76%_70%,_rgba(251,191,36,0.08)_0,_transparent_32%)]" aria-hidden />
+      <svg
+        viewBox="0 0 1200 500"
+        role="img"
+        aria-labelledby="system-field-title"
+        aria-describedby="system-field-desc"
+        className="h-full w-full"
+      >
+        <title id="system-field-title">System field: which parts of my life are loudest right now.</title>
+        <desc id="system-field-desc">
+          Interactive cluster map showing movement, exploration, recovery, and product & systems signals with brighter halos when a
+          cluster is focused.
+        </desc>
         <defs>
           <linearGradient id="grid-line" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor="rgba(148,163,184,0.24)" />
@@ -72,10 +84,10 @@ export default function SystemFieldHero({ title, version, stability, clusters }:
         </defs>
 
         {GRID_LINES.map((t) => (
-          <line key={`v-${t}`} x1={t * 1200} x2={t * 1200} y1={0} y2={480} stroke="url(#grid-line)" strokeWidth={0.5} />
+          <line key={`v-${t}`} x1={t * 1200} x2={t * 1200} y1={0} y2={500} stroke="url(#grid-line)" strokeWidth={0.5} />
         ))}
         {GRID_LINES.map((t) => (
-          <line key={`h-${t}`} x1={0} x2={1200} y1={t * 480} y2={t * 480} stroke="url(#grid-line)" strokeWidth={0.5} />
+          <line key={`h-${t}`} x1={0} x2={1200} y1={t * 500} y2={t * 500} stroke="url(#grid-line)" strokeWidth={0.5} />
         ))}
 
         {clusters.map((cluster, clusterIndex) => (
@@ -110,14 +122,23 @@ export default function SystemFieldHero({ title, version, stability, clusters }:
                 className="mix-blend-screen"
                 style={{ filter: "drop-shadow(0 0 12px rgba(255,255,255,0.35))" }}
                 fill={cluster.color}
-                initial={{ opacity: 0.08, scale: 0.9 }}
-                animate={{
-                  opacity: [0.12, 0.4, 0.16],
-                  scale: [0.9, 1.08, 0.98],
-                  x: [0, (index % 3) - 1.5, (index % 2) - 0.8],
-                  y: [0, ((index + 1) % 3) - 1.5, ((index + 2) % 2) - 0.6],
+                initial={{ opacity: 0.08, scale: prefersReducedMotion ? 1 : 0.9 }}
+                animate={
+                  prefersReducedMotion
+                    ? { opacity: active === cluster.id ? 0.8 : 0.45, scale: active === cluster.id ? 1.04 : 1 }
+                    : {
+                        opacity: [0.12, 0.4, 0.16],
+                        scale: [0.94, 1.08, 0.98],
+                        x: [0, (index % 3) - 1.5, (index % 2) - 0.8],
+                        y: [0, ((index + 1) % 3) - 1.5, ((index + 2) % 2) - 0.6],
+                      }
+                }
+                transition={{
+                  duration: prefersReducedMotion ? 0.3 : 4.5 + (index % 6) * 0.2,
+                  repeat: prefersReducedMotion ? 0 : Infinity,
+                  ease: "easeInOut",
+                  delay: prefersReducedMotion ? 0 : index * 0.015,
                 }}
-                transition={{ duration: 4.5 + (index % 6) * 0.2, repeat: Infinity, ease: "easeInOut", delay: index * 0.015 }}
                 opacity={active === cluster.id ? 0.8 : 0.5}
               />
             ))}
@@ -145,7 +166,7 @@ export default function SystemFieldHero({ title, version, stability, clusters }:
           </g>
         ))}
 
-        <g transform="translate(520 180)">
+        <g transform="translate(520 186)">
           <rect
             x={0}
             y={0}
