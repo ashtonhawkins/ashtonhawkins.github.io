@@ -30,6 +30,7 @@ export default function ProcessMonitor({ cpuLoad, items }: Props) {
         <div>
           <p className="text-xs uppercase tracking-[0.12em] text-text-tertiary">Processes</p>
           <h2 className="text-2xl font-semibold text-text-primary">Process monitor</h2>
+          <p className="text-sm text-text-secondary">What’s currently running on my system: work, movement, and the next hobby slot.</p>
         </div>
         <span className="rounded-full bg-surface px-3 py-1 text-[11px] font-semibold text-text-secondary ring-1 ring-border/60">
           Monitoring
@@ -59,9 +60,12 @@ export default function ProcessMonitor({ cpuLoad, items }: Props) {
         </div>
         <div className="divide-y divide-border/60 font-mono text-[13px]">
           {items.map((item, index) => (
-            <div key={item.name} className="grid grid-cols-[1.2fr_0.4fr_1fr] items-center gap-3 px-4 py-3">
+            <div
+              key={item.name}
+              className="grid grid-cols-[1.2fr_0.4fr_1fr] items-center gap-3 px-4 py-3 transition duration-200 hover:bg-primary/5 focus-within:bg-primary/5"
+            >
               <span className="text-text-primary">{item.name}</span>
-              <span className={`w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusColor[item.status]}`}>
+              <span className={`w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusColor[item.status]}`} tabIndex={0}>
                 {item.status}
               </span>
               <div className="flex items-center gap-3">

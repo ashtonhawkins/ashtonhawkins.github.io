@@ -7,9 +7,10 @@ type Props = {
   cyclingProgress: number;
   recoveryProgress: number;
   label: string;
+  summary: string;
 };
 
-export default function MovementRecoveryWheel({ ticks, filledTicks, cyclingProgress, recoveryProgress, label }: Props) {
+export default function MovementRecoveryWheel({ ticks, filledTicks, cyclingProgress, recoveryProgress, label, summary }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
@@ -25,12 +26,17 @@ export default function MovementRecoveryWheel({ ticks, filledTicks, cyclingProgr
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold text-text-primary">Movement & recovery</h2>
-          <p className="text-text-secondary">Circular readout of cadence, cycling, and recovery.</p>
+          <p className="text-text-secondary">A rough month: enough days in motion to feel good.</p>
         </div>
         <span className="rounded-full bg-secondary/10 px-3 py-1 text-xs font-medium text-secondary">Approximate</span>
       </div>
       <div className="flex flex-col items-center gap-4 lg:flex-row lg:items-center lg:justify-center">
-        <svg viewBox="0 0 320 320" className="h-[320px] w-[320px] max-w-full" role="img" aria-label="Movement and recovery wheel">
+        <svg
+          viewBox="0 0 320 320"
+          className="h-[320px] w-[320px] max-w-full"
+          role="img"
+          aria-label="Month wheel showing movement days and recovery fullness"
+        >
           <circle cx={160} cy={160} r={radius} className="fill-none stroke-border/60" strokeWidth={2} strokeDasharray="2 10" />
           <motion.circle
             cx={160}
@@ -80,17 +86,18 @@ export default function MovementRecoveryWheel({ ticks, filledTicks, cyclingProgr
             );
           })}
           <text x={160} y={154} textAnchor="middle" className="text-xs uppercase tracking-[0.12em]" fill="#94a3b8">
-            Month wheel
+            22 days active
           </text>
           <text x={160} y={176} textAnchor="middle" className="text-lg font-semibold" fill="#e2e8f0">
-            {filledTicks} days active
+            ~22 movement days / month
           </text>
         </svg>
         <div className="max-w-sm text-center lg:text-left">
-          <p className="text-sm text-text-secondary">{label}</p>
+          <p className="text-sm text-text-secondary">{summary}</p>
           <p className="mt-2 rounded-2xl border border-border/60 bg-surface/80 px-4 py-3 text-xs uppercase tracking-[0.1em] text-text-tertiary">
-            Outer ring: cycling progress · Inner ring: recovery fullness
+            Outer ring: days with movement · Inner ring: recovery fullness
           </p>
+          <p className="mt-2 text-sm text-text-secondary">{label}</p>
         </div>
       </div>
     </div>
