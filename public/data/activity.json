@@ -46,53 +46,5 @@
     "title": "Created branch: codex/upgrade-visualizations-for-personal-os",
     "url": "https://github.com/ashtonhawkins/ashtonhawkins.github.io",
     "createdAt": "2025-11-27T16:48:20Z"
-  },
-  {
-    "source": "github",
-    "type": "PushEvent",
-    "repo": "ashtonhawkins/ashtonhawkins.github.io",
-    "title": "Pushed 0 commits to ashtonhawkins/ashtonhawkins.github.io on main",
-    "url": "https://github.com/ashtonhawkins/ashtonhawkins.github.io",
-    "createdAt": "2025-11-24T15:34:13Z"
-  },
-  {
-    "source": "github",
-    "type": "PullRequestEvent",
-    "repo": "ashtonhawkins/ashtonhawkins.github.io",
-    "title": "Merged pull request: pull request",
-    "url": "https://github.com/ashtonhawkins/ashtonhawkins.github.io",
-    "createdAt": "2025-11-24T15:34:12Z"
-  },
-  {
-    "source": "github",
-    "type": "PullRequestEvent",
-    "repo": "ashtonhawkins/ashtonhawkins.github.io",
-    "title": "Labeled pull request: pull request",
-    "url": "https://github.com/ashtonhawkins/ashtonhawkins.github.io",
-    "createdAt": "2025-11-24T15:31:41Z"
-  },
-  {
-    "source": "github",
-    "type": "PullRequestEvent",
-    "repo": "ashtonhawkins/ashtonhawkins.github.io",
-    "title": "Opened pull request: pull request",
-    "url": "https://github.com/ashtonhawkins/ashtonhawkins.github.io",
-    "createdAt": "2025-11-24T15:31:41Z"
-  },
-  {
-    "source": "github",
-    "type": "PushEvent",
-    "repo": "ashtonhawkins/ashtonhawkins.github.io",
-    "title": "Pushed 0 commits to ashtonhawkins/ashtonhawkins.github.io on fix-aggregate-activity-errors",
-    "url": "https://github.com/ashtonhawkins/ashtonhawkins.github.io",
-    "createdAt": "2025-11-24T15:31:41Z"
-  },
-  {
-    "source": "github",
-    "type": "CreateEvent",
-    "repo": "ashtonhawkins/ashtonhawkins.github.io",
-    "title": "Created branch: codex/fix-aggregate-activity-errors",
-    "url": "https://github.com/ashtonhawkins/ashtonhawkins.github.io",
-    "createdAt": "2025-11-24T15:31:36Z"
   }
 ]
