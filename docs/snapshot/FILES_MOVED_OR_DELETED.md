@@ -1,0 +1,14 @@
+_old/.github
+_old/.prettierrc
+_old/astro.config.ts
+_old/eslint.config.js
+_old/node_modules
+_old/package-lock.json
+_old/package.json
+_old/postcss.config.cjs
+_old/public
+_old/scripts
+_old/src
+_old/tailwind.config.mjs
+_old/tests
+_old/tsconfig.json
