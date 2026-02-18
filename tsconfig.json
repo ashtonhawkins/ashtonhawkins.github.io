@@ -1,0 +1,22 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@components/*": ["src/components/*"],
+      "@layouts/*": ["src/layouts/*"],
+      "@lib/*": ["src/lib/*"],
+      "@data/*": ["src/data/*"],
+      "@content/*": ["src/content/*"],
+      "@styles/*": ["src/styles/*"]
+    }
+  },
+  "include": [
+    ".astro/types.d.ts",
+    "src/**/*",
+    "scripts/**/*",
+    "astro.config.mjs",
+    "tailwind.config.ts"
+  ],
+  "exclude": ["dist", "_old", "node_modules"]
+}

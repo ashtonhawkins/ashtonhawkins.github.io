@@ -1,8 +1,46 @@
-node_modules
-.astro
-dist
+# dependencies
+node_modules/
+
+# Astro build artifacts
+.astro/
+dist/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# env files
 .env
 .env.*
+!.env.example
+
+# editor files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# OS files
 .DS_Store
-.vscode
-.idea
+Thumbs.db
+
+# testing / coverage
+coverage/
+.nyc_output/
+playwright-report/
+
+# TypeScript
+*.tsbuildinfo
+
+# temp / cache
+.cache/
+.tmp/
+tmp/
+
+# local tooling
+.vercel/
+.netlify/
