@@ -1,0 +1,40 @@
+@import 'tailwindcss';
+
+:root {
+  color-scheme: light dark;
+  --bg: #f7f7f5;
+  --fg: #111217;
+  --crt-scanline-opacity: 0.06;
+}
+
+.dark {
+  --bg: #0f1013;
+  --fg: #f2f4f8;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--fg);
+  min-height: 100%;
+}
+
+.crt-overlay::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgb(255 255 255 / var(--crt-scanline-opacity)) 0,
+    rgb(255 255 255 / var(--crt-scanline-opacity)) 1px,
+    transparent 2px,
+    transparent 4px
+  );
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

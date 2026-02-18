@@ -1,0 +1,33 @@
+---
+import '@styles/fonts.css';
+import '@styles/global.css';
+import CRTOverlay from '@components/global/CRTOverlay.astro';
+import GSAPProvider from '@components/animations/GSAPProvider.astro';
+import { ClientRouter } from 'astro:transitions';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Ashton Hawkins',
+  description = 'Personal website scaffold powered by Astro.'
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" class="antialiased">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <GSAPProvider />
+    <ClientRouter />
+  </head>
+  <body class="crt-overlay">
+    <CRTOverlay />
+    <slot />
+  </body>
+</html>
