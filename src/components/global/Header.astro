@@ -1,5 +1,6 @@
 ---
 import ThemeToggle from '@components/global/ThemeToggle.astro';
+import NavTicker from '@components/global/NavTicker.astro';
 import Cursor from '@components/ui/Cursor.astro';
 import NoiseTexture from '@components/ui/NoiseTexture.astro';
 
@@ -9,6 +10,8 @@ const links = [
   { href: '/about', label: 'About' },
   { href: '/work', label: 'Work' },
   { href: '/ventures', label: 'Ventures' },
+  { href: '/travel', label: 'Travel' },
+  { href: '/photos', label: 'Photos' },
   { href: '/writing', label: 'Writing' },
   { href: '/now', label: 'Now' }
 ];
@@ -24,7 +27,7 @@ const isActive = (href: string) => {
   <NoiseTexture opacity={0.02} />
   <div class="header-inner container-shell max-wide">
     <a href="/" class="logotype" aria-label="Ashton Hawkins home" style="view-transition-name: logo-ashton-hawkins;">
-      <span class="logotype__text">ASHTON HAWKINS_</span>
+      <span class="logotype__text">ASHTON HAWKINS</span>
       <Cursor class="logotype__cursor" />
     </a>
 
@@ -32,14 +35,7 @@ const isActive = (href: string) => {
       <ul>
         {links.map((link) => (
           <li>
-            <a
-              href={link.href}
-              aria-current={isActive(link.href) ? 'page' : undefined}
-              class={isActive(link.href) ? 'active' : undefined}
-              style={`view-transition-name: nav-${link.label.toLowerCase()};`}
-            >
-              {link.label}
-            </a>
+            <a href={link.href} aria-current={isActive(link.href) ? 'page' : undefined} class={isActive(link.href) ? 'active' : undefined}>{link.label}</a>
           </li>
         ))}
       </ul>
@@ -47,12 +43,8 @@ const isActive = (href: string) => {
 
     <div class="utility-row">
       <ThemeToggle />
-      <button class="cmd-trigger" type="button" aria-label="Open command palette">
-        <span>⌘K</span>
-      </button>
-      <button class="menu-trigger" type="button" aria-label="Open menu" aria-expanded="false" data-menu-toggle>
-        <span></span><span></span><span></span>
-      </button>
+      <button class="cmd-trigger" type="button" aria-label="Open command palette"><span>⌘K</span></button>
+      <button class="menu-trigger" type="button" aria-label="Open menu" aria-expanded="false" data-menu-toggle><span></span><span></span><span></span></button>
     </div>
   </div>
 
@@ -60,31 +52,34 @@ const isActive = (href: string) => {
     <nav aria-label="Mobile Primary" class="mobile-nav">
       <ul>
         {links.map((link) => (
-          <li>
-            <a href={link.href} aria-current={isActive(link.href) ? 'page' : undefined}>
-              {link.label}
-            </a>
-          </li>
+          <li><a href={link.href} aria-current={isActive(link.href) ? 'page' : undefined}>{link.label}</a></li>
         ))}
       </ul>
     </nav>
     <p class="mobile-kbd-hint">Tip: press <kbd>⌘K</kbd> for command palette</p>
     <p class="mobile-time" data-mobile-time>--:--:--</p>
   </div>
+
+  {pathname !== '/' && <NavTicker />}
 </header>
 
 <script>
+  // @ts-nocheck
   import gsap from 'gsap';
+  gsap.fromTo('[data-header]', { y: -12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.35, ease: 'power2.out' });
 
-  gsap.fromTo(
-    '[data-header]',
-    { y: -16, autoAlpha: 0 },
-    { y: 0, autoAlpha: 1, duration: 0.3, ease: 'power2.out' }
-  );
-
+  const header = document.querySelector('[data-header]');
   const toggle = document.querySelector('[data-menu-toggle]');
   const menu = document.querySelector('[data-mobile-menu]');
   const timeEl = document.querySelector('[data-mobile-time]');
+
+  const updateScrolled = () => {
+    if (!(header instanceof HTMLElement)) return;
+    header.classList.toggle('scrolled', window.scrollY > 8);
+  };
+
+  updateScrolled();
+  window.addEventListener('scroll', updateScrolled, { passive: true });
 
   if (toggle instanceof HTMLButtonElement && menu instanceof HTMLElement) {
     const closeMenu = () => {
@@ -95,30 +90,19 @@ const isActive = (href: string) => {
 
     toggle.addEventListener('click', () => {
       const open = toggle.getAttribute('aria-expanded') === 'true';
-      if (open) {
-        closeMenu();
-        return;
-      }
-
+      if (open) return closeMenu();
       menu.hidden = false;
       toggle.setAttribute('aria-expanded', 'true');
       document.body.classList.add('menu-open');
     });
 
-    menu.querySelectorAll('a').forEach((link) => {
-      link.addEventListener('click', closeMenu);
-    });
+    menu.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu));
   }
 
   if (timeEl instanceof HTMLElement) {
     const updateTime = () => {
-      timeEl.textContent = new Intl.DateTimeFormat(undefined, {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      }).format(new Date());
+      timeEl.textContent = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date());
     };
-
     updateTime();
     setInterval(updateTime, 1000);
   }
@@ -126,34 +110,26 @@ const isActive = (href: string) => {
 
 <style>
   .skip-link { position:absolute; left:-999px; top:0; }
-  .skip-link:focus-visible { left:1rem; top:1rem; background:var(--bg-card); padding:.5rem .75rem; z-index:60; }
-  .site-header { position:fixed; inset:0 0 auto 0; z-index:50; backdrop-filter:blur(12px); background:color-mix(in srgb, var(--bg-primary) 88%, transparent); border-bottom:1px solid var(--border); isolation:isolate; }
-  .header-inner { position:relative; z-index:2; display:flex; align-items:center; justify-content:space-between; gap:1.25rem; padding-block:.75rem; }
+  .skip-link:focus-visible { left:1rem; top:1rem; background:var(--surface-primary); padding:.5rem .75rem; z-index:60; }
+  .site-header { position: sticky; top:0; z-index:50; backdrop-filter: blur(8px); background: color-mix(in srgb, var(--surface-primary) 90%, transparent); isolation:isolate; border-bottom:1px solid transparent; }
+  .site-header.scrolled { border-bottom-color: var(--border); }
+  .header-inner { position:relative; z-index:2; display:flex; align-items:center; justify-content:space-between; gap:1rem; padding-block:.7rem; }
   .logotype { font-family:'IBM Plex Mono',monospace; font-weight:700; color:var(--text-primary); text-decoration:none; display:inline-flex; align-items:center; font-size:1.25rem; letter-spacing:.15em; text-transform:uppercase; }
   .logotype__cursor { margin-left:.15rem; }
-  .desktop-nav { display:none; }
-  .desktop-nav ul { list-style:none; display:flex; gap:1.5rem; padding:0; margin:0; }
-  .desktop-nav a { font-family:'IBM Plex Mono',monospace; font-size:.875rem; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--text-secondary); text-decoration:none; padding:.35rem 0; border-bottom:2px solid transparent; transition:color 150ms ease, border-color 150ms ease; }
-  .desktop-nav a:hover { color:var(--text-primary); }
-  .desktop-nav a.active { color:var(--text-primary); border-bottom-color:var(--accent-primary); }
-  .utility-row { display:flex; align-items:center; gap:.5rem; }
-  .cmd-trigger,.menu-trigger { border:1px solid var(--border); background:var(--bg-card); color:var(--text-secondary); border-radius:999px; padding:.4rem .6rem; }
-  .cmd-trigger { display:none; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; transition:color 150ms ease; }
-  .cmd-trigger:hover { color:var(--text-primary); border-color:var(--border); }
-  kbd { font-family:'IBM Plex Mono',monospace; font-size:.72rem; border:1px solid var(--border); border-bottom-width:2px; border-radius:.35rem; padding:.1rem .3rem; }
-  .menu-trigger { border-radius:.5rem; }
-  .menu-trigger span { display:block; width:1rem; height:2px; margin:2px 0; background:var(--text-secondary); }
-  .mobile-overlay { position:fixed; inset:4.25rem 0 0 0; background:var(--bg-primary); padding:2rem 1.5rem 1.25rem; display:flex; flex-direction:column; justify-content:space-between; border-top:1px solid var(--border); }
-  .mobile-nav ul { list-style:none; margin:0; padding:0; display:grid; gap:1rem; }
-  .mobile-nav a { font-family:'IBM Plex Mono',monospace; font-size:1rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-primary); text-decoration:none; }
-  .mobile-kbd-hint { color:var(--text-secondary); }
-  .mobile-time { font-family:'IBM Plex Mono',monospace; color:var(--text-tertiary); font-size:.85rem; }
-
+  .desktop-nav{display:none;} .desktop-nav ul{list-style:none;display:flex;gap:1rem;padding:0;margin:0;}
+  .desktop-nav a{font-family:'IBM Plex Mono',monospace;font-size:.8rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);text-decoration:none;padding:.35rem 0;border-bottom:2px solid transparent;}
+  .desktop-nav a.active,.desktop-nav a:hover{color:var(--text-primary);} .desktop-nav a.active{border-bottom-color:var(--accent-primary);} 
+  .utility-row{display:flex;align-items:center;gap:.5rem;}
+  .cmd-trigger,.menu-trigger{border:1px solid var(--border);background:var(--surface-primary);color:var(--text-secondary);border-radius:999px;padding:.4rem .6rem;}
+  .cmd-trigger{display:none;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;}
+  .menu-trigger{border-radius:.5rem;} .menu-trigger span{display:block;width:1rem;height:2px;margin:2px 0;background:var(--text-secondary);} 
+  .mobile-overlay{position:fixed;inset:4.25rem 0 0 0;background:var(--surface-primary);padding:2rem 1.5rem 1.25rem;display:flex;flex-direction:column;justify-content:space-between;border-top:1px solid var(--border);} 
+  .mobile-nav ul{list-style:none;margin:0;padding:0;display:grid;gap:1rem;} .mobile-nav a{font-family:'IBM Plex Mono',monospace;font-size:1rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-primary);text-decoration:none;}
+  .mobile-kbd-hint{color:var(--text-secondary);} .mobile-time{font-family:'IBM Plex Mono',monospace;color:var(--text-tertiary);font-size:.85rem;}
   @media (width >= 52rem) {
     .desktop-nav, .cmd-trigger { display:flex; }
     .menu-trigger, .mobile-overlay { display:none; }
-    .header-inner { padding-block:1rem; }
-    .logotype { font-size:1.25rem; }
-    .desktop-nav ul { gap:2rem; }
+    .logotype { font-size:1.5rem; }
+    .desktop-nav ul { gap:1.4rem; }
   }
 </style>

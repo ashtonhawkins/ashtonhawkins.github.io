@@ -1,0 +1,9 @@
+{
+  "Tokyo": { "landmark": "Tokyo Tower", "path": "M100,200 L110,50 L120,200 M90,120 L130,120 M85,140 L135,140" },
+  "London": { "landmark": "Big Ben", "path": "M95,200 L95,60 L100,40 L105,60 L105,200 M80,80 L120,80 M80,200 L120,200" },
+  "Paris": { "landmark": "Eiffel Tower", "path": "M100,200 L80,200 L100,20 L120,200 L100,200 M85,140 L115,140 M90,100 L110,100" },
+  "Reykjavik": { "landmark": "Hallgrímskirkja", "path": "M100,200 L100,30 M80,200 L80,80 L100,30 L120,80 L120,200" },
+  "Lisbon": { "landmark": "Belém Tower", "path": "M70,200 L70,100 L130,100 L130,200 M85,100 L85,50 L115,50 L115,100" },
+  "Mexico City": { "landmark": "Palacio de Bellas Artes", "path": "M60,200 L60,120 L100,80 L140,120 L140,200 M80,120 L80,200 M120,120 L120,200" },
+  "Copenhagen": { "landmark": "Round Tower", "path": "M85,200 L85,80 A15,15 0 0 1 115,80 L115,200 M85,130 L115,130" }
+}

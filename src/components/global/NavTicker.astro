@@ -3,17 +3,18 @@ import NoiseTexture from '@components/ui/NoiseTexture.astro';
 import feedCache from '@data/feeds-cache.json';
 import quotes from '@data/quotes.json';
 
-const deployIso = new Date().toISOString();
-const deployDate = new Date(deployIso);
+const deployDate = new Date();
 const deployStamp = `${deployDate.getUTCFullYear()}.${String(deployDate.getUTCMonth() + 1).padStart(2, '0')}.${String(deployDate.getUTCDate()).padStart(2, '0')} — ${String(deployDate.getUTCHours()).padStart(2, '0')}:${String(deployDate.getUTCMinutes()).padStart(2, '0')}:${String(deployDate.getUTCSeconds()).padStart(2, '0')} UTC`;
 
 const letterboxd = (feedCache as any)?.items?.letterboxd ?? [];
 const listening = (feedCache as any)?.items?.lastfm ?? (feedCache as any)?.items?.spotify ?? [];
+const xPosts = (feedCache as any)?.items?.x ?? [];
 const tickerData = {
   deployStamp,
   quote: quotes[0] ?? null,
   listened: listening[0] ?? null,
-  watched: letterboxd[0] ?? null
+  watched: letterboxd[0] ?? null,
+  xPosts
 };
 ---
 
@@ -21,186 +22,128 @@ const tickerData = {
   <NoiseTexture opacity={0.02} />
   <div class="container-shell max-wide nav-ticker__inner">
     <p class="nav-ticker__content" data-ticker-content>Loading signal…</p>
+    <div class="nav-ticker__glitch" data-ticker-glitch aria-hidden="true"></div>
   </div>
 </div>
 
 <style>
-  .nav-ticker {
-    position: fixed;
-    top: 4.6rem;
-    inset-inline: 0;
-    z-index: 45;
-    border-bottom: 1px solid var(--border);
-    background: color-mix(in srgb, var(--bg-secondary) 88%, var(--bg-primary));
-    height: 1.85rem;
-    overflow: hidden;
-    isolation: isolate;
-  }
-
-  .nav-ticker__inner {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    height: 100%;
-  }
-
-  .nav-ticker__content {
-    margin: 0;
-    width: 100%;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.7rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    transition: opacity 300ms ease;
-    opacity: 1;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .nav-ticker__content.is-fading {
-    opacity: 0;
-  }
-
-  .ticker-link {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .ticker-link:hover {
-    color: var(--text-primary);
-  }
-
-  .mini-map {
-    width: 20px;
-    height: 12px;
-    flex: 0 0 auto;
-  }
-
-  @media (width >= 52rem) {
-    .nav-ticker {
-      top: 5.1rem;
-    }
-
-    .nav-ticker__content {
-      font-size: 0.74rem;
-    }
-  }
-
+  .nav-ticker { position: relative; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--surface-secondary) 90%, transparent); min-height: 38px; isolation: isolate; }
+  .nav-ticker__inner { position: relative; z-index: 2; min-height: 38px; display:flex; align-items:center; }
+  .nav-ticker__content { margin:0; width:100%; display:flex; align-items:center; gap:.45rem; font-family:'IBM Plex Mono', monospace; font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .nav-ticker__content.is-fading { opacity:.45; }
+  .nav-ticker__glitch { position:absolute; inset:0; opacity:0; pointer-events:none; background:repeating-linear-gradient(0deg, transparent 0 2px, color-mix(in srgb, var(--accent-primary) 24%, transparent) 2px 4px); mix-blend-mode:screen; }
+  .nav-ticker__glitch.is-active { opacity:.55; }
+  .ticker-link { color: inherit; text-decoration:none; }
+  .ticker-link:hover { color: var(--text-primary); }
+  .signal-map { width: 40px; height: 20px; flex:0 0 auto; }
+  .browser-icon { width:14px; height:14px; flex:0 0 auto; }
   @media (prefers-reduced-motion: reduce) {
-    .nav-ticker__content {
-      transition: none;
-    }
+    .nav-ticker__content { transition:none; }
   }
 </style>
 
 <script>
+  // @ts-nocheck
   const root = document.querySelector('[data-nav-ticker]');
   const content = document.querySelector('[data-ticker-content]');
+  const glitch = document.querySelector('[data-ticker-glitch]');
 
-  const miniMapSvg = (x = 10, y = 6) => `
-    <svg class="mini-map" viewBox="0 0 100 60" aria-hidden="true">
-      <rect width="100" height="60" fill="transparent" />
-      <path d="M8 18h18l6 8 12-2 8 5 14-3 9 6 10-2 7 6-4 8-15 4-18-2-12 5-20-6-9-10z" fill="none" stroke="currentColor" stroke-width="3" opacity="0.35"/>
-      <circle cx="${x}" cy="${y}" r="3.5" fill="var(--accent-primary)" />
-    </svg>`;
+  const browserIcon = (name) => {
+    const stroke = 'var(--text-secondary)';
+    const icons = {
+      CHROME: `<svg class="browser-icon" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="none" stroke="${stroke}"/><circle cx="7" cy="7" r="2" fill="none" stroke="${stroke}"/><path d="M7 1 L12 4" stroke="${stroke}"/><path d="M2 4 L7 13" stroke="${stroke}"/><path d="M12 4 L7 13" stroke="${stroke}"/></svg>`,
+      SAFARI: `<svg class="browser-icon" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="none" stroke="${stroke}"/><path d="M7 2 L8.5 8.5 L2 7 Z" fill="none" stroke="${stroke}"/></svg>`,
+      FIREFOX: `<svg class="browser-icon" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1.5 C10.2 1.5 12.5 3.9 12.5 7 C12.5 10.2 10 12.5 7 12.5 C4 12.5 1.5 10.2 1.5 7 C1.5 4.5 2.7 2.8 4.8 2.2 C4.2 3.5 4.4 4.8 5.5 5.3 C5.9 3.8 6.7 2.4 8.6 2" fill="none" stroke="${stroke}"/></svg>`,
+      EDGE: `<svg class="browser-icon" viewBox="0 0 14 14" aria-hidden="true"><path d="M12 8.2 C11.8 10.9 9.6 12.5 7 12.5 C3.9 12.5 1.5 10.2 1.5 7 C1.5 3.8 3.9 1.5 7 1.5 C9.6 1.5 11.4 2.9 12.2 5.2 C10.8 4.4 8.7 4.2 6.8 4.9 C5 5.5 3.9 6.8 3.9 8.4 C3.9 9.9 5.1 11 6.7 11 C8.2 11 9.4 10.2 9.8 8.9" fill="none" stroke="${stroke}"/></svg>`,
+      ARC: `<svg class="browser-icon" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 11 C2.8 7.5 5 3 9.8 2.5 C11.2 2.4 12 3.3 12 4.4 C12 6.4 10.4 7.3 8.8 8 C7.2 8.8 6.4 9.6 6.4 10.8 C6.4 11.8 7.1 12.5 8.2 12.5" fill="none" stroke="${stroke}"/></svg>`
+    };
+    return icons[name] ?? '';
+  };
 
-  const parseSignal = () => {
+  const miniMapSvg = (x, y) => `<svg class="signal-map" viewBox="0 0 40 20" aria-hidden="true"><path d="M2 6 L8 5 L10 7 L14 6 L17 8 L20 7 L23 9 L27 8 L31 10 L34 12 L30 14 L24 13 L20 14 L14 12 L10 13 L7 11 L4 10 Z" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.35"/><circle cx="${x}" cy="${y}" r="1.5" fill="var(--accent-primary)" filter="drop-shadow(0 0 3px var(--accent-glow))"/></svg>`;
+
+  const detectBrowser = () => {
     const ua = navigator.userAgent;
-    const browser = /Edg\//.test(ua)
-      ? 'EDGE'
-      : /Chrome\//.test(ua)
-        ? 'CHROME'
-        : /Safari\//.test(ua) && !/Chrome\//.test(ua)
-          ? 'SAFARI'
-          : /Firefox\//.test(ua)
-            ? 'FIREFOX'
-            : 'BROWSER';
+    if (/Arc\//.test(ua)) return 'ARC';
+    if (/Edg\//.test(ua)) return 'EDGE';
+    if (/Firefox\//.test(ua)) return 'FIREFOX';
+    if (/Chrome\//.test(ua) && !/Edg\//.test(ua) && !/Arc\//.test(ua)) return 'CHROME';
+    if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) return 'SAFARI';
+    return '';
+  };
 
-    const os = /Mac OS X/.test(ua)
-      ? 'MACOS'
-      : /Windows/.test(ua)
-        ? 'WINDOWS'
-        : /Android/.test(ua)
-          ? 'ANDROID'
-          : /iPhone|iPad|iOS/.test(ua)
-            ? 'IOS'
-            : 'OS';
-
-    return `${browser} / ${os} / ${window.innerWidth}×${window.innerHeight}`;
+  const detectOS = () => {
+    const ua = navigator.userAgent;
+    if (/Mac OS X/.test(ua)) return 'MACOS';
+    if (/Windows/.test(ua)) return 'WINDOWS';
+    if (/Linux/.test(ua)) return 'LINUX';
+    if (/Android/.test(ua)) return 'ANDROID';
+    if (/iPhone|iPad|iOS/.test(ua)) return 'IOS';
+    return 'OS';
   };
 
   if (root instanceof HTMLElement && content instanceof HTMLElement) {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const payload = JSON.parse(root.dataset.ticker ?? '{}');
-    const baseItems: Array<() => string> = [];
+    const items = [];
     let clock = '';
-    let signal = parseSignal();
-    let geoMap = miniMapSvg();
+    let geoMap = '';
+    let signalLine = '';
 
     const updateClock = () => {
-      clock = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'America/Los_Angeles',
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      }).format(new Date());
+      clock = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit' }).format(new Date());
     };
 
-    const maybeTrack = payload.listened;
-    const maybeFilm = payload.watched;
+    const updateSignal = () => {
+      const browser = detectBrowser();
+      const os = detectOS();
+      const base = browser ? `${browserIcon(browser)} ${browser} / ${os} / ${window.innerWidth}×${window.innerHeight}` : `${navigator.userAgent.slice(0, 40).toUpperCase()}…`;
+      signalLine = `SIGNAL: ${base}${geoMap ? ` ${geoMap}` : ''}`;
+    };
 
-    baseItems.push(() => `PST — ${clock}`);
-    baseItems.push(() => `DEPLOYED: ${payload.deployStamp}`);
+    items.push(() => `PST — ${clock}`);
+    items.push(() => `LAST DEPLOYED: ${payload.deployStamp}`);
 
-    if (maybeTrack?.artist && (maybeTrack?.title || maybeTrack?.name)) {
-      baseItems.push(() => `♫ ${String(maybeTrack.artist).toUpperCase()} — ${String(maybeTrack.title ?? maybeTrack.name).toUpperCase()}`);
+    if (payload.listened?.artist && (payload.listened?.title || payload.listened?.name)) {
+      items.push(() => `♫ ${String(payload.listened.artist).toUpperCase()} — ${String(payload.listened.title ?? payload.listened.name).toUpperCase()}`);
     }
-
-    if (maybeFilm?.title) {
-      baseItems.push(() => `▶ ${String(maybeFilm.title).toUpperCase()}${maybeFilm.year ? ` (${maybeFilm.year})` : ''}`);
+    if (payload.watched?.title) {
+      items.push(() => `▶ ${String(payload.watched.title).toUpperCase()}${payload.watched.year ? ` (${payload.watched.year})` : ''}`);
     }
-
     if (payload.quote?.text && payload.quote?.author) {
-      baseItems.push(() => `<a class="ticker-link" href="/quotes">"${payload.quote.text}" — ${String(payload.quote.author).toUpperCase()}</a>`);
+      items.push(() => `<a class="ticker-link" href="/quotes">"${payload.quote.text}" — ${String(payload.quote.author).toUpperCase()}</a>`);
     }
+    items.push(() => signalLine);
 
-    baseItems.push(() => `SIGNAL: ${signal} ${geoMap}`);
-
-    let i = 0;
-    updateClock();
-
+    let index = 0;
     const render = () => {
-      if (!baseItems.length) return;
-      const html = baseItems[i % baseItems.length]();
-      content.innerHTML = html;
-      i += 1;
+      if (!items.length) return;
+      content.innerHTML = items[index % items.length]();
+      index += 1;
     };
 
-    const rotate = () => {
+    const glitchCut = () => {
       if (reducedMotion) {
         render();
         return;
       }
       content.classList.add('is-fading');
+      glitch?.classList.add('is-active');
       window.setTimeout(() => {
         render();
+      }, 150);
+      window.setTimeout(() => {
+        glitch?.classList.remove('is-active');
         content.classList.remove('is-fading');
-      }, 300);
+      }, 260);
     };
 
+    updateClock();
+    updateSignal();
     render();
     window.setInterval(updateClock, 1000);
-    window.setInterval(rotate, 9000);
-    window.addEventListener('resize', () => {
-      signal = parseSignal();
-    });
+    window.setInterval(glitchCut, 9000);
+    window.addEventListener('resize', updateSignal);
 
     fetch('https://ipapi.co/json/')
       .then((res) => res.json())
@@ -208,12 +151,17 @@ const tickerData = {
         const lat = Number(geo?.latitude);
         const lon = Number(geo?.longitude);
         if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
-        const x = Math.min(95, Math.max(5, ((lon + 180) / 360) * 100));
-        const y = Math.min(55, Math.max(5, ((90 - lat) / 180) * 60));
-        geoMap = miniMapSvg(x, y);
+        const clampedLat = Math.max(-85, Math.min(85, lat));
+        const x = ((lon + 180) / 360) * 40;
+        const latRad = (clampedLat * Math.PI) / 180;
+        const mercN = Math.log(Math.tan(Math.PI / 4 + latRad / 2));
+        const y = 10 - (20 * mercN) / (2 * Math.PI);
+        geoMap = miniMapSvg(Math.max(1.5, Math.min(38.5, x)), Math.max(1.5, Math.min(18.5, y)));
+        updateSignal();
       })
       .catch(() => {
-        geoMap = miniMapSvg();
+        geoMap = '';
+        updateSignal();
       });
   }
 </script>

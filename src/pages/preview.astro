@@ -1,30 +1,27 @@
 ---
-import Page from '@layouts/Page.astro';
-import Nucleus from '@components/home/Nucleus.astro';
-import TravelSection from '@components/home/TravelSection.astro';
-import CyclingSection from '@components/home/CyclingSection.astro';
-import MediaFeeds from '@components/home/MediaFeeds.astro';
-import WritingDrift from '@components/home/WritingDrift.astro';
-import SignalBar from '@components/ui/SignalBar.astro';
+import Page from '../layouts/Page.astro';
+import Nucleus from '../components/home/Nucleus.astro';
+import SignalBar from '../components/ui/SignalBar.astro';
+import MediaFeeds from '../components/home/MediaFeeds.astro';
+import WritingSection from '../components/home/WritingSection.astro';
+import TravelSection from '../components/home/TravelSection.astro';
+import CyclingSection from '../components/home/CyclingSection.astro';
 ---
 
 <Page title="Ashton Hawkins">
   <Nucleus />
-  <SignalBar />
   <div class="dashboard container-shell max-wide">
-    <TravelSection />
-    <SignalBar />
-    <CyclingSection />
     <SignalBar />
     <MediaFeeds />
     <SignalBar />
-    <WritingDrift />
+    <WritingSection />
+    <SignalBar />
+    <TravelSection />
+    <SignalBar />
+    <CyclingSection />
   </div>
 </Page>
 
 <style>
-  .dashboard {
-    display: grid;
-    gap: 0.2rem;
-  }
+  .dashboard { display:grid; gap:.2rem; }
 </style>

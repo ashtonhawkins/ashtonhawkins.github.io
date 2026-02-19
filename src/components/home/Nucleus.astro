@@ -1,154 +1,43 @@
 ---
 import NoiseTexture from '@components/ui/NoiseTexture.astro';
-import NucleusGraphic from '@components/home/NucleusGraphic.astro';
+import NucleusCanvas from '@components/home/NucleusCanvas.astro';
 import quotes from '@data/quotes.json';
 
-const quote = quotes[Math.floor(Math.random() * quotes.length)] ?? quotes[0];
+const quote = quotes[0] ?? { text: '', author: '' };
 ---
 
 <section class="nucleus container-shell max-wide" aria-label="Nucleus">
   <div class="nucleus__frame" data-nucleus data-quotes={JSON.stringify(quotes)}>
-    <NucleusGraphic />
-    <NoiseTexture opacity={0.04} />
-
+    <NucleusCanvas />
+    <NoiseTexture opacity={0.03} />
     <ul class="nucleus__fragments" aria-hidden="true">
-      <li style="--x:6%; --y:14%; --dur:18s; --delay:-3s;">Marin County</li>
-      <li style="--x:68%; --y:18%; --dur:24s; --delay:-8s;">Director, CRO</li>
-      <li style="--x:12%; --y:62%; --dur:28s; --delay:-6s;">Cyclist</li>
-      <li style="--x:73%; --y:66%; --dur:20s; --delay:-10s;">Travel Obsessive</li>
-      <li style="--x:34%; --y:26%; --dur:26s; --delay:-14s;">Building Things</li>
-      <li style="--x:42%; --y:76%; --dur:30s; --delay:-16s;">Optimizing Everything</li>
+      <li style="--x:7%;--y:15%;--dur:24s;">MARIN COUNTY</li>
+      <li style="--x:65%;--y:18%;--dur:28s;">DIRECTOR, CRO</li>
+      <li style="--x:14%;--y:65%;--dur:22s;">CYCLIST</li>
+      <li style="--x:68%;--y:72%;--dur:30s;">TRAVEL OBSESSIVE</li>
+      <li style="--x:39%;--y:28%;--dur:26s;">BUILDING THINGS</li>
     </ul>
-
     <blockquote class="nucleus__quote" data-nucleus-quote>
       <p data-quote-text>“{quote.text}”</p>
-      <footer data-quote-author>— {quote.author}</footer>
+      <footer data-quote-author>{quote.author}</footer>
     </blockquote>
-
-    <div class="nucleus__counter" data-live-counter>
-      <p class="nucleus__seconds" data-seconds>0</p>
-      <p class="nucleus__label">SECONDS LIVE</p>
-    </div>
+    <div class="nucleus__counter"><p class="nucleus__seconds" data-seconds>0</p><p class="nucleus__label">SECONDS LIVE</p></div>
   </div>
 </section>
 
 <style>
-  .nucleus {
-    margin-bottom: 2rem;
-  }
-
-  .nucleus__frame {
-    position: relative;
-    overflow: hidden;
-    min-height: clamp(400px, 55vh, 700px);
-    border: 1px solid var(--border);
-    background: var(--bg-primary);
-  }
-
-  .nucleus__fragments {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .nucleus__fragments li {
-    position: absolute;
-    z-index: 2;
-    top: var(--y);
-    left: var(--x);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.69rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: color-mix(in srgb, var(--text-tertiary) 60%, transparent);
-    animation: drift var(--dur) ease-in-out infinite;
-    animation-delay: var(--delay);
-  }
-
-  .nucleus__quote {
-    position: absolute;
-    inset: 0;
-    z-index: 3;
-    display: grid;
-    place-content: center;
-    text-align: center;
-    padding: 2rem;
-    margin: 0;
-  }
-
-  .nucleus__quote p {
-    margin: 0;
-    font-size: clamp(1rem, 2vw, 1.2rem);
-    font-style: italic;
-    max-width: 55ch;
-  }
-
-  .nucleus__quote footer {
-    margin-top: 0.7rem;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-secondary);
-  }
-
-  .nucleus__counter {
-    position: absolute;
-    left: 50%;
-    bottom: 1.5rem;
-    transform: translateX(-50%);
-    z-index: 4;
-    text-align: center;
-  }
-
-  .nucleus__seconds {
-    margin: 0;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: clamp(1.2rem, 2.5vw, 1.7rem);
-    font-weight: 700;
-    color: var(--accent-primary);
-  }
-
-  .nucleus__label {
-    margin: 0;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.66rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--text-tertiary);
-  }
-
-  [data-nucleus-quote] {
-    transition: opacity 500ms ease;
-  }
-
-  [data-nucleus-quote].is-fading {
-    opacity: 0;
-  }
-
-  @media (width < 48rem) {
-    .nucleus__fragments li:nth-child(n + 5) {
-      display: none;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .nucleus__fragments li,
-    [data-nucleus-quote] {
-      animation: none;
-      transition: none;
-    }
-  }
-
-  @keyframes drift {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(8px);
-    }
-  }
+  .nucleus { margin-bottom: 1.5rem; }
+  .nucleus__frame { position:relative; overflow:hidden; height:clamp(280px,32vh,420px); border:1px solid var(--border); background:var(--surface-primary); }
+  .nucleus__fragments { list-style:none; margin:0; padding:0; }
+  .nucleus__fragments li { position:absolute; top:var(--y); left:var(--x); z-index:2; font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:.12em; color:color-mix(in srgb,var(--text-tertiary) 35%, transparent); animation:frag var(--dur) ease-in-out infinite; }
+  .nucleus__quote { position:absolute; inset:0; z-index:3; display:grid; place-content:center; text-align:center; margin:0; padding:1rem; transition:opacity .4s ease; }
+  .nucleus__quote p { margin:0; font-family:'IBM Plex Sans', sans-serif; font-style:italic; font-size:clamp(.9rem, 1.5vw, 1rem); max-width:54ch; }
+  .nucleus__quote footer { margin-top:.55rem; font-family:'IBM Plex Mono', monospace; font-size:10px; text-transform:uppercase; color:var(--text-secondary); letter-spacing:.08em; }
+  .nucleus__counter { position:absolute; left:50%; bottom:.8rem; transform:translateX(-50%); z-index:4; text-align:center; }
+  .nucleus__seconds { margin:0; font:700 clamp(1.1rem,2vw,1.5rem) 'IBM Plex Mono', monospace; color:var(--accent-primary); }
+  .nucleus__label { margin:0; font:10px 'IBM Plex Mono', monospace; color:var(--text-tertiary); letter-spacing:.1em; }
+  @keyframes frag {0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
+  @media (prefers-reduced-motion: reduce) { .nucleus__fragments li,.nucleus__quote{animation:none;transition:none;} }
 </style>
 
 <script>
@@ -158,40 +47,25 @@ const quote = quotes[Math.floor(Math.random() * quotes.length)] ?? quotes[0];
   const quoteWrap = document.querySelector('[data-nucleus-quote]');
   const quoteText = document.querySelector('[data-quote-text]');
   const quoteAuthor = document.querySelector('[data-quote-author]');
-
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   if (secondsEl instanceof HTMLElement) {
-    const renderSeconds = () => {
-      const seconds = Math.max(0, Math.floor((Date.now() - launchDate) / 1000));
-      secondsEl.textContent = seconds.toLocaleString();
-    };
-
-    renderSeconds();
-    window.setInterval(renderSeconds, reduced ? 60000 : 1000);
+    const render = () => { secondsEl.textContent = Math.max(0, Math.floor((Date.now() - launchDate) / 1000)).toLocaleString(); };
+    render(); setInterval(render, reduced ? 60000 : 1000);
   }
 
-  if (
-    !reduced &&
-    nucleus instanceof HTMLElement &&
-    quoteWrap instanceof HTMLElement &&
-    quoteText instanceof HTMLElement &&
-    quoteAuthor instanceof HTMLElement
-  ) {
+  if (!reduced && nucleus instanceof HTMLElement && quoteWrap instanceof HTMLElement && quoteText instanceof HTMLElement && quoteAuthor instanceof HTMLElement) {
     const pool = JSON.parse(nucleus.dataset.quotes ?? '[]');
-    let index = Math.floor(Math.random() * pool.length);
-
-    const rotateQuote = () => {
+    let index = 0;
+    setInterval(() => {
       if (pool.length < 2) return;
-      quoteWrap.classList.add('is-fading');
-      window.setTimeout(() => {
+      quoteWrap.style.opacity = '0';
+      setTimeout(() => {
         index = (index + 1) % pool.length;
         quoteText.textContent = `“${pool[index].text}”`;
-        quoteAuthor.textContent = `— ${pool[index].author}`;
-        quoteWrap.classList.remove('is-fading');
-      }, 500);
-    };
-
-    window.setInterval(rotateQuote, 20000);
+        quoteAuthor.textContent = String(pool[index].author).toUpperCase();
+        quoteWrap.style.opacity = '1';
+      }, 400);
+    }, 25000);
   }
 </script>
