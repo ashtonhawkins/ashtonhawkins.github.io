@@ -1,0 +1,22 @@
+---
+interface Props {
+  class?: string;
+}
+const { class: className = '' } = Astro.props;
+---
+
+<span class:list={["cursor-blink", className]} aria-hidden="true">_</span>
+
+<style>
+  .cursor-blink {
+    color: var(--accent-primary);
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cursor-blink { animation: none; opacity: 1; }
+  }
+</style>

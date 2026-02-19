@@ -35,8 +35,8 @@ export default {
         border: 'var(--border)'
       },
       fontFamily: {
-        sans: ['Inter Variable', 'sans-serif'],
-        body: ['Inter Variable', 'sans-serif'],
+        sans: ['IBM Plex Sans', 'sans-serif'],
+        body: ['IBM Plex Sans', 'sans-serif'],
         display: ['Space Grotesk Variable', 'sans-serif'],
         mono: ['IBM Plex Mono', 'monospace']
       },

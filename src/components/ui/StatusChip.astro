@@ -1,0 +1,44 @@
+---
+interface Props {
+  label: string;
+  active?: boolean;
+  class?: string;
+}
+const { label, active = false, class: className = '' } = Astro.props;
+---
+<span class:list={["status-chip", { "status-chip--active": active }, className]}>
+  <span class="status-chip__dot" aria-hidden="true"></span>
+  <span class="status-chip__label">{label}</span>
+</span>
+
+<style>
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.2rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  .status-chip__dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: var(--text-tertiary);
+  }
+  .status-chip--active .status-chip__dot {
+    background-color: var(--accent-primary);
+    box-shadow: 0 0 4px var(--accent-glow);
+  }
+  .status-chip--active {
+    color: var(--text-primary);
+    border-color: var(--accent-primary);
+  }
+</style>

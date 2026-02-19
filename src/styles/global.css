@@ -47,7 +47,7 @@ body {
   margin: 0;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
   line-height: 1.6;
   transition: background-color 150ms ease, color 150ms ease;
 }
@@ -87,8 +87,27 @@ h4 {
   font-family: 'Space Grotesk Variable', sans-serif;
   text-transform: uppercase;
   letter-spacing: -0.03em;
-  font-weight: 700;
   line-height: 1.2;
+}
+
+h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+h4 {
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 code,
@@ -296,7 +315,7 @@ html[data-theme='light'] .crt-scanlines::after {
   body {
     background: #fff !important;
     color: #000 !important;
-    font-family: 'Inter Variable', Arial, sans-serif;
+    font-family: 'IBM Plex Sans', Arial, sans-serif;
   }
 
   nav,
