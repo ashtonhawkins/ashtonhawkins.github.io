@@ -17,7 +17,7 @@ const {
   description = 'Digital product leader crafting AI-native experiences and thoughtful web interfaces.'
 } = Astro.props;
 
-const pageTitle = `${title} — Ashton Hawkins`;
+const pageTitle = title.includes('Ashton Hawkins') ? title : `${title} — Ashton Hawkins`;
 const canonical = new URL(Astro.url.pathname, Astro.site).toString();
 const ogImage = new URL('/favicon.svg', Astro.site).toString();
 const personSchema = {
