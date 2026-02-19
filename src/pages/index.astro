@@ -1,5 +1,17 @@
 ---
+import CRTBoot from '@components/animations/CRTBoot.astro';
 import Page from '@layouts/Page.astro';
 ---
 
-<Page title="Home" />
+<div class="home-shell" data-home-shell>
+  <div data-home-content>
+    <Page title="Home" />
+  </div>
+  <CRTBoot />
+</div>
+
+<style>
+  .home-shell {
+    position: relative;
+  }
+</style>
