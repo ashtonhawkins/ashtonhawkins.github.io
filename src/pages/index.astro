@@ -1,6 +1,6 @@
 ---
 import Page from '@layouts/Page.astro';
-import career from '@data/career.json';
+import home from '@data/home.json';
 import site from '@data/site.json';
 
 const buildDate = new Date().toLocaleDateString('en-US', {
@@ -55,7 +55,7 @@ const feedPlaceholders = {
 <Page title="Home" class="homepage-main">
       <section class="hero max-wide container-shell" data-hero>
         <h1 class="hero__title" data-scramble-text>{site.name}</h1>
-        <p class="hero__positioning">{career.positioningStatement}</p>
+        <p class="hero__positioning">{home.positioningStatement}</p>
 
         <ul class="status-strip" aria-label="Current status">
           <li>LOCATION // {site.location}</li>
@@ -67,7 +67,7 @@ const feedPlaceholders = {
       <section class="impact max-wide container-shell" aria-labelledby="impact-heading">
         <h2 id="impact-heading" class="section-kicker">// IMPACT</h2>
         <div class="impact__grid" data-impact-group>
-          {career.highlights.map((highlight) => (
+          {home.highlights.map((highlight) => (
             <article class="impact-tile" data-impact-tile data-value={highlight.value}>
               <p class="impact-tile__value" data-impact-value>{highlight.value}</p>
               <p class="impact-tile__label">{highlight.label}</p>
