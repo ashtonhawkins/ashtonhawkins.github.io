@@ -1,9 +1,9 @@
 [
-  { "place": "Tokyo", "country": "Japan", "visits": 3, "photos": [{ "src": "/images/travel/tokyo.svg", "alt": "Tokyo placeholder frame" }] },
-  { "place": "London", "country": "UK", "visits": 2, "photos": [{ "src": "/images/travel/london.svg", "alt": "London placeholder frame" }] },
-  { "place": "Lisbon", "country": "Portugal", "visits": 1, "photos": [{ "src": "/images/travel/lisbon.svg", "alt": "Lisbon placeholder frame" }] },
-  { "place": "Reykjavik", "country": "Iceland", "visits": 1, "photos": [{ "src": "/images/travel/reykjavik.svg", "alt": "Reykjavik placeholder frame" }] },
-  { "place": "Paris", "country": "France", "visits": 4, "photos": [{ "src": "/images/travel/paris.svg", "alt": "Paris placeholder frame" }] },
-  { "place": "Mexico City", "country": "Mexico", "visits": 2, "photos": [{ "src": "/images/travel/mexico-city.svg", "alt": "Mexico City placeholder frame" }] },
-  { "place": "Copenhagen", "country": "Denmark", "visits": 1, "photos": [{ "src": "/images/travel/copenhagen.svg", "alt": "Copenhagen placeholder frame" }] }
+  { "place": "Tokyo", "country": "Japan", "visits": 3, "routes": ["SFO → NRT"], "photos": [] },
+  { "place": "London", "country": "UK", "visits": 2, "routes": ["SFO → LHR"], "photos": [] },
+  { "place": "Lisbon", "country": "Portugal", "visits": 1, "routes": ["SFO → LIS"], "photos": [] },
+  { "place": "Reykjavik", "country": "Iceland", "visits": 1, "routes": ["SFO → KEF"], "photos": [] },
+  { "place": "Paris", "country": "France", "visits": 4, "routes": ["SFO → CDG"], "photos": [] },
+  { "place": "Mexico City", "country": "Mexico", "visits": 2, "routes": ["SFO → MEX"], "photos": [] },
+  { "place": "Copenhagen", "country": "Denmark", "visits": 1, "routes": ["SFO → CPH"], "photos": [] }
 ]

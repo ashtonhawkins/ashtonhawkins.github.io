@@ -1,5 +1,9 @@
 {
-  "thisMonth": { "miles": 127, "elevation": 8400 },
+  "thisMonth": { "miles": 127, "elevation": 8400, "rides": 9 },
   "lastRide": { "miles": 23, "elevation": 1400, "duration": "1:42:00" },
-  "ytd": { "miles": 847 }
+  "ytd": { "miles": 847 },
+  "lastRouteTrace": "M10,80 C40,10 65,10 95,80 S150,150 180,80 C210,10 235,10 265,80",
+  "weeklyMiles": [22, 35, 28, 41, 33, 27, 38, 31],
+  "weeklyElevation": [1800, 2900, 2200, 3400, 2700, 2100, 3100, 2500],
+  "goals": { "monthlyMiles": 200, "monthlyElevation": 15000 }
 }

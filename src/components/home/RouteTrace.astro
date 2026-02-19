@@ -1,0 +1,27 @@
+---
+interface Props { path: string; }
+const { path } = Astro.props;
+---
+<div class="route-trace">
+  <svg viewBox="0 0 280 160" aria-label="Abstract route trace">
+    <path d={path} data-route-path />
+  </svg>
+</div>
+
+<style>
+  .route-trace { border:1px solid var(--border); min-height:170px; display:grid; place-items:center; }
+  .route-trace svg { width:200px; height:150px; }
+  .route-trace path { fill:none; stroke:var(--accent-primary); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+
+<script>
+  // @ts-nocheck
+  const path = document.querySelector('[data-route-path]');
+  if (path instanceof SVGPathElement) {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const len = path.getTotalLength();
+    path.style.strokeDasharray = `${len}`;
+    path.style.strokeDashoffset = reduced ? '0' : `${len}`;
+    if (!reduced) path.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { duration: 2400, easing: 'ease-out', fill: 'forwards' });
+  }
+</script>
