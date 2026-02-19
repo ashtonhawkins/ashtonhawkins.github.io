@@ -1,0 +1,59 @@
+---
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import StatusChip from '@components/ui/StatusChip.astro';
+import feeds from '@data/feeds-cache.json';
+
+const watching = (feeds as any)?.items?.letterboxd?.[0] ?? null;
+const reading = (feeds as any)?.items?.literal?.[0] ?? null;
+const listening = (feeds as any)?.items?.lastfm?.[0] ?? (feeds as any)?.items?.spotify?.[0] ?? null;
+---
+
+<section class="media-feeds">
+  <SectionHeader label="Watching / Reading / Listening" />
+  <div class="media-feeds__grid">
+    <article class="media-card">
+      <StatusChip label="RECENTLY WATCHED" />
+      <h3>{watching?.title ?? 'No recent film cached'}</h3>
+      <p>{watching?.year ?? '----'} {watching?.rating ? `· ${watching.rating}` : ''}</p>
+    </article>
+    <article class="media-card">
+      <StatusChip label={reading?.status === 'reading' ? 'CURRENTLY READING' : 'RECENTLY FINISHED'} active />
+      <h3>{reading?.title ?? 'No recent book cached'}</h3>
+      <p>{reading?.author ?? 'Awaiting Literal feed sync'}</p>
+    </article>
+    <article class="media-card">
+      <StatusChip label="LAST PLAYED" />
+      <h3>{listening ? `${listening.artist} — ${listening.title ?? listening.name}` : 'No recent track cached'}</h3>
+      <p>{listening?.album ?? 'Awaiting music feed sync'}</p>
+    </article>
+  </div>
+</section>
+
+<style>
+  .media-feeds__grid {
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  .media-card {
+    border: 1px solid var(--border);
+    padding: 1rem;
+  }
+
+  .media-card h3 {
+    margin: 0.6rem 0 0.2rem;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 1rem;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .media-card p {
+    margin: 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+  }
+</style>
