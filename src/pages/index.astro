@@ -14,12 +14,6 @@ import Base from '@layouts/Base.astro';
         Something new is loading...
         <span class="coming-soon__cursor" aria-hidden="true"></span>
       </p>
-
-      <p class="coming-soon__links" aria-label="Contact links">
-        <a href="https://www.linkedin.com/in/ashtonhawkins" target="_blank" rel="noreferrer">LinkedIn</a>
-        <span aria-hidden="true">·</span>
-        <a href="mailto:ashtonhawkins@gmail.com">Email</a>
-      </p>
     </div>
   </main>
 </Base>
@@ -31,20 +25,6 @@ import Base from '@layouts/Base.astro';
     place-items: center;
     padding: 1.5rem;
     background: var(--bg-primary);
-  }
-
-  .coming-soon__content {
-    width: 100%;
-    max-width: 32rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 0.65rem;
-    opacity: 0;
-    animation: fade-in 800ms ease-out forwards;
-  }
-
   }
 
   .coming-soon__content {
@@ -92,56 +72,6 @@ import Base from '@layouts/Base.astro';
     background: var(--accent-primary);
     display: inline-block;
     animation: cursor-blink 1s steps(1, end) infinite;
-  }
-
-  .coming-soon__name {
-    margin: 0;
-    font-family: 'Space Grotesk Variable', 'Space Grotesk', 'Inter Variable', sans-serif;
-    font-size: 1.5rem;
-    line-height: 1.2;
-    color: var(--text-primary);
-    letter-spacing: -0.015em;
-  }
-
-  .coming-soon__status {
-    margin: 0;
-    display: inline-flex;
-    align-items: baseline;
-    gap: 0.3rem;
-    font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
-    font-size: 1rem;
-    color: var(--text-secondary);
-  }
-
-  .coming-soon__cursor {
-    width: 0.56ch;
-    height: 1em;
-    background: var(--accent-primary);
-    display: inline-block;
-    animation: cursor-blink 1s steps(1, end) infinite;
-  }
-
-  .coming-soon__links {
-    margin: 2.3rem 0 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
-    font-size: 0.875rem;
-    color: var(--text-tertiary);
-  }
-
-  .coming-soon__links a {
-    color: var(--text-tertiary);
-    text-decoration: none;
-  }
-
-  .coming-soon__links a:hover {
-    color: var(--text-secondary);
-  }
-
-  .coming-soon__links a:focus-visible {
-    color: var(--text-primary);
   }
 
   @keyframes cursor-blink {
