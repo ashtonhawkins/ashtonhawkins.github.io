@@ -1,5 +1,421 @@
 ---
 import Page from '@layouts/Page.astro';
+import TimelineCard from '@components/ui/TimelineCard.astro';
+import careerChapters from '@data/career.json';
 ---
 
-<Page title="About" />
+<Page title="About" class="about-main">
+  <section class="about-hero container-shell max-wide" data-about-hero>
+    <h1 data-scramble-text>About</h1>
+    <p class="about-subhead">The short version of a long story.</p>
+  </section>
+
+  <section class="about-positioning container-shell max-wide" data-reveal>
+    <div class="positioning-copy">
+      <p>
+        I work where web experience and digital operations meet. Over the last decade, I’ve helped build and optimize
+        ecommerce ecosystems across CRO, SEO, information architecture, taxonomy, content systems, analytics, and the
+        operating rhythms that keep all of it moving.
+      </p>
+      <p>
+        That work has happened inside massive retail environments, early healthcare startups, digital consultancies,
+        and independent engagements. The throughline has been the same: take fragmented systems, reduce operational
+        drag, and turn them into compounding engines for organic-led growth.
+      </p>
+      <p>
+        I build teams, own SaaS stacks, negotiate vendor relationships, and ship quickly without sacrificing quality.
+        Right now, I’m focused on senior director opportunities where I can scale this approach across larger,
+        more complex organizations.
+      </p>
+    </div>
+  </section>
+
+  <section class="career container-shell max-wide" aria-labelledby="experience-heading">
+    <h2 id="experience-heading" class="section-kicker">// EXPERIENCE</h2>
+    <div class="timeline" data-timeline>
+      {careerChapters.map((chapter, index) => (
+        <TimelineCard class={`timeline-card ${index % 2 === 0 ? 'timeline-card--left' : 'timeline-card--right'}`}>
+          <article class="timeline-card__content" data-timeline-card>
+            <header>
+              <p class="timeline-card__meta">{chapter.period} · {chapter.location}</p>
+              <h3>{chapter.role}</h3>
+              <p class="timeline-card__employer">{chapter.employer}</p>
+              {chapter.description ? <p class="timeline-card__description">{chapter.description}</p> : null}
+            </header>
+            <ul>
+              {chapter.bullets.map((bullet) => (
+                <li>{bullet}</li>
+              ))}
+            </ul>
+          </article>
+        </TimelineCard>
+      ))}
+    </div>
+  </section>
+
+  <section class="competencies container-shell max-wide" aria-labelledby="competencies-heading" data-reveal>
+    <h2 id="competencies-heading" class="section-kicker">// COMPETENCIES</h2>
+    <div class="competency-groups">
+      <article>
+        <h3>Domains</h3>
+        <ul class="chip-cloud">
+          <li>Ecommerce strategy</li>
+          <li>Web merchandising</li>
+          <li>CRO/SEO</li>
+          <li>Information architecture &amp; taxonomy</li>
+          <li>Analytics &amp; dashboards</li>
+          <li>Program/ops leadership</li>
+          <li>SaaS stack ownership</li>
+          <li>Org enablement &amp; training</li>
+        </ul>
+      </article>
+      <article>
+        <h3>Tools</h3>
+        <ul class="chip-cloud">
+          <li>GA4</li>
+          <li>Adobe Analytics</li>
+          <li>Looker Studio</li>
+          <li>Tableau</li>
+          <li>SEMRush</li>
+          <li>Jira</li>
+          <li>Airtable</li>
+          <li>Asana</li>
+          <li>Notion</li>
+          <li>Shopify</li>
+          <li>Magento</li>
+          <li>WordPress</li>
+          <li>Google Merchant Center</li>
+          <li>Heap</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section class="awards container-shell max-wide" data-reveal>
+    <h2 class="section-kicker">// AWARDS</h2>
+    <article class="award-card">
+      <h3>Digital &amp; Tech Team of the Year — Fortune 1 Retailer, 2021</h3>
+      <p>Omnichannel experience redesign — +177% digital category traffic</p>
+    </article>
+  </section>
+
+  <section class="education container-shell max-wide" data-reveal>
+    <h2 class="section-kicker">// EDUCATION</h2>
+    <ul>
+      <li>BA, English / Political Science — College of Charleston</li>
+      <li>Political Strategy — University of Northampton (2008)</li>
+    </ul>
+  </section>
+</Page>
+
+<script>
+  import gsap from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const scrambleText = (element: HTMLElement, targetText: string, duration = 0.6) => {
+    const glyphs = '!<>-_\\/[]{}—=+*^?#________';
+    const frameDuration = 1000 / 60;
+    const totalFrames = Math.max(1, Math.floor((duration * 1000) / frameDuration));
+    let frame = 0;
+
+    const update = () => {
+      frame += 1;
+      const progress = frame / totalFrames;
+      const resolvedChars = Math.floor(progress * targetText.length);
+
+      const output = targetText
+        .split('')
+        .map((char, index) => {
+          if (char === ' ') return ' ';
+          if (index < resolvedChars) return targetText[index];
+          return glyphs[Math.floor(Math.random() * glyphs.length)] ?? char;
+        })
+        .join('');
+
+      element.textContent = output;
+
+      if (frame < totalFrames) {
+        window.requestAnimationFrame(update);
+      } else {
+        element.textContent = targetText;
+      }
+    };
+
+    window.requestAnimationFrame(update);
+  };
+
+  const scrambleTarget = document.querySelector<HTMLElement>('[data-scramble-text]');
+  if (scrambleTarget) {
+    const finalText = scrambleTarget.textContent ?? '';
+    if (prefersReducedMotion) {
+      scrambleTarget.textContent = finalText;
+    } else {
+      scrambleText(scrambleTarget, finalText, 0.65);
+    }
+  }
+
+  const revealElements = gsap.utils.toArray<HTMLElement>('[data-reveal]');
+  revealElements.forEach((element) => {
+    gsap.fromTo(
+      element,
+      { opacity: 0, y: 28 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: prefersReducedMotion ? 0.01 : 0.6,
+        ease: 'power2.out',
+        scrollTrigger: {
+          trigger: element,
+          start: 'top 84%',
+          once: true
+        }
+      }
+    );
+  });
+
+  const timelineCards = gsap.utils.toArray<HTMLElement>('[data-timeline-card]');
+  timelineCards.forEach((card, index) => {
+    const accentLine = card;
+
+    gsap.fromTo(
+      card,
+      { opacity: 0, y: 30 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: prefersReducedMotion ? 0.01 : 0.65,
+        delay: prefersReducedMotion ? 0 : index * 0.04,
+        ease: 'power2.out',
+        scrollTrigger: {
+          trigger: card,
+          start: 'top 82%',
+          once: true
+        }
+      }
+    );
+
+    if (!prefersReducedMotion && accentLine) {
+      gsap.fromTo(
+        accentLine,
+        { '--line-scale': 0 },
+        {
+          '--line-scale': 1,
+          duration: 0.55,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: card,
+            start: 'top 82%',
+            once: true
+          }
+        }
+      );
+    }
+  });
+</script>
+
+<style>
+  .about-main {
+    display: grid;
+    gap: clamp(2.75rem, 6vw, 5rem);
+    padding-bottom: 5rem;
+  }
+
+  .about-hero {
+    padding-top: clamp(2rem, 6vw, 4.5rem);
+  }
+
+  .about-hero h1 {
+    font-size: clamp(2.4rem, 8vw, 5rem);
+    margin: 0;
+    letter-spacing: -0.03em;
+  }
+
+  .about-subhead {
+    margin: 0.5rem 0 0;
+    color: var(--text-secondary);
+    font-size: clamp(1rem, 2.4vw, 1.2rem);
+  }
+
+  .positioning-copy {
+    max-width: 40rem;
+    font-size: clamp(1.09rem, 2.2vw, 1.32rem);
+    line-height: 1.8;
+    color: var(--text-secondary);
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .positioning-copy p {
+    margin: 0;
+  }
+
+  .section-kicker {
+    margin: 0 0 1rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
+    color: var(--text-tertiary);
+  }
+
+  .timeline {
+    position: relative;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    left: 50%;
+    width: 1px;
+    background: color-mix(in srgb, var(--border) 80%, transparent);
+    transform: translateX(-0.5px);
+  }
+
+  .timeline-card {
+    display: flex;
+  }
+
+  .timeline-card--left {
+    justify-content: flex-start;
+  }
+
+  .timeline-card--right {
+    justify-content: flex-end;
+  }
+
+  .timeline-card__content {
+    --line-scale: 0;
+    position: relative;
+    width: min(100%, 32rem);
+    border: 1px solid var(--border);
+    border-radius: 0.9rem;
+    padding: 1rem 1rem 1rem 1.2rem;
+    background: color-mix(in srgb, var(--bg-card) 94%, transparent);
+    overflow: hidden;
+  }
+
+  .timeline-card__content::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 2px;
+    background: var(--accent-primary);
+    transform-origin: top;
+    transform: scaleY(var(--line-scale));
+  }
+
+  .timeline-card h3 {
+    margin: 0.25rem 0;
+    font-size: 1.2rem;
+    line-height: 1.3;
+  }
+
+  .timeline-card__meta,
+  .timeline-card__employer {
+    margin: 0;
+    color: var(--text-tertiary);
+    font-size: 0.88rem;
+  }
+
+  .timeline-card__description {
+    margin: 0.6rem 0 0;
+    color: var(--text-secondary);
+  }
+
+  .timeline-card ul {
+    margin: 0.8rem 0 0;
+    padding-left: 1rem;
+    color: var(--text-secondary);
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .competency-groups {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .competency-groups h3 {
+    margin: 0 0 0.75rem;
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+
+  .chip-cloud {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  .chip-cloud li {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.42rem 0.7rem;
+    font-size: 0.8rem;
+    line-height: 1.25;
+    color: var(--text-secondary);
+    background: color-mix(in srgb, var(--bg-card) 86%, transparent);
+    transition: box-shadow 180ms ease, border-color 180ms ease, color 180ms ease;
+  }
+
+  .chip-cloud li:hover {
+    color: var(--text-primary);
+    border-color: color-mix(in srgb, var(--accent-primary) 45%, var(--border));
+    box-shadow: 0 0 1rem color-mix(in srgb, var(--accent-primary) 18%, transparent);
+  }
+
+  .award-card {
+    border: 1px solid var(--border);
+    border-radius: 0.9rem;
+    padding: 1rem 1.1rem;
+    max-width: 42rem;
+    background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+  }
+
+  .award-card h3 {
+    margin: 0;
+    font-size: clamp(1rem, 2vw, 1.2rem);
+  }
+
+  .award-card p {
+    margin: 0.4rem 0 0;
+    color: var(--text-secondary);
+  }
+
+  .education ul {
+    margin: 0;
+    padding-left: 1rem;
+    color: var(--text-secondary);
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  @media (max-width: 900px) {
+    .timeline::before {
+      left: 0.5rem;
+    }
+
+    .timeline-card,
+    .timeline-card--left,
+    .timeline-card--right {
+      justify-content: flex-start;
+    }
+
+    .timeline-card__content {
+      margin-left: 1.4rem;
+      width: min(100%, 44rem);
+    }
+  }
+</style>

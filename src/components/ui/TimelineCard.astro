@@ -1,3 +1,9 @@
 ---
+interface Props {
+  class?: string;
+}
+
+const { class: className = '' } = Astro.props;
 ---
-<div data-component="TimelineCard"><slot /></div>
+
+<div class={`timeline-card-shell ${className}`.trim()} data-component="TimelineCard"><slot /></div>

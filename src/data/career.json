@@ -1,25 +1,64 @@
-{
-  "positioningStatement": "I build high-performing web experiences and the digital operations behind them — CRO, SEO, taxonomy, content systems, analytics, and platform modernization. I turn messy ecosystems into compounding growth.",
-  "highlights": [
-    {
-      "value": "~30%",
-      "label": "Brand engagement lift",
-      "context": "Organic-led acquisition & content improvements"
-    },
-    {
-      "value": "+20%",
-      "label": "YoY category sales",
-      "context": "Merchandising, catalog quality & on-page SEO"
-    },
-    {
-      "value": "7",
-      "label": "Direct reports led",
-      "context": "Plus multi-vendor SaaS stack ownership"
-    },
-    {
-      "value": "+177%",
-      "label": "Digital category traffic",
-      "context": "Omnichannel experience redesign — award-winning"
-    }
-  ]
-}
+[
+  {
+    "id": "portfolio-director",
+    "role": "Director, Web Experience & Optimization",
+    "employer": "Portfolio Role — Healthcare Ecommerce (2 businesses)",
+    "period": "2022 — Present",
+    "location": "Remote",
+    "description": "Operating across two healthcare ecommerce businesses, leading web experience, optimization, and digital operations end-to-end.",
+    "bullets": [
+      "Own experimentation/CRO, SEO, IA/taxonomy, content systems, analytics, and day-to-day site operations",
+      "Built a modernization framework spanning platforms, process automation, and executive dashboards",
+      "Shifted acquisition strategy from paid-heavy to organic-led, increasing engagement and resilience",
+      "Own SaaS vendor stack and budget — negotiate agreements and lead cross-org implementations",
+      "Built onboarding and training programs to upskill teams and institutionalize quality shipping rhythms"
+    ]
+  },
+  {
+    "id": "fortune1-manager",
+    "role": "Site Operations Manager, Digital Merchandising",
+    "employer": "Fortune 1 Retailer — Ecommerce",
+    "period": "2020 — 2021",
+    "location": "SF Bay Area & Remote",
+    "bullets": [
+      "Managed end-to-end performance of a multi-billion-dollar digital furniture business",
+      "Delivered +20% YoY category sales through catalog quality and merchandising improvements",
+      "Led 7 direct reports across site merchandising and content; drove OKRs and operating rhythms"
+    ]
+  },
+  {
+    "id": "fortune1-lead",
+    "role": "Optimization & Structured Data Lead",
+    "employer": "Fortune 1 Retailer — Ecommerce",
+    "period": "2018 — 2020",
+    "location": "SF Bay Area",
+    "bullets": [
+      "Led sitewide CRO and site-speed improvement programs; codified technical best practices",
+      "Rebuilt information architecture for major Home categories; improved internal search and browse",
+      "Implemented attribution strategy to automate merchandising and boost external search relevance"
+    ]
+  },
+  {
+    "id": "fortune1-merch",
+    "role": "Category Merchandising",
+    "employer": "Fortune 1 Retailer — Ecommerce",
+    "period": "2018",
+    "location": "SF Bay Area",
+    "bullets": [
+      "Drove category profitability and vendor relationships using customer analytics",
+      "Improved revenue through affiliate referral optimization and paid keyword strategy",
+      "Launched a new private-label brand with cross-functional partners"
+    ]
+  },
+  {
+    "id": "consultant",
+    "role": "Digital Strategy Consultant",
+    "employer": "Independent Consultancy",
+    "period": "2014 — 2018",
+    "location": "Remote",
+    "bullets": [
+      "Built strategy frameworks for small enterprises: brand, content, CX, and analytics programs",
+      "Created templates and training to improve digital execution across client organizations"
+    ]
+  }
+]
