@@ -5,7 +5,7 @@ import { ViewTransitions } from 'astro:transitions';
 
 import interVariableLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
 import spaceGroteskVariableLatin from '@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url';
-import jetBrainsMonoVariableLatin from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url';
+import ibmPlexMonoLatin400 from '@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2?url';
 
 interface Props {
   title?: string;
@@ -62,7 +62,7 @@ const personSchema = {
 
     <link rel="preload" href={interVariableLatin} as="font" type="font/woff2" crossorigin="anonymous" />
     <link rel="preload" href={spaceGroteskVariableLatin} as="font" type="font/woff2" crossorigin="anonymous" />
-    <link rel="preload" href={jetBrainsMonoVariableLatin} as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" href={ibmPlexMonoLatin400} as="font" type="font/woff2" crossorigin="anonymous" />
 
     <script type="application/ld+json" set:html={JSON.stringify(personSchema)}></script>
     <ViewTransitions />
