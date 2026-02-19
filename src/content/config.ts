@@ -14,8 +14,15 @@ const work = defineCollection({
   type: 'content',
   schema: z.object({
     title: z.string(),
-    summary: z.string().optional(),
-    date: z.coerce.date().optional(),
+    employer: z.string(),
+    year: z.string(),
+    category: z.array(z.string()),
+    description: z.string(),
+    problem: z.string().optional(),
+    insight: z.string().optional(),
+    approach: z.array(z.string()).optional(),
+    results: z.array(z.string()).optional(),
+    impact: z.string().optional(),
     draft: z.boolean().default(false)
   })
 });

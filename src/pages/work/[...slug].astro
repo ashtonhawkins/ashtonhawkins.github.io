@@ -1,11 +1,81 @@
 ---
 import Page from '@layouts/Page.astro';
+import { getCollection, render } from 'astro:content';
 
 export const prerender = true;
 
-export function getStaticPaths() {
-  return [];
+export async function getStaticPaths() {
+  const caseStudies = await getCollection('work', ({ data }) => !data.draft);
+
+  return caseStudies.map((study) => ({
+    params: { slug: study.slug },
+    props: { study }
+  }));
 }
+
+const { study } = Astro.props;
+const { Content } = await render(study);
 ---
 
-<Page title="Work Case Study" />
+<Page title={study.data.title} description={study.data.description}>
+  <article>
+    <header class="border-b border-border bg-bg-secondary/60 py-16 md:py-24">
+      <div class="container-shell max-wide mx-auto px-6">
+        <div class="space-y-6">
+          <p class="text-sm uppercase tracking-[0.18em] text-text-secondary">Case Study</p>
+          <h1 class="max-w-4xl text-4xl font-semibold tracking-tight text-text-primary md:text-6xl">
+            {study.data.title}
+          </h1>
+          <p class="max-w-2xl text-lg text-text-secondary">{study.data.description}</p>
+          <div class="flex flex-wrap items-center gap-3 text-sm text-text-secondary">
+            <span class="rounded-full border border-border px-3 py-1">{study.data.employer}</span>
+            <span class="rounded-full border border-border px-3 py-1">{study.data.year}</span>
+            {
+              study.data.category.map((tag) => (
+                <span class="rounded-full border border-border px-3 py-1">{tag}</span>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="container-shell mx-auto max-prose px-6 py-14 md:py-20">
+      <div class="case-prose">
+        <Content />
+      </div>
+    </div>
+  </article>
+</Page>
+
+
+<style>
+  .case-prose {
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+  }
+
+  .case-prose :global(h2) {
+    margin-top: 2.25rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+  }
+
+  .case-prose :global(p),
+  .case-prose :global(ul) {
+    margin-block: 0.9rem;
+  }
+
+  .case-prose :global(ul) {
+    padding-left: 1.4rem;
+  }
+
+  .case-prose :global(blockquote) {
+    margin: 2rem 0 0;
+    border-left: 3px solid var(--accent-primary);
+    padding: 0.4rem 0 0.4rem 1rem;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+  }
+</style>
