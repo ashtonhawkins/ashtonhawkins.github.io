@@ -1,6 +1,7 @@
 ---
 import Base from '@layouts/Base.astro';
 import Header from '@components/global/Header.astro';
+import NavTicker from '@components/global/NavTicker.astro';
 import Footer from '@components/global/Footer.astro';
 
 interface Props {
@@ -10,12 +11,29 @@ interface Props {
 }
 
 const { title, description, class: className = '' } = Astro.props;
+const showTicker = Astro.url.pathname !== '/';
 ---
 
 <Base title={title} description={description}>
   <Header />
-  <main id="content" class={`page-main ${className}`.trim()} style="view-transition-name: page-content;">
+  {showTicker && <NavTicker />}
+  <main id="content" class={`page-main ${showTicker ? 'page-main--with-ticker' : ''} ${className}`.trim()} style="view-transition-name: page-content;">
     <slot />
   </main>
   <Footer />
 </Base>
+
+
+<style>
+  .page-main--with-ticker {
+    padding-top: 7.35rem;
+    min-height: calc(100dvh - 7.35rem);
+  }
+
+  @media (width >= 52rem) {
+    .page-main--with-ticker {
+      padding-top: 7.85rem;
+      min-height: calc(100dvh - 7.85rem);
+    }
+  }
+</style>

@@ -1,0 +1,219 @@
+---
+import NoiseTexture from '@components/ui/NoiseTexture.astro';
+import feedCache from '@data/feeds-cache.json';
+import quotes from '@data/quotes.json';
+
+const deployIso = new Date().toISOString();
+const deployDate = new Date(deployIso);
+const deployStamp = `${deployDate.getUTCFullYear()}.${String(deployDate.getUTCMonth() + 1).padStart(2, '0')}.${String(deployDate.getUTCDate()).padStart(2, '0')} — ${String(deployDate.getUTCHours()).padStart(2, '0')}:${String(deployDate.getUTCMinutes()).padStart(2, '0')}:${String(deployDate.getUTCSeconds()).padStart(2, '0')} UTC`;
+
+const letterboxd = (feedCache as any)?.items?.letterboxd ?? [];
+const listening = (feedCache as any)?.items?.lastfm ?? (feedCache as any)?.items?.spotify ?? [];
+const tickerData = {
+  deployStamp,
+  quote: quotes[0] ?? null,
+  listened: listening[0] ?? null,
+  watched: letterboxd[0] ?? null
+};
+---
+
+<div class="nav-ticker" aria-live="polite" data-nav-ticker data-ticker={JSON.stringify(tickerData)}>
+  <NoiseTexture opacity={0.02} />
+  <div class="container-shell max-wide nav-ticker__inner">
+    <p class="nav-ticker__content" data-ticker-content>Loading signal…</p>
+  </div>
+</div>
+
+<style>
+  .nav-ticker {
+    position: fixed;
+    top: 4.6rem;
+    inset-inline: 0;
+    z-index: 45;
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg-secondary) 88%, var(--bg-primary));
+    height: 1.85rem;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .nav-ticker__inner {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+
+  .nav-ticker__content {
+    margin: 0;
+    width: 100%;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: opacity 300ms ease;
+    opacity: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .nav-ticker__content.is-fading {
+    opacity: 0;
+  }
+
+  .ticker-link {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .ticker-link:hover {
+    color: var(--text-primary);
+  }
+
+  .mini-map {
+    width: 20px;
+    height: 12px;
+    flex: 0 0 auto;
+  }
+
+  @media (width >= 52rem) {
+    .nav-ticker {
+      top: 5.1rem;
+    }
+
+    .nav-ticker__content {
+      font-size: 0.74rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav-ticker__content {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  const root = document.querySelector('[data-nav-ticker]');
+  const content = document.querySelector('[data-ticker-content]');
+
+  const miniMapSvg = (x = 10, y = 6) => `
+    <svg class="mini-map" viewBox="0 0 100 60" aria-hidden="true">
+      <rect width="100" height="60" fill="transparent" />
+      <path d="M8 18h18l6 8 12-2 8 5 14-3 9 6 10-2 7 6-4 8-15 4-18-2-12 5-20-6-9-10z" fill="none" stroke="currentColor" stroke-width="3" opacity="0.35"/>
+      <circle cx="${x}" cy="${y}" r="3.5" fill="var(--accent-primary)" />
+    </svg>`;
+
+  const parseSignal = () => {
+    const ua = navigator.userAgent;
+    const browser = /Edg\//.test(ua)
+      ? 'EDGE'
+      : /Chrome\//.test(ua)
+        ? 'CHROME'
+        : /Safari\//.test(ua) && !/Chrome\//.test(ua)
+          ? 'SAFARI'
+          : /Firefox\//.test(ua)
+            ? 'FIREFOX'
+            : 'BROWSER';
+
+    const os = /Mac OS X/.test(ua)
+      ? 'MACOS'
+      : /Windows/.test(ua)
+        ? 'WINDOWS'
+        : /Android/.test(ua)
+          ? 'ANDROID'
+          : /iPhone|iPad|iOS/.test(ua)
+            ? 'IOS'
+            : 'OS';
+
+    return `${browser} / ${os} / ${window.innerWidth}×${window.innerHeight}`;
+  };
+
+  if (root instanceof HTMLElement && content instanceof HTMLElement) {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const payload = JSON.parse(root.dataset.ticker ?? '{}');
+    const baseItems: Array<() => string> = [];
+    let clock = '';
+    let signal = parseSignal();
+    let geoMap = miniMapSvg();
+
+    const updateClock = () => {
+      clock = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Los_Angeles',
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }).format(new Date());
+    };
+
+    const maybeTrack = payload.listened;
+    const maybeFilm = payload.watched;
+
+    baseItems.push(() => `PST — ${clock}`);
+    baseItems.push(() => `DEPLOYED: ${payload.deployStamp}`);
+
+    if (maybeTrack?.artist && (maybeTrack?.title || maybeTrack?.name)) {
+      baseItems.push(() => `♫ ${String(maybeTrack.artist).toUpperCase()} — ${String(maybeTrack.title ?? maybeTrack.name).toUpperCase()}`);
+    }
+
+    if (maybeFilm?.title) {
+      baseItems.push(() => `▶ ${String(maybeFilm.title).toUpperCase()}${maybeFilm.year ? ` (${maybeFilm.year})` : ''}`);
+    }
+
+    if (payload.quote?.text && payload.quote?.author) {
+      baseItems.push(() => `<a class="ticker-link" href="/quotes">"${payload.quote.text}" — ${String(payload.quote.author).toUpperCase()}</a>`);
+    }
+
+    baseItems.push(() => `SIGNAL: ${signal} ${geoMap}`);
+
+    let i = 0;
+    updateClock();
+
+    const render = () => {
+      if (!baseItems.length) return;
+      const html = baseItems[i % baseItems.length]();
+      content.innerHTML = html;
+      i += 1;
+    };
+
+    const rotate = () => {
+      if (reducedMotion) {
+        render();
+        return;
+      }
+      content.classList.add('is-fading');
+      window.setTimeout(() => {
+        render();
+        content.classList.remove('is-fading');
+      }, 300);
+    };
+
+    render();
+    window.setInterval(updateClock, 1000);
+    window.setInterval(rotate, 9000);
+    window.addEventListener('resize', () => {
+      signal = parseSignal();
+    });
+
+    fetch('https://ipapi.co/json/')
+      .then((res) => res.json())
+      .then((geo) => {
+        const lat = Number(geo?.latitude);
+        const lon = Number(geo?.longitude);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+        const x = Math.min(95, Math.max(5, ((lon + 180) / 360) * 100));
+        const y = Math.min(55, Math.max(5, ((90 - lat) / 180) * 60));
+        geoMap = miniMapSvg(x, y);
+      })
+      .catch(() => {
+        geoMap = miniMapSvg();
+      });
+  }
+</script>

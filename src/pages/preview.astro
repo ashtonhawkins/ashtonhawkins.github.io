@@ -1,26 +1,30 @@
 ---
 import Page from '@layouts/Page.astro';
+import Nucleus from '@components/home/Nucleus.astro';
+import TravelSection from '@components/home/TravelSection.astro';
+import CyclingSection from '@components/home/CyclingSection.astro';
+import MediaFeeds from '@components/home/MediaFeeds.astro';
+import WritingDrift from '@components/home/WritingDrift.astro';
+import SignalBar from '@components/ui/SignalBar.astro';
 ---
 
-<Page title="Homepage Preview" class="preview-main">
-  <section class="preview container-shell max-wide">
-    <h1>Homepage Preview</h1>
-    <p>Under construction — testing layout and navigation.</p>
-  </section>
+<Page title="Ashton Hawkins">
+  <Nucleus />
+  <SignalBar />
+  <div class="dashboard container-shell max-wide">
+    <TravelSection />
+    <SignalBar />
+    <CyclingSection />
+    <SignalBar />
+    <MediaFeeds />
+    <SignalBar />
+    <WritingDrift />
+  </div>
 </Page>
 
 <style>
-  .preview {
-    padding-block: clamp(4rem, 12vh, 8rem);
-  }
-
-  .preview h1 {
-    margin: 0 0 1rem;
-  }
-
-  .preview p {
-    margin: 0;
-    max-width: 60ch;
-    color: var(--text-secondary);
+  .dashboard {
+    display: grid;
+    gap: 0.2rem;
   }
 </style>

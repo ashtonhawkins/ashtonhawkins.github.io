@@ -1,0 +1,122 @@
+---
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import tags from '@data/writing-tags.json';
+
+const seededTags = tags.map((tag, index) => ({
+  tag,
+  y: 10 + ((index * 17) % 80),
+  duration: 15 + (index % 6) * 5,
+  delay: index * -2,
+  size: ['0.72rem', '0.8rem', '0.92rem', '1.1rem'][index % 4]
+}));
+---
+
+<section class="writing">
+  <SectionHeader label="Writing" />
+  <div class="drift" aria-label="Writing topics">
+    {seededTags.map((item) => (
+      <a
+        href={`/writing?tag=${encodeURIComponent(item.tag)}`}
+        class="drift__tag"
+        style={`--y:${item.y}%; --dur:${item.duration}s; --delay:${item.delay}s; --size:${item.size};`}
+      >
+        {item.tag}
+      </a>
+    ))}
+  </div>
+  <p class="writing__footer"><a href="/writing">VIEW ALL POSTS →</a></p>
+</section>
+
+<style>
+  .drift {
+    position: relative;
+    height: 140px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    isolation: isolate;
+  }
+
+  .drift::before,
+  .drift::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 3rem;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .drift::before {
+    left: 0;
+    background: linear-gradient(90deg, var(--bg-secondary), transparent);
+  }
+
+  .drift::after {
+    right: 0;
+    background: linear-gradient(-90deg, var(--bg-secondary), transparent);
+  }
+
+  .drift__tag {
+    position: absolute;
+    left: 100%;
+    top: var(--y);
+    transform: translateY(-50%);
+    font-family: 'Space Grotesk Variable', sans-serif;
+    font-size: var(--size);
+    text-decoration: none;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    animation: drift-x var(--dur) linear infinite;
+    animation-delay: var(--delay);
+  }
+
+  .drift__tag:hover {
+    color: var(--accent-primary);
+  }
+
+  .writing__footer {
+    margin: 0.65rem 0 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+  }
+
+  .writing__footer a {
+    color: var(--text-secondary);
+    text-decoration: none;
+  }
+
+  .writing__footer a:hover {
+    color: var(--accent-primary);
+  }
+
+  @keyframes drift-x {
+    from { transform: translate(0, -50%); }
+    to { transform: translate(-140vw, -50%); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .drift {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+      height: auto;
+      padding: 1rem;
+    }
+
+    .drift__tag {
+      position: static;
+      transform: none;
+      animation: none;
+      left: auto;
+      top: auto;
+    }
+
+    .drift::before,
+    .drift::after {
+      display: none;
+    }
+  }
+</style>

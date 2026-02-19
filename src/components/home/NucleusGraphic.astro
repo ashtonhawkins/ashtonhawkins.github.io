@@ -1,0 +1,92 @@
+<canvas class="nucleus-graphic" data-nucleus-canvas aria-hidden="true"></canvas>
+
+<style>
+  .nucleus-graphic {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+  }
+</style>
+
+<script>
+  const canvas = document.querySelector('[data-nucleus-canvas]');
+  if (canvas instanceof HTMLCanvasElement) {
+    const ctx = canvas.getContext('2d');
+    if (ctx instanceof CanvasRenderingContext2D) {
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const particles: Array<{ x: number; y: number; r: number; vx: number; vy: number }> = [];
+      let width = 0;
+      let height = 0;
+
+      const styles = getComputedStyle(document.documentElement);
+      const accent = styles.getPropertyValue('--accent-primary').trim() || '#7b9ab8';
+      const tertiary = styles.getPropertyValue('--text-tertiary').trim() || '#4a5568';
+
+      const resize = () => {
+        const rect = canvas.getBoundingClientRect();
+        width = rect.width;
+        height = rect.height;
+        canvas.width = Math.floor(width * devicePixelRatio);
+        canvas.height = Math.floor(height * devicePixelRatio);
+        ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+        if (!particles.length) {
+          const count = Math.min(60, Math.max(40, Math.floor(width / 20)));
+          for (let i = 0; i < count; i += 1) {
+            particles.push({
+              x: Math.random() * width,
+              y: Math.random() * height,
+              r: 1 + Math.random() * 2,
+              vx: (Math.random() - 0.5) * 0.35,
+              vy: (Math.random() - 0.5) * 0.35
+            });
+          }
+        }
+      };
+
+      const draw = () => {
+        ctx.clearRect(0, 0, width, height);
+
+        for (let i = 0; i < particles.length; i += 1) {
+          const p = particles[i];
+          if (!reduced) {
+            p.x += p.vx;
+            p.y += p.vy;
+            if (p.x < 0 || p.x > width) p.vx *= -1;
+            if (p.y < 0 || p.y > height) p.vy *= -1;
+          }
+
+          for (let j = i + 1; j < particles.length; j += 1) {
+            const q = particles[j];
+            const dx = p.x - q.x;
+            const dy = p.y - q.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist < 100) {
+              ctx.strokeStyle = `${tertiary}22`;
+              ctx.lineWidth = 0.5;
+              ctx.beginPath();
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(q.x, q.y);
+              ctx.stroke();
+            }
+          }
+
+          ctx.fillStyle = `${accent}44`;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      };
+
+      const frame = () => {
+        draw();
+        if (!reduced) requestAnimationFrame(frame);
+      };
+
+      resize();
+      frame();
+      window.addEventListener('resize', resize);
+    }
+  }
+</script>

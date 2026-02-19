@@ -1,0 +1,31 @@
+---
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import cycling from '@data/cycling.json';
+---
+
+<section class="cycling">
+  <SectionHeader label="Cycling" />
+  <div class="cycling__stats">
+    <p>THIS MONTH: {cycling.thisMonth.miles} MI / {cycling.thisMonth.elevation.toLocaleString()} FT GAINED</p>
+    <p>LAST RIDE: {cycling.lastRide.miles} MI / {cycling.lastRide.elevation.toLocaleString()} FT / {cycling.lastRide.duration}</p>
+    <p>YTD: {cycling.ytd.miles} MI</p>
+  </div>
+</section>
+
+<style>
+  .cycling__stats {
+    display: grid;
+    gap: 0.5rem;
+    border: 1px solid var(--border);
+    padding: 1rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+  }
+
+  .cycling__stats p {
+    margin: 0;
+  }
+</style>
