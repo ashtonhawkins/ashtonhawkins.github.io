@@ -1,3 +1,43 @@
----
----
-<div data-component="ThemeToggle"></div>
+<button class="theme-toggle" type="button" aria-label="Toggle theme" aria-pressed="false" data-theme-toggle>
+  <span class="icon icon-sun" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+      <circle cx="12" cy="12" r="4"></circle>
+      <path d="M12 2.5v2.4M12 19.1v2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.9 19.1l1.7-1.7M17.4 6.6l1.7-1.7"></path>
+    </svg>
+  </span>
+  <span class="icon icon-moon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 14.2A8.5 8.5 0 1 1 9.8 4 6.8 6.8 0 0 0 20 14.2z"></path>
+    </svg>
+  </span>
+</button>
+
+<script>
+  const button = document.querySelector('[data-theme-toggle]');
+
+  if (button instanceof HTMLButtonElement) {
+    const setPressed = () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme') ?? 'dark';
+      button.setAttribute('aria-pressed', String(currentTheme === 'light'));
+    };
+
+    setPressed();
+
+    button.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme') ?? 'dark';
+      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', nextTheme);
+      localStorage.setItem('theme', nextTheme);
+      setPressed();
+    });
+  }
+</script>
+
+<style>
+  .theme-toggle { border:1px solid var(--border); background:var(--bg-card); color:var(--text-secondary); width:2rem; height:2rem; border-radius:.5rem; position:relative; display:grid; place-items:center; }
+  .icon { position:absolute; width:1rem; height:1rem; transition:opacity .2s ease, transform .2s ease; }
+  .icon-sun { opacity:0; transform:scale(.9); }
+  .icon-moon { opacity:1; }
+  html[data-theme='light'] .icon-sun { opacity:1; transform:scale(1); }
+  html[data-theme='light'] .icon-moon { opacity:0; transform:scale(.9); }
+</style>

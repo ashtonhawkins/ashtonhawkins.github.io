@@ -1,3 +1,17 @@
 ---
+const year = new Date().getFullYear();
 ---
-<div data-component="Footer"></div>
+
+<footer class="site-footer">
+  <div class="container-shell max-wide footer-inner">
+    <p>© {year} Ashton Hawkins</p>
+    <p>Built with Astro · <a href="/colophon">Colophon</a></p>
+  </div>
+</footer>
+
+<style>
+  .site-footer { border-top:1px solid color-mix(in srgb,var(--border) 60%, transparent); margin-top:4rem; }
+  .footer-inner { min-height:4rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; color:var(--text-secondary); font-size:.9rem; }
+  .footer-inner p { margin:0; }
+  .footer-inner a { color:inherit; }
+</style>
