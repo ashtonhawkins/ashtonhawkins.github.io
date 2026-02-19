@@ -2,7 +2,7 @@ import plugin from 'tailwindcss/plugin';
 import type { Config } from 'tailwindcss';
 
 export default {
-  darkMode: ['class', '[data-theme="dark"]'],
+  darkMode: 'class',
   content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
   theme: {
     container: {
@@ -30,12 +30,13 @@ export default {
           secondary: 'var(--accent-secondary)',
           glow: 'var(--accent-glow)'
         },
+        scanline: 'var(--scanline)',
         border: 'var(--border)'
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Space Grotesk', 'Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'ui-monospace', 'monospace']
+        sans: ['Inter Variable', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['Space Grotesk Variable', 'Space Grotesk', 'Inter Variable', 'sans-serif'],
+        mono: ['JetBrains Mono Variable', 'JetBrains Mono', 'ui-monospace', 'monospace']
       },
       maxWidth: {
         prose: '45rem',
@@ -77,8 +78,18 @@ export default {
   plugins: [
     plugin(({ addUtilities }) => {
       addUtilities({
+        '.crt-scanlines': {
+          position: 'relative'
+        },
+        '.crt-flicker': {
+          animation: 'crt-flicker 0.15s linear infinite'
+        },
         '.crt-glow': {
           textShadow: '0 0 0.4rem var(--accent-glow), 0 0 1.2rem var(--accent-glow)'
+        },
+        '.glitch': {
+          position: 'relative',
+          animation: 'glitch-load 900ms steps(2, end) 1'
         },
         '.text-balance': {
           textWrap: 'balance'

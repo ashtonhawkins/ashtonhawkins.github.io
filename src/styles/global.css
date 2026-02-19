@@ -45,8 +45,26 @@ body {
   margin: 0;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: 'Inter Variable', system-ui, sans-serif;
+  font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
   line-height: 1.6;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Space Grotesk Variable', 'Space Grotesk', 'Inter Variable', sans-serif;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
 }
 
 a {
@@ -146,9 +164,11 @@ html[data-theme='light'] .crt-scanlines::after {
   0% {
     opacity: 0.97;
   }
+
   50% {
     opacity: 1;
   }
+
   100% {
     opacity: 0.98;
   }
@@ -160,18 +180,22 @@ html[data-theme='light'] .crt-scanlines::after {
     clip-path: inset(0 0 0 0);
     transform: translate(0);
   }
+
   20% {
     clip-path: inset(15% 0 55% 0);
     transform: translate(-1px, 1px);
   }
+
   40% {
     clip-path: inset(65% 0 8% 0);
     transform: translate(1px, -1px);
   }
+
   60% {
     clip-path: inset(35% 0 35% 0);
     transform: translate(0.5px, 0.5px);
   }
+
   80% {
     clip-path: inset(5% 0 75% 0);
     transform: translate(-0.5px, -0.5px);
@@ -184,10 +208,12 @@ html[data-theme='light'] .crt-scanlines::after {
     clip-path: inset(0 0 0 0);
     transform: translate(0);
   }
+
   30% {
     clip-path: inset(10% 0 60% 0);
     transform: translate(-2px, 1px);
   }
+
   70% {
     clip-path: inset(60% 0 12% 0);
     transform: translate(1px, -1px);
@@ -200,10 +226,12 @@ html[data-theme='light'] .crt-scanlines::after {
     clip-path: inset(0 0 0 0);
     transform: translate(0);
   }
+
   25% {
     clip-path: inset(70% 0 10% 0);
     transform: translate(2px, -1px);
   }
+
   65% {
     clip-path: inset(18% 0 52% 0);
     transform: translate(-1px, 1px);
@@ -222,15 +250,15 @@ html[data-theme='light'] .crt-scanlines::after {
 
 @media (prefers-contrast: more) {
   :root {
-    --text-secondary: #c2c2c2;
-    --text-tertiary: #8e8e8e;
-    --border: #3a3a44;
+    --text-secondary: #c9c9c9;
+    --text-tertiary: #9b9b9b;
+    --border: #454550;
   }
 
   html[data-theme='light'] {
-    --text-secondary: #343434;
-    --text-tertiary: #555555;
-    --border: #bcbcbc;
+    --text-secondary: #2e2e2e;
+    --text-tertiary: #4a4a4a;
+    --border: #b5b5b5;
   }
 }
 
