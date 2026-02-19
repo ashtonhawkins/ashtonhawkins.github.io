@@ -1,601 +1,110 @@
 ---
-import Page from '@layouts/Page.astro';
-import home from '@data/home.json';
-import site from '@data/site.json';
-
-const buildDate = new Date().toLocaleDateString('en-US', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric'
-});
-
-const feedPlaceholders = {
-  watching: [
-    { title: 'Past Lives', rating: '★★★★☆' },
-    { title: 'Heat', rating: '★★★★★' },
-    { title: 'In the Mood for Love', rating: '★★★★½' }
-  ],
-  thinking: [
-    {
-      title: 'Designing for compounding growth',
-      date: 'Feb 02, 2026',
-      excerpt: 'Why operational rigor matters more than one-off wins.'
-    },
-    {
-      title: 'Taxonomy as a revenue lever',
-      date: 'Jan 18, 2026',
-      excerpt: 'The hidden architecture behind discoverability and conversion.'
-    },
-    {
-      title: 'Shipping modernization in legacy stacks',
-      date: 'Dec 12, 2025',
-      excerpt: 'A practical path to velocity without platform rewrites.'
-    }
-  ],
-  links: [
-    {
-      title: 'The future of search behavior',
-      source: 'thinkwithgoogle.com',
-      note: 'Great framing for intent shifts and SERP fragmentation.'
-    },
-    {
-      title: 'The systems view of content ops',
-      source: 'stratechery.com',
-      note: 'Strong take on process debt and editorial scale.'
-    },
-    {
-      title: 'Metrics that survive reorgs',
-      source: 'lennysnewsletter.com',
-      note: 'Useful north-star vs supporting KPI model.'
-    }
-  ]
-};
+import Base from '@layouts/Base.astro';
 ---
 
-<Page title="Home" class="homepage-main">
-      <section class="hero max-wide container-shell" data-hero>
-        <h1 class="hero__title" data-scramble-text>{site.name}</h1>
-        <p class="hero__positioning">{home.positioningStatement}</p>
-
-        <ul class="status-strip" aria-label="Current status">
-          <li>LOCATION // {site.location}</li>
-          <li class="status-live"><span class="status-dot" aria-hidden="true"></span>STATUS // Available for select engagements</li>
-          <li>SYSTEM // v3.0 — last deployed {buildDate}</li>
-        </ul>
-      </section>
-
-      <section class="impact max-wide container-shell" aria-labelledby="impact-heading">
-        <h2 id="impact-heading" class="section-kicker">// IMPACT</h2>
-        <div class="impact__grid" data-impact-group>
-          {home.highlights.map((highlight) => (
-            <article class="impact-tile" data-impact-tile data-value={highlight.value}>
-              <p class="impact-tile__value" data-impact-value>{highlight.value}</p>
-              <p class="impact-tile__label">{highlight.label}</p>
-              <p class="impact-tile__context">{highlight.context}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section class="signal max-wide container-shell" aria-labelledby="signal-heading">
-        <div class="section-head">
-          <h2 id="signal-heading" class="section-kicker">// SIGNAL</h2>
-          <span class="live-badge"><span class="live-dot" aria-hidden="true"></span>LIVE</span>
-        </div>
-
-        <div class="signal__grid" data-feed-group>
-          <article class="feed-card" data-feed-card>
-            <header>🎬 WATCHING</header>
-            <ul>
-              {feedPlaceholders.watching.map((movie) => (
-                <li>
-                  <div class="thumb"></div>
-                  <div>
-                    <p>{movie.title}</p>
-                    <span>{movie.rating}</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </article>
-
-          <article class="feed-card" data-feed-card>
-            <header>📚 READING</header>
-            <div class="single-feed">
-              <div class="cover"></div>
-              <div>
-                <p>Systems Thinking for Product Leaders</p>
-                <span>by Eleanor Shaw</span>
-                <div class="progress"><span style="width: 42%"></span></div>
-              </div>
-            </div>
-          </article>
-
-          <article class="feed-card" data-feed-card>
-            <header>🎧 LISTENING</header>
-            <div class="single-feed">
-              <div class="cover"></div>
-              <div>
-                <p>Everything In Its Right Place</p>
-                <span>Radiohead</span>
-              </div>
-            </div>
-          </article>
-
-          <article class="feed-card" data-feed-card>
-            <header>✍️ THINKING</header>
-            <ul>
-              {feedPlaceholders.thinking.map((post) => (
-                <li>
-                  <div>
-                    <p>{post.title}</p>
-                    <span>{post.date}</span>
-                    <small>{post.excerpt}</small>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </article>
-
-          <article class="feed-card" data-feed-card>
-            <header>🔗 LINKS</header>
-            <ul>
-              {feedPlaceholders.links.map((link) => (
-                <li>
-                  <div>
-                    <p>{link.title}</p>
-                    <span>{link.source}</span>
-                    <small>{link.note}</small>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </article>
-        </div>
-      </section>
-
-      <section class="work max-wide container-shell" aria-labelledby="work-heading">
-        <h2 id="work-heading" class="section-kicker">// WORK</h2>
-        <div class="work__list" data-work-group>
-          <a class="work-card" href="/work">
-            <div>
-              <h3>Commerce Discovery Overhaul</h3>
-              <p>Rebuilt category wayfinding and schema for stronger intent matching.</p>
-            </div>
-            <span>Fortune 1 Retailer →</span>
-          </a>
-          <a class="work-card" href="/work">
-            <div>
-              <h3>Content Platform Consolidation</h3>
-              <p>Merged fragmented publishing workflows into one composable system.</p>
-            </div>
-            <span>National Media Brand →</span>
-          </a>
-          <a class="work-card" href="/work">
-            <div>
-              <h3>Lifecycle Experimentation Program</h3>
-              <p>Operationalized testing cadence across acquisition and retention touchpoints.</p>
-            </div>
-            <span>Growth Portfolio →</span>
-          </a>
-        </div>
-      </section>
-
-      <section class="footer-cta container-shell max-wide">
-        <p>Want to talk? <a href={`mailto:${site.email}`}>{site.email}</a></p>
-        <nav aria-label="Footer links">
-          <a href={site.social.linkedin} target="_blank" rel="noreferrer">LinkedIn</a>
-          <a href="/now">/now</a>
-          <a href="/rss.xml">RSS</a>
-        </nav>
-      </section>
-    </Page>
-
-<script>
-  import gsap from 'gsap';
-  import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-  gsap.registerPlugin(ScrollTrigger);
-
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  const scrambleText = (element: HTMLElement, targetText: string, duration = 0.6) => {
-    const glyphs = '!<>-_\\/[]{}—=+*^?#________';
-    const frameDuration = 1000 / 60;
-    const totalFrames = Math.max(1, Math.floor((duration * 1000) / frameDuration));
-    let frame = 0;
-
-    const update = () => {
-      frame += 1;
-      const progress = frame / totalFrames;
-      const resolvedChars = Math.floor(progress * targetText.length);
-
-      const output = targetText
-        .split('')
-        .map((char, index) => {
-          if (char === ' ') return ' ';
-          if (index < resolvedChars) return targetText[index];
-          return glyphs[Math.floor(Math.random() * glyphs.length)] ?? char;
-        })
-        .join('');
-
-      element.textContent = output;
-
-      if (frame < totalFrames) {
-        window.requestAnimationFrame(update);
-      } else {
-        element.textContent = targetText;
-      }
-    };
-
-    window.requestAnimationFrame(update);
-  };
-
-  const animateImpactValue = (element: HTMLElement, rawValue: string) => {
-    const match = rawValue.match(/(-?\d+(?:\.\d+)?)/);
-    if (!match) return;
-
-    const numericValue = Number(match[1]);
-    if (!Number.isFinite(numericValue)) return;
-
-    const numberStart = match.index ?? 0;
-    const numberEnd = numberStart + match[1].length;
-    const prefix = rawValue.slice(0, numberStart);
-    const suffix = rawValue.slice(numberEnd);
-
-    const counter = { value: 0 };
-
-    gsap.to(counter, {
-      value: numericValue,
-      duration: 0.9,
-      ease: 'power2.out',
-      onUpdate: () => {
-        const rounded = Math.round(counter.value);
-        element.textContent = `${prefix}${rounded}${suffix}`;
-      },
-      onComplete: () => {
-        element.textContent = rawValue;
-      }
-    });
-  };
-
-  const hero = document.querySelector('[data-hero]');
-  const scrambleTarget = document.querySelector('[data-scramble-text]');
-
-  if (!prefersReducedMotion && hero instanceof HTMLElement) {
-    gsap.fromTo(hero, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, delay: 0.1, ease: 'power2.out' });
-  }
-
-  if (scrambleTarget instanceof HTMLElement) {
-    const finalText = scrambleTarget.textContent ?? '';
-    if (prefersReducedMotion) {
-      scrambleTarget.textContent = finalText;
-    } else {
-      scrambleText(scrambleTarget, finalText, 0.6);
-    }
-  }
-
-  const impactTiles = gsap.utils.toArray<HTMLElement>('[data-impact-tile]');
-  impactTiles.forEach((tile) => {
-    const valueEl = tile.querySelector<HTMLElement>('[data-impact-value]');
-    const rawValue = tile.dataset.value ?? '';
-
-    gsap.fromTo(
-      tile,
-      { opacity: 0, y: 30 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: prefersReducedMotion ? 0.01 : 0.6,
-        ease: 'power2.out',
-        scrollTrigger: {
-          trigger: tile,
-          start: 'top 80%',
-          once: true,
-          onEnter: () => {
-            if (!prefersReducedMotion && valueEl instanceof HTMLElement) {
-              animateImpactValue(valueEl, rawValue);
-            }
-          }
-        }
-      }
-    );
-  });
-
-  const animateGroup = (selector: string) => {
-    const items = gsap.utils.toArray<HTMLElement>(selector);
-
-    gsap.fromTo(
-      items,
-      { opacity: 0, y: 30 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: prefersReducedMotion ? 0.01 : 0.6,
-        stagger: prefersReducedMotion ? 0 : 0.1,
-        ease: 'power2.out',
-        scrollTrigger: {
-          trigger: items[0],
-          start: 'top 80%',
-          once: true
-        }
-      }
-    );
-  };
-
-  animateGroup('[data-feed-card]');
-  animateGroup('.work-card');
-</script>
+<Base
+  title="Ashton Hawkins — Coming Soon"
+  description="New site loading. Ashton Hawkins — web experience, optimization, and digital operations."
+>
+  <main class="coming-soon" aria-label="Coming soon page">
+    <div class="coming-soon__content">
+      <p class="coming-soon__monogram crt-glow">AH</p>
+      <h1 class="coming-soon__name">Ashton Hawkins</h1>
+      <p class="coming-soon__status">
+        Something new is loading...
+        <span class="coming-soon__cursor" aria-hidden="true"></span>
+      </p>
+    </div>
+  </main>
+</Base>
 
 <style>
-  .homepage-main {
+  .coming-soon {
+    min-height: 100dvh;
     display: grid;
-    gap: clamp(3rem, 8vw, 6rem);
-    padding-bottom: 5rem;
+    place-items: center;
+    padding: 1.5rem;
+    background: var(--bg-primary);
   }
 
-  .hero {
-    padding-top: clamp(2rem, 6vw, 5rem);
+  .coming-soon__content {
+    width: 100%;
+    max-width: 32rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.65rem;
+    opacity: 0;
+    animation: fade-in 800ms ease-out forwards;
   }
 
-  .hero__title {
-    font-size: clamp(2.5rem, 9vw, 6.25rem);
+  .coming-soon__monogram {
     margin: 0;
-    letter-spacing: -0.03em;
+    font-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 2.25rem;
+    line-height: 1;
+    color: var(--text-primary);
   }
 
-  .hero__positioning {
-    max-width: 72ch;
-    color: var(--text-secondary);
-    font-size: clamp(1rem, 2.3vw, 1.25rem);
+  .coming-soon__name {
+    margin: 0;
+    font-family: 'Space Grotesk Variable', 'Space Grotesk', 'Inter Variable', sans-serif;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    color: var(--text-primary);
+    letter-spacing: -0.015em;
   }
 
-  .status-strip {
-    list-style: none;
-    display: grid;
-    gap: 0.45rem;
-    padding: 0;
-    margin: 1.25rem 0 0;
-    font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
-    font-size: 0.78rem;
-    color: var(--text-tertiary);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  .status-live {
+  .coming-soon__status {
+    margin: 0;
     display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-  }
-
-  .status-dot {
-    width: 0.45rem;
-    aspect-ratio: 1;
-    border-radius: 999px;
-    background: var(--accent-primary);
-    box-shadow: 0 0 0.6rem color-mix(in srgb, var(--accent-primary) 55%, transparent);
-    animation: pulse-dot 1.8s ease-in-out infinite;
-  }
-
-  .section-kicker {
-    margin: 0 0 1rem;
-    font-size: 0.85rem;
-    letter-spacing: 0.08em;
-    font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
-    color: var(--text-tertiary);
-  }
-
-  .impact__grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem;
-  }
-
-  .impact-tile,
-  .feed-card,
-  .work-card {
-    border: 1px solid var(--border);
-    border-radius: 0.9rem;
-    background: color-mix(in srgb, var(--bg-card) 94%, transparent);
-  }
-
-  .impact-tile {
-    padding: 1.1rem;
-  }
-
-  .impact-tile__value {
-    margin: 0;
-    font-family: 'Space Grotesk Variable', 'Space Grotesk', sans-serif;
-    font-size: clamp(1.5rem, 3.8vw, 2.3rem);
-  }
-
-  .impact-tile__label {
-    margin: 0.25rem 0;
+    align-items: baseline;
+    gap: 0.3rem;
+    font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
+    font-size: 1rem;
     color: var(--text-secondary);
-    font-weight: 600;
   }
 
-  .impact-tile__context {
-    margin: 0;
-    color: var(--text-tertiary);
-    font-size: 0.93rem;
-  }
-
-  .section-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  .live-badge {
-    font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
-    font-size: 0.78rem;
-    color: #ff7f7f;
-    display: inline-flex;
-    gap: 0.4rem;
-    align-items: center;
-  }
-
-  .live-dot {
-    width: 0.45rem;
-    aspect-ratio: 1;
-    border-radius: 999px;
-    background: #ff3535;
-    animation: pulse-dot 1.2s ease-in-out infinite;
-  }
-
-  .signal__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
-  }
-
-  .feed-card {
-    padding: 1rem;
-  }
-
-  .feed-card header {
-    font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
-    font-size: 0.76rem;
-    color: var(--text-tertiary);
-    margin-bottom: 0.8rem;
-    letter-spacing: 0.07em;
-  }
-
-  .feed-card ul {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: grid;
-    gap: 0.85rem;
-  }
-
-  .feed-card li,
-  .single-feed {
-    display: flex;
-    gap: 0.75rem;
-  }
-
-  .thumb,
-  .cover {
-    width: 2.7rem;
-    flex: 0 0 2.7rem;
-    border-radius: 0.5rem;
-    background: linear-gradient(135deg, var(--bg-tertiary), color-mix(in srgb, var(--accent-primary) 30%, var(--bg-card)));
-  }
-
-  .cover {
-    height: 3.8rem;
-  }
-
-  .thumb {
-    aspect-ratio: 2 / 3;
-  }
-
-  .feed-card p {
-    margin: 0;
-    line-height: 1.3;
-  }
-
-  .feed-card span,
-  .feed-card small {
-    color: var(--text-tertiary);
-    display: block;
-    line-height: 1.3;
-  }
-
-  .progress {
-    margin-top: 0.45rem;
-    background: var(--bg-tertiary);
-    border-radius: 999px;
-    height: 0.4rem;
-    overflow: hidden;
-  }
-
-  .progress span {
-    display: block;
-    height: 100%;
+  .coming-soon__cursor {
+    width: 0.56ch;
+    height: 1em;
     background: var(--accent-primary);
-    box-shadow: 0 0 0.5rem color-mix(in srgb, var(--accent-primary) 50%, transparent);
+    display: inline-block;
+    animation: cursor-blink 1s steps(1, end) infinite;
   }
 
-  .work__list {
-    display: grid;
-    gap: 0.8rem;
-  }
-
-  .work-card {
-    padding: 1rem 1.1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-    text-decoration: none;
-    color: inherit;
-    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
-  }
-
-  .work-card h3 {
-    margin: 0;
-    font-size: 1.15rem;
-  }
-
-  .work-card p {
-    margin: 0.2rem 0 0;
-    color: var(--text-secondary);
-    max-width: 62ch;
-  }
-
-  .work-card span {
-    color: var(--text-tertiary);
-    font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  .work-card:hover {
-    transform: translateY(-3px);
-    border-color: color-mix(in srgb, var(--accent-primary) 40%, var(--border));
-    box-shadow: 0 0 1.3rem var(--accent-glow);
-  }
-
-  .footer-cta {
-    border-top: 1px solid var(--border);
-    padding-top: 1.5rem;
-  }
-
-  .footer-cta p {
-    margin: 0;
-    font-size: clamp(1rem, 2.2vw, 1.2rem);
-  }
-
-  .footer-cta nav {
-    margin-top: 0.65rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-
-  @media (width >= 64rem) {
-    .impact__grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-  }
-
-  @keyframes pulse-dot {
+  @keyframes cursor-blink {
     0%,
-    100% {
-      transform: scale(1);
-      opacity: 0.9;
+    49% {
+      opacity: 1;
     }
 
-    50% {
-      transform: scale(0.72);
-      opacity: 0.55;
+    50%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .coming-soon__content {
+      animation: none;
+      opacity: 1;
+    }
+
+    .coming-soon__cursor {
+      animation: none;
+      opacity: 1;
     }
   }
 </style>
