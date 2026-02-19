@@ -1,5 +1,4 @@
 ---
-import CRTBoot from '@components/animations/CRTBoot.astro';
 import Page from '@layouts/Page.astro';
 import career from '@data/career.json';
 import site from '@data/site.json';
@@ -53,9 +52,7 @@ const feedPlaceholders = {
 };
 ---
 
-<div class="home-shell" data-home-shell>
-  <div data-home-content>
-    <Page title="Home" class="homepage-main">
+<Page title="Home" class="homepage-main">
       <section class="hero max-wide container-shell" data-hero>
         <h1 class="hero__title" data-scramble-text>{site.name}</h1>
         <p class="hero__positioning">{career.positioningStatement}</p>
@@ -193,9 +190,6 @@ const feedPlaceholders = {
         </nav>
       </section>
     </Page>
-  </div>
-  <CRTBoot />
-</div>
 
 <script>
   import gsap from 'gsap';
@@ -334,10 +328,6 @@ const feedPlaceholders = {
 </script>
 
 <style>
-  .home-shell {
-    position: relative;
-  }
-
   .homepage-main {
     display: grid;
     gap: clamp(3rem, 8vw, 6rem);
