@@ -47,6 +47,35 @@ body {
   color: var(--text-primary);
   font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
   line-height: 1.6;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+body.menu-open {
+  overflow: hidden;
+}
+
+.page-main {
+  padding-top: 5.5rem;
+  min-height: calc(100dvh - 5.5rem);
+}
+
+.crt-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 1px,
+    var(--scanline) 1px,
+    var(--scanline) 2px
+  );
+  transition: opacity 150ms ease;
+}
+
+html[data-theme='light'] .crt-overlay {
+  opacity: 0;
 }
 
 h1,

@@ -1,9 +1,7 @@
 ---
 import '@styles/fonts.css';
 import '@styles/global.css';
-import CRTOverlay from '@components/global/CRTOverlay.astro';
-import GSAPProvider from '@components/animations/GSAPProvider.astro';
-import { ClientRouter } from 'astro:transitions';
+import { ViewTransitions } from 'astro:transitions';
 
 import interVariableLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
 import spaceGroteskVariableLatin from '@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url';
@@ -16,31 +14,61 @@ interface Props {
 
 const {
   title = 'Ashton Hawkins',
-  description = 'Personal website scaffold powered by Astro.'
+  description = 'Digital product leader crafting AI-native experiences and thoughtful web interfaces.'
 } = Astro.props;
+
+const pageTitle = `${title} — Ashton Hawkins`;
+const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+const ogImage = new URL('/favicon.svg', Astro.site).toString();
+const personSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'Ashton Hawkins',
+  url: Astro.site?.toString() ?? 'https://www.ashtonhawkins.com',
+  sameAs: ['https://github.com/ashtonhawkins'],
+  jobTitle: 'Digital Product Leader',
+  description
+};
 ---
 
 <!doctype html>
-<html lang="en" data-theme="dark" class="antialiased dark">
+<html lang="en" data-theme="dark" class="antialiased">
   <head>
+    <script is:inline>
+      (() => {
+        const savedTheme = localStorage.getItem('theme');
+        const initialTheme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : 'dark';
+        document.documentElement.setAttribute('data-theme', initialTheme);
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href={canonical} />
     <meta name="description" content={description} />
+    <title>{pageTitle}</title>
+
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:type" content="website" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
     <link rel="preload" href={interVariableLatin} as="font" type="font/woff2" crossorigin="anonymous" />
-    <link
-      rel="preload"
-      href={spaceGroteskVariableLatin}
-      as="font"
-      type="font/woff2"
-      crossorigin="anonymous"
-    />
+    <link rel="preload" href={spaceGroteskVariableLatin} as="font" type="font/woff2" crossorigin="anonymous" />
     <link rel="preload" href={jetBrainsMonoVariableLatin} as="font" type="font/woff2" crossorigin="anonymous" />
-    <title>{title}</title>
-    <GSAPProvider />
-    <ClientRouter />
+
+    <script type="application/ld+json" set:html={JSON.stringify(personSchema)}></script>
+    <ViewTransitions />
   </head>
-  <body class="crt-scanlines crt-flicker bg-bg-primary text-text-primary">
-    <CRTOverlay />
+  <body class="bg-bg-primary text-text-primary">
+    <div class="crt-overlay" aria-hidden="true"></div>
     <slot />
   </body>
 </html>
