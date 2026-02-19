@@ -1,0 +1,347 @@
+---
+const lines = [
+  { text: '> BOOT SEQUENCE INITIATED', className: 'is-dim' },
+  { text: '> LOADING IDENTITY MATRIX...', className: 'is-dim' },
+  { text: '> ashton hawkins', className: 'is-accent' },
+  { text: '> web systems / digital operations / optimization', className: 'is-primary' }
+];
+---
+
+<div class="crt-boot" data-crt-boot aria-hidden="true">
+  <div class="crt-boot__frame" data-crt-frame>
+    <div class="crt-boot__scan-sweep" data-scan-sweep></div>
+    <div class="crt-boot__static" data-static></div>
+    <div class="crt-boot__content" data-crt-content>
+      <pre class="crt-boot__text" data-crt-text>
+{lines.map((line, lineIndex) => (
+  <span class={`crt-boot__line ${line.className}`} data-line={lineIndex}>
+    {Array.from(line.text).map((character, charIndex) => (
+      <span class="crt-boot__char" data-char={charIndex} aria-hidden="true">
+        {character === ' ' ? '\u00A0' : character}
+      </span>
+    ))}
+  </span>
+))}
+      </pre>
+      <span class="crt-boot__cursor" data-cursor aria-hidden="true"></span>
+    </div>
+    <button class="crt-boot__skip" data-crt-skip type="button">skip</button>
+    <div class="crt-boot__line-collapse" data-collapse-line></div>
+    <div class="crt-boot__dot" data-collapse-dot></div>
+  </div>
+</div>
+
+<script>
+  import gsap from 'gsap';
+
+  const overlay = document.querySelector('[data-crt-boot]');
+  const contentRoot = document.querySelector('[data-home-content]');
+
+  if (!(overlay instanceof HTMLElement) || !(contentRoot instanceof HTMLElement)) {
+    // No-op if this component is included without home content wrapper.
+  } else {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const seenIntro = sessionStorage.getItem('intro-seen') === 'true';
+
+    const skipButton = overlay.querySelector('[data-crt-skip]');
+    const frame = overlay.querySelector('[data-crt-frame]');
+    const scanSweep = overlay.querySelector('[data-scan-sweep]');
+    const staticLayer = overlay.querySelector('[data-static]');
+    const cursor = overlay.querySelector('[data-cursor]');
+    const collapseLine = overlay.querySelector('[data-collapse-line]');
+    const collapseDot = overlay.querySelector('[data-collapse-dot]');
+    const lines = Array.from(overlay.querySelectorAll('[data-line]'));
+    const charMatrix = lines.map((line) => Array.from(line.querySelectorAll('[data-char]')));
+
+    let isResolving = false;
+    let cancelled = false;
+
+    const sleep = (seconds: number) =>
+      new Promise((resolve) => {
+        gsap.delayedCall(seconds, resolve);
+      });
+
+    const clearOverlay = () => {
+      overlay.remove();
+      window.removeEventListener('keydown', triggerSkip);
+      overlay.removeEventListener('pointerdown', triggerSkip);
+      if (skipButton instanceof HTMLButtonElement) {
+        skipButton.removeEventListener('click', triggerSkip);
+      }
+    };
+
+    const revealPage = () => {
+      gsap.to(contentRoot, { autoAlpha: 1, duration: 0.45, ease: 'power2.out' });
+    };
+
+    const triggerSkip = () => {
+      if (isResolving) return;
+      isResolving = true;
+      cancelled = true;
+      resolveSequence();
+    };
+
+    const revealChars = async () => {
+      for (let lineIndex = 0; lineIndex < charMatrix.length; lineIndex += 1) {
+        const chars = charMatrix[lineIndex];
+        for (let charIndex = 0; charIndex < chars.length; charIndex += 1) {
+          if (cancelled) return;
+          chars[charIndex]?.classList.add('is-visible');
+          const baseDelay = 0.04;
+          const randomPause = Math.random() < 0.18 ? gsap.utils.random(0.08, 0.12) : 0;
+          await sleep(baseDelay + randomPause);
+        }
+        await sleep(0.08);
+      }
+    };
+
+    const scrambleSequence = async () => {
+      const glyphs = ['#', '%', '&', '*', '@', '▓', '▒', '/', '>', '?', '0', '1'];
+      const original = charMatrix.map((line) => line.map((charEl) => charEl.textContent ?? ''));
+
+      const scrambleStart = performance.now();
+      while (performance.now() - scrambleStart < 300) {
+        if (cancelled) break;
+        charMatrix.forEach((line, lineIndex) => {
+          line.forEach((charEl, charIndex) => {
+            if (!charEl.classList.contains('is-visible')) return;
+            const shouldScramble = Math.random() > 0.35;
+            charEl.textContent = shouldScramble ? glyphs[Math.floor(Math.random() * glyphs.length)] : original[lineIndex][charIndex];
+          });
+        });
+        await sleep(0.04);
+      }
+
+      charMatrix.forEach((line, lineIndex) => {
+        line.forEach((charEl, charIndex) => {
+          charEl.textContent = original[lineIndex][charIndex];
+        });
+      });
+    };
+
+    const resolveSequence = async () => {
+      await scrambleSequence();
+
+      const timeline = gsap.timeline({
+        defaults: { ease: 'power2.inOut' },
+        onComplete: () => {
+          revealPage();
+          clearOverlay();
+        }
+      });
+
+      timeline
+        .set([collapseLine, collapseDot], { autoAlpha: 0 })
+        .to(cursor, { autoAlpha: 0, duration: 0.06 }, 0)
+        .to('[data-crt-content], [data-static], [data-scan-sweep]', { autoAlpha: 0, duration: 0.22 }, 0)
+        .set(collapseLine, { autoAlpha: 1, scaleX: 1, transformOrigin: 'center center' })
+        .to(frame, { scaleY: 0.02, duration: 0.22 }, '>')
+        .to(collapseLine, { scaleX: 0.12, duration: 0.16 }, '>')
+        .set(collapseDot, { autoAlpha: 1, scale: 1 })
+        .to(collapseDot, { scale: 0, duration: 0.16 }, '<')
+        .to(overlay, { autoAlpha: 0, duration: 0.12 }, '<');
+
+      sessionStorage.setItem('intro-seen', 'true');
+    };
+
+    if (reducedMotion || seenIntro) {
+      overlay.style.pointerEvents = 'none';
+      gsap.set(contentRoot, { autoAlpha: 0 });
+      gsap.to(contentRoot, { autoAlpha: 1, duration: reducedMotion ? 0.5 : 0.01, ease: 'power1.out' });
+      sessionStorage.setItem('intro-seen', 'true');
+      gsap.to(overlay, { autoAlpha: 0, duration: 0.2, onComplete: clearOverlay });
+    } else {
+      const introTimeline = gsap.timeline({ defaults: { ease: 'none' } });
+
+      gsap.set(contentRoot, { autoAlpha: 0 });
+      gsap.set(scanSweep, { yPercent: -110, autoAlpha: 0.95 });
+      gsap.set(staticLayer, { autoAlpha: 0 });
+      gsap.set(cursor, { autoAlpha: 0 });
+      gsap.set(skipButton, { autoAlpha: 0 });
+
+      introTimeline
+        .to(scanSweep, { yPercent: 120, duration: 0.5 })
+        .to(scanSweep, { autoAlpha: 0, duration: 0.02 }, '<')
+        .to(staticLayer, { autoAlpha: 0.95, duration: 0.1 }, '>-0.02')
+        .to(staticLayer, { autoAlpha: 0.22, duration: 0.08 })
+        .to(staticLayer, { autoAlpha: 0.7, duration: 0.08 })
+        .to(staticLayer, { autoAlpha: 0, duration: 0.04 })
+        .to(cursor, { autoAlpha: 1, duration: 0.01 }, '>-0.01')
+        .to(skipButton, { autoAlpha: 1, duration: 0.2 }, 1);
+
+      introTimeline.call(() => {
+        void revealChars().then(() => {
+          if (!cancelled) {
+            isResolving = true;
+            resolveSequence();
+          }
+        });
+      });
+
+      window.addEventListener('keydown', triggerSkip);
+      overlay.addEventListener('pointerdown', triggerSkip);
+      if (skipButton instanceof HTMLButtonElement) {
+        skipButton.addEventListener('click', triggerSkip);
+      }
+    }
+  }
+</script>
+
+<style>
+  .crt-boot {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: #000;
+    pointer-events: auto;
+  }
+
+  .crt-boot__frame {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    transform-origin: center center;
+    background: radial-gradient(circle at center, rgb(8 16 10 / 0.35), #000 72%);
+  }
+
+  .crt-boot__scan-sweep {
+    position: absolute;
+    inset: -22% 0 auto;
+    height: 20%;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgb(255 255 255 / 0.06) 15%,
+      rgb(0 255 136 / 0.42) 50%,
+      transparent 100%
+    );
+    mix-blend-mode: screen;
+  }
+
+  .crt-boot__static {
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-conic-gradient(from 0deg, rgb(255 255 255 / 0.1) 0% 2%, transparent 2% 4%),
+      repeating-linear-gradient(0deg, rgb(255 255 255 / 0.08) 0 1px, transparent 1px 2px);
+    animation: crt-static 0.12s steps(2, end) infinite;
+    mix-blend-mode: screen;
+  }
+
+  .crt-boot__content {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding-inline: clamp(1.25rem, 4vw, 3rem);
+    text-shadow: 0 0 12px color-mix(in srgb, var(--accent-primary) 60%, transparent);
+  }
+
+  .crt-boot__text {
+    margin: 0;
+    width: min(70ch, 100%);
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
+    font-size: clamp(0.8rem, 1.6vw, 1rem);
+    line-height: 1.5;
+    white-space: pre;
+  }
+
+  .crt-boot__line {
+    display: block;
+    min-height: 1.5em;
+  }
+
+  .crt-boot__line.is-dim {
+    color: var(--text-secondary);
+  }
+
+  .crt-boot__line.is-accent {
+    color: var(--accent-primary);
+    font-size: clamp(1rem, 2.2vw, 1.35rem);
+    margin-block: 0.15rem;
+  }
+
+  .crt-boot__char {
+    opacity: 0;
+  }
+
+  .crt-boot__char.is-visible {
+    opacity: 1;
+  }
+
+  .crt-boot__cursor {
+    position: absolute;
+    left: max(10vw, calc(50% - min(35ch, 50%)));
+    top: calc(50% - 3.1em);
+    width: 0.68em;
+    height: 1.25em;
+    background: color-mix(in srgb, var(--accent-primary) 80%, white 20%);
+    animation: crt-cursor 1s steps(2, end) infinite;
+    box-shadow: 0 0 14px color-mix(in srgb, var(--accent-primary) 68%, transparent);
+  }
+
+  .crt-boot__skip {
+    position: absolute;
+    right: 1.5rem;
+    bottom: 1rem;
+    border: 0;
+    background: transparent;
+    color: var(--text-tertiary);
+    font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+
+  .crt-boot__line-collapse,
+  .crt-boot__dot {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    translate: -50% -50%;
+    background: color-mix(in srgb, var(--accent-primary) 80%, white 20%);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--accent-primary) 72%, transparent);
+    pointer-events: none;
+  }
+
+  .crt-boot__line-collapse {
+    width: 100%;
+    height: 2px;
+  }
+
+  .crt-boot__dot {
+    width: 6px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+  }
+
+  @keyframes crt-cursor {
+    0%,
+    45% {
+      opacity: 1;
+    }
+
+    46%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes crt-static {
+    0% {
+      transform: translate(0, 0);
+      opacity: 0.8;
+    }
+
+    50% {
+      transform: translate(-2%, 1%);
+      opacity: 1;
+    }
+
+    100% {
+      transform: translate(2%, -1%);
+      opacity: 0.7;
+    }
+  }
+</style>
