@@ -1,6 +1,14 @@
 {
-  "title": "Ashton Hawkins",
-  "description": "Personal website scaffold",
+  "name": "Ashton Hawkins",
+  "title": "Director, Web Experience & Optimization",
+  "email": "ashtonhawkins@gmail.com",
+  "location": "SF Bay Area",
   "url": "https://www.ashtonhawkins.com",
+  "social": {
+    "linkedin": "https://www.linkedin.com/in/ashtonhawkins",
+    "x": "https://x.com/ashtin",
+    "letterboxd": "https://letterboxd.com/ashtin",
+    "github": null
+  },
   "now": null
 }
