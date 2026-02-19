@@ -45,12 +45,53 @@ import Base from '@layouts/Base.astro';
     animation: fade-in 800ms ease-out forwards;
   }
 
+  }
+
+  .coming-soon__content {
+    width: 100%;
+    max-width: 32rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.65rem;
+    opacity: 0;
+    animation: fade-in 800ms ease-out forwards;
+  }
+
   .coming-soon__monogram {
     margin: 0;
     font-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
     font-size: 2.25rem;
     line-height: 1;
     color: var(--text-primary);
+  }
+
+  .coming-soon__name {
+    margin: 0;
+    font-family: 'Space Grotesk Variable', 'Space Grotesk', 'Inter Variable', sans-serif;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    color: var(--text-primary);
+    letter-spacing: -0.015em;
+  }
+
+  .coming-soon__status {
+    margin: 0;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
+    font-size: 1rem;
+    color: var(--text-secondary);
+  }
+
+  .coming-soon__cursor {
+    width: 0.56ch;
+    height: 1em;
+    background: var(--accent-primary);
+    display: inline-block;
+    animation: cursor-blink 1s steps(1, end) infinite;
   }
 
   .coming-soon__name {
