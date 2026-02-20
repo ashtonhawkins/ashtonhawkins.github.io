@@ -1,7 +1,6 @@
 ---
 import SectionHeader from '@components/ui/SectionHeader.astro';
 import NoiseTexture from '@components/ui/NoiseTexture.astro';
-import StatusChip from '@components/ui/StatusChip.astro';
 import TravelCardCanvas from '@components/home/TravelCardCanvas.astro';
 import travelData from '@data/travel.json';
 import superlativesData from '@data/travel-superlatives.json';
@@ -17,35 +16,52 @@ const sketchByCategory: Record<string, string> = {
 ---
 <section class="travel" data-travel data-cities={JSON.stringify(travelData)}>
   <SectionHeader label="Travel" />
-  <article class="travel-card" data-travel-card>
+  <a href="/travel" class="travel-card" data-travel-card>
     <TravelCardCanvas />
     <NoiseTexture opacity={0.03} />
     <div class="travel-card__info" data-travel-content>
-      <h3 data-travel-city>{travelData[0].place}</h3>
-      <p class="country" data-travel-country>{travelData[0].country}</p>
-      <StatusChip label={`×${travelData[0].visits}`} active />
-      <p class="route" data-travel-route>{travelData[0].routes?.[0] ?? 'SFO → ---'}</p>
+      <h3 class="travel-card__city" data-travel-city>{travelData[0].place}</h3>
+      <p class="travel-card__country" data-travel-country>{travelData[0].country}</p>
+      <p class="travel-card__visits" data-travel-visits>×{travelData[0].visits}</p>
+      <p class="travel-card__route" data-travel-route>{travelData[0].routes?.[0] ?? 'SFO → ---'}</p>
     </div>
-  </article>
-  <p class="travel__stats">TOTAL FLIGHTS: {travelStats.totalFlights} · AIRPORTS: {travelStats.airports} · COUNTRIES: {travelStats.countries} · DISTANCE: {travelStats.totalDistance.toLocaleString()} MI</p>
+    <div class="travel-card__cta"><span>Explore trip →</span></div>
+  </a>
+  <div class="travel-stats" aria-label="Travel stats">
+    <div class="travel-stats__item"><div class="travel-stats__graphic"><svg width="32" height="16" viewBox="0 0 32 16" fill="none"><path d="M2,12 Q8,2 16,8 Q24,14 30,4" stroke="var(--accent-primary)" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.5"/><circle cx="30" cy="4" r="2" fill="var(--accent-primary)" opacity="0.8"/></svg></div><div class="travel-stats__number">{travelStats.totalFlights}</div><div class="travel-stats__label">Flights</div></div>
+    <div class="travel-stats__item"><div class="travel-stats__graphic"><svg width="32" height="16" viewBox="0 0 32 16" fill="none"><circle cx="4" cy="4" r="2" fill="var(--accent-primary)" opacity="0.3"/><circle cx="12" cy="8" r="2" fill="var(--accent-primary)" opacity="0.5"/><circle cx="20" cy="3" r="2" fill="var(--accent-primary)" opacity="0.4"/><circle cx="28" cy="10" r="2" fill="var(--accent-primary)" opacity="0.6"/><circle cx="8" cy="13" r="2" fill="var(--accent-primary)" opacity="0.3"/><circle cx="16" cy="12" r="2" fill="var(--accent-primary)" opacity="0.5"/><circle cx="24" cy="6" r="2" fill="var(--accent-primary)" opacity="0.4"/></svg></div><div class="travel-stats__number">{travelStats.airports}</div><div class="travel-stats__label">Airports</div></div>
+    <div class="travel-stats__item"><div class="travel-stats__graphic"><svg width="32" height="16" viewBox="0 0 32 16" fill="none"><line x1="4" y1="14" x2="4" y2="4" stroke="var(--accent-primary)" stroke-width="1" opacity="0.4"/><rect x="4" y="4" width="5" height="3" fill="var(--accent-primary)" opacity="0.2"/><line x1="14" y1="14" x2="14" y2="2" stroke="var(--accent-primary)" stroke-width="1" opacity="0.5"/><rect x="14" y="2" width="5" height="3" fill="var(--accent-primary)" opacity="0.3"/><line x1="24" y1="14" x2="24" y2="6" stroke="var(--accent-primary)" stroke-width="1" opacity="0.4"/><rect x="24" y="6" width="5" height="3" fill="var(--accent-primary)" opacity="0.2"/></svg></div><div class="travel-stats__number">{travelStats.countries}</div><div class="travel-stats__label">Countries</div></div>
+    <div class="travel-stats__item"><div class="travel-stats__graphic"><svg width="32" height="16" viewBox="0 0 32 16" fill="none"><path d="M2,14 Q16,-4 30,14" stroke="var(--accent-primary)" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.4" stroke-dasharray="3 2"/></svg></div><div class="travel-stats__number">{Math.round(travelStats.totalDistance / 1000)}K</div><div class="travel-stats__label">Miles</div></div>
+  </div>
   <div class="travel__supers">{superlativesData.superlatives.map((item) => <article class="plaque"><Fragment set:html={sketchByCategory[item.category] ?? sketchByCategory['Fork & Knife']} /><p>{item.category}</p><strong>{item.value}</strong><span>{item.place}</span></article>)}</div>
-  <p class="travel__footer"><a href="/travel">EXPLORE ALL TRIPS →</a></p>
+  <p class="travel__footer"><a href="/travel" class="section-footer-link">Explore all trips →</a></p>
 </section>
 <style>
-.travel-card{position:relative;min-height:250px;border:1px solid var(--border);overflow:hidden;margin-bottom:.75rem;background:var(--surface-primary)}
-.travel-card__info{background: rgba(var(--surface-primary-rgb), 0.6);backdrop-filter: blur(4px);padding: 1rem;border-radius: 4px;position: relative;z-index: 5;display:grid;gap:.4rem;max-width:280px;transition:opacity .3s ease;margin:1rem}
-.travel-card__info.is-fading{opacity:0}.travel-card h3{margin:0;font:700 1.25rem 'Space Grotesk Variable',sans-serif;letter-spacing:.06em;text-transform:uppercase}
-.country,.route{margin:0;font:.72rem 'IBM Plex Mono',monospace;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.08em}
-.travel__stats{font:.72rem 'IBM Plex Mono',monospace;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.08em}
+.travel-card{display:block;position:relative;overflow:hidden;border:1px solid var(--border);aspect-ratio:2.5/1;text-decoration:none;cursor:pointer;transition:border-color .3s ease;background:var(--surface-primary);margin-bottom:.85rem}
+.travel-card:hover{border-color:var(--accent-primary)}
+.travel-card__info{position:absolute;top:16px;left:16px;z-index:10;background:rgba(var(--surface-primary-rgb),.65);backdrop-filter:blur(6px);padding:12px 16px;border-radius:4px;border:1px solid rgba(var(--border-rgb, 255, 255, 255), .1);display:grid;gap:0;transition:opacity .3s ease}
+.travel-card__info.is-fading{opacity:0}
+.travel-card__city{margin:0;font-family:'Space Grotesk Variable',sans-serif;font-size:22px;font-weight:700;text-transform:uppercase;color:var(--text-primary);line-height:1.1;letter-spacing:.03em}
+.travel-card__country{margin:2px 0 0;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.08em}
+.travel-card__visits{margin:6px 0 0;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-primary);letter-spacing:.08em;text-transform:uppercase}
+.travel-card__route{margin:4px 0 0;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em}
+.travel-card__cta{position:absolute;bottom:16px;right:16px;z-index:10;background:rgba(var(--surface-primary-rgb),.65);backdrop-filter:blur(6px);padding:6px 14px;border-radius:4px;border:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-primary);opacity:0;transform:translateY(4px);transition:opacity .3s ease,transform .3s ease}
+.travel-card:hover .travel-card__cta{opacity:1;transform:translateY(0)}
+.travel-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-top:1rem}
+.travel-stats__item{background:var(--surface-primary);padding:12px 16px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px}
+.travel-stats__graphic{height:16px;display:flex;align-items:center}
+.travel-stats__number{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums;line-height:1.1}
+.travel-stats__label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text-tertiary);letter-spacing:.1em;text-transform:uppercase}
 .travel__supers{display:grid;gap:.7rem;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));margin-top:.75rem}
 .plaque{border:1px solid var(--border);padding:1rem;text-align:center}
 .plaque p{margin:.45rem 0 .2rem;font:10px 'IBM Plex Mono',monospace;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.1em}
 .plaque strong{display:block;font:600 .9rem 'IBM Plex Sans',sans-serif;color:var(--text-primary)}.plaque span{font:10px 'IBM Plex Mono',monospace;color:var(--text-tertiary)}
-.travel__footer a{text-decoration:none;font:.72rem 'IBM Plex Mono',monospace;color:var(--text-secondary)}
+.section-footer-link{text-decoration:none;font:.72rem 'IBM Plex Mono',monospace;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.08em}
+@media (max-width: 720px){.travel-stats{grid-template-columns:repeat(2,1fr)}}
 </style>
 <script>
 // @ts-nocheck
 const root=document.querySelector('[data-travel]'); const content=document.querySelector('[data-travel-content]'); const cityEl=document.querySelector('[data-travel-city]'); const countryEl=document.querySelector('[data-travel-country]'); const routeEl=document.querySelector('[data-travel-route]'); const bg=document.querySelector('[data-travel-bg]');
-if(root&&content&&cityEl&&countryEl&&routeEl&&bg){const cities=JSON.parse(root.dataset.cities??'[]'); let i=0; const render=()=>{const c=cities[i%cities.length]; cityEl.textContent=c.place; countryEl.textContent=c.country; routeEl.textContent=c.routes?.[0]??'SFO → ---'; const chip=content.querySelector('.status-chip__label'); if(chip) chip.textContent=`×${c.visits}`; bg.dispatchEvent(new CustomEvent('travel-city-change',{detail:{city:c.place}}));}; render();
+if(root&&content&&cityEl&&countryEl&&routeEl&&bg){const cities=JSON.parse(root.dataset.cities??'[]'); let i=0; const visitsEl=content.querySelector('[data-travel-visits]'); const render=()=>{const c=cities[i%cities.length]; cityEl.textContent=c.place; countryEl.textContent=c.country; routeEl.textContent=c.routes?.[0]??'SFO → ---'; if(visitsEl) visitsEl.textContent=`×${c.visits}`; bg.dispatchEvent(new CustomEvent('travel-city-change',{detail:{city:c.place}}));}; render();
 if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){setInterval(()=>{content.classList.add('is-fading'); setTimeout(()=>{i=(i+1)%cities.length; render(); content.classList.remove('is-fading')},300)},12000)} }
 </script>

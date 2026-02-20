@@ -2,27 +2,34 @@
 import landmarks from '@data/travel-landmarks.json';
 const map = landmarks as Record<string, { landmark: string; path: string }>;
 ---
-<div class="travel-bg" data-travel-bg data-landmarks={JSON.stringify(map)}>
-  <canvas data-travel-grid></canvas>
-  <svg viewBox="0 0 200 200" class="travel-landmark" data-travel-landmark aria-hidden="true"><path d="" data-landmark-path></path></svg>
+<div class="travel-card__bg" data-travel-bg data-landmarks={JSON.stringify(map)}>
+  <canvas class="travel-card__canvas" data-travel-grid></canvas>
+  <svg viewBox="0 0 200 200" class="travel-card__landmark" data-travel-landmark aria-hidden="true"><path d="" data-landmark-path></path></svg>
 </div>
 <style>
-.travel-bg{position:absolute;inset:0}.travel-bg canvas,.travel-landmark{position:absolute;inset:0;width:100%;height:100%}
-.travel-landmark{left:auto;right:4%;width:34%;height:78%}
-.travel-landmark path{fill:none;stroke:color-mix(in srgb,var(--accent-primary) 35%, transparent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.travel-card__bg{position:absolute;inset:0}
+.travel-card__canvas,.travel-card__landmark{position:absolute;inset:0;width:100%;height:100%}
+.travel-card__landmark{left:auto;right:5%;top:50%;transform:translateY(-50%);width:34%;height:80%;opacity:1}
+.travel-card__landmark path{stroke:var(--accent-primary);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;fill:none;opacity:.45}
 </style>
 <script>
 // @ts-nocheck
 const bg=document.querySelector('[data-travel-bg]'); const canvas=document.querySelector('[data-travel-grid]'); const pathEl=document.querySelector('[data-landmark-path]');
 if(bg instanceof HTMLElement && canvas instanceof HTMLCanvasElement && pathEl instanceof SVGPathElement){const ctx=canvas.getContext('2d'); if(ctx){const landmarks=JSON.parse(bg.dataset.landmarks??'{}'); let w=0,h=0,seed=1,city='Tokyo';
-const rand=()=>{seed=(seed*1664525+1013904223)%4294967296; return seed/4294967296};
+const rand=()=>{seed=(seed*16807)%2147483647; return (seed-1)/2147483646};
 const resize=()=>{const r=canvas.getBoundingClientRect(); w=r.width; h=r.height; const dpr=window.devicePixelRatio||1; canvas.width=w*dpr; canvas.height=h*dpr; ctx.setTransform(dpr,0,0,dpr,0,0)};
-const draw=()=>{ctx.clearRect(0,0,w,h); ctx.strokeStyle='color-mix(in srgb,var(--text-tertiary) 12%, transparent)';
-  const hLines=8+Math.floor(rand()*5); const vLines=6+Math.floor(rand()*5);
-  for(let i=0;i<hLines;i++){const y=(i+1)/(hLines+1)*h + (rand()-0.5)*14; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y+(rand()-0.5)*8); ctx.lineWidth=i%3===0?1:0.5; ctx.stroke();}
-  for(let i=0;i<vLines;i++){const x=(i+1)/(vLines+1)*w + (rand()-0.5)*16; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x+(rand()-0.5)*10,h); ctx.lineWidth=i%3===0?1:0.5; ctx.stroke();}
+const draw=()=>{ctx.clearRect(0,0,w,h); ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--text-tertiary').trim();
+  ctx.lineWidth=1; ctx.globalAlpha=.15;
+  const hCount=4+Math.floor(rand()*3);
+  for(let i=0;i<hCount;i++){const y=(h/(hCount+1))*(i+1)+(rand()-0.5)*20; ctx.beginPath(); ctx.moveTo(0,y); ctx.quadraticCurveTo(w*.3,y+(rand()-0.5)*15,w*.6,y+(rand()-0.5)*10); ctx.quadraticCurveTo(w*.8,y+(rand()-0.5)*8,w,y+(rand()-0.5)*12); ctx.stroke();}
+  const vCount=3+Math.floor(rand()*3);
+  for(let i=0;i<vCount;i++){const x=(w/(vCount+1))*(i+1)+(rand()-0.5)*30; ctx.beginPath(); ctx.moveTo(x,0); ctx.quadraticCurveTo(x+(rand()-0.5)*15,h*.5,x+(rand()-0.5)*10,h); ctx.stroke();}
+  ctx.lineWidth=.5; ctx.globalAlpha=.08;
+  const sideCount=8+Math.floor(rand()*7);
+  for(let i=0;i<sideCount;i++){const horizontal=rand()>.5; ctx.beginPath(); if(horizontal){const y=rand()*h; const startX=rand()*w*.3; const endX=startX+rand()*w*.7; ctx.moveTo(startX,y); ctx.lineTo(endX,y+(rand()-0.5)*6);} else {const x=rand()*w; const startY=rand()*h*.3; const endY=startY+rand()*h*.7; ctx.moveTo(x,startY); ctx.lineTo(x+(rand()-0.5)*6,endY);} ctx.stroke();}
+  ctx.globalAlpha=1;
 };
-const setCity=(next)=>{city=next; seed=[...city].reduce((a,c)=>a+c.charCodeAt(0),1); resize(); draw(); const lm=landmarks[city]; pathEl.setAttribute('d',lm?.path ?? 'M60,190 L140,190'); const len=pathEl.getTotalLength(); pathEl.style.strokeDasharray=`${len}`; pathEl.style.strokeDashoffset=`${len}`; pathEl.animate([{strokeDashoffset:len,opacity:.4},{strokeDashoffset:0,opacity:1}],{duration:3600,easing:'ease-out',fill:'forwards'})};
+const setCity=(next)=>{city=next; seed=[...city].reduce((a,c)=>a+c.charCodeAt(0),1); resize(); draw(); const lm=landmarks[city]; pathEl.setAttribute('d',lm?.path ?? 'M60,190 L140,190'); const len=pathEl.getTotalLength(); pathEl.style.setProperty('--path-length',`${len}`); pathEl.style.strokeDasharray=`${len}`; pathEl.style.strokeDashoffset=`${len}`; pathEl.getAnimations().forEach((animation)=>animation.cancel()); pathEl.animate([{strokeDashoffset:len,opacity:.45},{strokeDashoffset:0,opacity:.45}],{duration:3500,easing:'ease',fill:'forwards'})};
 bg.addEventListener('travel-city-change',(e)=>setCity(e.detail.city)); setCity('Tokyo'); window.addEventListener('resize',()=>setCity(city));
 }}
 </script>
