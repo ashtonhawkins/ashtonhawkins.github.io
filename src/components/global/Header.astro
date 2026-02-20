@@ -42,8 +42,11 @@ const isActive = (href: string) => {
       </ul>
     </nav>
 
-    <div class="header__utilities">
+    <div class="header__clock">
       <AnalogClock />
+    </div>
+
+    <div class="header__utilities">
       <ThemeToggle />
       <button class="cmd-trigger" type="button" aria-label="Open command palette"><span>⌘K</span></button>
       <button class="menu-trigger" type="button" aria-label="Open menu" aria-expanded="false" data-menu-toggle><span></span><span></span><span></span></button>
@@ -115,13 +118,14 @@ const isActive = (href: string) => {
   .skip-link:focus-visible { left:1rem; top:1rem; background:var(--surface-primary); padding:.5rem .75rem; z-index:60; }
   .site-header { position: sticky; top:0; z-index:50; backdrop-filter: blur(8px); background: color-mix(in srgb, var(--surface-primary) 90%, transparent); isolation:isolate; }
   .site-header.scrolled { border-bottom-color: transparent; }
-  .header-inner { position:relative; z-index:2; display:flex; align-items:center; justify-content:space-between; gap:1rem; padding-block:.7rem; }
-  .logotype { font-family:'IBM Plex Mono',monospace; font-weight:700; color:var(--text-primary); text-decoration:none; display:inline-flex; align-items:center; font-size:1.25rem; letter-spacing:.15em; text-transform:uppercase; }
+  .header-inner { position:relative; z-index:2; display:flex; align-items:center; width:100%; min-height:48px; padding-inline:var(--content-padding); }
+  .logotype { flex-shrink:0; font-family:'IBM Plex Mono',monospace; font-weight:700; color:var(--text-primary); text-decoration:none; display:inline-flex; align-items:center; font-size:1.25rem; letter-spacing:.15em; text-transform:uppercase; }
   .logotype__cursor { margin-left:.15rem; }
-  .desktop-nav{display:none;} .desktop-nav ul{list-style:none;display:flex;gap:1rem;padding:0;margin:0;}
+  .desktop-nav{display:none;flex-shrink:0;margin-left:2rem;} .desktop-nav ul{list-style:none;display:flex;gap:1.25rem;padding:0;margin:0;}
   .desktop-nav a{font-family:'IBM Plex Mono',monospace;font-size:.8rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);text-decoration:none;padding:.35rem 0;border-bottom:2px solid transparent;}
   .desktop-nav a.active,.desktop-nav a:hover{color:var(--text-primary);} .desktop-nav a.active{border-bottom-color:var(--accent-primary);} 
-  .header__utilities{display:flex;align-items:center;gap:.5rem;}
+  .header__clock{flex:1;display:flex;justify-content:center;align-items:center;}
+  .header__utilities{flex-shrink:0;display:flex;align-items:center;gap:.5rem;}
   .cmd-trigger,.menu-trigger{border:1px solid var(--border);background:var(--surface-primary);color:var(--text-secondary);border-radius:999px;padding:.4rem .6rem;}
   .cmd-trigger{display:none;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;}
   .menu-trigger{border-radius:.5rem;} .menu-trigger span{display:block;width:1rem;height:2px;margin:2px 0;background:var(--text-secondary);} 
@@ -132,6 +136,5 @@ const isActive = (href: string) => {
     .desktop-nav, .cmd-trigger { display:flex; }
     .menu-trigger, .mobile-overlay { display:none; }
     .logotype { font-size:1.5rem; }
-    .desktop-nav ul { gap:1.4rem; }
   }
 </style>

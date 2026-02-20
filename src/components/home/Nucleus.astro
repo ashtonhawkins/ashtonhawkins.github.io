@@ -1,23 +1,10 @@
 ---
 import NucleusCanvas from '@components/home/NucleusCanvas.astro';
-import AnalogClock from '@components/ui/AnalogClock.astro';
-import quotes from '@data/quotes.json';
-
-const quote = quotes[0] ?? { text: '', author: '' };
 ---
 
 <section class="nucleus container-shell max-wide" aria-label="Nucleus">
-  <div class="nucleus__frame" data-nucleus data-quotes={JSON.stringify(quotes)}>
+  <div class="nucleus__frame" data-nucleus>
     <NucleusCanvas />
-    <blockquote class="nucleus__quote" data-nucleus-quote>
-      <div class="nucleus__quote-window">
-        <p data-quote-text>“{quote.text}”</p>
-        <footer data-quote-author>{quote.author}</footer>
-      </div>
-    </blockquote>
-    <div class="nucleus__clock" aria-hidden="true">
-      <AnalogClock />
-    </div>
   </div>
 </section>
 
@@ -39,86 +26,4 @@ const quote = quotes[0] ?? { text: '', author: '' };
     width: 100%;
     background: var(--surface-primary);
   }
-
-  .nucleus__quote {
-    position: relative;
-    z-index: 10;
-    display: grid;
-    place-content: center;
-    text-align: center;
-    margin: 0;
-    padding: 0.5rem 1rem;
-    height: 100%;
-  }
-
-  .nucleus__quote-window {
-    background: rgba(var(--surface-primary-rgb), 0.6);
-    backdrop-filter: blur(4px);
-    border-radius: 4px;
-    padding: 0.4rem 1rem;
-  }
-
-  .nucleus__quote p {
-    margin: 0;
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-style: italic;
-    font-size: clamp(0.75rem, 1.5vw, 0.95rem);
-    color: var(--text-primary);
-    max-width: 54ch;
-  }
-
-  .nucleus__quote footer {
-    margin-top: 0.5rem;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    letter-spacing: 0.08em;
-  }
-
-  .nucleus__clock {
-    position: absolute;
-    left: 50%;
-    bottom: 8px;
-    transform: translateX(-50%);
-    z-index: 8;
-  }
-
-  .nucleus__clock :global(.analog-clock) {
-    width: 48px;
-    height: 48px;
-  }
-
-  @media (max-width: 44rem) {
-    .nucleus__clock :global(.analog-clock) {
-      width: 36px;
-      height: 36px;
-    }
-  }
 </style>
-
-<script>
-  // @ts-nocheck
-  const nucleus = document.querySelector('[data-nucleus]');
-  const quoteWrap = document.querySelector('[data-nucleus-quote]');
-  const quoteText = document.querySelector('[data-quote-text]');
-  const quoteAuthor = document.querySelector('[data-quote-author]');
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  if (nucleus instanceof HTMLElement && quoteWrap instanceof HTMLElement && quoteText instanceof HTMLElement && quoteAuthor instanceof HTMLElement) {
-    const pool = JSON.parse(nucleus.dataset.quotes ?? '[]');
-    let index = 0;
-    if (!reduced) {
-      setInterval(() => {
-        if (pool.length < 2) return;
-        quoteWrap.style.opacity = '0';
-        setTimeout(() => {
-          index = (index + 1) % pool.length;
-          quoteText.textContent = `“${pool[index].text}”`;
-          quoteAuthor.textContent = String(pool[index].author).toUpperCase();
-          quoteWrap.style.opacity = '1';
-        }, 400);
-      }, 25000);
-    }
-  }
-</script>
