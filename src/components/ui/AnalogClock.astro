@@ -3,33 +3,40 @@
 ---
 <div class="analog-clock" aria-label="Current time">
   <svg viewBox="0 0 50 50" class="analog-clock__face">
-    <circle cx="25" cy="25" r="23" fill="none" stroke="var(--border)" stroke-width="1" />
+    <circle cx="25" cy="25" r="23" fill="none" stroke="var(--border)" stroke-width="1.5" />
     <g class="analog-clock__ticks">
-      <line x1="25" y1="4" x2="25" y2="7" stroke="var(--text-tertiary)" stroke-width="1" />
+      <line x1="25" y1="4" x2="25" y2="9" stroke="var(--text-secondary)" stroke-width="1.5" />
       <line x1="25" y1="4" x2="25" y2="7" stroke="var(--text-tertiary)" stroke-width="1" transform="rotate(30 25 25)" />
       <line x1="25" y1="4" x2="25" y2="7" stroke="var(--text-tertiary)" stroke-width="1" transform="rotate(60 25 25)" />
-      <line x1="25" y1="4" x2="25" y2="7" stroke="var(--text-tertiary)" stroke-width="1" transform="rotate(90 25 25)" />
+      <line x1="25" y1="4" x2="25" y2="9" stroke="var(--text-secondary)" stroke-width="1.5" transform="rotate(90 25 25)" />
       <line x1="25" y1="4" x2="25" y2="7" stroke="var(--text-tertiary)" stroke-width="1" transform="rotate(120 25 25)" />
       <line x1="25" y1="4" x2="25" y2="7" stroke="var(--text-tertiary)" stroke-width="1" transform="rotate(150 25 25)" />
-      <line x1="25" y1="4" x2="25" y2="7" stroke="var(--text-tertiary)" stroke-width="1" transform="rotate(180 25 25)" />
+      <line x1="25" y1="4" x2="25" y2="9" stroke="var(--text-secondary)" stroke-width="1.5" transform="rotate(180 25 25)" />
       <line x1="25" y1="4" x2="25" y2="7" stroke="var(--text-tertiary)" stroke-width="1" transform="rotate(210 25 25)" />
       <line x1="25" y1="4" x2="25" y2="7" stroke="var(--text-tertiary)" stroke-width="1" transform="rotate(240 25 25)" />
-      <line x1="25" y1="4" x2="25" y2="7" stroke="var(--text-tertiary)" stroke-width="1" transform="rotate(270 25 25)" />
+      <line x1="25" y1="4" x2="25" y2="9" stroke="var(--text-secondary)" stroke-width="1.5" transform="rotate(270 25 25)" />
       <line x1="25" y1="4" x2="25" y2="7" stroke="var(--text-tertiary)" stroke-width="1" transform="rotate(300 25 25)" />
       <line x1="25" y1="4" x2="25" y2="7" stroke="var(--text-tertiary)" stroke-width="1" transform="rotate(330 25 25)" />
     </g>
-    <line class="analog-clock__hour" x1="25" y1="25" x2="25" y2="13" stroke="var(--text-primary)" stroke-width="2" stroke-linecap="round" />
-    <line class="analog-clock__minute" x1="25" y1="25" x2="25" y2="9" stroke="var(--text-primary)" stroke-width="1.5" stroke-linecap="round" />
+    <line class="analog-clock__hour" x1="25" y1="25" x2="25" y2="14" stroke="var(--text-primary)" stroke-width="2.5" stroke-linecap="round" />
+    <line class="analog-clock__minute" x1="25" y1="25" x2="25" y2="10" stroke="var(--text-primary)" stroke-width="1.5" stroke-linecap="round" />
     <line class="analog-clock__second" x1="25" y1="25" x2="25" y2="8" stroke="var(--accent-primary)" stroke-width="1" stroke-linecap="round" />
-    <circle cx="25" cy="25" r="1.5" fill="var(--accent-primary)" />
+    <circle cx="25" cy="25" r="2" fill="var(--accent-primary)" />
   </svg>
 </div>
 
 <style>
   .analog-clock {
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
     flex-shrink: 0;
+  }
+
+  @media (max-width: 768px) {
+    .analog-clock {
+      width: 36px;
+      height: 36px;
+    }
   }
 
   .analog-clock__face {
