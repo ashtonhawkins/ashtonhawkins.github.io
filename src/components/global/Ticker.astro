@@ -1,36 +1,62 @@
 ---
 import quotes from '../../data/quotes.json';
 
-const deployTimestamp = new Date().toISOString().replace('T', ' — ').split('.')[0] + ' UTC';
+const deployTimestamp = new Date().toISOString().replace('T', ' — ').slice(0, 22) + ' UTC';
+
+const buildNumber = 1;
+const componentCount = 14;
+const lineCount = 2850;
+
+const co2PerView = '0.04g';
+const pageWeight = '~300 KB';
+const cleanerThan = '92%';
 ---
 
 <div class="ticker" role="marquee" aria-label="Status ticker">
   <div class="ticker__track" id="ticker-track">
-    <div class="ticker__item ticker__item--pill" data-ticker-item>
+    <div class="ticker__item" data-ticker-item>
       <span class="ticker__pill">
-        <span class="ticker__label">Last Site Deployment:</span>
-        <span class="ticker__value">{deployTimestamp}</span>
+        <span class="t-label">Last Site Deployment:</span>
+        <span class="t-value">{deployTimestamp}</span>
+        <span class="t-sep">·</span>
+        <span class="t-value">99.8% Uptime</span>
       </span>
     </div>
 
-    <div class="ticker__item ticker__item--counter" data-ticker-item>
-      <span class="ticker__number" id="seconds-live-ticker">31,622,000</span>
-      <span class="ticker__suffix">seconds live</span>
+    <div class="ticker__item" data-ticker-item>
+      <span class="t-accent" id="seconds-live-ticker">31,622,000</span>
+      <span class="t-label" style="margin-left: 8px;">seconds live</span>
     </div>
 
-    {quotes.map((q: { text: string; author: string }, i: number) => (
-      <div class="ticker__item ticker__item--quote" data-ticker-item data-quote-index={i}>
-        <span class="ticker__quote-text">"{q.text}"</span>
-        <span class="ticker__quote-author">— {q.author}</span>
+    {quotes.map((q: { text: string; author: string }) => (
+      <div class="ticker__item ticker__item--quote" data-ticker-item data-is-quote>
+        <span class="t-quote">"{q.text}"</span>
+        <span class="t-author">— {q.author}</span>
       </div>
     ))}
 
-    <div class="ticker__item ticker__item--signal" data-ticker-item>
-      <span class="ticker__signal-text">
-        Signal: <span id="ticker-browser-icon"></span>
-        <span id="ticker-browser-info">detecting...</span>
-        <span id="ticker-minimap"></span>
-      </span>
+    <div class="ticker__item" data-ticker-item id="ticker-signal-item">
+      <span class="t-label">Signal:</span>
+      <span id="ticker-browser-icon" style="margin: 0 4px; display: inline-flex; align-items: center;"></span>
+      <span class="t-value" id="ticker-browser-info">detecting…</span>
+      <span id="ticker-minimap" style="margin-left: 8px; display: inline-flex; align-items: center;"></span>
+    </div>
+
+    <div class="ticker__item" data-ticker-item>
+      <span class="t-value">{co2PerView} CO₂</span>
+      <span class="t-sep">·</span>
+      <span class="t-value">{pageWeight}</span>
+      <span class="t-sep">·</span>
+      <span class="t-label">Cleaner than {cleanerThan} of sites</span>
+    </div>
+
+    <div class="ticker__item" data-ticker-item>
+      <span class="t-label">Build</span>
+      <span class="t-value">#{buildNumber}</span>
+      <span class="t-sep">·</span>
+      <span class="t-value">{componentCount} Components</span>
+      <span class="t-sep">·</span>
+      <span class="t-value">{lineCount.toLocaleString()} Lines</span>
     </div>
   </div>
 </div>
@@ -40,19 +66,19 @@ const deployTimestamp = new Date().toISOString().replace('T', ' — ').split('.'
     height: 40px;
     background: var(--surface-secondary);
     overflow: hidden;
+    border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
-    padding: 0 var(--content-padding);
-    border-bottom: 1px solid var(--border);
-    position: relative;
+    justify-content: center;
   }
 
   .ticker__track {
     position: relative;
-    width: 100%;
-    height: 100%;
     display: flex;
     align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
   }
 
   .ticker__item {
@@ -60,14 +86,12 @@ const deployTimestamp = new Date().toISOString().replace('T', ' — ').split('.'
     inset: 0;
     display: flex;
     align-items: center;
+    justify-content: center;
     opacity: 0;
-    transition: opacity 0.4s ease;
+    transition: opacity 0.5s ease;
     pointer-events: none;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
     white-space: nowrap;
+    gap: 0;
   }
 
   .ticker__item--active {
@@ -75,87 +99,122 @@ const deployTimestamp = new Date().toISOString().replace('T', ' — ').split('.'
     pointer-events: auto;
   }
 
-  .ticker__pill {
-    border: 1px solid var(--border);
-    border-radius: 9999px;
-    padding: 3px 14px;
-    display: inline-flex;
-    gap: 8px;
-    align-items: center;
-  }
-  .ticker__label {
+  .t-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 400;
     color: var(--text-tertiary);
-    font-size: 10px;
-  }
-  .ticker__value {
-    color: var(--text-primary);
-    font-weight: 500;
-    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
 
-  .ticker__number {
-    color: var(--accent-primary);
+  .t-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .t-accent {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
     font-weight: 700;
-    font-size: 14px;
+    color: var(--accent-primary);
     font-variant-numeric: tabular-nums;
   }
-  .ticker__suffix {
-    color: var(--text-tertiary);
+
+  .t-sep {
     font-size: 9px;
+    color: var(--text-tertiary);
+    margin: 0 8px;
+  }
+
+  .t-quote {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--text-primary);
+    text-transform: none;
+  }
+
+  .t-author {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
     margin-left: 8px;
   }
 
-  .ticker__item--quote {
-    gap: 8px;
-  }
-  .ticker__quote-text {
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-style: italic;
-    text-transform: none;
-    color: var(--text-primary);
-    font-size: 12px;
-  }
-  .ticker__quote-author {
-    color: var(--text-secondary);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
-    text-transform: uppercase;
+  .ticker__pill {
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    padding: 3px 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
   }
 
-  .ticker__item--signal {
-    gap: 6px;
+  .ticker__pill .t-label {
+    margin-right: 8px;
   }
-  .ticker__signal-text {
-    color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .ticker__signal-text :global(svg) {
+
+  .ticker__item :global(svg) {
     display: inline-block;
     vertical-align: middle;
+    flex-shrink: 0;
   }
 </style>
 
 <script>
   // @ts-nocheck
   const allItems = document.querySelectorAll('[data-ticker-item]');
-
-  const deployItem = document.querySelector('.ticker__item--pill');
-  const counterItem = document.querySelector('.ticker__item--counter');
-  const signalItem = document.querySelector('.ticker__item--signal');
-  const quoteItems = [...document.querySelectorAll('.ticker__item--quote')];
-
-  function shuffle(arr) {
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
+  if (!allItems.length) {
+    console.warn('Ticker: No items found');
   }
 
-  const selectedQuotes = shuffle([...quoteItems]).slice(0, 3);
-  const rotation = [deployItem, counterItem, ...selectedQuotes, signalItem].filter(Boolean);
+  const nonQuoteItems = [];
+  const quoteItems = [];
+
+  allItems.forEach((item) => {
+    if (item.hasAttribute('data-is-quote')) {
+      quoteItems.push(item);
+    } else {
+      nonQuoteItems.push(item);
+    }
+  });
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  const selectedQuotes = shuffle(quoteItems).slice(0, Math.min(3, quoteItems.length));
+
+  const dataItems = [...nonQuoteItems];
+  const rotation = [];
+
+  let qi = 0;
+  for (let i = 0; i < dataItems.length; i++) {
+    rotation.push(dataItems[i]);
+    if ((i + 1) % 2 === 0 && qi < selectedQuotes.length) {
+      rotation.push(selectedQuotes[qi]);
+      qi++;
+    }
+  }
+
+  while (qi < selectedQuotes.length) {
+    rotation.push(selectedQuotes[qi]);
+    qi++;
+  }
 
   let currentIndex = 0;
 
@@ -166,13 +225,12 @@ const deployTimestamp = new Date().toISOString().replace('T', ' — ').split('.'
     }
   }
 
-  if (rotation.length > 0) {
-    showItem(0);
-    setInterval(() => {
-      currentIndex = (currentIndex + 1) % rotation.length;
-      showItem(currentIndex);
-    }, 8000);
-  }
+  showItem(0);
+
+  setInterval(() => {
+    currentIndex = (currentIndex + 1) % rotation.length;
+    showItem(currentIndex);
+  }, 8000);
 
   const LAUNCH_DATE = new Date('2025-02-19T00:00:00Z');
   const counterEl = document.getElementById('seconds-live-ticker');
@@ -183,6 +241,7 @@ const deployTimestamp = new Date().toISOString().replace('T', ' — ').split('.'
     const seconds = Math.floor((now.getTime() - LAUNCH_DATE.getTime()) / 1000);
     counterEl.textContent = seconds.toLocaleString();
   }
+
   updateSecondsLive();
   setInterval(updateSecondsLive, 1000);
 
@@ -209,30 +268,31 @@ const deployTimestamp = new Date().toISOString().replace('T', ' — ').split('.'
 
   if (browserInfoEl) {
     browserInfoEl.textContent = `${browserName} / ${osName} / ${resolution}`;
+    browserInfoEl.classList.add('t-value');
   }
 
   const BROWSER_ICONS = {
-    Chrome: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="10"/><line x1="12" y1="2" x2="12" y2="8"/><line x1="2.5" y1="17" x2="7.5" y2="14"/><line x1="21.5" y1="17" x2="16.5" y2="14"/></svg>',
-    Safari: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88"/></svg>',
-    Firefox: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a7 7 0 0 0-4 12.9"/></svg>',
-    Edge: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8c2.2 0 4 1.8 4 4h-8"/></svg>',
-    Arc: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12a4 4 0 0 1 8 0"/></svg>'
+    Chrome: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="10"/><line x1="12" y1="2" x2="12" y2="8"/><line x1="2.5" y1="17" x2="7.5" y2="14"/><line x1="21.5" y1="17" x2="16.5" y2="14"/></svg>`,
+    Safari: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88" fill="var(--text-tertiary)"/></svg>`,
+    Firefox: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 2c-1 3 0 5 2 6 2 1 4 3 4 6"/></svg>`,
+    Edge: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8c2.2 0 4 1.8 4 4h-8"/></svg>`,
+    Arc: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14a5 5 0 0 1 8 0"/></svg>`,
+    Browser: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/></svg>`
   };
 
   if (browserIconEl) {
-    browserIconEl.innerHTML = BROWSER_ICONS[browserName] || BROWSER_ICONS.Chrome;
+    browserIconEl.innerHTML = BROWSER_ICONS[browserName] || BROWSER_ICONS.Browser;
   }
 
   if (minimapEl) {
-    const mapSvg = `<svg width="40" height="20" viewBox="0 0 200 100" style="display:inline-block;vertical-align:middle;max-width:40px;max-height:20px;">
-      <rect width="200" height="100" fill="none"/>
-      <path d="M30,25 L45,20 L55,25 L50,40 L35,45 L25,35 Z" fill="var(--text-tertiary)" opacity="0.3"/>
-      <path d="M55,55 L65,50 L75,60 L70,80 L55,75 Z" fill="var(--text-tertiary)" opacity="0.3"/>
-      <path d="M85,20 L120,15 L130,25 L125,50 L100,55 L85,40 Z" fill="var(--text-tertiary)" opacity="0.3"/>
-      <path d="M130,30 L170,25 L180,40 L175,55 L160,60 L140,50 L130,40 Z" fill="var(--text-tertiary)" opacity="0.3"/>
-      <path d="M140,65 L170,60 L175,80 L150,85 L140,75 Z" fill="var(--text-tertiary)" opacity="0.3"/>
-      <circle id="visitor-dot" cx="0" cy="0" r="3" fill="var(--accent-primary)" opacity="0">
-        <animate attributeName="opacity" values="0;1;0.7;1" dur="2s" repeatCount="indefinite"/>
+    const mapSvg = `<svg width="40" height="20" viewBox="0 0 200 100" fill="none" style="max-width:40px;max-height:20px;">
+      <path d="M30,25 L45,20 L55,25 L50,40 L35,45 L25,35 Z" fill="var(--text-tertiary)" opacity="0.25"/>
+      <path d="M55,55 L65,50 L75,60 L70,80 L55,75 Z" fill="var(--text-tertiary)" opacity="0.25"/>
+      <path d="M85,20 L120,15 L130,25 L125,50 L100,55 L85,40 Z" fill="var(--text-tertiary)" opacity="0.25"/>
+      <path d="M130,30 L170,25 L180,40 L175,55 L160,60 L140,50 L130,40 Z" fill="var(--text-tertiary)" opacity="0.25"/>
+      <path d="M140,65 L170,60 L175,80 L150,85 L140,75 Z" fill="var(--text-tertiary)" opacity="0.25"/>
+      <circle id="visitor-dot" cx="0" cy="0" r="4" fill="var(--accent-primary)" opacity="0">
+        <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
       </circle>
     </svg>`;
     minimapEl.innerHTML = mapSvg;
@@ -246,8 +306,8 @@ const deployTimestamp = new Date().toISOString().replace('T', ' — ').split('.'
           const y = 50 - (Math.log(Math.tan(Math.PI / 4 + latRad / 2)) / Math.PI) * 50;
           const dot = minimapEl.querySelector('#visitor-dot');
           if (dot) {
-            dot.setAttribute('cx', x.toString());
-            dot.setAttribute('cy', Math.max(5, Math.min(95, y)).toString());
+            dot.setAttribute('cx', String(Math.max(5, Math.min(195, x))));
+            dot.setAttribute('cy', String(Math.max(5, Math.min(95, y))));
             dot.setAttribute('opacity', '1');
           }
         }

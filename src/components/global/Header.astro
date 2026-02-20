@@ -26,7 +26,7 @@ const isActive = (href: string) => {
 <a href="#content" class="skip-link">Skip to content</a>
 <header class="site-header" data-header>
   <NoiseTexture opacity={0.02} />
-  <div class="header-inner container-shell max-wide">
+  <div class="header__nav-row header-inner container-shell max-wide">
     <a href="/" class="logotype" aria-label="Ashton Hawkins home" style="view-transition-name: logo-ashton-hawkins;">
       <span class="logotype__text">ASHTON HAWKINS</span>
       <Cursor class="logotype__cursor" />
@@ -53,6 +53,8 @@ const isActive = (href: string) => {
     </div>
   </div>
 
+  <Ticker />
+
   <div class="mobile-overlay" data-mobile-menu hidden>
     <nav aria-label="Mobile Primary" class="mobile-nav">
       <ul>
@@ -65,7 +67,6 @@ const isActive = (href: string) => {
     <p class="mobile-time" data-mobile-time>--:--:--</p>
   </div>
 
-  {pathname !== '/' && <Ticker />}
 </header>
 
 <script>
