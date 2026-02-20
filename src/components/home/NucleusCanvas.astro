@@ -336,73 +336,182 @@
       ctx.globalAlpha = 1;
     };
 
-    const glitchTransition = (w, h, callback) => {
-      transitioning = true;
-      const imageData = ctx.getImageData(0, 0, w, h);
-      const start = performance.now();
-      const duration = 200;
-
-      const glitchStep = (now) => {
-        ctx.putImageData(imageData, 0, 0);
-        const slices = 5 + Math.floor(Math.random() * 10);
-        for (let i = 0; i < slices; i++) {
-          const y = Math.floor(Math.random() * h);
-          const sliceH = 2 + Math.floor(Math.random() * 8);
-          const offset = (Math.random() - 0.5) * 40;
-          const slice = ctx.getImageData(0, y, w, sliceH);
-          ctx.putImageData(slice, offset, y);
-        }
-        ctx.fillStyle = `rgba(${Math.random() > 0.5 ? 255 : 0}, ${Math.random() > 0.5 ? 255 : 0}, ${Math.random() > 0.5 ? 255 : 0}, 0.05)`;
-        ctx.fillRect(0, 0, w, h);
-
-        if (now - start < duration) requestAnimationFrame(glitchStep);
-        else {
-          callback();
-          transitioning = false;
-        }
-      };
-      requestAnimationFrame(glitchStep);
+    const drawSlideByIndex = (slideIndex, w, h) => {
+      switch (SLIDES[slideIndex].visual) {
+        case 'topo': drawTopo(w, h); break;
+        case 'globe': drawGlobe(w, h); break;
+        case 'skyline': drawSkyline(w, h); break;
+        case 'waveform': drawWaveform(w, h); break;
+      }
     };
 
-    const updateCaption = (slideIndex) => {
-      const slide = SLIDES[slideIndex];
+    const resetProgress = () => {
+      const bar = document.getElementById('nucleus-progress');
+      if (!bar) return;
+      bar.classList.remove('nucleus__progress--filling');
+      void bar.offsetWidth;
+      bar.classList.add('nucleus__progress--filling');
+    };
+
+    const updateDots = (slideIndex) => {
+      document.querySelectorAll('.nucleus__dot').forEach((dot) => {
+        dot.classList.remove('nucleus__dot--active');
+        const ring = dot.querySelector('.nucleus__dot-ring');
+        if (ring instanceof SVGCircleElement) {
+          ring.style.animation = 'none';
+          void ring.getBoundingClientRect();
+          ring.style.animation = '';
+        }
+      });
+
+      const activeDot = document.querySelector(`.nucleus__dot[data-dot="${slideIndex}"]`);
+      if (activeDot instanceof HTMLElement) activeDot.classList.add('nucleus__dot--active');
+    };
+
+    const SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+
+    const scrambleText = (element, targetText, duration, delay = 0, decode = true) => {
+      if (!(element instanceof HTMLElement)) return;
+      const startText = element.textContent || '';
+      const length = Math.max(startText.length, targetText.length);
+      const stagger = 18;
+      const startTime = performance.now() + delay;
+
+      const update = () => {
+        const elapsed = performance.now() - startTime;
+        if (elapsed < 0) {
+          requestAnimationFrame(update);
+          return;
+        }
+
+        const progress = Math.min(elapsed / duration, 1);
+        const resolvedCount = decode ? Math.min(targetText.length, Math.floor(elapsed / stagger)) : 0;
+        let output = '';
+
+        for (let i = 0; i < length; i++) {
+          if (decode && i < resolvedCount && i < targetText.length) {
+            output += targetText[i];
+          } else {
+            output += SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+          }
+        }
+
+        element.textContent = output.slice(0, decode ? Math.max(resolvedCount, targetText.length) : length);
+
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        } else if (decode) {
+          element.textContent = targetText;
+        }
+      };
+
+      requestAnimationFrame(update);
+    };
+
+    const startCaptionTransition = (nextIndex, reducedMotion) => {
       const labelEl = document.getElementById('nucleus-label');
       const detailEl = document.getElementById('nucleus-detail');
       const linkEl = document.getElementById('nucleus-link');
+      const nextSlide = SLIDES[nextIndex];
 
-      if (labelEl) labelEl.textContent = slide.label;
-      if (detailEl) detailEl.textContent = slide.detail;
-      if (linkEl instanceof HTMLAnchorElement) linkEl.href = slide.link;
+      if (reducedMotion) {
+        if (labelEl) labelEl.textContent = nextSlide.label;
+        if (detailEl) detailEl.textContent = nextSlide.detail;
+        if (linkEl instanceof HTMLAnchorElement) linkEl.href = nextSlide.link;
+        return;
+      }
 
-      document.querySelectorAll('.nucleus__dot').forEach((dot, i) => {
-        dot.classList.toggle('nucleus__dot--active', i === slideIndex);
-      });
+      const scrambleDuration = 250;
+      scrambleText(labelEl, labelEl?.textContent || '', scrambleDuration, 0, false);
+      scrambleText(detailEl, detailEl?.textContent || '', scrambleDuration, 0, false);
+
+      window.setTimeout(() => {
+        if (linkEl instanceof HTMLAnchorElement) linkEl.href = nextSlide.link;
+        scrambleText(labelEl, nextSlide.label, 250, 0, true);
+        scrambleText(detailEl, nextSlide.detail, 250, 0, true);
+      }, scrambleDuration);
     };
 
-    const transitionToSlide = (nextIndex) => {
-      const caption = document.getElementById('nucleus-caption');
-      if (caption instanceof HTMLElement) caption.style.opacity = '0';
+    const crtTransition = (w, h, nextIndex, callback) => {
+      transitioning = true;
+      const start = performance.now();
+      const duration = 500;
+      const midpoint = 250;
+      let switched = false;
 
+      const frame = (now) => {
+        const elapsed = now - start;
+        const clamped = Math.min(elapsed, duration);
+
+        if (!switched && clamped >= midpoint) {
+          currentSlide = nextIndex;
+          switched = true;
+        }
+
+        drawSlideByIndex(switched ? nextIndex : currentSlide, w, h);
+
+        const { accent } = getColors();
+        const scanProgress = clamped / duration;
+        const scanY = h * scanProgress;
+        const scanAlpha = clamped < midpoint ? 0.3 : Math.max(0, 0.3 * (1 - (clamped - midpoint) / midpoint));
+        const scanHeight = 2 + Math.floor(Math.random() * 2);
+        ctx.fillStyle = accent;
+        ctx.globalAlpha = scanAlpha;
+        ctx.fillRect(0, scanY, w, scanHeight);
+
+        const noiseFade = clamped < midpoint ? 1 : Math.max(0, 1 - (clamped - midpoint) / midpoint);
+        const grainCount = 200 + Math.floor(Math.random() * 201);
+        for (let i = 0; i < grainCount; i++) {
+          const x = Math.random() * w;
+          const y = Math.random() * h;
+          const size = 1 + Math.floor(Math.random() * 2);
+          ctx.globalAlpha = (0.05 + Math.random() * 0.03) * noiseFade;
+          ctx.fillRect(x, y, size, size);
+        }
+
+        ctx.globalAlpha = 1;
+
+        if (elapsed < duration) {
+          requestAnimationFrame(frame);
+          return;
+        }
+
+        drawSlideByIndex(nextIndex, w, h);
+        callback();
+        transitioning = false;
+      };
+
+      requestAnimationFrame(frame);
+    };
+
+    const transitionToSlide = (nextIndex, reducedMotion = false) => {
       const w = canvas.width / (window.devicePixelRatio || 1);
       const h = canvas.height / (window.devicePixelRatio || 1);
-      glitchTransition(w, h, () => {
+
+      startCaptionTransition(nextIndex, reducedMotion);
+
+      if (reducedMotion) {
         currentSlide = nextIndex;
-        updateCaption(nextIndex);
-        if (caption instanceof HTMLElement) {
-          window.setTimeout(() => {
-            caption.style.opacity = '1';
-          }, 100);
-        }
+        drawSlideByIndex(nextIndex, w, h);
+        updateDots(nextIndex);
+        resetProgress();
+        return;
+      }
+
+      crtTransition(w, h, nextIndex, () => {
+        updateDots(nextIndex);
+        resetProgress();
       });
     };
 
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
-    updateCaption(0);
+    updateDots(0);
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const SLIDE_DURATION = 12000;
+    const SLIDE_DURATION = 9000;
     let lastSwitch = Date.now();
+    resetProgress();
 
     if (reducedMotion) {
       drawTopo(canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1));
@@ -412,7 +521,8 @@
           const index = Number.parseInt(dot.getAttribute('data-dot') || '-1', 10);
           if (index >= 0 && index < SLIDES.length && index !== currentSlide && !transitioning) {
             lastSwitch = Date.now();
-            transitionToSlide(index);
+            resetProgress();
+            transitionToSlide(index, reducedMotion);
           }
         });
       });
@@ -427,16 +537,11 @@
           if (now - lastSwitch > SLIDE_DURATION) {
             lastSwitch = now;
             const next = (currentSlide + 1) % SLIDES.length;
-            transitionToSlide(next);
+            transitionToSlide(next, reducedMotion);
             return requestAnimationFrame(animate);
           }
 
-          switch (SLIDES[currentSlide].visual) {
-            case 'topo': drawTopo(w, h); break;
-            case 'globe': drawGlobe(w, h); break;
-            case 'skyline': drawSkyline(w, h); break;
-            case 'waveform': drawWaveform(w, h); break;
-          }
+          drawSlideByIndex(currentSlide, w, h);
         }
 
         requestAnimationFrame(animate);
