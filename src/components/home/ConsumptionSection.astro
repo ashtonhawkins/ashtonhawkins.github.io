@@ -7,7 +7,7 @@ const watching = (feeds as any)?.items?.letterboxd?.[0] ?? null;
 const reading = (feeds as any)?.items?.literal?.[0] ?? null;
 const listening = (feeds as any)?.items?.lastfm?.[0] ?? (feeds as any)?.items?.spotify?.[0] ?? null;
 ---
-<section class="media-feeds">
+<section id="consumption" class="media-feeds">
   <SectionHeader label="Consumption" />
   <div class="media-feeds__grid">
     <article class="consumption-card">

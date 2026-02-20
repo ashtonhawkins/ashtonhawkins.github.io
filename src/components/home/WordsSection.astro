@@ -6,12 +6,14 @@ import feeds from '@data/feeds-cache.json';
 
 const posts = ((feeds as any)?.items?.x ?? []).slice(0, 5);
 ---
-<section class="words-section">
+<section id="words" class="words-section">
   <SectionHeader label="Words" />
   <div class="words-section__grid">
-    <WritingDrift />
-    <aside class="x-sidebar">
-      <h3>// X <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2 L10 10 M10 2 L2 10" stroke="currentColor"/></svg></h3>
+    <div class="words-section__drift">
+      <WritingDrift />
+    </div>
+    <aside class="words-section__x-feed">
+      <h3 class="x-feed__header"><span class="section-prefix">//</span><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="x-feed__logo" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></h3>
       <ul>
         {posts.length ? posts.map((post: any) => (
           <li>
@@ -26,12 +28,15 @@ const posts = ((feeds as any)?.items?.x ?? []).slice(0, 5);
   <p class="writing__footer"><a href="/writing">VIEW ALL POSTS →</a></p>
 </section>
 <style>
-.words-section__grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
-.x-sidebar{border:1px solid var(--border);padding:.8rem;background:var(--surface-primary)}
-.x-sidebar h3{margin:0 0 .6rem;display:flex;align-items:center;gap:.3rem;font:700 .76rem 'IBM Plex Mono',monospace;letter-spacing:.08em}
-.x-sidebar ul{list-style:none;margin:0;padding:0}.x-sidebar li{padding:.55rem 0;border-bottom:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
-.x-sidebar p{margin:0;font:.85rem/1.35 'IBM Plex Sans',sans-serif;color:var(--text-primary);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.x-sidebar span{font:.68rem 'IBM Plex Mono',monospace;color:var(--text-tertiary);text-transform:uppercase}
-.x-sidebar a,.writing__footer a{text-decoration:none;font:.72rem 'IBM Plex Mono',monospace;color:var(--text-secondary);letter-spacing:.08em}
-@media (max-width: 768px) { .words-section__grid { grid-template-columns:1fr; } }
+.words-section__grid { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+.words-section__drift { border:1px solid var(--border); border-right:none; position:relative; overflow:hidden; min-height:200px; }
+.words-section__x-feed{border:1px solid var(--border);padding:1rem;background:var(--surface-primary)}
+.x-feed__header{margin:0 0 .6rem;display:flex;align-items:center;gap:.4rem;font:700 .76rem 'IBM Plex Mono',monospace;letter-spacing:.08em}
+.section-prefix{color:var(--text-tertiary)}
+.x-feed__logo{display:block}
+.words-section__x-feed ul{list-style:none;margin:0;padding:0}.words-section__x-feed li{padding:.55rem 0;border-bottom:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.words-section__x-feed p{margin:0;font:.85rem/1.35 'IBM Plex Sans',sans-serif;color:var(--text-primary);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.words-section__x-feed span{font:.68rem 'IBM Plex Mono',monospace;color:var(--text-tertiary);text-transform:uppercase}
+.words-section__x-feed a,.writing__footer a{text-decoration:none;font:.72rem 'IBM Plex Mono',monospace;color:var(--text-secondary);letter-spacing:.08em}
+@media (max-width: 768px) { .words-section__grid { grid-template-columns:1fr; } .words-section__drift { border-right:1px solid var(--border); } }
 </style>

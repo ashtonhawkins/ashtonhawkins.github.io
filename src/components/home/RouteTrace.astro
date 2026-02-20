@@ -2,16 +2,17 @@
 interface Props { path: string; stats?: string; }
 const { path, stats = '' } = Astro.props;
 ---
-<div class="route-trace">
-  <svg viewBox="0 0 280 160" aria-label="Abstract route trace"><path d={path} data-route-path /></svg>
-  <p>LAST RIDE</p>
-  <span>{stats}</span>
+<div class="route-trace cycling__panel cycling__panel--route">
+  <svg class="cycling__route-trace" viewBox="0 0 280 160" aria-label="Abstract route trace"><path d={path} data-route-path /></svg>
+  <div class="cycling__route-label">LAST RIDE</div>
+  <div class="cycling__route-stats">{stats}</div>
 </div>
 <style>
-.route-trace{border:1px solid var(--border);min-height:170px;display:grid;place-items:center;padding:1rem;text-align:center}
-.route-trace svg{width:200px;height:140px}.route-trace path{fill:none;stroke:var(--accent-primary);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.route-trace p{margin:.3rem 0 0;font:10px 'IBM Plex Mono',monospace;color:var(--text-tertiary);letter-spacing:.1em}
-.route-trace span{font:.75rem 'IBM Plex Mono',monospace;color:var(--text-secondary)}
+.route-trace{min-height:170px;display:grid;place-items:center;padding:1rem;text-align:center}
+.cycling__route-trace{width:200px;height:140px}
+.cycling__route-trace path{fill:none;stroke:var(--accent-primary);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.cycling__route-label{margin:.3rem 0 0;font:10px 'IBM Plex Mono',monospace;color:var(--text-tertiary);letter-spacing:.1em}
+.cycling__route-stats{font:.75rem 'IBM Plex Mono',monospace;color:var(--text-secondary)}
 </style>
 <script>
 const path=document.querySelector('[data-route-path]'); if(path instanceof SVGPathElement){const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches; const len=path.getTotalLength(); path.style.strokeDasharray=`${len}`; path.style.strokeDashoffset=reduced?'0':`${len}`; if(!reduced) path.animate([{strokeDashoffset:len},{strokeDashoffset:0}],{duration:2300,easing:'ease-out',fill:'forwards'});}

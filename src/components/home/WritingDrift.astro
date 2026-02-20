@@ -1,26 +1,30 @@
 ---
 import tags from '@data/writing-tags.json';
 
-const visibleTags = [...tags, ...tags.slice(0, 8)];
-const seededTags = visibleTags.map((tag, index) => ({
+const TAGS = tags.slice(0, 20);
+const sizes = ['10px', '11px', '13px', '15px', '17px', '20px'];
+const laneCount = Math.min(TAGS.length, 12);
+const laneHeight = 100 / laneCount;
+const seededTags = TAGS.map((tag, index) => ({
   tag,
-  y: 5 + ((index * 13) % 90),
-  duration: 18 + (index % 10) * 4.5,
-  delay: (index * 2.7) % 30,
-  size: `${10 + ((index * 3) % 13)}px`
+  lane: index % laneCount,
+  duration: 20 + Math.random() * 35,
+  delay: -(Math.random() * (20 + Math.random() * 35)),
+  size: sizes[index % sizes.length]
 }));
 ---
-<div class="drift" aria-label="Writing topics">
+<div class="words-drift" aria-label="Writing topics">
   {seededTags.map((item) => (
-    <a href={`/writing?tag=${encodeURIComponent(item.tag)}`} class="drift__tag" style={`--y:${item.y}%; --dur:${item.duration}s; --delay:${item.delay}s; --size:${item.size};`}>{item.tag}</a>
+    <a href={`/writing?tag=${encodeURIComponent(item.tag)}`} class="words-drift__tag" style={`--top:${item.lane * laneHeight + laneHeight * 0.2}%; --dur:${item.duration}s; --delay:${item.delay}s; --size:${item.size};`}>{item.tag}</a>
   ))}
 </div>
 <style>
-.drift{position:relative;height:230px;overflow:hidden;border:1px solid var(--border);background:var(--surface-secondary);isolation:isolate}
-.drift::before,.drift::after{content:'';position:absolute;top:0;bottom:0;width:2.5rem;z-index:2;pointer-events:none}
-.drift::before{left:0;background:linear-gradient(90deg,var(--surface-secondary),transparent)}.drift::after{right:0;background:linear-gradient(-90deg,var(--surface-secondary),transparent)}
-.drift__tag{position:absolute;left:-35%;top:var(--y);transform:translateY(-50%);font-family:'IBM Plex Mono',monospace;font-size:var(--size);text-decoration:none;color:var(--text-tertiary);white-space:nowrap;animation:drift-x var(--dur) linear infinite;animation-delay:calc(var(--delay) * -1s)}
-.drift__tag:hover{color:var(--accent-primary)}
-@keyframes drift-x{from{transform:translate(-120%,-50%)}to{transform:translate(130vw,-50%)}}
-@media (prefers-reduced-motion: reduce){.drift{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;height:auto;padding:1rem}.drift__tag{position:static;transform:none;animation:none}}
+.words-drift{position:relative;height:230px;overflow:hidden;background:var(--surface-secondary);isolation:isolate}
+.words-drift::before,.words-drift::after{content:'';position:absolute;top:0;bottom:0;width:40px;z-index:5;pointer-events:none}
+.words-drift::before{left:0;background:linear-gradient(to right,var(--surface-primary),transparent)}
+.words-drift::after{right:0;background:linear-gradient(to left,var(--surface-primary),transparent)}
+.words-drift__tag{position:absolute;left:-10%;top:var(--top);font-family:'IBM Plex Mono',monospace;font-size:var(--size);text-decoration:none;color:var(--text-tertiary);white-space:nowrap;animation:drift-left-to-right var(--dur) linear var(--delay) infinite;transition:color .2s ease;cursor:pointer}
+.words-drift__tag:hover{color:var(--accent-primary)}
+@keyframes drift-left-to-right{from{transform:translateX(-100%);left:-10%}to{transform:translateX(0);left:110%}}
+@media (prefers-reduced-motion: reduce){.words-drift{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;height:auto;padding:1rem}.words-drift__tag{position:static;animation:none;left:auto;top:auto;transform:none}}
 </style>
