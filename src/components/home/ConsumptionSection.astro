@@ -10,18 +10,18 @@ const listening = (feeds as any)?.items?.lastfm?.[0] ?? (feeds as any)?.items?.s
 <section class="media-feeds">
   <SectionHeader label="Consumption" />
   <div class="media-feeds__grid">
-    <article class="media-card">
+    <article class="consumption-card">
       <StatusChip label="RECENTLY WATCHED" />
       <h3 class="consumption-card__title">{watching?.title ?? 'No recent film cached'}</h3>
       <p class="consumption-card__subtitle">{watching?.year ?? '----'}</p>
       {watching?.rating && <small>★ {watching.rating}</small>}
     </article>
-    <article class="media-card">
-      <StatusChip label={reading?.status === 'reading' ? 'CURRENTLY READING' : 'RECENTLY FINISHED'} active />
+    <article class="consumption-card">
+      <StatusChip label={reading?.status === 'reading' ? 'CURRENTLY READING' : 'RECENTLY FINISHED'} />
       <h3 class="consumption-card__title">{reading?.title ?? 'No recent book cached'}</h3>
       <p class="consumption-card__subtitle">{reading?.author ?? 'Awaiting Literal feed sync'}</p>
     </article>
-    <article class="media-card">
+    <article class="consumption-card">
       <StatusChip label="LAST PLAYED" />
       <h3 class="consumption-card__title">{listening ? `${listening.title ?? listening.name}` : 'No recent track cached'}</h3>
       <p class="consumption-card__subtitle">{listening?.artist ?? 'Awaiting music feed sync'}</p>
@@ -31,8 +31,8 @@ const listening = (feeds as any)?.items?.lastfm?.[0] ?? (feeds as any)?.items?.s
 
 <style>
 .media-feeds__grid{display:grid;gap:.85rem;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
-.media-card{border:1px solid var(--border);padding:1rem;display:grid;gap:.45rem}
-.consumption-card__title { font-family: 'IBM Plex Sans', sans-serif; font-size: 1rem; font-weight: 600; color: var(--text-primary); text-transform: none; margin:0; }
-.consumption-card__subtitle { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin:0; letter-spacing:.08em; }
-.media-card small{font:.75rem 'IBM Plex Mono',monospace;color:var(--accent-primary)}
+.consumption-card{border:1px solid var(--border);padding:1rem;display:flex;flex-direction:column;gap:.5rem}
+.consumption-card__title { font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; font-weight: 600; color: var(--text-primary); text-transform: none; margin:0; }
+.consumption-card__subtitle { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; margin:0; letter-spacing:.05em; }
+.consumption-card small{font:.75rem 'IBM Plex Mono',monospace;color:var(--accent-primary)}
 </style>
