@@ -1,0 +1,26 @@
+---
+import landmarks from '@data/travel-landmarks.json';
+const map = landmarks as Record<string, { landmark: string; path: string }>;
+---
+<div class="travel-bg" data-travel-bg data-landmarks={JSON.stringify(map)}>
+  <canvas data-travel-grid></canvas>
+  <svg viewBox="0 0 200 220" class="travel-landmark" data-travel-landmark aria-hidden="true"><path d="" data-landmark-path></path></svg>
+</div>
+<style>
+.travel-bg{position:absolute;inset:0}.travel-bg canvas,.travel-landmark{position:absolute;inset:0;width:100%;height:100%}
+.travel-landmark{left:auto;right:0;width:45%}
+.travel-landmark path{fill:none;stroke:color-mix(in srgb,var(--accent-primary) 40%,transparent);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+</style>
+<script>
+// @ts-nocheck
+const bg=document.querySelector('[data-travel-bg]'); const canvas=document.querySelector('[data-travel-grid]'); const pathEl=document.querySelector('[data-landmark-path]');
+if(bg instanceof HTMLElement && canvas instanceof HTMLCanvasElement && pathEl instanceof SVGPathElement){const ctx=canvas.getContext('2d'); if(ctx){const landmarks=JSON.parse(bg.dataset.landmarks??'{}'); let w=0,h=0,seed=1,t=0,city='Tokyo';
+const rand=()=>{seed=(seed*1664525+1013904223)%4294967296; return seed/4294967296};
+const resize=()=>{const r=canvas.getBoundingClientRect(); w=r.width; h=r.height; canvas.width=w*devicePixelRatio; canvas.height=h*devicePixelRatio; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)};
+const draw=()=>{ctx.clearRect(0,0,w,h); ctx.strokeStyle='color-mix(in srgb, var(--border) 15%, transparent)'; for(let i=0;i<28;i++){ctx.beginPath(); let x=rand()*w,y=rand()*h; ctx.moveTo(x,y); for(let j=0;j<7;j++){x+=(rand()-.5)*(city==='Paris'?40:city==='Reykjavik'?70:48); y+=(rand()-.5)*(city==='Paris'?55:30); ctx.lineTo(x,y)} ctx.lineWidth=i%4===0?1.2:.6; ctx.stroke();}}
+const setCity=(next)=>{city=next; seed=[...city].reduce((a,c)=>a+c.charCodeAt(0),1); resize(); draw(); const lm=landmarks[city]; pathEl.setAttribute('d',lm?.path ?? 'M40,180 L160,180'); const len=pathEl.getTotalLength(); pathEl.style.strokeDasharray=`${len}`; pathEl.style.strokeDashoffset=`${len}`; pathEl.animate([{opacity:.2,strokeDashoffset:len},{opacity:1,strokeDashoffset:0}],{duration:3600,easing:'ease-out'})};
+bg.addEventListener('travel-city-change',(e)=>setCity(e.detail.city)); setCity('Tokyo');
+requestAnimationFrame(function loop(n){if(!document.hidden){if(n-t>160){t=n; draw()}} requestAnimationFrame(loop)});
+window.addEventListener('resize',()=>setCity(city));
+}}
+</script>

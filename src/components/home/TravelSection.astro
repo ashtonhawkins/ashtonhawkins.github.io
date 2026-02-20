@@ -2,17 +2,15 @@
 import SectionHeader from '@components/ui/SectionHeader.astro';
 import NoiseTexture from '@components/ui/NoiseTexture.astro';
 import StatusChip from '@components/ui/StatusChip.astro';
-import TravelCardBackground from '@components/home/TravelCardBackground.astro';
+import TravelCardCanvas from '@components/home/TravelCardCanvas.astro';
 import travelData from '@data/travel.json';
 import superlativesData from '@data/travel-superlatives.json';
+import travelStats from '@data/travel-stats.json';
 ---
-
 <section class="travel" data-travel data-cities={JSON.stringify(travelData)}>
   <SectionHeader label="Travel" />
-  <p class="travel__strip">{travelData.map((entry, index) => <><span>{entry.place.toUpperCase()} ×{entry.visits}</span>{index < travelData.length - 1 && <span class="sep">·</span>}</>)}</p>
-
   <article class="travel-card" data-travel-card>
-    <TravelCardBackground />
+    <TravelCardCanvas />
     <NoiseTexture opacity={0.03} />
     <div class="travel-card__content" data-travel-content>
       <h3 data-travel-city>{travelData[0].place}</h3>
@@ -21,54 +19,25 @@ import superlativesData from '@data/travel-superlatives.json';
       <p class="route" data-travel-route>{travelData[0].routes?.[0] ?? 'SFO → ---'}</p>
     </div>
   </article>
-
-  <ul class="travel__supers">{superlativesData.superlatives.slice(0, 2).map((item) => <li><a href="/travel">{item.category.toUpperCase()} {superlativesData.year}: {item.value} — {item.place}</a></li>)}</ul>
+  <p class="travel__stats">TOTAL FLIGHTS: {travelStats.totalFlights} · AIRPORTS: {travelStats.airports} · COUNTRIES: {travelStats.countries} · DISTANCE: {travelStats.totalDistance.toLocaleString()} MI</p>
+  <div class="travel__supers">{superlativesData.superlatives.map((item) => <article class="plaque"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 30 C10 20, 30 20, 34 30 M8 30 L8 16 M32 30 L32 16"/><path d="M12 12 L28 12"/></svg><p>{item.category}</p><strong>{item.value}</strong><span>{item.place}</span></article>)}</div>
+  <p class="travel__footer"><a href="/travel">EXPLORE ALL TRIPS →</a></p>
 </section>
-
 <style>
-  .travel__strip,.travel__supers{font:.72rem 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary)}
-  .travel__strip{display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 1rem}.sep{color:var(--text-tertiary)}
-  .travel-card{position:relative;min-height:220px;border:1px solid var(--border);overflow:hidden;margin-bottom:1rem;background:var(--surface-primary)}
-  .travel-card__content{position:relative;z-index:3;padding:1rem;display:grid;gap:.4rem;max-width:260px;transition:opacity .3s ease}
-  .travel-card__content.is-fading{opacity:0}
-  .travel-card h3{margin:0;font:700 1.25rem 'Space Grotesk Variable',sans-serif;letter-spacing:.06em;text-transform:uppercase}
-  .country,.route{margin:0;font:.72rem 'IBM Plex Mono',monospace;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.08em}
-  .travel__supers{list-style:none;margin:0;padding:0;display:grid;gap:.4rem}.travel__supers a{color:inherit;text-decoration:none}.travel__supers a:hover{color:var(--accent-primary)}
+.travel-card{position:relative;min-height:250px;border:1px solid var(--border);overflow:hidden;margin-bottom:.75rem;background:var(--surface-primary)}
+.travel-card__content{position:relative;z-index:3;padding:1rem;display:grid;gap:.4rem;max-width:280px;transition:opacity .3s ease;background:rgba(var(--surface-primary-rgb),.5);backdrop-filter:blur(4px);border-radius:4px;margin:1rem}
+.travel-card__content.is-fading{opacity:0}.travel-card h3{margin:0;font:700 1.25rem 'Space Grotesk Variable',sans-serif;letter-spacing:.06em;text-transform:uppercase}
+.country,.route{margin:0;font:.72rem 'IBM Plex Mono',monospace;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.08em}
+.travel__stats{font:.72rem 'IBM Plex Mono',monospace;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.08em}
+.travel__supers{display:grid;gap:.7rem;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));margin-top:.75rem}
+.plaque{border:1px solid var(--border);padding:1rem;text-align:center}.plaque svg{width:40px;height:40px;stroke:color-mix(in srgb,var(--accent-primary) 60%,transparent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.plaque p{margin:.45rem 0 .2rem;font:10px 'IBM Plex Mono',monospace;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.1em}
+.plaque strong{display:block;font:600 .9rem 'IBM Plex Sans',sans-serif;color:var(--text-primary)}.plaque span{font:10px 'IBM Plex Mono',monospace;color:var(--text-tertiary)}
+.travel__footer a{text-decoration:none;font:.72rem 'IBM Plex Mono',monospace;color:var(--text-secondary)}
 </style>
-
 <script>
-  // @ts-nocheck
-  const root = document.querySelector('[data-travel]');
-  const content = document.querySelector('[data-travel-content]');
-  const cityEl = document.querySelector('[data-travel-city]');
-  const countryEl = document.querySelector('[data-travel-country]');
-  const routeEl = document.querySelector('[data-travel-route]');
-  const bg = document.querySelector('[data-travel-bg]');
-
-  if (root instanceof HTMLElement && content instanceof HTMLElement && cityEl instanceof HTMLElement && countryEl instanceof HTMLElement && routeEl instanceof HTMLElement && bg instanceof HTMLElement) {
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const cities = JSON.parse(root.dataset.cities ?? '[]');
-    let i = 0;
-    const render = () => {
-      const c = cities[i % cities.length];
-      cityEl.textContent = c.place;
-      countryEl.textContent = c.country;
-      routeEl.textContent = c.routes?.[0] ?? 'SFO → ---';
-      content.querySelector('.status-chip')?.setAttribute('data-label', `×${c.visits}`);
-      const chipLabel = content.querySelector('.status-chip__label');
-      if (chipLabel) chipLabel.textContent = `×${c.visits}`;
-      bg.dispatchEvent(new CustomEvent('travel-city-change', { detail: { city: c.place } }));
-    };
-    render();
-    if (!reduced) {
-      setInterval(() => {
-        content.classList.add('is-fading');
-        setTimeout(() => {
-          i = (i + 1) % cities.length;
-          render();
-          content.classList.remove('is-fading');
-        }, 300);
-      }, 12000);
-    }
-  }
+// @ts-nocheck
+const root=document.querySelector('[data-travel]'); const content=document.querySelector('[data-travel-content]'); const cityEl=document.querySelector('[data-travel-city]'); const countryEl=document.querySelector('[data-travel-country]'); const routeEl=document.querySelector('[data-travel-route]'); const bg=document.querySelector('[data-travel-bg]');
+if(root&&content&&cityEl&&countryEl&&routeEl&&bg){const cities=JSON.parse(root.dataset.cities??'[]'); let i=0; const render=()=>{const c=cities[i%cities.length]; cityEl.textContent=c.place; countryEl.textContent=c.country; routeEl.textContent=c.routes?.[0]??'SFO → ---'; const chip=content.querySelector('.status-chip__label'); if(chip) chip.textContent=`×${c.visits}`; bg.dispatchEvent(new CustomEvent('travel-city-change',{detail:{city:c.place}}));}; render();
+if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){setInterval(()=>{content.classList.add('is-fading'); setTimeout(()=>{i=(i+1)%cities.length; render(); content.classList.remove('is-fading')},300)},12000)} }
 </script>

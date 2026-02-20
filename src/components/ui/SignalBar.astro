@@ -2,27 +2,26 @@
 interface Props { class?: string; }
 const { class: className = '' } = Astro.props;
 ---
-<div class:list={["signal-bar", className]} data-signal-bar role="separator" aria-hidden="true"></div>
+<div class:list={["signal-bar", className]} role="separator" aria-hidden="true"></div>
 
 <style>
-  .signal-bar { width:100%; height:1px; background-color:var(--border); margin:2rem 0; transition:height 300ms ease, background-color 300ms ease, box-shadow 500ms ease; }
-  .signal-bar--pulse { height:2px; background-color:var(--accent-primary); box-shadow:0 0 8px var(--accent-glow); }
+  .signal-bar { width: 100%; height: 1px; background-color: var(--border); margin: 2rem 0; transition: height 300ms ease, background-color 300ms ease, box-shadow 500ms ease; }
+  .signal-bar--pulse { height: 2px; background-color: var(--accent-primary); box-shadow: 0 0 8px var(--accent-glow); }
 </style>
 
 <script>
   // @ts-nocheck
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!reduced) {
-    const bars = document.querySelectorAll('[data-signal-bar]');
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        const bar = entry.target;
-        if (!(bar instanceof HTMLElement)) return;
-        if (!entry.isIntersecting || bar.classList.contains('signal-bar--pulsed')) return;
-        bar.classList.add('signal-bar--pulse', 'signal-bar--pulsed');
-        setTimeout(() => bar.classList.remove('signal-bar--pulse'), 800);
-      });
-    }, { threshold: 0.5 });
-    bars.forEach((bar) => observer.observe(bar));
-  }
+  const bars = document.querySelectorAll('.signal-bar');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting && !entry.target.classList.contains('signal-bar--pulsed')) {
+        entry.target.classList.add('signal-bar--pulse');
+        setTimeout(() => {
+          entry.target.classList.remove('signal-bar--pulse');
+          entry.target.classList.add('signal-bar--pulsed');
+        }, 800);
+      }
+    });
+  }, { threshold: 0.5 });
+  bars.forEach((bar) => observer.observe(bar));
 </script>
