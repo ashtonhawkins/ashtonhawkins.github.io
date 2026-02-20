@@ -1,0 +1,1466 @@
+[
+  {
+    "hex": "#2D3142",
+    "name": "DEEP CARBON"
+  },
+  {
+    "hex": "#4A6FA5",
+    "name": "COASTAL BLUE"
+  },
+  {
+    "hex": "#E07A5F",
+    "name": "TERRACOTTA"
+  },
+  {
+    "hex": "#81B29A",
+    "name": "PATINA GREEN"
+  },
+  {
+    "hex": "#F2CC8F",
+    "name": "WARM SAND"
+  },
+  {
+    "hex": "#3D405B",
+    "name": "DARK SLATE"
+  },
+  {
+    "hex": "#B5838D",
+    "name": "DUSTY ROSE"
+  },
+  {
+    "hex": "#6D6875",
+    "name": "MUTED PLUM"
+  },
+  {
+    "hex": "#CCD5AE",
+    "name": "SAGE MIST"
+  },
+  {
+    "hex": "#E9EDC9",
+    "name": "PALE MEADOW"
+  },
+  {
+    "hex": "#FEFAE0",
+    "name": "WARM IVORY"
+  },
+  {
+    "hex": "#FAEDCD",
+    "name": "ALMOND CREAM"
+  },
+  {
+    "hex": "#D4A373",
+    "name": "CARAMEL"
+  },
+  {
+    "hex": "#264653",
+    "name": "DEEP TEAL"
+  },
+  {
+    "hex": "#2A9D8F",
+    "name": "OCEAN JADE"
+  },
+  {
+    "hex": "#E9C46A",
+    "name": "SAFFRON"
+  },
+  {
+    "hex": "#F4A261",
+    "name": "SANDY AMBER"
+  },
+  {
+    "hex": "#E76F51",
+    "name": "BURNT SIENNA"
+  },
+  {
+    "hex": "#606C38",
+    "name": "OLIVE BRANCH"
+  },
+  {
+    "hex": "#283618",
+    "name": "FOREST FLOOR"
+  },
+  {
+    "hex": "#DDA15E",
+    "name": "GOLDEN OAK"
+  },
+  {
+    "hex": "#BC6C25",
+    "name": "RUST"
+  },
+  {
+    "hex": "#344E41",
+    "name": "PINE SHADOW"
+  },
+  {
+    "hex": "#3A5A40",
+    "name": "MOSS"
+  },
+  {
+    "hex": "#588157",
+    "name": "FERN"
+  },
+  {
+    "hex": "#A3B18A",
+    "name": "LICHEN"
+  },
+  {
+    "hex": "#DAD7CD",
+    "name": "BIRCH BARK"
+  },
+  {
+    "hex": "#CB997E",
+    "name": "CLAY"
+  },
+  {
+    "hex": "#DDBEA9",
+    "name": "BISQUE"
+  },
+  {
+    "hex": "#A5A58D",
+    "name": "STONE GREY"
+  },
+  {
+    "hex": "#B7B7A4",
+    "name": "PUMICE"
+  },
+  {
+    "hex": "#2F364A",
+    "name": "DAYLIGHT TONE 001"
+  },
+  {
+    "hex": "#56709F",
+    "name": "DAYLIGHT TONE 002"
+  },
+  {
+    "hex": "#D87F64",
+    "name": "DAYLIGHT TONE 003"
+  },
+  {
+    "hex": "#8AB499",
+    "name": "DAYLIGHT TONE 004"
+  },
+  {
+    "hex": "#E3C08B",
+    "name": "DAYLIGHT TONE 005"
+  },
+  {
+    "hex": "#47465F",
+    "name": "DAYLIGHT TONE 006"
+  },
+  {
+    "hex": "#AF818B",
+    "name": "DAYLIGHT TONE 007"
+  },
+  {
+    "hex": "#75717A",
+    "name": "DAYLIGHT TONE 008"
+  },
+  {
+    "hex": "#CED7B0",
+    "name": "DAYLIGHT TONE 009"
+  },
+  {
+    "hex": "#EBEECB",
+    "name": "DAYLIGHT TONE 010"
+  },
+  {
+    "hex": "#FEF9DE",
+    "name": "DAYLIGHT TONE 011"
+  },
+  {
+    "hex": "#F7E7C6",
+    "name": "DAYLIGHT TONE 012"
+  },
+  {
+    "hex": "#C69B70",
+    "name": "DAYLIGHT TONE 013"
+  },
+  {
+    "hex": "#264D58",
+    "name": "DAYLIGHT TONE 014"
+  },
+  {
+    "hex": "#3AA08C",
+    "name": "DAYLIGHT TONE 015"
+  },
+  {
+    "hex": "#EAC169",
+    "name": "DAYLIGHT TONE 016"
+  },
+  {
+    "hex": "#F39E60",
+    "name": "DAYLIGHT TONE 017"
+  },
+  {
+    "hex": "#DC6F4F",
+    "name": "DAYLIGHT TONE 018"
+  },
+  {
+    "hex": "#5B6835",
+    "name": "DAYLIGHT TONE 019"
+  },
+  {
+    "hex": "#373F1E",
+    "name": "DAYLIGHT TONE 020"
+  },
+  {
+    "hex": "#DA9D59",
+    "name": "DAYLIGHT TONE 021"
+  },
+  {
+    "hex": "#B16A27",
+    "name": "DAYLIGHT TONE 022"
+  },
+  {
+    "hex": "#344F41",
+    "name": "DAYLIGHT TONE 023"
+  },
+  {
+    "hex": "#3C5D42",
+    "name": "DAYLIGHT TONE 024"
+  },
+  {
+    "hex": "#5E855B",
+    "name": "DAYLIGHT TONE 025"
+  },
+  {
+    "hex": "#A8B490",
+    "name": "DAYLIGHT TONE 026"
+  },
+  {
+    "hex": "#D9D2C6",
+    "name": "DAYLIGHT TONE 027"
+  },
+  {
+    "hex": "#CC9C82",
+    "name": "DAYLIGHT TONE 028"
+  },
+  {
+    "hex": "#D8BCA7",
+    "name": "DAYLIGHT TONE 029"
+  },
+  {
+    "hex": "#A6A68F",
+    "name": "DAYLIGHT TONE 030"
+  },
+  {
+    "hex": "#ACAC9C",
+    "name": "DAYLIGHT TONE 031"
+  },
+  {
+    "hex": "#323B52",
+    "name": "DAYLIGHT TONE 032"
+  },
+  {
+    "hex": "#637199",
+    "name": "DAYLIGHT TONE 033"
+  },
+  {
+    "hex": "#D08369",
+    "name": "DAYLIGHT TONE 034"
+  },
+  {
+    "hex": "#94B698",
+    "name": "DAYLIGHT TONE 035"
+  },
+  {
+    "hex": "#D4B586",
+    "name": "DAYLIGHT TONE 036"
+  },
+  {
+    "hex": "#514B63",
+    "name": "DAYLIGHT TONE 037"
+  },
+  {
+    "hex": "#A97E89",
+    "name": "DAYLIGHT TONE 038"
+  },
+  {
+    "hex": "#7D7A7E",
+    "name": "DAYLIGHT TONE 039"
+  },
+  {
+    "hex": "#D1D9B2",
+    "name": "DAYLIGHT TONE 040"
+  },
+  {
+    "hex": "#ECEFCD",
+    "name": "DAYLIGHT TONE 041"
+  },
+  {
+    "hex": "#FDF8DD",
+    "name": "DAYLIGHT TONE 042"
+  },
+  {
+    "hex": "#F4E1BE",
+    "name": "DAYLIGHT TONE 043"
+  },
+  {
+    "hex": "#B7946E",
+    "name": "DAYLIGHT TONE 044"
+  },
+  {
+    "hex": "#27545D",
+    "name": "DAYLIGHT TONE 045"
+  },
+  {
+    "hex": "#4AA489",
+    "name": "DAYLIGHT TONE 046"
+  },
+  {
+    "hex": "#EBBE68",
+    "name": "DAYLIGHT TONE 047"
+  },
+  {
+    "hex": "#F29A5E",
+    "name": "DAYLIGHT TONE 048"
+  },
+  {
+    "hex": "#D06E4D",
+    "name": "DAYLIGHT TONE 049"
+  },
+  {
+    "hex": "#576333",
+    "name": "DAYLIGHT TONE 050"
+  },
+  {
+    "hex": "#464824",
+    "name": "DAYLIGHT TONE 051"
+  },
+  {
+    "hex": "#D89854",
+    "name": "DAYLIGHT TONE 052"
+  },
+  {
+    "hex": "#A5672A",
+    "name": "DAYLIGHT TONE 053"
+  },
+  {
+    "hex": "#355041",
+    "name": "DAYLIGHT TONE 054"
+  },
+  {
+    "hex": "#3F6044",
+    "name": "DAYLIGHT TONE 055"
+  },
+  {
+    "hex": "#648960",
+    "name": "DAYLIGHT TONE 056"
+  },
+  {
+    "hex": "#ACB795",
+    "name": "DAYLIGHT TONE 057"
+  },
+  {
+    "hex": "#D8CDC0",
+    "name": "DAYLIGHT TONE 058"
+  },
+  {
+    "hex": "#CE9F85",
+    "name": "DAYLIGHT TONE 059"
+  },
+  {
+    "hex": "#D4BAA4",
+    "name": "DAYLIGHT TONE 060"
+  },
+  {
+    "hex": "#A8A891",
+    "name": "DAYLIGHT TONE 061"
+  },
+  {
+    "hex": "#A0A194",
+    "name": "DAYLIGHT TONE 062"
+  },
+  {
+    "hex": "#34405B",
+    "name": "DAYLIGHT TONE 063"
+  },
+  {
+    "hex": "#707294",
+    "name": "DAYLIGHT TONE 064"
+  },
+  {
+    "hex": "#C8886E",
+    "name": "DAYLIGHT TONE 065"
+  },
+  {
+    "hex": "#9DB897",
+    "name": "DAYLIGHT TONE 066"
+  },
+  {
+    "hex": "#C5A982",
+    "name": "DAYLIGHT TONE 067"
+  },
+  {
+    "hex": "#5B5168",
+    "name": "DAYLIGHT TONE 068"
+  },
+  {
+    "hex": "#A37C87",
+    "name": "DAYLIGHT TONE 069"
+  },
+  {
+    "hex": "#858383",
+    "name": "DAYLIGHT TONE 070"
+  },
+  {
+    "hex": "#D3DBB5",
+    "name": "DAYLIGHT TONE 071"
+  },
+  {
+    "hex": "#EEF0CF",
+    "name": "DAYLIGHT TONE 072"
+  },
+  {
+    "hex": "#FDF7DB",
+    "name": "DAYLIGHT TONE 073"
+  },
+  {
+    "hex": "#F0DAB6",
+    "name": "DAYLIGHT TONE 074"
+  },
+  {
+    "hex": "#A88C6B",
+    "name": "DAYLIGHT TONE 075"
+  },
+  {
+    "hex": "#275C62",
+    "name": "DAYLIGHT TONE 076"
+  },
+  {
+    "hex": "#5AA786",
+    "name": "DAYLIGHT TONE 077"
+  },
+  {
+    "hex": "#ECBC68",
+    "name": "DAYLIGHT TONE 078"
+  },
+  {
+    "hex": "#F1955D",
+    "name": "DAYLIGHT TONE 079"
+  },
+  {
+    "hex": "#C56E4B",
+    "name": "DAYLIGHT TONE 080"
+  },
+  {
+    "hex": "#525E30",
+    "name": "DAYLIGHT TONE 081"
+  },
+  {
+    "hex": "#55512A",
+    "name": "DAYLIGHT TONE 082"
+  },
+  {
+    "hex": "#D59450",
+    "name": "DAYLIGHT TONE 083"
+  },
+  {
+    "hex": "#9A642C",
+    "name": "DAYLIGHT TONE 084"
+  },
+  {
+    "hex": "#365141",
+    "name": "DAYLIGHT TONE 085"
+  },
+  {
+    "hex": "#426446",
+    "name": "DAYLIGHT TONE 086"
+  },
+  {
+    "hex": "#6B8D64",
+    "name": "DAYLIGHT TONE 087"
+  },
+  {
+    "hex": "#B1BA9B",
+    "name": "DAYLIGHT TONE 088"
+  },
+  {
+    "hex": "#D6C8B9",
+    "name": "DAYLIGHT TONE 089"
+  },
+  {
+    "hex": "#D0A289",
+    "name": "DAYLIGHT TONE 090"
+  },
+  {
+    "hex": "#CFB8A2",
+    "name": "DAYLIGHT TONE 091"
+  },
+  {
+    "hex": "#AAAA93",
+    "name": "DAYLIGHT TONE 092"
+  },
+  {
+    "hex": "#94968C",
+    "name": "DAYLIGHT TONE 093"
+  },
+  {
+    "hex": "#374663",
+    "name": "DAYLIGHT TONE 094"
+  },
+  {
+    "hex": "#7C738E",
+    "name": "DAYLIGHT TONE 095"
+  },
+  {
+    "hex": "#C08D73",
+    "name": "DAYLIGHT TONE 096"
+  },
+  {
+    "hex": "#A7BB96",
+    "name": "DAYLIGHT TONE 097"
+  },
+  {
+    "hex": "#B69D7E",
+    "name": "DAYLIGHT TONE 098"
+  },
+  {
+    "hex": "#65566C",
+    "name": "DAYLIGHT TONE 099"
+  },
+  {
+    "hex": "#9D7A85",
+    "name": "DAYLIGHT TONE 100"
+  },
+  {
+    "hex": "#8D8C88",
+    "name": "DAYLIGHT TONE 101"
+  },
+  {
+    "hex": "#D6DDB7",
+    "name": "DAYLIGHT TONE 102"
+  },
+  {
+    "hex": "#F0F1D1",
+    "name": "DAYLIGHT TONE 103"
+  },
+  {
+    "hex": "#FDF6DA",
+    "name": "DAYLIGHT TONE 104"
+  },
+  {
+    "hex": "#EDD4AF",
+    "name": "DAYLIGHT TONE 105"
+  },
+  {
+    "hex": "#9A8468",
+    "name": "DAYLIGHT TONE 106"
+  },
+  {
+    "hex": "#276367",
+    "name": "DAYLIGHT TONE 107"
+  },
+  {
+    "hex": "#6AAA83",
+    "name": "DAYLIGHT TONE 108"
+  },
+  {
+    "hex": "#EDB967",
+    "name": "DAYLIGHT TONE 109"
+  },
+  {
+    "hex": "#F0915C",
+    "name": "DAYLIGHT TONE 110"
+  },
+  {
+    "hex": "#BA6E49",
+    "name": "DAYLIGHT TONE 111"
+  },
+  {
+    "hex": "#4D5A2D",
+    "name": "DAYLIGHT TONE 112"
+  },
+  {
+    "hex": "#645A2F",
+    "name": "DAYLIGHT TONE 113"
+  },
+  {
+    "hex": "#D28F4B",
+    "name": "DAYLIGHT TONE 114"
+  },
+  {
+    "hex": "#8F622E",
+    "name": "DAYLIGHT TONE 115"
+  },
+  {
+    "hex": "#365241",
+    "name": "DAYLIGHT TONE 116"
+  },
+  {
+    "hex": "#446748",
+    "name": "DAYLIGHT TONE 117"
+  },
+  {
+    "hex": "#719168",
+    "name": "DAYLIGHT TONE 118"
+  },
+  {
+    "hex": "#B5BEA0",
+    "name": "DAYLIGHT TONE 119"
+  },
+  {
+    "hex": "#D5C2B3",
+    "name": "DAYLIGHT TONE 120"
+  },
+  {
+    "hex": "#D1A58C",
+    "name": "DAYLIGHT TONE 121"
+  },
+  {
+    "hex": "#CAB6A0",
+    "name": "DAYLIGHT TONE 122"
+  },
+  {
+    "hex": "#ABAB95",
+    "name": "DAYLIGHT TONE 123"
+  },
+  {
+    "hex": "#898A83",
+    "name": "DAYLIGHT TONE 124"
+  },
+  {
+    "hex": "#394B6B",
+    "name": "DAYLIGHT TONE 125"
+  },
+  {
+    "hex": "#887488",
+    "name": "DAYLIGHT TONE 126"
+  },
+  {
+    "hex": "#B89178",
+    "name": "DAYLIGHT TONE 127"
+  },
+  {
+    "hex": "#B0BD95",
+    "name": "DAYLIGHT TONE 128"
+  },
+  {
+    "hex": "#A79279",
+    "name": "DAYLIGHT TONE 129"
+  },
+  {
+    "hex": "#6F5C70",
+    "name": "DAYLIGHT TONE 130"
+  },
+  {
+    "hex": "#977883",
+    "name": "DAYLIGHT TONE 131"
+  },
+  {
+    "hex": "#95958D",
+    "name": "DAYLIGHT TONE 132"
+  },
+  {
+    "hex": "#D8DFB9",
+    "name": "DAYLIGHT TONE 133"
+  },
+  {
+    "hex": "#F2F2D3",
+    "name": "DAYLIGHT TONE 134"
+  },
+  {
+    "hex": "#FCF5D8",
+    "name": "DAYLIGHT TONE 135"
+  },
+  {
+    "hex": "#EACEA8",
+    "name": "DAYLIGHT TONE 136"
+  },
+  {
+    "hex": "#8C7C66",
+    "name": "DAYLIGHT TONE 137"
+  },
+  {
+    "hex": "#286A6C",
+    "name": "DAYLIGHT TONE 138"
+  },
+  {
+    "hex": "#7AAD80",
+    "name": "DAYLIGHT TONE 139"
+  },
+  {
+    "hex": "#EEB666",
+    "name": "DAYLIGHT TONE 140"
+  },
+  {
+    "hex": "#EF8D5A",
+    "name": "DAYLIGHT TONE 141"
+  },
+  {
+    "hex": "#AF6E47",
+    "name": "DAYLIGHT TONE 142"
+  },
+  {
+    "hex": "#49562B",
+    "name": "DAYLIGHT TONE 143"
+  },
+  {
+    "hex": "#736335",
+    "name": "DAYLIGHT TONE 144"
+  },
+  {
+    "hex": "#CF8B46",
+    "name": "DAYLIGHT TONE 145"
+  },
+  {
+    "hex": "#836031",
+    "name": "DAYLIGHT TONE 146"
+  },
+  {
+    "hex": "#365341",
+    "name": "DAYLIGHT TONE 147"
+  },
+  {
+    "hex": "#466A4A",
+    "name": "DAYLIGHT TONE 148"
+  },
+  {
+    "hex": "#77956C",
+    "name": "DAYLIGHT TONE 149"
+  },
+  {
+    "hex": "#BAC1A6",
+    "name": "DAYLIGHT TONE 150"
+  },
+  {
+    "hex": "#D4BDAC",
+    "name": "DAYLIGHT TONE 151"
+  },
+  {
+    "hex": "#D2A890",
+    "name": "DAYLIGHT TONE 152"
+  },
+  {
+    "hex": "#C6B49D",
+    "name": "DAYLIGHT TONE 153"
+  },
+  {
+    "hex": "#ACAC97",
+    "name": "DAYLIGHT TONE 154"
+  },
+  {
+    "hex": "#7E7F7B",
+    "name": "DAYLIGHT TONE 155"
+  },
+  {
+    "hex": "#3C5074",
+    "name": "DAYLIGHT TONE 156"
+  },
+  {
+    "hex": "#957482",
+    "name": "DAYLIGHT TONE 157"
+  },
+  {
+    "hex": "#B0967C",
+    "name": "DAYLIGHT TONE 158"
+  },
+  {
+    "hex": "#BABF94",
+    "name": "DAYLIGHT TONE 159"
+  },
+  {
+    "hex": "#988675",
+    "name": "DAYLIGHT TONE 160"
+  },
+  {
+    "hex": "#796274",
+    "name": "DAYLIGHT TONE 161"
+  },
+  {
+    "hex": "#917681",
+    "name": "DAYLIGHT TONE 162"
+  },
+  {
+    "hex": "#9C9E92",
+    "name": "DAYLIGHT TONE 163"
+  },
+  {
+    "hex": "#DAE1BC",
+    "name": "DAYLIGHT TONE 164"
+  },
+  {
+    "hex": "#F4F4D4",
+    "name": "DAYLIGHT TONE 165"
+  },
+  {
+    "hex": "#FCF4D6",
+    "name": "DAYLIGHT TONE 166"
+  },
+  {
+    "hex": "#E7C8A0",
+    "name": "DAYLIGHT TONE 167"
+  },
+  {
+    "hex": "#7D7463",
+    "name": "DAYLIGHT TONE 168"
+  },
+  {
+    "hex": "#287271",
+    "name": "DAYLIGHT TONE 169"
+  },
+  {
+    "hex": "#8AB07C",
+    "name": "DAYLIGHT TONE 170"
+  },
+  {
+    "hex": "#EEB366",
+    "name": "DAYLIGHT TONE 171"
+  },
+  {
+    "hex": "#EE8859",
+    "name": "DAYLIGHT TONE 172"
+  },
+  {
+    "hex": "#A46E44",
+    "name": "DAYLIGHT TONE 173"
+  },
+  {
+    "hex": "#445128",
+    "name": "DAYLIGHT TONE 174"
+  },
+  {
+    "hex": "#826C3B",
+    "name": "DAYLIGHT TONE 175"
+  },
+  {
+    "hex": "#CC8642",
+    "name": "DAYLIGHT TONE 176"
+  },
+  {
+    "hex": "#785D33",
+    "name": "DAYLIGHT TONE 177"
+  },
+  {
+    "hex": "#375440",
+    "name": "DAYLIGHT TONE 178"
+  },
+  {
+    "hex": "#496E4C",
+    "name": "DAYLIGHT TONE 179"
+  },
+  {
+    "hex": "#7E9970",
+    "name": "DAYLIGHT TONE 180"
+  },
+  {
+    "hex": "#BEC4AC",
+    "name": "DAYLIGHT TONE 181"
+  },
+  {
+    "hex": "#D2B8A6",
+    "name": "DAYLIGHT TONE 182"
+  },
+  {
+    "hex": "#D4AC94",
+    "name": "DAYLIGHT TONE 183"
+  },
+  {
+    "hex": "#C1B29B",
+    "name": "DAYLIGHT TONE 184"
+  },
+  {
+    "hex": "#AEAE98",
+    "name": "DAYLIGHT TONE 185"
+  },
+  {
+    "hex": "#727473",
+    "name": "DAYLIGHT TONE 186"
+  },
+  {
+    "hex": "#3E557C",
+    "name": "DAYLIGHT TONE 187"
+  },
+  {
+    "hex": "#A2757C",
+    "name": "DAYLIGHT TONE 188"
+  },
+  {
+    "hex": "#A99B81",
+    "name": "DAYLIGHT TONE 189"
+  },
+  {
+    "hex": "#C3C194",
+    "name": "DAYLIGHT TONE 190"
+  },
+  {
+    "hex": "#887A71",
+    "name": "DAYLIGHT TONE 191"
+  },
+  {
+    "hex": "#836778",
+    "name": "DAYLIGHT TONE 192"
+  },
+  {
+    "hex": "#8B737F",
+    "name": "DAYLIGHT TONE 193"
+  },
+  {
+    "hex": "#A4A896",
+    "name": "DAYLIGHT TONE 194"
+  },
+  {
+    "hex": "#DDE3BE",
+    "name": "DAYLIGHT TONE 195"
+  },
+  {
+    "hex": "#F5F5D6",
+    "name": "DAYLIGHT TONE 196"
+  },
+  {
+    "hex": "#FCF2D5",
+    "name": "DAYLIGHT TONE 197"
+  },
+  {
+    "hex": "#E4C298",
+    "name": "DAYLIGHT TONE 198"
+  },
+  {
+    "hex": "#6E6D60",
+    "name": "DAYLIGHT TONE 199"
+  },
+  {
+    "hex": "#287976",
+    "name": "DAYLIGHT TONE 200"
+  },
+  {
+    "hex": "#99B479",
+    "name": "DAYLIGHT TONE 201"
+  },
+  {
+    "hex": "#EFB065",
+    "name": "DAYLIGHT TONE 202"
+  },
+  {
+    "hex": "#EC8458",
+    "name": "DAYLIGHT TONE 203"
+  },
+  {
+    "hex": "#986D42",
+    "name": "DAYLIGHT TONE 204"
+  },
+  {
+    "hex": "#3F4C25",
+    "name": "DAYLIGHT TONE 205"
+  },
+  {
+    "hex": "#927441",
+    "name": "DAYLIGHT TONE 206"
+  },
+  {
+    "hex": "#CA823D",
+    "name": "DAYLIGHT TONE 207"
+  },
+  {
+    "hex": "#6D5A35",
+    "name": "DAYLIGHT TONE 208"
+  },
+  {
+    "hex": "#385540",
+    "name": "DAYLIGHT TONE 209"
+  },
+  {
+    "hex": "#4C714D",
+    "name": "DAYLIGHT TONE 210"
+  },
+  {
+    "hex": "#849D75",
+    "name": "DAYLIGHT TONE 211"
+  },
+  {
+    "hex": "#C3C7B1",
+    "name": "DAYLIGHT TONE 212"
+  },
+  {
+    "hex": "#D1B39F",
+    "name": "DAYLIGHT TONE 213"
+  },
+  {
+    "hex": "#D6AF97",
+    "name": "DAYLIGHT TONE 214"
+  },
+  {
+    "hex": "#BCAF99",
+    "name": "DAYLIGHT TONE 215"
+  },
+  {
+    "hex": "#B0B09A",
+    "name": "DAYLIGHT TONE 216"
+  },
+  {
+    "hex": "#66696B",
+    "name": "DAYLIGHT TONE 217"
+  },
+  {
+    "hex": "#405A84",
+    "name": "DAYLIGHT TONE 218"
+  },
+  {
+    "hex": "#AE7676",
+    "name": "DAYLIGHT TONE 219"
+  },
+  {
+    "hex": "#A19F86",
+    "name": "DAYLIGHT TONE 220"
+  },
+  {
+    "hex": "#CCC393",
+    "name": "DAYLIGHT TONE 221"
+  },
+  {
+    "hex": "#796F6C",
+    "name": "DAYLIGHT TONE 222"
+  },
+  {
+    "hex": "#8D6D7C",
+    "name": "DAYLIGHT TONE 223"
+  },
+  {
+    "hex": "#85717D",
+    "name": "DAYLIGHT TONE 224"
+  },
+  {
+    "hex": "#ACB19B",
+    "name": "DAYLIGHT TONE 225"
+  },
+  {
+    "hex": "#DFE5C0",
+    "name": "DAYLIGHT TONE 226"
+  },
+  {
+    "hex": "#F7F6D8",
+    "name": "DAYLIGHT TONE 227"
+  },
+  {
+    "hex": "#FBF1D3",
+    "name": "DAYLIGHT TONE 228"
+  },
+  {
+    "hex": "#E1BC91",
+    "name": "DAYLIGHT TONE 229"
+  },
+  {
+    "hex": "#60655E",
+    "name": "DAYLIGHT TONE 230"
+  },
+  {
+    "hex": "#29807B",
+    "name": "DAYLIGHT TONE 231"
+  },
+  {
+    "hex": "#A9B776",
+    "name": "DAYLIGHT TONE 232"
+  },
+  {
+    "hex": "#F0AD64",
+    "name": "DAYLIGHT TONE 233"
+  },
+  {
+    "hex": "#EB8056",
+    "name": "DAYLIGHT TONE 234"
+  },
+  {
+    "hex": "#8D6D40",
+    "name": "DAYLIGHT TONE 235"
+  },
+  {
+    "hex": "#3B4823",
+    "name": "DAYLIGHT TONE 236"
+  },
+  {
+    "hex": "#A17D47",
+    "name": "DAYLIGHT TONE 237"
+  },
+  {
+    "hex": "#C77E38",
+    "name": "DAYLIGHT TONE 238"
+  },
+  {
+    "hex": "#615838",
+    "name": "DAYLIGHT TONE 239"
+  },
+  {
+    "hex": "#385640",
+    "name": "DAYLIGHT TONE 240"
+  },
+  {
+    "hex": "#4E744F",
+    "name": "DAYLIGHT TONE 241"
+  },
+  {
+    "hex": "#8AA179",
+    "name": "DAYLIGHT TONE 242"
+  },
+  {
+    "hex": "#C8CAB7",
+    "name": "DAYLIGHT TONE 243"
+  },
+  {
+    "hex": "#D0AE98",
+    "name": "DAYLIGHT TONE 244"
+  },
+  {
+    "hex": "#D7B29B",
+    "name": "DAYLIGHT TONE 245"
+  },
+  {
+    "hex": "#B8AD96",
+    "name": "DAYLIGHT TONE 246"
+  },
+  {
+    "hex": "#B1B19C",
+    "name": "DAYLIGHT TONE 247"
+  },
+  {
+    "hex": "#5B5E63",
+    "name": "DAYLIGHT TONE 248"
+  },
+  {
+    "hex": "#43608C",
+    "name": "DAYLIGHT TONE 249"
+  },
+  {
+    "hex": "#BA7770",
+    "name": "DAYLIGHT TONE 250"
+  },
+  {
+    "hex": "#99A48B",
+    "name": "DAYLIGHT TONE 251"
+  },
+  {
+    "hex": "#D6C692",
+    "name": "DAYLIGHT TONE 252"
+  },
+  {
+    "hex": "#6A6368",
+    "name": "DAYLIGHT TONE 253"
+  },
+  {
+    "hex": "#977280",
+    "name": "DAYLIGHT TONE 254"
+  },
+  {
+    "hex": "#7F6F7B",
+    "name": "DAYLIGHT TONE 255"
+  },
+  {
+    "hex": "#B4BAA0",
+    "name": "DAYLIGHT TONE 256"
+  },
+  {
+    "hex": "#E2E7C2",
+    "name": "DAYLIGHT TONE 257"
+  },
+  {
+    "hex": "#F9F7DA",
+    "name": "DAYLIGHT TONE 258"
+  },
+  {
+    "hex": "#FBF0D2",
+    "name": "DAYLIGHT TONE 259"
+  },
+  {
+    "hex": "#DEB68A",
+    "name": "DAYLIGHT TONE 260"
+  },
+  {
+    "hex": "#525D5B",
+    "name": "DAYLIGHT TONE 261"
+  },
+  {
+    "hex": "#298780",
+    "name": "DAYLIGHT TONE 262"
+  },
+  {
+    "hex": "#B9BA73",
+    "name": "DAYLIGHT TONE 263"
+  },
+  {
+    "hex": "#F1AA63",
+    "name": "DAYLIGHT TONE 264"
+  },
+  {
+    "hex": "#EA7C55",
+    "name": "DAYLIGHT TONE 265"
+  },
+  {
+    "hex": "#826D3E",
+    "name": "DAYLIGHT TONE 266"
+  },
+  {
+    "hex": "#364420",
+    "name": "DAYLIGHT TONE 267"
+  },
+  {
+    "hex": "#B0864C",
+    "name": "DAYLIGHT TONE 268"
+  },
+  {
+    "hex": "#C47933",
+    "name": "DAYLIGHT TONE 269"
+  },
+  {
+    "hex": "#56563A",
+    "name": "DAYLIGHT TONE 270"
+  },
+  {
+    "hex": "#385740",
+    "name": "DAYLIGHT TONE 271"
+  },
+  {
+    "hex": "#507751",
+    "name": "DAYLIGHT TONE 272"
+  },
+  {
+    "hex": "#90A57D",
+    "name": "DAYLIGHT TONE 273"
+  },
+  {
+    "hex": "#CCCEBC",
+    "name": "DAYLIGHT TONE 274"
+  },
+  {
+    "hex": "#CFA892",
+    "name": "DAYLIGHT TONE 275"
+  },
+  {
+    "hex": "#D8B59E",
+    "name": "DAYLIGHT TONE 276"
+  },
+  {
+    "hex": "#B3AB94",
+    "name": "DAYLIGHT TONE 277"
+  },
+  {
+    "hex": "#B2B29E",
+    "name": "DAYLIGHT TONE 278"
+  },
+  {
+    "hex": "#50525A",
+    "name": "DAYLIGHT TONE 279"
+  },
+  {
+    "hex": "#456594",
+    "name": "DAYLIGHT TONE 280"
+  },
+  {
+    "hex": "#C7786B",
+    "name": "DAYLIGHT TONE 281"
+  },
+  {
+    "hex": "#91A990",
+    "name": "DAYLIGHT TONE 282"
+  },
+  {
+    "hex": "#DFC891",
+    "name": "DAYLIGHT TONE 283"
+  },
+  {
+    "hex": "#5B5764",
+    "name": "DAYLIGHT TONE 284"
+  },
+  {
+    "hex": "#A17885",
+    "name": "DAYLIGHT TONE 285"
+  },
+  {
+    "hex": "#796C79",
+    "name": "DAYLIGHT TONE 286"
+  },
+  {
+    "hex": "#BCC3A4",
+    "name": "DAYLIGHT TONE 287"
+  },
+  {
+    "hex": "#E4E9C4",
+    "name": "DAYLIGHT TONE 288"
+  },
+  {
+    "hex": "#FAF8DC",
+    "name": "DAYLIGHT TONE 289"
+  },
+  {
+    "hex": "#FBEFD0",
+    "name": "DAYLIGHT TONE 290"
+  },
+  {
+    "hex": "#DAAF82",
+    "name": "DAYLIGHT TONE 291"
+  },
+  {
+    "hex": "#435658",
+    "name": "DAYLIGHT TONE 292"
+  },
+  {
+    "hex": "#298E85",
+    "name": "DAYLIGHT TONE 293"
+  },
+  {
+    "hex": "#C9BE70",
+    "name": "DAYLIGHT TONE 294"
+  },
+  {
+    "hex": "#F2A862",
+    "name": "DAYLIGHT TONE 295"
+  },
+  {
+    "hex": "#E97854",
+    "name": "DAYLIGHT TONE 296"
+  },
+  {
+    "hex": "#766C3C",
+    "name": "DAYLIGHT TONE 297"
+  },
+  {
+    "hex": "#313F1D",
+    "name": "DAYLIGHT TONE 298"
+  },
+  {
+    "hex": "#BF8F52",
+    "name": "DAYLIGHT TONE 299"
+  },
+  {
+    "hex": "#C2752E",
+    "name": "DAYLIGHT TONE 300"
+  },
+  {
+    "hex": "#4B533C",
+    "name": "DAYLIGHT TONE 301"
+  },
+  {
+    "hex": "#395840",
+    "name": "DAYLIGHT TONE 302"
+  },
+  {
+    "hex": "#537A53",
+    "name": "DAYLIGHT TONE 303"
+  },
+  {
+    "hex": "#96A982",
+    "name": "DAYLIGHT TONE 304"
+  },
+  {
+    "hex": "#D1D1C2",
+    "name": "DAYLIGHT TONE 305"
+  },
+  {
+    "hex": "#CEA38B",
+    "name": "DAYLIGHT TONE 306"
+  },
+  {
+    "hex": "#DAB8A2",
+    "name": "DAYLIGHT TONE 307"
+  },
+  {
+    "hex": "#AEA992",
+    "name": "DAYLIGHT TONE 308"
+  },
+  {
+    "hex": "#B4B4A0",
+    "name": "DAYLIGHT TONE 309"
+  },
+  {
+    "hex": "#444752",
+    "name": "DAYLIGHT TONE 310"
+  },
+  {
+    "hex": "#486A9D",
+    "name": "DAYLIGHT TONE 311"
+  },
+  {
+    "hex": "#D47965",
+    "name": "DAYLIGHT TONE 312"
+  },
+  {
+    "hex": "#89AD95",
+    "name": "DAYLIGHT TONE 313"
+  },
+  {
+    "hex": "#E9CA90",
+    "name": "DAYLIGHT TONE 314"
+  },
+  {
+    "hex": "#4C4C5F",
+    "name": "DAYLIGHT TONE 315"
+  },
+  {
+    "hex": "#AB7D89",
+    "name": "DAYLIGHT TONE 316"
+  },
+  {
+    "hex": "#736A77",
+    "name": "DAYLIGHT TONE 317"
+  },
+  {
+    "hex": "#C4CCA9",
+    "name": "DAYLIGHT TONE 318"
+  },
+  {
+    "hex": "#E7EBC7",
+    "name": "DAYLIGHT TONE 319"
+  },
+  {
+    "hex": "#FCF9DE",
+    "name": "DAYLIGHT TONE 320"
+  },
+  {
+    "hex": "#FAEECF",
+    "name": "DAYLIGHT TONE 321"
+  },
+  {
+    "hex": "#D7A97A",
+    "name": "DAYLIGHT TONE 322"
+  },
+  {
+    "hex": "#344E56",
+    "name": "DAYLIGHT TONE 323"
+  },
+  {
+    "hex": "#2A968A",
+    "name": "DAYLIGHT TONE 324"
+  },
+  {
+    "hex": "#D9C16D",
+    "name": "DAYLIGHT TONE 325"
+  },
+  {
+    "hex": "#F3A562",
+    "name": "DAYLIGHT TONE 326"
+  },
+  {
+    "hex": "#E87352",
+    "name": "DAYLIGHT TONE 327"
+  },
+  {
+    "hex": "#6B6C3A",
+    "name": "DAYLIGHT TONE 328"
+  },
+  {
+    "hex": "#2D3A1B",
+    "name": "DAYLIGHT TONE 329"
+  },
+  {
+    "hex": "#CE9858",
+    "name": "DAYLIGHT TONE 330"
+  },
+  {
+    "hex": "#BF702A",
+    "name": "DAYLIGHT TONE 331"
+  },
+  {
+    "hex": "#3F503F",
+    "name": "DAYLIGHT TONE 332"
+  },
+  {
+    "hex": "#3A5940",
+    "name": "DAYLIGHT TONE 333"
+  },
+  {
+    "hex": "#567E55",
+    "name": "DAYLIGHT TONE 334"
+  },
+  {
+    "hex": "#9DAD86",
+    "name": "DAYLIGHT TONE 335"
+  }
+]

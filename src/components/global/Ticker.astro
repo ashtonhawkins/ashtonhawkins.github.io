@@ -1,7 +1,9 @@
 ---
 import quotes from '../../data/quotes.json';
+import dailyColors from '../../data/daily-colors.json';
+import dailyWords from '../../data/daily-words.json';
 
-const deployTimestamp = new Date().toISOString().replace('T', ' — ').slice(0, 22) + ' UTC';
+const deployTimestampUtc = new Date().toISOString();
 
 const buildNumber = 1;
 const componentCount = 14;
@@ -14,35 +16,75 @@ const cleanerThan = '92%';
 
 <div class="ticker" role="marquee" aria-label="Status ticker">
   <div class="ticker__track" id="ticker-track">
-    <div class="ticker__item" data-ticker-item>
+    <div class="ticker__item" data-ticker-item data-ticker-deploy>
       <span class="ticker__pill">
-        <span class="t-label">Last Site Deployment:</span>
-        <span class="t-value">{deployTimestamp}</span>
+        <svg class="ticker-viz" width="16" height="16" viewBox="0 0 20 20" style="margin-right: 8px;">
+          <circle cx="10" cy="10" r="8" fill="none" stroke="var(--border)" stroke-width="2"/>
+          <circle
+            cx="10"
+            cy="10"
+            r="8"
+            fill="none"
+            stroke="var(--accent-primary)"
+            stroke-width="2"
+            stroke-dasharray="50.27 50.27"
+            stroke-dashoffset="0.1"
+            stroke-linecap="round"
+            transform="rotate(-90 10 10)"
+            opacity="0.8"
+          />
+        </svg>
+        <span class="t-label">Last Deploy:</span>
+        <span class="t-value" data-ticker-deploy-time={deployTimestampUtc}>{deployTimestampUtc.replace('T', ' — ').slice(0, 19)} UTC</span>
         <span class="t-sep">·</span>
         <span class="t-value">99.8% Uptime</span>
       </span>
     </div>
 
-    <div class="ticker__item" data-ticker-item>
+    <div class="ticker__item" data-ticker-item data-ticker-seconds>
+      <svg class="ticker-viz" width="12" height="12" viewBox="0 0 12 12" style="margin-right: 8px;">
+        <circle cx="6" cy="6" r="3" fill="var(--accent-primary)">
+          <animate attributeName="r" values="2;4;2" dur="2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite"/>
+        </circle>
+      </svg>
       <span class="t-accent" id="seconds-live-ticker">31,622,000</span>
       <span class="t-label" style="margin-left: 8px;">seconds live</span>
     </div>
 
-    {quotes.map((q: { text: string; author: string }) => (
+    {quotes.slice(0, 5).map((q: { text: string; author: string }) => (
       <div class="ticker__item ticker__item--quote" data-ticker-item data-is-quote>
         <span class="t-quote">"{q.text}"</span>
         <span class="t-author">— {q.author}</span>
       </div>
     ))}
 
-    <div class="ticker__item" data-ticker-item id="ticker-signal-item">
-      <span class="t-label">Signal:</span>
-      <span id="ticker-browser-icon" style="margin: 0 4px; display: inline-flex; align-items: center;"></span>
+    <div class="ticker__item" data-ticker-item data-ticker-signal>
+      <span class="t-label">Your Signal:</span>
+      <span id="ticker-browser-icon" style="margin: 0 6px; display: inline-flex; align-items: center;"></span>
       <span class="t-value" id="ticker-browser-info">detecting…</span>
       <span id="ticker-minimap" style="margin-left: 8px; display: inline-flex; align-items: center;"></span>
+      <span class="t-sep">·</span>
+      <span class="t-label" id="ticker-visitor-city"></span>
     </div>
 
-    <div class="ticker__item" data-ticker-item>
+    <div class="ticker__item" data-ticker-item data-ticker-carbon>
+      <svg class="ticker-viz" width="60" height="14" viewBox="0 0 60 14" style="margin-right: 10px;">
+        <polyline
+          points="0,10 6,11 12,9 18,10 24,7 30,8 36,5 42,6 48,4 54,3 60,2"
+          fill="none"
+          stroke="var(--accent-primary)"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          opacity="0.6"
+        />
+        <polygon
+          points="0,14 0,10 6,11 12,9 18,10 24,7 30,8 36,5 42,6 48,4 54,3 60,2 60,14"
+          fill="var(--accent-primary)"
+          opacity="0.08"
+        />
+      </svg>
       <span class="t-value">{co2PerView} CO₂</span>
       <span class="t-sep">·</span>
       <span class="t-value">{pageWeight}</span>
@@ -50,13 +92,30 @@ const cleanerThan = '92%';
       <span class="t-label">Cleaner than {cleanerThan} of sites</span>
     </div>
 
-    <div class="ticker__item" data-ticker-item>
+    <div class="ticker__item" data-ticker-item data-ticker-build>
+      <span class="ticker-viz ticker-viz--ascii" style="margin-right: 10px; font-size: 12px; letter-spacing: 1px; color: var(--accent-primary); opacity: 0.45;">
+        ▊▎▌▋▊▍▏▊▌▎
+      </span>
       <span class="t-label">Build</span>
-      <span class="t-value">#{buildNumber}</span>
+      <span class="t-value" style="margin-left: 4px;">#{buildNumber}</span>
       <span class="t-sep">·</span>
       <span class="t-value">{componentCount} Components</span>
       <span class="t-sep">·</span>
       <span class="t-value">{lineCount.toLocaleString()} Lines</span>
+    </div>
+
+    <div class="ticker__item" data-ticker-item data-ticker-color>
+      <svg class="ticker-viz" width="14" height="14" viewBox="0 0 14 14" style="margin-right: 10px;">
+        <rect x="1" y="1" width="12" height="12" rx="2" id="color-swatch-rect" fill="var(--text-tertiary)" stroke="var(--border)" stroke-width="0.5"/>
+      </svg>
+      <span class="t-value" id="color-hex">—</span>
+      <span class="t-sep">·</span>
+      <span class="t-label" id="color-name">—</span>
+    </div>
+
+    <div class="ticker__item" data-ticker-item data-ticker-word>
+      <span class="t-label" style="margin-right: 8px;">▸</span>
+      <span class="t-value" id="word-of-day" style="letter-spacing: 0.12em;">—</span>
     </div>
   </div>
 </div>
@@ -103,7 +162,7 @@ const cleanerThan = '92%';
     font-family: 'IBM Plex Mono', monospace;
     font-size: 9px;
     font-weight: 400;
-    color: var(--text-tertiary);
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.08em;
   }
@@ -111,7 +170,7 @@ const cleanerThan = '92%';
   .t-value {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 11px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text-primary);
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -119,7 +178,7 @@ const cleanerThan = '92%';
 
   .t-accent {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--accent-primary);
     font-variant-numeric: tabular-nums;
@@ -129,6 +188,7 @@ const cleanerThan = '92%';
     font-size: 9px;
     color: var(--text-tertiary);
     margin: 0 8px;
+    user-select: none;
   }
 
   .t-quote {
@@ -147,7 +207,14 @@ const cleanerThan = '92%';
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    margin-left: 8px;
+    margin-left: 10px;
+  }
+
+  .ticker-viz {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    vertical-align: middle;
   }
 
   .ticker__pill {
@@ -170,23 +237,9 @@ const cleanerThan = '92%';
   }
 </style>
 
-<script>
+<script define:vars={{ dailyColors, dailyWords }}>
   // @ts-nocheck
   const allItems = document.querySelectorAll('[data-ticker-item]');
-  if (!allItems.length) {
-    console.warn('Ticker: No items found');
-  }
-
-  const nonQuoteItems = [];
-  const quoteItems = [];
-
-  allItems.forEach((item) => {
-    if (item.hasAttribute('data-is-quote')) {
-      quoteItems.push(item);
-    } else {
-      nonQuoteItems.push(item);
-    }
-  });
 
   function shuffle(arr) {
     const a = [...arr];
@@ -197,24 +250,29 @@ const cleanerThan = '92%';
     return a;
   }
 
-  const selectedQuotes = shuffle(quoteItems).slice(0, Math.min(3, quoteItems.length));
+  const dataItems = [
+    document.querySelector('[data-ticker-deploy]'),
+    document.querySelector('[data-ticker-seconds]'),
+    document.querySelector('[data-ticker-signal]'),
+    document.querySelector('[data-ticker-carbon]'),
+    document.querySelector('[data-ticker-build]'),
+    document.querySelector('[data-ticker-color]'),
+    document.querySelector('[data-ticker-word]')
+  ].filter(Boolean);
 
-  const dataItems = [...nonQuoteItems];
+  const quoteItems = [...document.querySelectorAll('[data-is-quote]')];
+  const selectedQuotes = shuffle(quoteItems).slice(0, 2);
+
   const rotation = [];
-
-  let qi = 0;
-  for (let i = 0; i < dataItems.length; i++) {
-    rotation.push(dataItems[i]);
-    if ((i + 1) % 2 === 0 && qi < selectedQuotes.length) {
-      rotation.push(selectedQuotes[qi]);
-      qi++;
-    }
-  }
-
-  while (qi < selectedQuotes.length) {
-    rotation.push(selectedQuotes[qi]);
-    qi++;
-  }
+  if (dataItems[0]) rotation.push(dataItems[0]);
+  if (dataItems[1]) rotation.push(dataItems[1]);
+  if (selectedQuotes[0]) rotation.push(selectedQuotes[0]);
+  if (dataItems[2]) rotation.push(dataItems[2]);
+  if (dataItems[3]) rotation.push(dataItems[3]);
+  if (selectedQuotes[1]) rotation.push(selectedQuotes[1]);
+  if (dataItems[4]) rotation.push(dataItems[4]);
+  if (dataItems[5]) rotation.push(dataItems[5]);
+  if (dataItems[6]) rotation.push(dataItems[6]);
 
   let currentIndex = 0;
 
@@ -225,12 +283,31 @@ const cleanerThan = '92%';
     }
   }
 
-  showItem(0);
+  if (rotation.length) {
+    showItem(0);
 
-  setInterval(() => {
-    currentIndex = (currentIndex + 1) % rotation.length;
-    showItem(currentIndex);
-  }, 8000);
+    setInterval(() => {
+      currentIndex = (currentIndex + 1) % rotation.length;
+      showItem(currentIndex);
+    }, 8000);
+  }
+
+  const deployEl = document.querySelector('[data-ticker-deploy-time]');
+  if (deployEl) {
+    const utcString = deployEl.dataset.tickerDeployTime;
+    const deployDate = new Date(utcString);
+    const formatted = deployDate.toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+      timeZoneName: 'short'
+    });
+    deployEl.textContent = formatted;
+  }
 
   const LAUNCH_DATE = new Date('2025-02-19T00:00:00Z');
   const counterEl = document.getElementById('seconds-live-ticker');
@@ -284,15 +361,18 @@ const cleanerThan = '92%';
     browserIconEl.innerHTML = BROWSER_ICONS[browserName] || BROWSER_ICONS.Browser;
   }
 
+  const cityEl = document.getElementById('ticker-visitor-city');
+
   if (minimapEl) {
-    const mapSvg = `<svg width="40" height="20" viewBox="0 0 200 100" fill="none" style="max-width:40px;max-height:20px;">
-      <path d="M30,25 L45,20 L55,25 L50,40 L35,45 L25,35 Z" fill="var(--text-tertiary)" opacity="0.25"/>
-      <path d="M55,55 L65,50 L75,60 L70,80 L55,75 Z" fill="var(--text-tertiary)" opacity="0.25"/>
-      <path d="M85,20 L120,15 L130,25 L125,50 L100,55 L85,40 Z" fill="var(--text-tertiary)" opacity="0.25"/>
-      <path d="M130,30 L170,25 L180,40 L175,55 L160,60 L140,50 L130,40 Z" fill="var(--text-tertiary)" opacity="0.25"/>
-      <path d="M140,65 L170,60 L175,80 L150,85 L140,75 Z" fill="var(--text-tertiary)" opacity="0.25"/>
-      <circle id="visitor-dot" cx="0" cy="0" r="4" fill="var(--accent-primary)" opacity="0">
-        <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+    const mapSvg = `<svg width="60" height="24" viewBox="0 0 200 100" fill="none" style="max-width:60px;max-height:24px;">
+      <path d="M30,25 L45,20 L55,25 L50,40 L35,45 L25,35 Z" fill="var(--text-secondary)" opacity="0.35"/>
+      <path d="M55,55 L65,50 L75,60 L70,80 L55,75 Z" fill="var(--text-secondary)" opacity="0.35"/>
+      <path d="M85,20 L120,15 L130,25 L125,50 L100,55 L85,40 Z" fill="var(--text-secondary)" opacity="0.35"/>
+      <path d="M130,30 L170,25 L180,40 L175,55 L160,60 L140,50 L130,40 Z" fill="var(--text-secondary)" opacity="0.35"/>
+      <path d="M140,65 L170,60 L175,80 L150,85 L140,75 Z" fill="var(--text-secondary)" opacity="0.35"/>
+      <circle id="visitor-dot" cx="0" cy="0" r="5" fill="var(--accent-primary)" opacity="0">
+        <animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite"/>
       </circle>
     </svg>`;
     minimapEl.innerHTML = mapSvg;
@@ -311,8 +391,30 @@ const cleanerThan = '92%';
             dot.setAttribute('opacity', '1');
           }
         }
+
+        if (data.city && cityEl) {
+          cityEl.textContent = data.city;
+        }
       })
       .catch(() => {
       });
   }
+
+  const today = new Date();
+  const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+
+  const todayColor = dailyColors[dayOfYear % dailyColors.length];
+  const swatchRect = document.getElementById('color-swatch-rect');
+  const hexEl = document.getElementById('color-hex');
+  const nameEl = document.getElementById('color-name');
+
+  if (todayColor) {
+    if (swatchRect) swatchRect.setAttribute('fill', todayColor.hex);
+    if (hexEl) hexEl.textContent = todayColor.hex;
+    if (nameEl) nameEl.textContent = todayColor.name;
+  }
+
+  const wordEl = document.getElementById('word-of-day');
+  const todayWord = dailyWords[dayOfYear % dailyWords.length];
+  if (wordEl && todayWord) wordEl.textContent = todayWord;
 </script>
