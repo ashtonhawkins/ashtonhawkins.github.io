@@ -1,12 +1,13 @@
 ---
 import tags from '@data/writing-tags.json';
 
-const seededTags = tags.map((tag, index) => ({
+const visibleTags = [...tags, ...tags.slice(0, 8)];
+const seededTags = visibleTags.map((tag, index) => ({
   tag,
-  y: 3 + ((index * 11) % 94),
-  duration: 10 + (index % 9) * 5,
-  delay: index * -2.1,
-  size: ['10px', '12px', '14px', '18px', '20px'][index % 5]
+  y: 5 + ((index * 13) % 90),
+  duration: 18 + (index % 10) * 4.5,
+  delay: (index * 2.7) % 30,
+  size: `${10 + ((index * 3) % 13)}px`
 }));
 ---
 <div class="drift" aria-label="Writing topics">
@@ -18,8 +19,8 @@ const seededTags = tags.map((tag, index) => ({
 .drift{position:relative;height:230px;overflow:hidden;border:1px solid var(--border);background:var(--surface-secondary);isolation:isolate}
 .drift::before,.drift::after{content:'';position:absolute;top:0;bottom:0;width:2.5rem;z-index:2;pointer-events:none}
 .drift::before{left:0;background:linear-gradient(90deg,var(--surface-secondary),transparent)}.drift::after{right:0;background:linear-gradient(-90deg,var(--surface-secondary),transparent)}
-.drift__tag{position:absolute;left:100%;top:var(--y);transform:translateY(-50%);font-family:'IBM Plex Mono',monospace;font-size:var(--size);text-decoration:none;color:var(--text-tertiary);white-space:nowrap;animation:drift-x var(--dur) linear infinite;animation-delay:var(--delay)}
+.drift__tag{position:absolute;left:-35%;top:var(--y);transform:translateY(-50%);font-family:'IBM Plex Mono',monospace;font-size:var(--size);text-decoration:none;color:var(--text-tertiary);white-space:nowrap;animation:drift-x var(--dur) linear infinite;animation-delay:calc(var(--delay) * -1s)}
 .drift__tag:hover{color:var(--accent-primary)}
-@keyframes drift-x{from{transform:translate(0,-50%)}to{transform:translate(-140vw,-50%)}}
+@keyframes drift-x{from{transform:translate(-120%,-50%)}to{transform:translate(130vw,-50%)}}
 @media (prefers-reduced-motion: reduce){.drift{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;height:auto;padding:1rem}.drift__tag{position:static;transform:none;animation:none}}
 </style>

@@ -1,11 +1,8 @@
 ---
-import NoiseTexture from '@components/ui/NoiseTexture.astro';
 import feedCache from '@data/feeds-cache.json';
 import quotes from '@data/quotes.json';
 
-const deployDate = new Date();
-const deployStamp = `${deployDate.getUTCFullYear()}.${String(deployDate.getUTCMonth() + 1).padStart(2, '0')}.${String(deployDate.getUTCDate()).padStart(2, '0')} — ${String(deployDate.getUTCHours()).padStart(2, '0')}:${String(deployDate.getUTCMinutes()).padStart(2, '0')}:${String(deployDate.getUTCSeconds()).padStart(2, '0')} UTC`;
-
+const deployStamp = '2026.02.20 — 00:40:16 UTC';
 const letterboxd = (feedCache as any)?.items?.letterboxd ?? [];
 const listening = (feedCache as any)?.items?.lastfm ?? [];
 const tickerData = {
@@ -16,137 +13,115 @@ const tickerData = {
 };
 ---
 
-<div class="nav-ticker" aria-live="polite" data-nav-ticker data-ticker={JSON.stringify(tickerData)}>
-  <NoiseTexture opacity={0.02} />
-  <div class="container-shell max-wide nav-ticker__inner">
-    <p class="nav-ticker__content" data-ticker-content>Loading signal…</p>
-    <div class="nav-ticker__glitch" data-ticker-glitch aria-hidden="true"></div>
+<div class="ticker" aria-live="polite" data-nav-ticker data-ticker={JSON.stringify(tickerData)}>
+  <div class="container-shell max-wide ticker__inner">
+    <div class="ticker__content" data-ticker-content>Loading signal…</div>
   </div>
 </div>
 
 <style>
-  .nav-ticker { position: relative; height:40px; overflow:hidden; border-bottom: 1px solid var(--border); background: var(--surface-secondary); isolation: isolate; }
-  .nav-ticker__inner { position: relative; z-index: 2; height:40px; display:flex; align-items:center; }
-  .nav-ticker__content { margin:0; width:100%; display:flex; align-items:center; gap:.45rem; font-family:'IBM Plex Mono', monospace; font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .nav-ticker__content.is-fading { opacity:.45; }
-  .nav-ticker__glitch { position:absolute; inset:0; opacity:0; pointer-events:none; background:repeating-linear-gradient(0deg, transparent 0 2px, color-mix(in srgb, var(--accent-primary) 24%, transparent) 2px 4px); mix-blend-mode:screen; }
-  .nav-ticker__glitch.is-active { opacity:.55; }
-  .ticker-link { color: inherit; text-decoration:none; }
-  .ticker-link:hover { color: var(--text-primary); }
-  .ticker-pill{border:1px solid var(--border);border-radius:9999px;padding:2px 10px;display:inline-flex;gap:.3rem;align-items:center}
-  .ticker-pill strong{font-weight:700;color:var(--text-primary)}
-  .ticker-seconds{font:700 .8rem 'IBM Plex Mono',monospace;color:var(--accent-primary)}
-  .ticker-seconds-label{font-size:10px;color:var(--text-tertiary)}
-  .ticker-quote{font-family:'IBM Plex Sans',sans-serif;font-style:italic;text-transform:none;color:var(--text-primary)}
-  .ticker-quote-author{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-secondary)}
-  .signal-map { width:40px; height:20px; max-width:40px; max-height:20px; display:inline-block; vertical-align:middle; flex:0 0 auto; }
-  .browser-icon { width:14px; height:14px; max-width:14px; max-height:14px; display:inline-block; vertical-align:middle; flex:0 0 auto; }
+  .ticker {
+    height: 40px;
+    background: var(--surface-secondary);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 0 var(--content-padding);
+    border-bottom: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .ticker__inner{width:100%;}
+  .ticker__content { display:flex; align-items:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  .ticker-item--pill { border: 1px solid var(--border); border-radius: 9999px; padding: 2px 12px; display: inline-flex; gap: 6px; }
+  .ticker-item--pill .ticker-item__label { color: var(--text-tertiary); }
+  .ticker-item--pill .ticker-item__value { color: var(--text-primary); font-weight: 500; }
+
+  .ticker-item--counter .ticker-item__number { color: var(--accent-primary); font-weight: 700; font-size: 13px; }
+  .ticker-item--counter .ticker-item__suffix { color: var(--text-tertiary); font-size: 9px; margin-left: 6px; }
+
+  .ticker-item--media .ticker-item__icon { color: var(--text-tertiary); margin-right: 6px; }
+  .ticker-item--media .ticker-item__content { color: var(--text-primary); }
+
+  .ticker-item--quote .ticker-item__text { font-family: 'IBM Plex Sans', sans-serif; font-style: italic; text-transform: none; color: var(--text-primary); }
+  .ticker-item--quote .ticker-item__author { color: var(--text-secondary); margin-left: 6px; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; font-size: 9px; }
+  .ticker-item--signal{display:inline-flex;align-items:center;gap:6px;color:var(--text-secondary)}
 </style>
 
 <script>
   // @ts-nocheck
   const root = document.querySelector('[data-nav-ticker]');
   const content = document.querySelector('[data-ticker-content]');
-  const glitch = document.querySelector('[data-ticker-glitch]');
   const launchDate = new Date('2025-02-19T00:00:00Z').getTime();
 
   const browserIcon = (name) => {
     const stroke = 'var(--text-secondary)';
     const icons = {
-      CHROME: `<svg class="browser-icon" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="none" stroke="${stroke}"/><circle cx="7" cy="7" r="2" fill="none" stroke="${stroke}"/><path d="M7 1 L12 4" stroke="${stroke}"/><path d="M2 4 L7 13" stroke="${stroke}"/><path d="M12 4 L7 13" stroke="${stroke}"/></svg>`,
-      SAFARI: `<svg class="browser-icon" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="none" stroke="${stroke}"/><path d="M7 2 L8.5 8.5 L2 7 Z" fill="none" stroke="${stroke}"/></svg>`,
-      FIREFOX: `<svg class="browser-icon" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1.5 C10.2 1.5 12.5 3.9 12.5 7 C12.5 10.2 10 12.5 7 12.5 C4 12.5 1.5 10.2 1.5 7 C1.5 4.5 2.7 2.8 4.8 2.2 C4.2 3.5 4.4 4.8 5.5 5.3 C5.9 3.8 6.7 2.4 8.6 2" fill="none" stroke="${stroke}"/></svg>`,
-      EDGE: `<svg class="browser-icon" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M12 8.2 C11.8 10.9 9.6 12.5 7 12.5 C3.9 12.5 1.5 10.2 1.5 7 C1.5 3.8 3.9 1.5 7 1.5 C9.6 1.5 11.4 2.9 12.2 5.2 C10.8 4.4 8.7 4.2 6.8 4.9 C5 5.5 3.9 6.8 3.9 8.4 C3.9 9.9 5.1 11 6.7 11 C8.2 11 9.4 10.2 9.8 8.9" fill="none" stroke="${stroke}"/></svg>`,
-      ARC: `<svg class="browser-icon" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 11 C2.8 7.5 5 3 9.8 2.5 C11.2 2.4 12 3.3 12 4.4 C12 6.4 10.4 7.3 8.8 8 C7.2 8.8 6.4 9.6 6.4 10.8 C6.4 11.8 7.1 12.5 8.2 12.5" fill="none" stroke="${stroke}"/></svg>`
+      CHROME: `<svg width="14" height="14" style="display:inline-block;vertical-align:middle;max-width:14px;max-height:14px;" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="none" stroke="${stroke}"/><circle cx="7" cy="7" r="2" fill="none" stroke="${stroke}"/><path d="M7 1 L12 4" stroke="${stroke}"/><path d="M2 4 L7 13" stroke="${stroke}"/><path d="M12 4 L7 13" stroke="${stroke}"/></svg>`,
+      SAFARI: `<svg width="14" height="14" style="display:inline-block;vertical-align:middle;max-width:14px;max-height:14px;" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="none" stroke="${stroke}"/><path d="M7 2 L8.5 8.5 L2 7 Z" fill="none" stroke="${stroke}"/></svg>`,
+      FIREFOX: `<svg width="14" height="14" style="display:inline-block;vertical-align:middle;max-width:14px;max-height:14px;" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1.5 C10.2 1.5 12.5 3.9 12.5 7 C12.5 10.2 10 12.5 7 12.5 C4 12.5 1.5 10.2 1.5 7 C1.5 4.5 2.7 2.8 4.8 2.2 C4.2 3.5 4.4 4.8 5.5 5.3 C5.9 3.8 6.7 2.4 8.6 2" fill="none" stroke="${stroke}"/></svg>`,
+      EDGE: `<svg width="14" height="14" style="display:inline-block;vertical-align:middle;max-width:14px;max-height:14px;" viewBox="0 0 14 14" aria-hidden="true"><path d="M12 8.2 C11.8 10.9 9.6 12.5 7 12.5 C3.9 12.5 1.5 10.2 1.5 7 C1.5 3.8 3.9 1.5 7 1.5 C9.6 1.5 11.4 2.9 12.2 5.2 C10.8 4.4 8.7 4.2 6.8 4.9 C5 5.5 3.9 6.8 3.9 8.4 C3.9 9.9 5.1 11 6.7 11 C8.2 11 9.4 10.2 9.8 8.9" fill="none" stroke="${stroke}"/></svg>`
     };
     return icons[name] ?? '';
   };
 
-  const miniMapSvg = (x, y) => `<svg class="signal-map" width="40" height="20" viewBox="0 0 40 20" aria-hidden="true"><path d="M2 6 L8 5 L10 7 L14 6 L17 8 L20 7 L23 9 L27 8 L31 10 L34 12 L30 14 L24 13 L20 14 L14 12 L10 13 L7 11 L4 10 Z" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.35"/><circle cx="${x}" cy="${y}" r="1.5" fill="var(--accent-primary)" filter="drop-shadow(0 0 3px var(--accent-glow))"/></svg>`;
+  const miniMapSvg = (x, y) => `<svg width="40" height="20" style="display:inline-block;vertical-align:middle;max-width:40px;max-height:20px;" viewBox="0 0 40 20" aria-hidden="true"><path d="M2 6 L8 5 L10 7 L14 6 L17 8 L20 7 L23 9 L27 8 L31 10 L34 12 L30 14 L24 13 L20 14 L14 12 L10 13 L7 11 L4 10 Z" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.35"/><circle cx="${x}" cy="${y}" r="1.5" fill="var(--accent-primary)"/></svg>`;
 
   const detectBrowser = () => {
     const ua = navigator.userAgent;
-    if (/Arc\//.test(ua)) return 'ARC';
     if (/Edg\//.test(ua)) return 'EDGE';
     if (/Firefox\//.test(ua)) return 'FIREFOX';
-    if (/Chrome\//.test(ua) && !/Edg\//.test(ua) && !/Arc\//.test(ua)) return 'CHROME';
+    if (/Chrome\//.test(ua) && !/Edg\//.test(ua)) return 'CHROME';
     if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) return 'SAFARI';
-    return '';
-  };
-
-  const detectOS = () => {
-    const ua = navigator.userAgent;
-    if (/Mac OS X/.test(ua)) return 'MACOS';
-    if (/Windows/.test(ua)) return 'WINDOWS';
-    if (/Linux/.test(ua)) return 'LINUX';
-    if (/Android/.test(ua)) return 'ANDROID';
-    if (/iPhone|iPad|iOS/.test(ua)) return 'IOS';
-    return 'OS';
+    return 'UNKNOWN';
   };
 
   if (root instanceof HTMLElement && content instanceof HTMLElement) {
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const payload = JSON.parse(root.dataset.ticker ?? '{}');
-    const items = [];
     let geoMap = '';
 
     const secondsLive = () => Math.max(0, Math.floor((Date.now() - launchDate) / 1000)).toLocaleString();
 
-    items.push(() => `<span class="ticker-pill"><span>LAST SITE DEPLOYMENT:</span><strong>${payload.deployStamp}</strong></span>`);
-    items.push(() => `<span class="ticker-seconds">${secondsLive()}</span> <span class="ticker-seconds-label">SECONDS LIVE</span>`);
-
-    if (payload.listened?.artist && (payload.listened?.title || payload.listened?.name)) {
-      items.push(() => `♫ <span style="color:var(--text-primary)">${String(payload.listened.artist).toUpperCase()} — ${String(payload.listened.title ?? payload.listened.name).toUpperCase()}</span>`);
-    }
-    if (payload.watched?.title) {
-      items.push(() => `▶ <span style="color:var(--text-primary)">${String(payload.watched.title).toUpperCase()}${payload.watched.year ? ` (${payload.watched.year})` : ''}</span>`);
-    }
-    if (payload.quote?.text && payload.quote?.author) {
-      items.push(() => `<a class="ticker-link" href="/quotes"><span class="ticker-quote">\"${payload.quote.text}\"</span> <span class="ticker-quote-author">— ${String(payload.quote.author).toUpperCase()}</span></a>`);
-    }
-    items.push(() => {
-      const browser = detectBrowser();
-      const os = detectOS();
-      return `SIGNAL: ${browserIcon(browser)} ${browser || 'UNKNOWN'} / ${os} / ${window.innerWidth}×${window.innerHeight}${geoMap ? ` ${geoMap}` : ''}`;
-    });
+    const items = [
+      () => `<span class="ticker-item ticker-item--pill"><span class="ticker-item__label">Last Site Deployment:</span><span class="ticker-item__value">${payload.deployStamp}</span></span>`,
+      () => `<span class="ticker-item ticker-item--counter"><span class="ticker-item__number">${secondsLive()}</span><span class="ticker-item__suffix">seconds live</span></span>`,
+      () => `<span class="ticker-item ticker-item--media"><span class="ticker-item__icon">♫</span><span class="ticker-item__content">${payload.listened?.artist ?? 'Artist'} — ${payload.listened?.title ?? payload.listened?.name ?? 'Track Title'}</span></span>`,
+      () => `<span class="ticker-item ticker-item--media"><span class="ticker-item__icon">▶</span><span class="ticker-item__content">${payload.watched?.title ?? 'Film Title'}</span></span>`,
+      () => `<span class="ticker-item ticker-item--quote"><span class="ticker-item__text">"${payload.quote?.text ?? 'Simplicity is the ultimate sophistication.'}"</span><span class="ticker-item__author">— ${payload.quote?.author ?? 'Leonardo da Vinci'}</span></span>`,
+      () => `<span class="ticker-item ticker-item--signal">Visitor Signal ${browserIcon(detectBrowser())} ${detectBrowser()} ${geoMap}</span>`
+    ];
 
     let index = 0;
     const render = () => {
-      if (!items.length) return;
       content.innerHTML = items[index % items.length]();
       index += 1;
     };
 
-    const glitchCut = () => {
-      if (reducedMotion) return render();
-      content.classList.add('is-fading');
-      glitch?.classList.add('is-active');
-      window.setTimeout(render, 150);
-      window.setTimeout(() => {
-        glitch?.classList.remove('is-active');
-        content.classList.remove('is-fading');
-      }, 260);
-    };
-
     render();
-    window.setInterval(() => {
-      if (index % items.length === 2) render();
+    setInterval(() => {
+      if ((index - 1) % items.length === 1) {
+        content.innerHTML = items[1]();
+        return;
+      }
+      render();
+    }, 9000);
+    setInterval(() => {
+      if ((index - 1) % items.length === 1) content.innerHTML = items[1]();
     }, 1000);
-    window.setInterval(glitchCut, 9000);
 
-    fetch('https://ipapi.co/json/')
-      .then((res) => res.json())
-      .then((geo) => {
-        const lat = Number(geo?.latitude);
-        const lon = Number(geo?.longitude);
-        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
-        const clampedLat = Math.max(-85, Math.min(85, lat));
-        const x = ((lon + 180) / 360) * 40;
-        const latRad = (clampedLat * Math.PI) / 180;
-        const mercN = Math.log(Math.tan(Math.PI / 4 + latRad / 2));
-        const y = 10 - (20 * mercN) / (2 * Math.PI);
-        geoMap = miniMapSvg(Math.max(1.5, Math.min(38.5, x)), Math.max(1.5, Math.min(18.5, y)));
-      })
-      .catch(() => {});
+    fetch('https://ipapi.co/json/').then((res) => res.json()).then((geo) => {
+      const lat = Number(geo?.latitude);
+      const lon = Number(geo?.longitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+      const clampedLat = Math.max(-85, Math.min(85, lat));
+      const x = ((lon + 180) / 360) * 40;
+      const latRad = (clampedLat * Math.PI) / 180;
+      const mercN = Math.log(Math.tan(Math.PI / 4 + latRad / 2));
+      const y = 10 - (20 * mercN) / (2 * Math.PI);
+      geoMap = miniMapSvg(Math.max(1.5, Math.min(38.5, x)), Math.max(1.5, Math.min(18.5, y)));
+    }).catch(() => {});
   }
 </script>

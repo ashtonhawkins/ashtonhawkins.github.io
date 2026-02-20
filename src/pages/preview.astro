@@ -20,8 +20,37 @@ import CyclingSection from '../components/home/CyclingSection.astro';
     <SignalBar />
     <CyclingSection />
   </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const bars = document.querySelectorAll('[data-signal-bar]');
+      if (!bars.length) return;
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          const el = entry.target;
+          if (!(el instanceof HTMLElement)) return;
+          if (entry.isIntersecting && !el.dataset.pulsed) {
+            el.style.height = '2px';
+            el.style.backgroundColor = 'var(--accent-primary)';
+            el.style.boxShadow = '0 0 8px var(--accent-primary)';
+
+            setTimeout(() => {
+              el.style.height = '1px';
+              el.style.backgroundColor = 'var(--border)';
+              el.style.boxShadow = 'none';
+              el.dataset.pulsed = 'true';
+            }, 800);
+          }
+        });
+      }, { threshold: 0.5 });
+
+      bars.forEach((bar) => observer.observe(bar));
+    });
+  </script>
 </Page>
 
 <style>
-  .dashboard { display:grid; gap:.2rem; }
+  .dashboard { display:grid; gap:.2rem; margin-top:0; padding-top:0; }
+  .dashboard > .signal-bar:first-child { margin-top:1rem; }
 </style>

@@ -1,6 +1,6 @@
 ---
-import NoiseTexture from '@components/ui/NoiseTexture.astro';
 import NucleusCanvas from '@components/home/NucleusCanvas.astro';
+import AnalogClock from '@components/ui/AnalogClock.astro';
 import quotes from '@data/quotes.json';
 
 const quote = quotes[0] ?? { text: '', author: '' };
@@ -9,48 +9,92 @@ const quote = quotes[0] ?? { text: '', author: '' };
 <section class="nucleus container-shell max-wide" aria-label="Nucleus">
   <div class="nucleus__frame" data-nucleus data-quotes={JSON.stringify(quotes)}>
     <NucleusCanvas />
-    <NoiseTexture opacity={0.03} />
-    <ul class="nucleus__fragments" aria-hidden="true">
-      <li style="--x:7%;--y:14%;--dur:24s;">MARIN COUNTY</li>
-      <li style="--x:66%;--y:16%;--dur:28s;">DIRECTOR, CRO</li>
-      <li style="--x:14%;--y:68%;--dur:22s;">CYCLIST</li>
-      <li style="--x:69%;--y:70%;--dur:30s;">TRAVEL OBSESSIVE</li>
-      <li style="--x:42%;--y:20%;--dur:26s;">BUILDING THINGS</li>
-    </ul>
     <blockquote class="nucleus__quote" data-nucleus-quote>
       <div class="nucleus__quote-window">
         <p data-quote-text>“{quote.text}”</p>
         <footer data-quote-author>{quote.author}</footer>
       </div>
     </blockquote>
-    <svg class="nucleus__clock" viewBox="0 0 48 48" aria-hidden="true" data-analog-clock>
-      <circle cx="24" cy="24" r="22" class="clock-face" />
-      {Array.from({ length: 12 }).map((_, i) => <line x1="24" y1="4" x2="24" y2="7" class="clock-tick" transform={`rotate(${i * 30} 24 24)`} />)}
-      <line x1="24" y1="24" x2="24" y2="14" class="clock-hour" data-hour-hand />
-      <line x1="24" y1="24" x2="24" y2="10" class="clock-minute" data-minute-hand />
-      <line x1="24" y1="24" x2="24" y2="8" class="clock-second" data-second-hand />
-      <circle cx="24" cy="24" r="1.8" class="clock-center" />
-    </svg>
+    <div class="nucleus__clock" aria-hidden="true">
+      <AnalogClock />
+    </div>
   </div>
 </section>
 
 <style>
-  .nucleus { margin-bottom: 1.5rem; }
-  .nucleus__frame { position:relative; overflow:hidden; height:clamp(180px,22vh,320px); border:1px solid var(--border); background:var(--surface-primary); }
-  @media (min-aspect-ratio:3/1){.nucleus__frame{height:min(clamp(180px,22vh,320px), 30vw)}}
-  .nucleus__fragments { list-style:none; margin:0; padding:0; }
-  .nucleus__fragments li { position:absolute; top:var(--y); left:var(--x); z-index:5; font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:.12em; color:color-mix(in srgb,var(--text-tertiary) 30%, transparent); animation:frag var(--dur) ease-in-out infinite; }
-  .nucleus__quote { position:relative; z-index:10; display:grid; place-content:center; text-align:center; margin:0; padding:.5rem 1rem; height:100%; }
-  .nucleus__quote-window { background: rgba(var(--surface-primary-rgb), 0.7); backdrop-filter: blur(4px); border-radius:4px; padding:.4rem 1rem; }
-  .nucleus__quote p { margin:0; font-family:'IBM Plex Sans', sans-serif; font-style:italic; font-size:clamp(.75rem, 1.5vw, .95rem); color:var(--text-primary); max-width:54ch; }
-  .nucleus__quote footer { margin-top:.5rem; font-family:'IBM Plex Mono', monospace; font-size:10px; text-transform:uppercase; color:var(--text-secondary); letter-spacing:.08em; }
-  .nucleus__clock{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:8;width:48px;height:48px}
-  .clock-face{fill:none;stroke:var(--border);stroke-width:1}.clock-tick{stroke:var(--border);stroke-width:1}
-  .clock-hour{stroke:var(--text-primary);stroke-width:2;stroke-linecap:round}.clock-minute{stroke:var(--text-primary);stroke-width:1.5;stroke-linecap:round}
-  .clock-second,.clock-center{stroke:var(--accent-primary);fill:var(--accent-primary);stroke-width:1}
-  @keyframes frag {0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
-  @media (max-width: 44rem){.nucleus__clock{width:36px;height:36px}}
-  @media (prefers-reduced-motion: reduce) { .nucleus__fragments li{animation:none;} }
+  .nucleus {
+    height: clamp(180px, 22vh, 320px);
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    margin-top: 1rem;
+    margin-bottom: 0;
+    background: var(--surface-primary);
+  }
+
+  .nucleus__frame {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    background: var(--surface-primary);
+  }
+
+  .nucleus__quote {
+    position: relative;
+    z-index: 10;
+    display: grid;
+    place-content: center;
+    text-align: center;
+    margin: 0;
+    padding: 0.5rem 1rem;
+    height: 100%;
+  }
+
+  .nucleus__quote-window {
+    background: rgba(var(--surface-primary-rgb), 0.6);
+    backdrop-filter: blur(4px);
+    border-radius: 4px;
+    padding: 0.4rem 1rem;
+  }
+
+  .nucleus__quote p {
+    margin: 0;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-style: italic;
+    font-size: clamp(0.75rem, 1.5vw, 0.95rem);
+    color: var(--text-primary);
+    max-width: 54ch;
+  }
+
+  .nucleus__quote footer {
+    margin-top: 0.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.08em;
+  }
+
+  .nucleus__clock {
+    position: absolute;
+    left: 50%;
+    bottom: 8px;
+    transform: translateX(-50%);
+    z-index: 8;
+  }
+
+  .nucleus__clock :global(.analog-clock) {
+    width: 48px;
+    height: 48px;
+  }
+
+  @media (max-width: 44rem) {
+    .nucleus__clock :global(.analog-clock) {
+      width: 36px;
+      height: 36px;
+    }
+  }
 </style>
 
 <script>
@@ -76,22 +120,5 @@ const quote = quotes[0] ?? { text: '', author: '' };
         }, 400);
       }, 25000);
     }
-  }
-
-  const hour = document.querySelector('[data-hour-hand]');
-  const minute = document.querySelector('[data-minute-hand]');
-  const second = document.querySelector('[data-second-hand]');
-  if (hour instanceof SVGLineElement && minute instanceof SVGLineElement && second instanceof SVGLineElement) {
-    const updateClock = () => {
-      const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
-      const h = now.getHours() % 12;
-      const m = now.getMinutes();
-      const s = now.getSeconds();
-      hour.setAttribute('transform', `rotate(${(h + m / 60) * 30} 24 24)`);
-      minute.setAttribute('transform', `rotate(${(m + s / 60) * 6} 24 24)`);
-      second.setAttribute('transform', `rotate(${s * 6} 24 24)`);
-    };
-    updateClock();
-    setInterval(updateClock, reduced ? 60000 : 1000);
   }
 </script>
