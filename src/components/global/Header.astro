@@ -1,6 +1,6 @@
 ---
 import ThemeToggle from '@components/global/ThemeToggle.astro';
-import NavTicker from '@components/global/NavTicker.astro';
+import Ticker from '@components/global/Ticker.astro';
 import Cursor from '@components/ui/Cursor.astro';
 import NoiseTexture from '@components/ui/NoiseTexture.astro';
 import AnalogClock from '@components/ui/AnalogClock.astro';
@@ -65,7 +65,7 @@ const isActive = (href: string) => {
     <p class="mobile-time" data-mobile-time>--:--:--</p>
   </div>
 
-  {pathname !== '/' && <NavTicker />}
+  {pathname !== '/' && <Ticker />}
 </header>
 
 <script>

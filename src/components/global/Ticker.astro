@@ -1,0 +1,258 @@
+---
+import quotes from '../../data/quotes.json';
+
+const deployTimestamp = new Date().toISOString().replace('T', ' — ').split('.')[0] + ' UTC';
+---
+
+<div class="ticker" role="marquee" aria-label="Status ticker">
+  <div class="ticker__track" id="ticker-track">
+    <div class="ticker__item ticker__item--pill" data-ticker-item>
+      <span class="ticker__pill">
+        <span class="ticker__label">Last Site Deployment:</span>
+        <span class="ticker__value">{deployTimestamp}</span>
+      </span>
+    </div>
+
+    <div class="ticker__item ticker__item--counter" data-ticker-item>
+      <span class="ticker__number" id="seconds-live-ticker">31,622,000</span>
+      <span class="ticker__suffix">seconds live</span>
+    </div>
+
+    {quotes.map((q: { text: string; author: string }, i: number) => (
+      <div class="ticker__item ticker__item--quote" data-ticker-item data-quote-index={i}>
+        <span class="ticker__quote-text">"{q.text}"</span>
+        <span class="ticker__quote-author">— {q.author}</span>
+      </div>
+    ))}
+
+    <div class="ticker__item ticker__item--signal" data-ticker-item>
+      <span class="ticker__signal-text">
+        Signal: <span id="ticker-browser-icon"></span>
+        <span id="ticker-browser-info">detecting...</span>
+        <span id="ticker-minimap"></span>
+      </span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .ticker {
+    height: 40px;
+    background: var(--surface-secondary);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 0 var(--content-padding);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .ticker__track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+
+  .ticker__item {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .ticker__item--active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .ticker__pill {
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    padding: 3px 14px;
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .ticker__label {
+    color: var(--text-tertiary);
+    font-size: 10px;
+  }
+  .ticker__value {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 11px;
+  }
+
+  .ticker__number {
+    color: var(--accent-primary);
+    font-weight: 700;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+  .ticker__suffix {
+    color: var(--text-tertiary);
+    font-size: 9px;
+    margin-left: 8px;
+  }
+
+  .ticker__item--quote {
+    gap: 8px;
+  }
+  .ticker__quote-text {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-style: italic;
+    text-transform: none;
+    color: var(--text-primary);
+    font-size: 12px;
+  }
+  .ticker__quote-author {
+    color: var(--text-secondary);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+  }
+
+  .ticker__item--signal {
+    gap: 6px;
+  }
+  .ticker__signal-text {
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ticker__signal-text :global(svg) {
+    display: inline-block;
+    vertical-align: middle;
+  }
+</style>
+
+<script>
+  // @ts-nocheck
+  const allItems = document.querySelectorAll('[data-ticker-item]');
+
+  const deployItem = document.querySelector('.ticker__item--pill');
+  const counterItem = document.querySelector('.ticker__item--counter');
+  const signalItem = document.querySelector('.ticker__item--signal');
+  const quoteItems = [...document.querySelectorAll('.ticker__item--quote')];
+
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  const selectedQuotes = shuffle([...quoteItems]).slice(0, 3);
+  const rotation = [deployItem, counterItem, ...selectedQuotes, signalItem].filter(Boolean);
+
+  let currentIndex = 0;
+
+  function showItem(index) {
+    allItems.forEach((item) => item.classList.remove('ticker__item--active'));
+    if (rotation[index]) {
+      rotation[index].classList.add('ticker__item--active');
+    }
+  }
+
+  if (rotation.length > 0) {
+    showItem(0);
+    setInterval(() => {
+      currentIndex = (currentIndex + 1) % rotation.length;
+      showItem(currentIndex);
+    }, 8000);
+  }
+
+  const LAUNCH_DATE = new Date('2025-02-19T00:00:00Z');
+  const counterEl = document.getElementById('seconds-live-ticker');
+
+  function updateSecondsLive() {
+    if (!counterEl) return;
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - LAUNCH_DATE.getTime()) / 1000);
+    counterEl.textContent = seconds.toLocaleString();
+  }
+  updateSecondsLive();
+  setInterval(updateSecondsLive, 1000);
+
+  const browserIconEl = document.getElementById('ticker-browser-icon');
+  const browserInfoEl = document.getElementById('ticker-browser-info');
+  const minimapEl = document.getElementById('ticker-minimap');
+
+  const ua = navigator.userAgent;
+  let browserName = 'Browser';
+  if (ua.includes('Arc/')) browserName = 'Arc';
+  else if (ua.includes('Edg/')) browserName = 'Edge';
+  else if (ua.includes('Chrome/')) browserName = 'Chrome';
+  else if (ua.includes('Safari/') && !ua.includes('Chrome')) browserName = 'Safari';
+  else if (ua.includes('Firefox/')) browserName = 'Firefox';
+
+  let osName = 'Unknown';
+  if (ua.includes('Mac')) osName = 'macOS';
+  else if (ua.includes('Windows')) osName = 'Windows';
+  else if (ua.includes('Linux')) osName = 'Linux';
+  else if (ua.includes('Android')) osName = 'Android';
+  else if (ua.includes('iPhone') || ua.includes('iPad')) osName = 'iOS';
+
+  const resolution = `${screen.width}×${screen.height}`;
+
+  if (browserInfoEl) {
+    browserInfoEl.textContent = `${browserName} / ${osName} / ${resolution}`;
+  }
+
+  const BROWSER_ICONS = {
+    Chrome: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="10"/><line x1="12" y1="2" x2="12" y2="8"/><line x1="2.5" y1="17" x2="7.5" y2="14"/><line x1="21.5" y1="17" x2="16.5" y2="14"/></svg>',
+    Safari: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88"/></svg>',
+    Firefox: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a7 7 0 0 0-4 12.9"/></svg>',
+    Edge: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8c2.2 0 4 1.8 4 4h-8"/></svg>',
+    Arc: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12a4 4 0 0 1 8 0"/></svg>'
+  };
+
+  if (browserIconEl) {
+    browserIconEl.innerHTML = BROWSER_ICONS[browserName] || BROWSER_ICONS.Chrome;
+  }
+
+  if (minimapEl) {
+    const mapSvg = `<svg width="40" height="20" viewBox="0 0 200 100" style="display:inline-block;vertical-align:middle;max-width:40px;max-height:20px;">
+      <rect width="200" height="100" fill="none"/>
+      <path d="M30,25 L45,20 L55,25 L50,40 L35,45 L25,35 Z" fill="var(--text-tertiary)" opacity="0.3"/>
+      <path d="M55,55 L65,50 L75,60 L70,80 L55,75 Z" fill="var(--text-tertiary)" opacity="0.3"/>
+      <path d="M85,20 L120,15 L130,25 L125,50 L100,55 L85,40 Z" fill="var(--text-tertiary)" opacity="0.3"/>
+      <path d="M130,30 L170,25 L180,40 L175,55 L160,60 L140,50 L130,40 Z" fill="var(--text-tertiary)" opacity="0.3"/>
+      <path d="M140,65 L170,60 L175,80 L150,85 L140,75 Z" fill="var(--text-tertiary)" opacity="0.3"/>
+      <circle id="visitor-dot" cx="0" cy="0" r="3" fill="var(--accent-primary)" opacity="0">
+        <animate attributeName="opacity" values="0;1;0.7;1" dur="2s" repeatCount="indefinite"/>
+      </circle>
+    </svg>`;
+    minimapEl.innerHTML = mapSvg;
+
+    fetch('https://ipapi.co/json/')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.latitude && data.longitude) {
+          const x = ((data.longitude + 180) / 360) * 200;
+          const latRad = (data.latitude * Math.PI) / 180;
+          const y = 50 - (Math.log(Math.tan(Math.PI / 4 + latRad / 2)) / Math.PI) * 50;
+          const dot = minimapEl.querySelector('#visitor-dot');
+          if (dot) {
+            dot.setAttribute('cx', x.toString());
+            dot.setAttribute('cy', Math.max(5, Math.min(95, y)).toString());
+            dot.setAttribute('opacity', '1');
+          }
+        }
+      })
+      .catch(() => {
+      });
+  }
+</script>
