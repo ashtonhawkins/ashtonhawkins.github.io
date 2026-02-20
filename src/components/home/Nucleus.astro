@@ -5,6 +5,20 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
 <section class="nucleus container-shell max-wide" aria-label="Nucleus">
   <div class="nucleus__frame" data-nucleus>
     <NucleusCanvas />
+    <div class="nucleus__caption" id="nucleus-caption">
+      <a href="#cycling" class="nucleus__caption-link" id="nucleus-link">
+        <span class="nucleus__caption-label" id="nucleus-label">CYCLING</span>
+        <span class="nucleus__caption-detail" id="nucleus-detail">Last Ride: 23 mi / 1,400 ft</span>
+        <span class="nucleus__caption-arrow">→</span>
+      </a>
+    </div>
+
+    <div class="nucleus__dots" id="nucleus-dots" aria-label="Nucleus slide indicators">
+      <button type="button" class="nucleus__dot nucleus__dot--active" data-dot="0" aria-label="Show cycling slide"></button>
+      <button type="button" class="nucleus__dot" data-dot="1" aria-label="Show travel globe slide"></button>
+      <button type="button" class="nucleus__dot" data-dot="2" aria-label="Show travel skyline slide"></button>
+      <button type="button" class="nucleus__dot" data-dot="3" aria-label="Show consumption slide"></button>
+    </div>
   </div>
 </section>
 
@@ -25,5 +39,75 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
     height: 100%;
     width: 100%;
     background: var(--surface-primary);
+  }
+
+  .nucleus__caption {
+    position: absolute;
+    bottom: 12px;
+    left: 16px;
+    z-index: 10;
+    background: rgba(var(--surface-primary-rgb), 0.65);
+    backdrop-filter: blur(6px);
+    padding: 8px 14px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    transition: opacity 0.3s ease;
+  }
+
+  .nucleus__caption-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--text-primary);
+  }
+
+  .nucleus__caption-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-primary);
+    padding: 2px 6px;
+    border: 1px solid var(--accent-primary);
+    border-radius: 3px;
+  }
+
+  .nucleus__caption-detail {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .nucleus__caption-arrow {
+    font-size: 14px;
+    color: var(--accent-primary);
+  }
+
+  .nucleus__dots {
+    position: absolute;
+    bottom: 12px;
+    right: 16px;
+    z-index: 10;
+    display: flex;
+    gap: 6px;
+  }
+
+  .nucleus__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-tertiary);
+    opacity: 0.4;
+    transition: opacity 0.3s ease, background 0.3s ease;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .nucleus__dot--active {
+    background: var(--accent-primary);
+    opacity: 1;
   }
 </style>
