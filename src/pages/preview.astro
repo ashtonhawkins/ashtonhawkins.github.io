@@ -2,8 +2,8 @@
 import Page from '../layouts/Page.astro';
 import Nucleus from '../components/home/Nucleus.astro';
 import SignalBar from '../components/ui/SignalBar.astro';
-import MediaFeeds from '../components/home/MediaFeeds.astro';
-import WritingSection from '../components/home/WritingSection.astro';
+import ConsumptionSection from '../components/home/ConsumptionSection.astro';
+import WordsSection from '../components/home/WordsSection.astro';
 import TravelSection from '../components/home/TravelSection.astro';
 import CyclingSection from '../components/home/CyclingSection.astro';
 ---
@@ -12,9 +12,9 @@ import CyclingSection from '../components/home/CyclingSection.astro';
   <Nucleus />
   <div class="dashboard container-shell max-wide">
     <SignalBar />
-    <MediaFeeds />
+    <ConsumptionSection />
     <SignalBar />
-    <WritingSection />
+    <WordsSection />
     <SignalBar />
     <TravelSection />
     <SignalBar />

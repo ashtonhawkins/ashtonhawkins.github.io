@@ -1,7 +1,10 @@
 {
   "year": 2025,
   "superlatives": [
-    { "category": "Best Meal", "value": "TBD", "place": "TBD" },
-    { "category": "Hardest Hike", "value": "TBD", "place": "TBD" }
+    { "category": "Fork & Knife", "value": "TBD", "place": "TBD" },
+    { "category": "Check-In", "value": "TBD", "place": "TBD" },
+    { "category": "Guilty Pleasure", "value": "TBD", "place": "TBD" },
+    { "category": "Splurge", "value": "TBD", "place": "TBD" },
+    { "category": "Peak Transit", "value": "TBD", "place": "TBD" }
   ]
 }

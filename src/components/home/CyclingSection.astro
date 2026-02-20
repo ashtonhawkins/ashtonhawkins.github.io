@@ -18,14 +18,13 @@ const spark = (arr: number[]) => {
 <section class="cycling">
   <SectionHeader label="Cycling" />
   <div class="cycling-grid">
-    <RouteTrace path={cycling.lastRouteTrace} />
+    <RouteTrace path={cycling.lastRouteTrace} stats={`${cycling.lastRide.miles} MI / ${cycling.lastRide.elevation.toLocaleString()} FT / ${cycling.lastRide.duration}`} />
     <CyclingGauges miles={cycling.thisMonth.miles} elevation={cycling.thisMonth.elevation} rides={cycling.thisMonth.rides} goals={cycling.goals} />
     <div class="cycling__stats">
       <p>WEEKLY MI</p>
       <svg viewBox="0 0 80 24"><polyline points={spark(cycling.weeklyMiles)} /></svg>
       <p>WEEKLY ELEV</p>
       <svg viewBox="0 0 80 24"><polyline points={spark(cycling.weeklyElevation)} /></svg>
-      <p>LAST RIDE: {cycling.lastRide.miles} MI / {cycling.lastRide.elevation.toLocaleString()} FT / {cycling.lastRide.duration}</p>
       <p>YTD: {cycling.ytd.miles} MI</p>
     </div>
   </div>
@@ -35,6 +34,7 @@ const spark = (arr: number[]) => {
   .cycling-grid { display:grid; gap:1rem; }
   .cycling__stats { border:1px solid var(--border); padding:1rem; font:.72rem 'IBM Plex Mono',monospace; text-transform:uppercase; letter-spacing:.08em; color:var(--text-secondary); }
   .cycling__stats p{margin:.35rem 0;} .cycling__stats svg{width:80px;height:24px;display:block;margin:.2rem 0 .6rem}
+  .cycling__stats p:last-child{margin-top:.7rem;padding-top:.6rem;border-top:1px solid var(--border);font-size:.9rem;color:var(--text-primary);}
   .cycling__stats polyline{fill:none;stroke:var(--accent-primary);stroke-width:1}
-  @media (width >= 64rem) { .cycling-grid { grid-template-columns: 1fr 1fr 1fr; align-items:start; } }
+  @media (width >= 64rem) { .cycling-grid { grid-template-columns: 30% 35% 35%; align-items:start; } }
 </style>
