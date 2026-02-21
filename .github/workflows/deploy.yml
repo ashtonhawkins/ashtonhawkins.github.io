@@ -27,6 +27,13 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Fetch external feeds
+        run: npm run feeds:fetch
+        env:
+          PUBLIC_LASTFM_API_KEY: ${{ secrets.PUBLIC_LASTFM_API_KEY }}
+          PUBLIC_LASTFM_USERNAME: ${{ secrets.PUBLIC_LASTFM_USERNAME }}
+          PUBLIC_LETTERBOXD_USERNAME: ${{ secrets.PUBLIC_LETTERBOXD_USERNAME }}
+          LITERAL_API_TOKEN: ${{ secrets.LITERAL_API_TOKEN }}
       - name: Build site
         run: npm run build
         env:

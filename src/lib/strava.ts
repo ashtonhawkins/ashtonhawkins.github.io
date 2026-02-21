@@ -119,15 +119,26 @@ export async function getLatestActivity(accessToken: string): Promise<StravaActi
 
   if (!response.ok) {
     const text = await response.text();
-    if (response.status === 403) {
-      console.error(`[Nucleus] Strava returned 403. The refresh token likely needs activity:read scope. Re-auth at: https://www.strava.com/oauth/authorize?client_id=${import.meta.env.STRAVA_CLIENT_ID}&redirect_uri=http://localhost&response_type=code&scope=read,activity:read`);
+    if (response.status === 403 || text.includes('insufficient_scope')) {
+      console.error(
+        '[Nucleus] Strava returned 403 — the refresh token lacks activity:read scope.\n' +
+        '  To fix, the human must:\n' +
+        `  1. Visit: https://www.strava.com/oauth/authorize?client_id=${import.meta.env.STRAVA_CLIENT_ID}&redirect_uri=http://localhost&response_type=code&scope=read,activity:read\n` +
+        '  2. Approve and copy the ?code= from the redirect URL\n' +
+        '  3. Exchange it: curl -X POST https://www.strava.com/oauth/token -d client_id=CLIENT -d client_secret=SECRET -d code=CODE -d grant_type=authorization_code\n' +
+        '  4. Update STRAVA_REFRESH_TOKEN secret in GitHub repo settings with the new refresh_token'
+      );
     }
     throw new Error(`Failed fetching latest activity (${response.status}): ${text}`);
   }
 
   const activities = (await response.json()) as StravaActivity[];
   if (!activities.length) {
-    console.error('[Nucleus] Strava returned 0 activities. The account may have no activities or the token scope may be insufficient.');
+    console.error(
+      '[Nucleus] Strava returned 0 activities. This usually means the token has read scope but not activity:read.\n' +
+      '  The token refresh succeeds, but /athlete/activities returns an empty list without the right scope.\n' +
+      '  See the 403 instructions above — the fix is the same: re-auth with activity:read scope.'
+    );
     return null;
   }
 

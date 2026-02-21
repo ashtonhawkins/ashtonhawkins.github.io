@@ -1,6 +1,8 @@
 import { fetchRetry } from './fetch-retry';
 
-const LITERAL_API_URL = 'https://literal.club/graphql/';
+// No trailing slash — /graphql/ returns 308 → /graphql and the redirect
+// can drop the POST body in some Node.js fetch implementations.
+const LITERAL_API_URL = 'https://literal.club/graphql';
 
 type LiteralAuthor = { name: string };
 
@@ -60,16 +62,28 @@ async function fetchLiteralGraphQL<T>(query: string, variables?: Record<string, 
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ query, variables }),
+    redirect: 'follow',
   });
+
+  if (response.redirected) {
+    console.error(`[Nucleus] Literal API was redirected to ${response.url}. This may indicate a URL issue.`);
+  }
 
   if (!response.ok) {
     const body = await response.text();
     throw new Error(`Literal API request failed (${response.status}): ${body}`);
   }
 
-  const payload = (await response.json()) as LiteralGraphQLResponse<T>;
+  const text = await response.text();
+  let payload: LiteralGraphQLResponse<T>;
+  try {
+    payload = JSON.parse(text) as LiteralGraphQLResponse<T>;
+  } catch {
+    throw new Error(`Literal API returned non-JSON response (${response.status}): ${text.slice(0, 200)}`);
+  }
+
   if (payload.errors?.length) {
-    throw new Error(payload.errors.map((error) => error.message).join('; '));
+    throw new Error(`Literal GraphQL errors: ${payload.errors.map((error) => error.message).join('; ')}`);
   }
 
   return payload.data ?? null;
