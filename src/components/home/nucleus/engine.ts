@@ -181,6 +181,7 @@ const resetProgress = () => {
   const bar = document.getElementById('nucleus-progress');
   if (!bar) return;
   bar.classList.remove('nucleus__progress--filling');
+  bar.style.opacity = '0';
   void bar.getBoundingClientRect();
   bar.classList.add('nucleus__progress--filling');
 };
@@ -217,6 +218,28 @@ const renderSlide = (
 ) => {
   const theme = getThemeColors();
   slide.module.render(ctx, width, height, frame, slide.data, theme);
+};
+
+const pickStartingSlide = (slides: ActiveSlide[]): number => {
+  if (slides.length <= 1) return 0;
+
+  const ranked = slides
+    .map((s, i) => ({ index: i, time: new Date(s.data.updatedAt).getTime() || 0 }))
+    .sort((a, b) => b.time - a.time);
+
+  const primaryWeights = [0.40, 0.25, 0.15];
+  const remainingCount = Math.max(1, ranked.length - 3);
+  const weights = ranked.map((_, i) =>
+    i < 3 ? primaryWeights[i] : 0.20 / remainingCount
+  );
+
+  const rand = Math.random();
+  let cumulative = 0;
+  for (let i = 0; i < ranked.length; i++) {
+    cumulative += weights[i];
+    if (rand <= cumulative) return ranked[i].index;
+  }
+  return ranked[0].index;
 };
 
 export const initNucleus = async () => {
@@ -258,7 +281,7 @@ export const initNucleus = async () => {
   createDots(slides);
 
   let frame = 0;
-  let currentSlide = 0;
+  let currentSlide = pickStartingSlide(slides);
   let transitioning = false;
   let lastSwitch = Date.now();
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -361,6 +384,14 @@ export const initNucleus = async () => {
   updateDots(currentSlide);
   resetProgress();
   bindDots();
+
+  // Set initial caption to match the starting slide
+  const labelEl = document.getElementById('nucleus-label');
+  const detailEl = document.getElementById('nucleus-detail');
+  const linkEl = document.getElementById('nucleus-link');
+  if (labelEl) labelEl.textContent = slides[currentSlide].data.label;
+  if (detailEl) detailEl.textContent = slides[currentSlide].data.detail;
+  if (linkEl instanceof HTMLAnchorElement) linkEl.href = slides[currentSlide].data.link;
 
   window.addEventListener('resize', () => resizeCanvas(canvas, ctx));
 
