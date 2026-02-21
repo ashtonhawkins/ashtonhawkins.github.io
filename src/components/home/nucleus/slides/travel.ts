@@ -1,3 +1,6 @@
+import type { SlideData, SlideModule } from '../types';
+import { LANDMARKS, getSkyline, loadTravelData } from '@lib/travel';
+
 export type TravelRenderData = {
   city: string;
   country: string;
@@ -16,6 +19,8 @@ type ParsedPath = {
 
 const PATH_CACHE = new Map<string, ParsedPath>();
 const DEFAULT_LANDMARK_PATH = 'M20 85 L50 15 L80 85 L68 85 L60 65 L40 65 L32 85 Z';
+
+let revealStart: number | null = null;
 
 const clamp01 = (value: number): number => Math.max(0, Math.min(1, value));
 const easeOutCubic = (t: number): number => 1 - Math.pow(1 - clamp01(t), 3);
@@ -469,29 +474,71 @@ const drawCrosshair = (
   ctx.restore();
 };
 
-export function render(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  renderData: TravelRenderData,
-  elapsedMs: number,
-  accentRgb = '194, 233, 255',
-): void {
-  const safeData: TravelRenderData = {
-    city: renderData.city ?? '',
-    country: renderData.country ?? '',
-    latitude: Number.isFinite(renderData.latitude) ? renderData.latitude : 0,
-    longitude: Number.isFinite(renderData.longitude) ? renderData.longitude : 0,
-    date: renderData.date ?? '',
-    landmarkName: renderData.landmarkName ?? '',
-    landmarkPath: renderData.landmarkPath || DEFAULT_LANDMARK_PATH,
-    skylineProfile: Array.isArray(renderData.skylineProfile) ? renderData.skylineProfile : [],
-  };
+// Helper to extract RGB values from theme accent for rgba() usage
+const toRgbString = (color: string): string => {
+  if (color.startsWith('rgb(')) {
+    return color.replace(/rgb\(([^)]+)\)/, '$1');
+  }
+  if (color.startsWith('#')) {
+    const hex = color.slice(1);
+    const full = hex.length === 3 ? hex.split('').map((x) => x + x).join('') : hex;
+    const r = parseInt(full.slice(0, 2), 16);
+    const g = parseInt(full.slice(2, 4), 16);
+    const b = parseInt(full.slice(4, 6), 16);
+    return `${r}, ${g}, ${b}`;
+  }
+  return '194, 233, 255'; // fallback
+};
 
-  drawSkyline(ctx, width, height, safeData.skylineProfile, accentRgb, elapsedMs);
-  drawStamp(ctx, width, height, safeData, accentRgb, elapsedMs);
-  drawLandmark(ctx, width, height, safeData.landmarkPath, accentRgb, elapsedMs);
-  drawCrosshair(ctx, width, height, safeData, accentRgb, elapsedMs);
-}
+export const travelSlide: SlideModule = {
+  id: 'travel',
 
-export default { render };
+  async fetchData(): Promise<SlideData | null> {
+    try {
+      const travelData = await loadTravelData();
+      const trip = travelData?.lastTrip;
+      if (!trip) {
+        return null;
+      }
+      const landmark = LANDMARKS[trip.landmark] ?? LANDMARKS.default;
+      const skyline = getSkyline(trip.destination.city);
+      return {
+        label: 'TRAVEL',
+        detail: `${trip.destination.city} – ${trip.destination.country}`,
+        link: '#travel',
+        updatedAt: trip.date,
+        renderData: {
+          city: trip.destination.city,
+          country: trip.destination.country,
+          latitude: trip.destination.latitude,
+          longitude: trip.destination.longitude,
+          date: trip.date,
+          landmarkName: landmark.name,
+          landmarkPath: landmark.path,
+          skylineProfile: skyline,
+        },
+      };
+    } catch (error) {
+      console.error('[Nucleus] Failed to fetch travel data:', error);
+      return null;
+    }
+  },
+
+  reset(): void {
+    revealStart = null;
+  },
+
+  render(ctx, width, height, _frame, data, theme) {
+    if (revealStart === null) revealStart = performance.now();
+    const elapsedMs = performance.now() - revealStart;
+    const renderData = (data?.renderData || {}) as TravelRenderData;
+    const accentRgb = toRgbString(theme.accent);
+
+    ctx.clearRect(0, 0, width, height);
+
+    drawSkyline(ctx, width, height, renderData.skylineProfile || [], accentRgb, elapsedMs);
+    drawStamp(ctx, width, height, renderData, accentRgb, elapsedMs);
+    drawLandmark(ctx, width, height, renderData.landmarkPath || DEFAULT_LANDMARK_PATH, accentRgb, elapsedMs);
+    drawCrosshair(ctx, width, height, renderData, accentRgb, elapsedMs);
+  }
+};
