@@ -1,4 +1,6 @@
-export type WatchingRenderData = {
+import type { SlideData, SlideModule } from '../types';
+
+export interface WatchingRenderData {
   type: 'film' | 'tv';
   title: string;
   year: number;
@@ -10,17 +12,9 @@ export type WatchingRenderData = {
   season?: number;
   episode?: number;
   episodeTitle?: string;
-};
+}
 
-type RenderParams = {
-  ctx: CanvasRenderingContext2D;
-  width: number;
-  height: number;
-  frame: number;
-  accent: string;
-  renderData: WatchingRenderData;
-  ratingScale?: 'letterboxd' | 'trakt' | 5 | 10;
-};
+type RatingScale = 'letterboxd' | 'trakt' | 5 | 10;
 
 const drawYearStamp = (
   ctx: CanvasRenderingContext2D,
@@ -230,10 +224,10 @@ const drawRating = (
   height: number,
   accent: string,
   rating: number | null,
-  ratingScale: RenderParams['ratingScale']
+  ratingScale: RatingScale
 ) => {
   const scale = ratingScale === 10 || ratingScale === 'trakt' ? 10 : 5;
-  const value = rating == null ? '—' : Number(rating).toFixed(scale === 10 ? 1 : 1);
+  const value = rating == null ? '—' : Number(rating).toFixed(1);
   const text = rating == null ? '★ —' : `★ ${value} / ${scale}`;
 
   ctx.save();
@@ -251,20 +245,34 @@ const drawRating = (
   ctx.restore();
 };
 
-export const render = ({
-  ctx,
-  width,
-  height,
-  frame,
-  accent,
-  renderData,
-  ratingScale = 'letterboxd'
-}: RenderParams) => {
-  drawYearStamp(ctx, width, height, frame, accent, renderData.year);
-  drawRuntimeBar(ctx, width, height, frame, accent, renderData.runtime);
-  drawRollingCredits(ctx, width, height, frame, accent, renderData);
-  drawCountdownLeader(ctx, frame, accent);
-  drawRating(ctx, height, accent, renderData.rating, ratingScale);
-};
+export const watchingSlide: SlideModule = {
+  id: 'watching',
 
-export default { render };
+  async fetchData(): Promise<SlideData | null> {
+    try {
+      const response = await fetch('/api/nucleus/watching.json');
+      if (!response.ok) {
+        console.error(`[Nucleus] Failed to fetch Watching slide data: ${response.status} ${response.statusText}`);
+        return null;
+      }
+      return (await response.json()) as SlideData | null;
+    } catch (error) {
+      console.error('[Nucleus] Failed to fetch Watching slide data.', error);
+      return null;
+    }
+  },
+
+  render(ctx, width, height, frame, data, theme) {
+    const accent = theme.accent;
+    const renderData = (data?.renderData || {}) as WatchingRenderData;
+    const ratingScale: RatingScale = renderData.type === 'tv' ? 'trakt' : 'letterboxd';
+
+    ctx.clearRect(0, 0, width, height);
+
+    drawYearStamp(ctx, width, height, frame, accent, renderData.year || 0);
+    drawRuntimeBar(ctx, width, height, frame, accent, renderData.runtime || 0);
+    drawRollingCredits(ctx, width, height, frame, accent, renderData);
+    drawCountdownLeader(ctx, frame, accent);
+    drawRating(ctx, height, accent, renderData.rating, ratingScale);
+  }
+};

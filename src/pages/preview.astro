@@ -1,4 +1,5 @@
 ---
+import { getCollection } from 'astro:content';
 import Page from '../layouts/Page.astro';
 import Nucleus from '../components/home/Nucleus.astro';
 import SignalBar from '../components/ui/SignalBar.astro';
@@ -6,9 +7,45 @@ import ConsumptionSection from '../components/home/ConsumptionSection.astro';
 import WordsSection from '../components/home/WordsSection.astro';
 import TravelSection from '../components/home/TravelSection.astro';
 import CyclingSection from '../components/home/CyclingSection.astro';
+
+const writingData = await (async () => {
+  try {
+    const posts = await getCollection('writing', ({ data }) => !data.draft);
+    const latestPost = posts.sort((a, b) => {
+      const aDate = a.data.pubDate ? new Date(a.data.pubDate).getTime() : 0;
+      const bDate = b.data.pubDate ? new Date(b.data.pubDate).getTime() : 0;
+      return bDate - aDate;
+    })[0];
+
+    if (!latestPost) return null;
+
+    const tags = latestPost.data.description
+      ? latestPost.data.description
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+      : [];
+
+    return {
+      title: latestPost.data.title,
+      category: tags[0] || 'Essay',
+      tags,
+      date: latestPost.data.pubDate ? new Date(latestPost.data.pubDate).toISOString() : new Date().toISOString(),
+      slug: latestPost.slug,
+      wordCount: latestPost.body.trim().split(/\s+/).filter(Boolean).length,
+      paragraphCount: latestPost.body.split(/\n\n+/).map((paragraph) => paragraph.trim()).filter(Boolean).length
+    };
+  } catch (error) {
+    console.error('[Nucleus] Failed to load writing collection:', error);
+    return null;
+  }
+})();
 ---
 
 <Page title="Ashton Hawkins">
+  <script define:vars={{ writingData }}>
+    window.__nucleusWritingData = writingData;
+  </script>
   <Nucleus />
   <div class="dashboard container-shell max-wide">
     <SignalBar />
