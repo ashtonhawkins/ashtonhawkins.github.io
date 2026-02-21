@@ -1,5 +1,6 @@
+import { fetchRetry } from './fetch-retry';
+
 const LASTFM_API_BASE = 'https://ws.audioscrobbler.com/2.0/';
-const REQUEST_TIMEOUT_MS = 5000;
 
 export const GENRE_BPM_MAP: Record<string, number> = {
   rock: 120,
@@ -49,23 +50,14 @@ async function fetchJson<T>(params: Record<string, string>): Promise<T> {
     throw new Error('PUBLIC_LASTFM_API_KEY is missing.');
   }
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const query = new URLSearchParams({ ...params, api_key: apiKey, format: 'json' });
+  const response = await fetchRetry(`${LASTFM_API_BASE}?${query.toString()}`);
 
-  try {
-    const query = new URLSearchParams({ ...params, api_key: apiKey, format: 'json' });
-    const response = await fetch(`${LASTFM_API_BASE}?${query.toString()}`, {
-      signal: controller.signal,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    return (await response.json()) as T;
-  } finally {
-    clearTimeout(timeout);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
   }
+
+  return (await response.json()) as T;
 }
 
 export function estimateBpmFromGenre(genre: string): number {

@@ -1,5 +1,6 @@
+import { fetchRetry } from './fetch-retry';
+
 const LETTERBOXD_BASE_URL = 'https://letterboxd.com';
-const REQUEST_TIMEOUT_MS = 5_000;
 
 export interface LetterboxdFilmEntry {
   title: string;
@@ -54,22 +55,6 @@ function parsePosterFromDescription(description: string | null): string | null {
   return imageMatch?.[1] ?? null;
 }
 
-async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    return await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        Accept: 'application/rss+xml, application/xml, text/xml'
-      }
-    });
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
 export async function fetchLatestFilm(username?: string): Promise<LetterboxdFilmEntry | null> {
   if (!username) {
     console.error('[Nucleus] Missing Letterboxd username.');
@@ -79,7 +64,11 @@ export async function fetchLatestFilm(username?: string): Promise<LetterboxdFilm
   const rssUrl = `${LETTERBOXD_BASE_URL}/${username}/rss/`;
 
   try {
-    const response = await fetchWithTimeout(rssUrl, REQUEST_TIMEOUT_MS);
+    const response = await fetchRetry(rssUrl, {
+      headers: {
+        Accept: 'application/rss+xml, application/xml, text/xml'
+      }
+    });
     if (!response.ok) {
       console.error(`[Nucleus] Letterboxd RSS request failed: ${response.status} ${response.statusText}`);
       return null;
