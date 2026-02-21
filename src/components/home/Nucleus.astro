@@ -2,24 +2,30 @@
 import NucleusCanvas from '@components/home/NucleusCanvas.astro';
 ---
 
-<section class="nucleus container-shell max-wide" aria-label="Nucleus">
-  <div class="nucleus__frame" data-nucleus>
-    <NucleusCanvas />
-    <div class="nucleus__caption" id="nucleus-caption">
-      <a href="#cycling" class="nucleus__caption-link" id="nucleus-link">
-        <span class="nucleus__caption-label" id="nucleus-label">CYCLING</span>
-        <span class="nucleus__caption-detail" id="nucleus-detail">Last Ride: 23 mi / 1,400 ft</span>
-        <span class="nucleus__caption-arrow">→</span>
-      </a>
+<div class="nucleus-wrapper container-shell max-wide">
+  <section class="nucleus" aria-label="Nucleus">
+    <div class="nucleus__frame" data-nucleus>
+      <NucleusCanvas />
+      <div class="nucleus__caption" id="nucleus-caption">
+        <a href="#cycling" class="nucleus__caption-link" id="nucleus-link">
+          <span class="nucleus__caption-label" id="nucleus-label">CYCLING</span>
+          <span class="nucleus__caption-detail" id="nucleus-detail">Last Ride: 23 mi / 1,400 ft</span>
+          <span class="nucleus__caption-arrow">→</span>
+        </a>
+      </div>
+
+      <div class="nucleus__progress" id="nucleus-progress"></div>
     </div>
+  </section>
 
-    <div class="nucleus__dots" id="nucleus-dots" aria-label="Nucleus slide indicators"></div>
-
-    <div class="nucleus__progress" id="nucleus-progress"></div>
-  </div>
-</section>
+  <div class="nucleus__dots" id="nucleus-dots" aria-label="Nucleus slide indicators"></div>
+</div>
 
 <style>
+  .nucleus-wrapper {
+    position: relative;
+  }
+
   .nucleus {
     height: clamp(180px, 22vh, 320px);
     width: 100%;
@@ -82,13 +88,11 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
   }
 
   .nucleus__dots {
-    position: absolute;
-    bottom: 12px;
-    right: 16px;
-    z-index: 10;
     display: flex;
+    justify-content: flex-end;
     gap: 4px;
-    align-items: center;
+    padding-top: 8px;
+    padding-right: 4px;
   }
 
   .nucleus__dot {
@@ -148,10 +152,12 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
     background: var(--accent-primary);
     z-index: 5;
     transition: none;
+    opacity: 0;
   }
 
   .nucleus__progress--filling {
     width: 100%;
-    transition: width 9s linear;
+    transition: width 9s linear, opacity 1s ease 0.5s;
+    opacity: 0.35;
   }
 </style>
