@@ -1,3 +1,5 @@
+import type { SlideData, SlideModule } from '../types';
+
 export type CyclingRenderData = {
   distanceMi: number;
   elevationFt: number;
@@ -8,10 +10,6 @@ export type CyclingRenderData = {
   distanceStream: number[];
   routePolyline: [number, number][];
   routeName: string;
-};
-
-type Theme = {
-  accent: string;
 };
 
 const REVEAL_DURATION = 2000;
@@ -222,28 +220,43 @@ const drawTextLayers = (
   }
 };
 
-export const cyclingSlide = {
+export const cyclingSlide: SlideModule = {
+  id: 'cycling',
+
+  async fetchData(): Promise<SlideData | null> {
+    try {
+      const response = await fetch('/api/nucleus/cycling.json', {
+        headers: {
+          Accept: 'application/json'
+        }
+      });
+      if (!response.ok) {
+        throw new Error(`Cycling API returned ${response.status}`);
+      }
+      const data = (await response.json()) as SlideData | null;
+      return data;
+    } catch (error) {
+      console.error('[Nucleus] Failed to fetch cycling data:', error);
+      return null;
+    }
+  },
+
   reset(): void {
     revealStart = null;
   },
 
-  render(
-    ctx: CanvasRenderingContext2D,
-    width: number,
-    height: number,
-    frame: number,
-    data: CyclingRenderData,
-    theme: Theme
-  ): void {
+  render(ctx, width, height, frame, data, theme) {
     if (revealStart === null) revealStart = performance.now();
     const elapsed = performance.now() - revealStart;
     const reveal = clamp01(elapsed / REVEAL_DURATION);
     const easedReveal = 1 - Math.pow(1 - reveal, 3);
 
     const accent = theme.accent;
+    const renderData = (data?.renderData || {}) as CyclingRenderData;
 
-    drawRouteTrace(ctx, frame, data, accent, width, height);
-    drawElevation(ctx, frame, easedReveal, data, accent, width, height);
-    drawTextLayers(ctx, frame, easedReveal, data, accent, width, height);
+    ctx.clearRect(0, 0, width, height);
+    drawRouteTrace(ctx, frame, renderData, accent, width, height);
+    drawElevation(ctx, frame, easedReveal, renderData, accent, width, height);
+    drawTextLayers(ctx, frame, easedReveal, renderData, accent, width, height);
   }
 };
