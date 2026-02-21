@@ -17,12 +17,56 @@
 
   if (canvas instanceof HTMLCanvasElement && ctx instanceof CanvasRenderingContext2D) {
     const SLIDES = [
-      { visual: 'topo', label: 'CYCLING', detail: 'Last Ride: 23 mi / 1,400 ft', link: '#cycling' },
-      { visual: 'globe', label: 'TRAVEL', detail: 'Latest: SFO → NRT · 7 countries', link: '#travel' },
-      { visual: 'skyline', label: 'TRAVEL', detail: '24 flights · 142,000 mi', link: '#travel' },
-      { visual: 'waveform', label: 'CONSUMPTION', detail: 'Listening · Awaiting feed sync', link: '#consumption' }
+      { visual: 'topo', label: 'CYCLING', detail: 'Last Ride: 23 mi / 1,400 ft', link: '#cycling', updatedAt: '2026-01-12T12:30:00.000Z' },
+      { visual: 'globe', label: 'TRAVEL', detail: 'Latest: SFO → NRT · 7 countries', link: '#travel', updatedAt: '2026-01-16T08:10:00.000Z' },
+      { visual: 'skyline', label: 'TRAVEL', detail: '24 flights · 142,000 mi', link: '#travel', updatedAt: '2025-12-22T19:45:00.000Z' },
+      { visual: 'waveform', label: 'CONSUMPTION', detail: 'Listening · Awaiting feed sync', link: '#consumption', updatedAt: '2026-01-05T16:00:00.000Z' }
     ];
-    let currentSlide = 0;
+
+    const pickStartingSlide = (slides) => {
+      if (!Array.isArray(slides) || slides.length === 0) return 0;
+      if (slides.length === 1) return 0;
+
+      const withTimes = slides.map((slide, index) => {
+        const parsed = Date.parse(slide.updatedAt);
+        return {
+          index,
+          time: Number.isFinite(parsed) ? parsed : 0
+        };
+      });
+
+      const uniqueTimes = new Set(withTimes.map((item) => item.time));
+      if (uniqueTimes.size <= 1) {
+        return Math.floor(Math.random() * slides.length);
+      }
+
+      const ranked = withTimes.slice().sort((a, b) => b.time - a.time);
+      const weights = [];
+      const primaryWeights = [0.4, 0.25, 0.15];
+      const remainingWeight = 0.2;
+      const remainingCount = Math.max(0, ranked.length - 3);
+
+      for (let i = 0; i < ranked.length; i++) {
+        if (i < 3) {
+          weights.push(primaryWeights[i]);
+        } else if (remainingCount > 0) {
+          weights.push(remainingWeight / remainingCount);
+        }
+      }
+
+      const rand = Math.random();
+      let cumulative = 0;
+      for (let i = 0; i < ranked.length; i++) {
+        cumulative += weights[i] ?? 0;
+        if (rand <= cumulative) {
+          return ranked[i].index;
+        }
+      }
+
+      return ranked[0]?.index ?? 0;
+    };
+
+    let currentSlide = pickStartingSlide(SLIDES);
     let time = 0;
     let transitioning = false;
 
@@ -349,6 +393,7 @@
       const bar = document.getElementById('nucleus-progress');
       if (!bar) return;
       bar.classList.remove('nucleus__progress--filling');
+      bar.style.opacity = '0';
       void bar.offsetWidth;
       bar.classList.add('nucleus__progress--filling');
     };
@@ -506,7 +551,7 @@
 
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
-    updateDots(0);
+    updateDots(currentSlide);
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const SLIDE_DURATION = 9000;
