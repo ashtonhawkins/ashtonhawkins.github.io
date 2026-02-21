@@ -1,6 +1,7 @@
+import { fetchRetry } from './fetch-retry';
+
 const STRAVA_TOKEN_URL = 'https://www.strava.com/oauth/token';
 const STRAVA_API_BASE = 'https://www.strava.com/api/v3';
-const REQUEST_TIMEOUT_MS = 5_000;
 
 interface StravaTokenResponse {
   access_token: string;
@@ -59,17 +60,6 @@ export interface ActivityStreams {
   grade: number[];
 }
 
-const withTimeout = async (input: RequestInfo | URL, init?: RequestInit) => {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-
-  try {
-    return await fetch(input, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timeout);
-  }
-};
-
 const getStravaCredentials = () => {
   const { STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, STRAVA_REFRESH_TOKEN } = import.meta.env;
 
@@ -88,7 +78,7 @@ export async function refreshStravaToken(): Promise<string | null> {
   const creds = getStravaCredentials();
 
   if (!creds) {
-    console.error('[Nucleus] Missing Strava credentials.');
+    console.error('[Nucleus] Missing Strava credentials. STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, and STRAVA_REFRESH_TOKEN must all be set.');
     return null;
   }
 
@@ -99,7 +89,7 @@ export async function refreshStravaToken(): Promise<string | null> {
     grant_type: 'refresh_token'
   });
 
-  const response = await withTimeout(STRAVA_TOKEN_URL, {
+  const response = await fetchRetry(STRAVA_TOKEN_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
@@ -108,8 +98,8 @@ export async function refreshStravaToken(): Promise<string | null> {
   });
 
   if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Strava token refresh failed (${response.status}): ${body}`);
+    const text = await response.text();
+    throw new Error(`Strava token refresh failed (${response.status}): ${text}`);
   }
 
   const json = (await response.json()) as StravaTokenResponse;
@@ -121,26 +111,36 @@ export async function refreshStravaToken(): Promise<string | null> {
 }
 
 export async function getLatestActivity(accessToken: string): Promise<StravaActivity | null> {
-  // Strava requires `activity:read` (or `activity:read_all`) on the refresh token scope for this endpoint.
-  // If the token only has `read`, the API responds with insufficient_scope and this route will return null.
-  const response = await withTimeout(`${STRAVA_API_BASE}/athlete/activities?per_page=10`, {
+  const response = await fetchRetry(`${STRAVA_API_BASE}/athlete/activities?per_page=10`, {
     headers: {
       Authorization: `Bearer ${accessToken}`
     }
   });
 
   if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Failed fetching latest activity (${response.status}): ${body}`);
+    const text = await response.text();
+    if (response.status === 403) {
+      console.error(`[Nucleus] Strava returned 403. The refresh token likely needs activity:read scope. Re-auth at: https://www.strava.com/oauth/authorize?client_id=${import.meta.env.STRAVA_CLIENT_ID}&redirect_uri=http://localhost&response_type=code&scope=read,activity:read`);
+    }
+    throw new Error(`Failed fetching latest activity (${response.status}): ${text}`);
   }
 
   const activities = (await response.json()) as StravaActivity[];
-  return activities.find((activity) => CYCLING_ACTIVITY_TYPES.has(activity.type)) ?? null;
+  if (!activities.length) {
+    console.error('[Nucleus] Strava returned 0 activities. The account may have no activities or the token scope may be insufficient.');
+    return null;
+  }
+
+  const cycling = activities.find((activity) => CYCLING_ACTIVITY_TYPES.has(activity.type));
+  if (!cycling) {
+    console.error(`[Nucleus] No cycling activity in latest 10 Strava activities. Types found: ${activities.map((a) => a.type).join(', ')}`);
+  }
+  return cycling ?? null;
 }
 
 export async function getActivityStreams(accessToken: string, activityId: number): Promise<ActivityStreams | null> {
   try {
-    const response = await withTimeout(
+    const response = await fetchRetry(
       `${STRAVA_API_BASE}/activities/${activityId}/streams?keys=altitude,distance,grade_smooth&key_type=distance`,
       {
         headers: {
@@ -150,8 +150,8 @@ export async function getActivityStreams(accessToken: string, activityId: number
     );
 
     if (!response.ok) {
-      const body = await response.text();
-      throw new Error(`Failed fetching activity streams (${response.status}): ${body}`);
+      const text = await response.text();
+      throw new Error(`Failed fetching activity streams (${response.status}): ${text}`);
     }
 
     const streams = (await response.json()) as StravaStreamsResponse[];
@@ -215,7 +215,6 @@ export async function fetchCyclingData(): Promise<SlideData | null> {
 
     const activity = await getLatestActivity(token);
     if (!activity) {
-      console.error('[Nucleus] No supported cycling activity found in the latest Strava activities.');
       return null;
     }
 

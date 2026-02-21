@@ -1,5 +1,6 @@
+import { fetchRetry } from './fetch-retry';
+
 const LITERAL_API_URL = 'https://literal.club/graphql/';
-const REQUEST_TIMEOUT_MS = 5_000;
 
 type LiteralAuthor = { name: string };
 
@@ -45,12 +46,6 @@ export type ReadingSlideData = {
   };
 };
 
-function withTimeout(timeoutMs: number): AbortSignal {
-  const controller = new AbortController();
-  setTimeout(() => controller.abort(), timeoutMs);
-  return controller.signal;
-}
-
 async function fetchLiteralGraphQL<T>(query: string, variables?: Record<string, unknown>): Promise<T | null> {
   const token = import.meta.env.LITERAL_API_TOKEN;
   if (!token) {
@@ -58,14 +53,13 @@ async function fetchLiteralGraphQL<T>(query: string, variables?: Record<string, 
     return null;
   }
 
-  const response = await fetch(LITERAL_API_URL, {
+  const response = await fetchRetry(LITERAL_API_URL, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ query, variables }),
-    signal: withTimeout(REQUEST_TIMEOUT_MS),
   });
 
   if (!response.ok) {
@@ -122,9 +116,7 @@ function toReadingSlideData(state: LiteralReadingState, status: ReadingStatus): 
   if (!state.book) return null;
 
   const author = state.book.authors?.[0]?.name || 'Unknown Author';
-  const progress = null;
   const detailParts = [`${state.book.title} – ${author}`];
-  if (progress) detailParts.push(progress);
 
   return {
     label: 'READING',

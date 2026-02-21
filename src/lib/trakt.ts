@@ -1,5 +1,6 @@
+import { fetchRetry } from './fetch-retry';
+
 const TRAKT_API_BASE_URL = 'https://api.trakt.tv';
-const REQUEST_TIMEOUT_MS = 5_000;
 
 interface TraktIds {
   trakt?: number;
@@ -46,29 +47,15 @@ export interface TraktTVEntry {
   cast: string[];
 }
 
-async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    return await fetch(url, {
-      ...init,
-      signal: controller.signal
-    });
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
 async function fetchTrakt<T>(path: string, clientId: string): Promise<T | null> {
   try {
-    const response = await fetchWithTimeout(`${TRAKT_API_BASE_URL}${path}`, {
+    const response = await fetchRetry(`${TRAKT_API_BASE_URL}${path}`, {
       headers: {
         'Content-Type': 'application/json',
         'trakt-api-version': '2',
         'trakt-api-key': clientId
       }
-    }, REQUEST_TIMEOUT_MS);
+    });
 
     if (!response.ok) {
       console.error(`[Nucleus] Trakt request failed for ${path}: ${response.status} ${response.statusText}`);
