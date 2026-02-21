@@ -1,9 +1,44 @@
-[
-  { "place": "Tokyo", "country": "Japan", "visits": 3, "routes": ["SFO → NRT"], "photos": [] },
-  { "place": "London", "country": "UK", "visits": 2, "routes": ["SFO → LHR"], "photos": [] },
-  { "place": "Lisbon", "country": "Portugal", "visits": 1, "routes": ["SFO → LIS"], "photos": [] },
-  { "place": "Reykjavik", "country": "Iceland", "visits": 1, "routes": ["SFO → KEF"], "photos": [] },
-  { "place": "Paris", "country": "France", "visits": 4, "routes": ["SFO → CDG"], "photos": [] },
-  { "place": "Mexico City", "country": "Mexico", "visits": 2, "routes": ["SFO → MEX"], "photos": [] },
-  { "place": "Copenhagen", "country": "Denmark", "visits": 1, "routes": ["SFO → CPH"], "photos": [] }
-]
+{
+  "lastTrip": {
+    "destination": {
+      "city": "Tokyo",
+      "country": "Japan",
+      "latitude": 35.6762,
+      "longitude": 139.6503
+    },
+    "date": "2025-11-15",
+    "landmark": "tokyo-tower"
+  },
+  "trips": [
+    {
+      "destination": {
+        "city": "Tokyo",
+        "country": "Japan",
+        "latitude": 35.6762,
+        "longitude": 139.6503
+      },
+      "date": "2025-11-15",
+      "landmark": "tokyo-tower"
+    },
+    {
+      "destination": {
+        "city": "London",
+        "country": "UK",
+        "latitude": 51.5074,
+        "longitude": -0.1278
+      },
+      "date": "2025-08-20",
+      "landmark": "big-ben"
+    },
+    {
+      "destination": {
+        "city": "Lisbon",
+        "country": "Portugal",
+        "latitude": 38.7223,
+        "longitude": -9.1393
+      },
+      "date": "2025-06-10",
+      "landmark": "belem-tower"
+    }
+  ]
+}
