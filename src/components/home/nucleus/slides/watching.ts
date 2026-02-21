@@ -1,3 +1,5 @@
+import type { SlideData, SlideModule } from '../types';
+
 export interface WatchingRenderData {
   type: 'film' | 'tv';
   title: string;
@@ -12,26 +14,30 @@ export interface WatchingRenderData {
   episodeTitle?: string;
 }
 
-export interface SlideData {
-  label: string;
-  detail: string;
-  link: string;
-  updatedAt: string;
-  renderData: WatchingRenderData;
-}
+export const watchingSlide: SlideModule = {
+  id: 'watching',
 
-export async function fetchData(): Promise<SlideData | null> {
-  try {
-    const response = await fetch('/api/nucleus/watching.json');
-
-    if (!response.ok) {
-      console.error(`[Nucleus] Failed to fetch Watching slide data: ${response.status} ${response.statusText}`);
+  async fetchData(): Promise<SlideData | null> {
+    try {
+      const response = await fetch('/api/nucleus/watching.json');
+      if (!response.ok) {
+        console.error(`[Nucleus] Failed to fetch Watching slide data: ${response.status} ${response.statusText}`);
+        return null;
+      }
+      return (await response.json()) as SlideData | null;
+    } catch (error) {
+      console.error('[Nucleus] Failed to fetch Watching slide data.', error);
       return null;
     }
+  },
 
-    return (await response.json()) as SlideData | null;
-  } catch (error) {
-    console.error('[Nucleus] Failed to fetch Watching slide data.', error);
-    return null;
+  render(ctx, width, height, _frame, _data, theme) {
+    ctx.clearRect(0, 0, width, height);
+    ctx.font = '11px "IBM Plex Mono", monospace';
+    ctx.fillStyle = theme.accent;
+    ctx.globalAlpha = 0.3;
+    ctx.textAlign = 'center';
+    ctx.fillText('[ WATCHING ]', width / 2, height / 2);
+    ctx.globalAlpha = 1;
   }
-}
+};
