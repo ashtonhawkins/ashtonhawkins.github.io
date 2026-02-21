@@ -1,0 +1,25 @@
+import type { SlideData, SlideModule } from '../types';
+
+export const watchingSlide: SlideModule = {
+  id: 'watching',
+
+  async fetchData(): Promise<SlideData> {
+    return {
+      label: 'WATCHING',
+      detail: 'Awaiting Letterboxd sync',
+      link: '#consumption',
+      updatedAt: new Date().toISOString(),
+      renderData: {}
+    };
+  },
+
+  render(ctx, width, height, _frame, _data, theme) {
+    ctx.clearRect(0, 0, width, height);
+    ctx.font = '11px "IBM Plex Mono", monospace';
+    ctx.fillStyle = theme.accent;
+    ctx.globalAlpha = 0.3;
+    ctx.textAlign = 'center';
+    ctx.fillText('[ WATCHING ]', width / 2, height / 2);
+    ctx.globalAlpha = 1;
+  }
+};
