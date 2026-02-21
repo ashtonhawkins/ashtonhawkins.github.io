@@ -1,5 +1,14 @@
+import type { SlideData, SlideModule } from '../types';
+
+const REQUEST_TIMEOUT_MS = 5_000;
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789.,:;';
 const BASE_STREAM_LENGTH = 80;
+
+function withTimeout(timeoutMs: number): AbortSignal {
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), timeoutMs);
+  return controller.signal;
+}
 
 export type ReadingRenderData = {
   title: string;
@@ -11,15 +20,6 @@ export type ReadingRenderData = {
   chapterCount: number;
   pullQuote: string;
   status: 'reading' | 'finished';
-};
-
-export type ReadingRenderArgs = {
-  ctx: CanvasRenderingContext2D;
-  width: number;
-  height: number;
-  frame: number;
-  accent: string;
-  renderData: ReadingRenderData;
 };
 
 type StreamLayer = 'back' | 'mid' | 'front';
@@ -330,13 +330,37 @@ const drawPageCount = (
   ctx.restore();
 };
 
-export const render = ({ ctx, width, height, frame, accent, renderData }: ReadingRenderArgs): void => {
-  const state = ensureState(ctx, width, height, renderData.totalPages, renderData.chapterCount, renderData.title);
+export const readingSlide: SlideModule = {
+  id: 'reading',
 
-  drawPullQuote(ctx, renderData.pullQuote, frame, width, height, accent);
-  drawStreams(ctx, state, frame, width, accent, ['back']);
-  drawChapterMarkers(ctx, renderData, width, height, accent);
-  drawSpine(ctx, renderData.title, frame, height, accent);
-  drawStreams(ctx, state, frame, width, accent, ['mid', 'front']);
-  drawPageCount(ctx, renderData, frame, width, height, accent);
+  async fetchData(): Promise<SlideData | null> {
+    try {
+      const response = await fetch('/api/nucleus/reading.json', {
+        signal: withTimeout(REQUEST_TIMEOUT_MS),
+      });
+      if (!response.ok) {
+        console.error('[Nucleus] Failed to fetch reading slide data:', response.status);
+        return null;
+      }
+      return (await response.json()) as SlideData | null;
+    } catch (error) {
+      console.error('[Nucleus] Failed to fetch reading data:', error);
+      return null;
+    }
+  },
+
+  render(ctx, width, height, frame, data, theme) {
+    const accent = theme.accent;
+    const renderData = (data?.renderData || {}) as ReadingRenderData;
+    const state = ensureState(ctx, width, height, renderData.totalPages, renderData.chapterCount || 1, renderData.title || '');
+
+    ctx.clearRect(0, 0, width, height);
+
+    drawPullQuote(ctx, renderData.pullQuote || '', frame, width, height, accent);
+    drawStreams(ctx, state, frame, width, accent, ['back']);
+    drawChapterMarkers(ctx, renderData, width, height, accent);
+    drawSpine(ctx, renderData.title || '', frame, height, accent);
+    drawStreams(ctx, state, frame, width, accent, ['mid', 'front']);
+    drawPageCount(ctx, renderData, frame, width, height, accent);
+  }
 };
