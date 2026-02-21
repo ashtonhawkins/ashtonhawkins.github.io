@@ -1,3 +1,5 @@
+import type { SlideData, SlideModule } from '../types';
+
 export interface WritingRenderData {
   title: string;
   category: string;
@@ -7,6 +9,16 @@ export interface WritingRenderData {
   paragraphCount: number;
   slug: string;
 }
+
+type WritingResponse = {
+  title: string;
+  category?: string;
+  tags?: string[];
+  date?: string;
+  slug: string;
+  wordCount?: number;
+  paragraphCount?: number;
+};
 
 interface CloudWord {
   text: string;
@@ -23,6 +35,12 @@ interface TopicTag {
   x: number;
   y: number;
   vx: number;
+}
+
+declare global {
+  interface Window {
+    __nucleusWritingData?: WritingResponse | null;
+  }
 }
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
@@ -52,59 +70,109 @@ function splitTitle(title: string): [string, string] {
   return [title.slice(0, splitIndex).trim(), title.slice(splitIndex).trim()];
 }
 
-export function createWritingSlide(data: { renderData: WritingRenderData }) {
-  let revealStart: number | null = null;
-  let cloudWords: CloudWord[] = [];
-  let topicTags: TopicTag[] = [];
+function extractKeyTerms(title: string, tags: string[], category: string): string[] {
+  const terms = new Set<string>();
+  tags.forEach((tag) => terms.add(tag));
+  if (category) terms.add(category);
+  const stopWords = new Set([
+    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'it',
+    'this', 'that', 'my', 'how', 'what', 'why', 'when'
+  ]);
+  title.split(/\s+/).forEach((word) => {
+    const clean = word.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (clean.length > 3 && !stopWords.has(clean)) {
+      terms.add(word.replace(/[^a-zA-Z0-9\s]/g, ''));
+    }
+  });
+  return Array.from(terms).filter(Boolean).slice(0, 10);
+}
 
-  const seedCloudWords = (width: number, height: number) => {
-    const titleSeed = data.renderData.title.length;
-    cloudWords = data.renderData.keyTerms.slice(0, 10).map((term, i) => ({
-      text: term,
-      x: ((hash(`${term}${i}${titleSeed}`) % 100) / 100) * width,
-      y: ((hash(`${term}${i}y${titleSeed}`) % 100) / 100) * height,
-      vx: (hash(`${term}vx${titleSeed}`) % 60 - 30) / 100,
-      vy: (hash(`${term}vy${titleSeed}`) % 30 - 15) / 100,
-      size: 10 + (hash(`${term}sz${titleSeed}`) % 13),
-      alpha: 0.04 + (hash(`${term}a${titleSeed}`) % 7) / 100
-    }));
-  };
+let revealStart: number | null = null;
+let cloudWords: CloudWord[] = [];
+let topicTags: TopicTag[] = [];
 
-  const seedTags = (width: number, height: number) => {
-    const allTags = [data.renderData.category, ...data.renderData.tags].filter(Boolean);
-    const tagCount = Math.max(allTags.length, 1);
+function seedCloudWords(renderData: WritingRenderData, width: number, height: number) {
+  const titleSeed = renderData.title.length;
+  cloudWords = renderData.keyTerms.slice(0, 10).map((term, i) => ({
+    text: term,
+    x: ((hash(`${term}${i}${titleSeed}`) % 100) / 100) * width,
+    y: ((hash(`${term}${i}y${titleSeed}`) % 100) / 100) * height,
+    vx: (hash(`${term}vx${titleSeed}`) % 60 - 30) / 100,
+    vy: (hash(`${term}vy${titleSeed}`) % 30 - 15) / 100,
+    size: 10 + (hash(`${term}sz${titleSeed}`) % 13),
+    alpha: 0.04 + (hash(`${term}a${titleSeed}`) % 7) / 100
+  }));
+}
 
-    topicTags = allTags.map((tag, i) => {
-      const lane = (i + 1) / (tagCount + 1);
-      const xJitter = (hash(`${tag}x`) % 100) / 100;
-      const yJitter = (hash(`${tag}y`) % 100) / 100;
-      const speed = 0.05 + (hash(`${tag}v`) % 6) / 100;
-      const direction = hash(`${tag}dir`) % 2 === 0 ? 1 : -1;
+function seedTags(renderData: WritingRenderData, width: number, height: number) {
+  const allTags = [renderData.category, ...renderData.tags].filter(Boolean);
+  const tagCount = Math.max(allTags.length, 1);
 
+  topicTags = allTags.map((tag, i) => {
+    const lane = (i + 1) / (tagCount + 1);
+    const xJitter = (hash(`${tag}x`) % 100) / 100;
+    const yJitter = (hash(`${tag}y`) % 100) / 100;
+    const speed = 0.05 + (hash(`${tag}v`) % 6) / 100;
+    const direction = hash(`${tag}dir`) % 2 === 0 ? 1 : -1;
+
+    return {
+      text: tag,
+      x: clamp((lane + (xJitter - 0.5) * 0.12) * width, 0, width),
+      y: (height * 0.68) + yJitter * (height * 0.26),
+      vx: speed * direction
+    };
+  });
+}
+
+export const writingSlide: SlideModule = {
+  id: 'writing',
+
+  async fetchData(): Promise<SlideData | null> {
+    try {
+      const data = window.__nucleusWritingData
+        || await fetch('/api/nucleus/writing.json').then((response) => response.json() as Promise<WritingResponse | null>);
+      if (!data) return null;
+      const tags = data.tags || [];
+      const category = data.category || tags[0] || 'Essay';
+      const keyTerms = extractKeyTerms(data.title, tags, category);
       return {
-        text: tag,
-        x: clamp((lane + (xJitter - 0.5) * 0.12) * width, 0, width),
-        y: (height * 0.68) + yJitter * (height * 0.26),
-        vx: speed * direction
+        label: 'WRITING',
+        detail: `${data.title} – ${category}`,
+        link: '#writing',
+        updatedAt: data.date || new Date().toISOString(),
+        renderData: {
+          title: data.title,
+          category,
+          tags,
+          keyTerms,
+          wordCount: data.wordCount || 0,
+          paragraphCount: data.paragraphCount || 0,
+          slug: data.slug
+        }
       };
-    });
-  };
+    } catch (error) {
+      console.error('[Nucleus] Failed to fetch writing data:', error);
+      return null;
+    }
+  },
 
-  const reset = (width: number, height: number) => {
+  reset() {
     revealStart = null;
-    seedCloudWords(width, height);
-    seedTags(width, height);
-  };
+    cloudWords = [];
+    topicTags = [];
+  },
 
-  const render = (ctx: CanvasRenderingContext2D, width: number, height: number, frame: number) => {
+  render(ctx, width, height, frame, data, theme) {
     if (revealStart === null) revealStart = performance.now();
+    const renderData = (data?.renderData || {}) as WritingRenderData;
+    const accent = theme.accent;
+
     if (cloudWords.length === 0) {
-      seedCloudWords(width, height);
-      seedTags(width, height);
+      seedCloudWords(renderData, width, height);
+      seedTags(renderData, width, height);
     }
 
     const elapsed = performance.now() - revealStart;
-    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim();
 
     ctx.clearRect(0, 0, width, height);
 
@@ -126,7 +194,7 @@ export function createWritingSlide(data: { renderData: WritingRenderData }) {
     ctx.globalAlpha = 1;
 
     // 2) Paragraph blocks
-    const visibleParagraphs = Math.min(data.renderData.paragraphCount, 15);
+    const visibleParagraphs = Math.min(renderData.paragraphCount || 0, 15);
     const paragraphAreaX = width * 0.68;
     const paragraphAreaW = width * 0.26;
     const paragraphStartY = height * 0.35;
@@ -136,7 +204,7 @@ export function createWritingSlide(data: { renderData: WritingRenderData }) {
       if (elapsed <= revealOffset) continue;
 
       const fadeMultiplier = clamp((elapsed - revealOffset) / 300, 0, 1);
-      const widthFactor = 0.6 + (hash(`${data.renderData.slug}p${i}`) % 31) / 100;
+      const widthFactor = 0.6 + (hash(`${renderData.slug}p${i}`) % 31) / 100;
       const blockW = paragraphAreaW * widthFactor;
       const blockY = paragraphStartY + (i * 12);
 
@@ -172,7 +240,8 @@ export function createWritingSlide(data: { renderData: WritingRenderData }) {
     ctx.globalAlpha = 1;
 
     // 4) Typewriter title
-    const [line1, line2] = splitTitle(data.renderData.title);
+    const title = renderData.title || '';
+    const [line1, line2] = splitTitle(title);
     const totalChars = line1.length + line2.length;
     const typeProgress = Math.floor(elapsed / 80);
     const doneAt = totalChars * 80;
@@ -221,7 +290,7 @@ export function createWritingSlide(data: { renderData: WritingRenderData }) {
     // 5) Word count counter
     const countProgress = clamp(elapsed / 2000, 0, 1);
     const easedReveal = 1 - Math.pow(1 - countProgress, 3);
-    const displayCount = Math.floor(easedReveal * data.renderData.wordCount);
+    const displayCount = Math.floor(easedReveal * (renderData.wordCount || 0));
     const label = `${displayCount.toLocaleString()} WORDS`;
 
     ctx.font = '10px "IBM Plex Mono", monospace';
@@ -229,7 +298,5 @@ export function createWritingSlide(data: { renderData: WritingRenderData }) {
     ctx.globalAlpha = 0.25;
     ctx.fillText(label, 16, height - 16);
     ctx.globalAlpha = 1;
-  };
-
-  return { reset, render };
-}
+  }
+};
