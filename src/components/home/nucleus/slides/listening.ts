@@ -1,3 +1,11 @@
+import type { SlideData, SlideModule } from '../types';
+import {
+  estimateBpmFromGenre,
+  extractDominantColor,
+  getRecentTrack,
+  getTrackInfo,
+} from '@lib/lastfm';
+
 const TAU = Math.PI * 2;
 const MINI_BAR_COUNT = 10;
 const EQ_BAR_COUNT = 10;
@@ -15,11 +23,6 @@ export type ListeningRenderData = {
   genre: string;
   duration: number;
   isNowPlaying: boolean;
-};
-
-export type SlideData = {
-  accentOverride?: string;
-  renderData: ListeningRenderData;
 };
 
 const clampBpm = (bpm: number): number => {
@@ -202,23 +205,59 @@ const drawBpmCounter = (
   ctx.globalAlpha = 1;
 };
 
-export const render = (
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  frame: number,
-  data: SlideData,
-  theme: { accent: string; border: string }
-): void => {
-  const accent = data.accentOverride ? blendColors(theme.accent, data.accentOverride, 0.3) : theme.accent;
-  const bpm = clampBpm(data.renderData.bpm);
-  const genre = data.renderData.genre || 'unknown';
+export const listeningSlide: SlideModule = {
+  id: 'listening',
 
-  ctx.clearRect(0, 0, width, height);
+  async fetchData(): Promise<SlideData | null> {
+    try {
+      const username = import.meta.env.PUBLIC_LASTFM_USERNAME as string | undefined;
+      if (!username) {
+        console.error('[Nucleus] PUBLIC_LASTFM_USERNAME is missing.');
+        return null;
+      }
+      const recentTrack = await getRecentTrack(username);
+      if (!recentTrack) return null;
+      const trackInfo = await getTrackInfo(recentTrack.artist, recentTrack.name);
+      const dominantColor = recentTrack.albumArtUrl
+        ? await extractDominantColor(recentTrack.albumArtUrl)
+        : null;
+      const genre = trackInfo?.tags?.[0] || 'unknown';
+      const bpm = trackInfo?.bpm || estimateBpmFromGenre(genre);
+      return {
+        label: 'LISTENING',
+        detail: `${recentTrack.name} – ${recentTrack.artist}`,
+        link: '#consumption',
+        updatedAt: recentTrack.scrobbledAt || new Date().toISOString(),
+        accentOverride: dominantColor || undefined,
+        renderData: {
+          title: recentTrack.name,
+          artist: recentTrack.artist,
+          album: recentTrack.album,
+          albumArtUrl: recentTrack.albumArtUrl,
+          bpm,
+          genre,
+          duration: trackInfo?.duration || 0,
+          isNowPlaying: recentTrack.isNowPlaying,
+        },
+      };
+    } catch (error) {
+      console.error('[Nucleus] Failed to fetch listening data:', error);
+      return null;
+    }
+  },
 
-  drawGenreTag(ctx, width, height, frame, genre, accent);
-  drawBottomBars(ctx, width, height, frame, accent);
-  drawWaveform(ctx, width, height, frame, bpm, accent);
-  drawEqBars(ctx, width, height, frame, bpm, accent);
-  drawBpmCounter(ctx, width, frame, bpm, accent);
+  render(ctx, width, height, frame, data, theme) {
+    const accent = data.accentOverride ? blendColors(theme.accent, data.accentOverride, 0.3) : theme.accent;
+    const renderData = (data?.renderData || {}) as ListeningRenderData;
+    const bpm = clampBpm(renderData.bpm);
+    const genre = renderData.genre || 'unknown';
+
+    ctx.clearRect(0, 0, width, height);
+
+    drawGenreTag(ctx, width, height, frame, genre, accent);
+    drawBottomBars(ctx, width, height, frame, accent);
+    drawWaveform(ctx, width, height, frame, bpm, accent);
+    drawEqBars(ctx, width, height, frame, bpm, accent);
+    drawBpmCounter(ctx, width, frame, bpm, accent);
+  }
 };
