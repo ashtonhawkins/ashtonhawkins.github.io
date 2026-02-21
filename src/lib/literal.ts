@@ -53,7 +53,10 @@ function withTimeout(timeoutMs: number): AbortSignal {
 
 async function fetchLiteralGraphQL<T>(query: string, variables?: Record<string, unknown>): Promise<T | null> {
   const token = import.meta.env.LITERAL_API_TOKEN;
-  if (!token) return null;
+  if (!token) {
+    console.error('[Nucleus] Missing LITERAL_API_TOKEN.');
+    return null;
+  }
 
   const response = await fetch(LITERAL_API_URL, {
     method: 'POST',
@@ -66,7 +69,8 @@ async function fetchLiteralGraphQL<T>(query: string, variables?: Record<string, 
   });
 
   if (!response.ok) {
-    throw new Error(`Literal API request failed (${response.status})`);
+    const body = await response.text();
+    throw new Error(`Literal API request failed (${response.status}): ${body}`);
   }
 
   const payload = (await response.json()) as LiteralGraphQLResponse<T>;
@@ -144,11 +148,15 @@ function toReadingSlideData(state: LiteralReadingState, status: ReadingStatus): 
 export async function fetchReadingData(): Promise<ReadingSlideData | null> {
   const token = import.meta.env.LITERAL_API_TOKEN;
   if (!token) {
+    console.error('[Nucleus] Reading data fetch skipped because LITERAL_API_TOKEN is missing.');
     return null;
   }
 
   try {
     const readingStates = await getMyReadingStates();
+    if (!readingStates.length) {
+      console.error('[Nucleus] Literal returned no reading states.');
+    }
     const sortedStates = [...readingStates].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
     const currentlyReading = sortedStates.find((state) => state.status === 'IS_READING' && state.book);

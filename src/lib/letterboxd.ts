@@ -72,6 +72,7 @@ async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Respons
 
 export async function fetchLatestFilm(username?: string): Promise<LetterboxdFilmEntry | null> {
   if (!username) {
+    console.error('[Nucleus] Missing Letterboxd username.');
     return null;
   }
 
@@ -87,6 +88,7 @@ export async function fetchLatestFilm(username?: string): Promise<LetterboxdFilm
     const xml = await response.text();
     const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/i);
     if (!itemMatch) {
+      console.error('[Nucleus] Letterboxd RSS response did not include any <item> entries.');
       return null;
     }
 

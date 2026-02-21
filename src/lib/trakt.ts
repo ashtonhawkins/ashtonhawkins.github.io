@@ -84,6 +84,7 @@ async function fetchTrakt<T>(path: string, clientId: string): Promise<T | null> 
 
 export async function fetchLatestTVShow(username?: string, clientId?: string): Promise<TraktTVEntry | null> {
   if (!username || !clientId) {
+    console.error('[Nucleus] Missing Trakt credentials (TRAKT_USERNAME/TRAKT_CLIENT_ID).');
     return null;
   }
 
@@ -91,6 +92,7 @@ export async function fetchLatestTVShow(username?: string, clientId?: string): P
   const latest = history?.[0];
 
   if (!latest?.show || !latest.episode) {
+    console.error('[Nucleus] Trakt history response had no recent episode entry.');
     return null;
   }
 
