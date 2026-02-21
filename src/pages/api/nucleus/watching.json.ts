@@ -78,6 +78,14 @@ export const GET: APIRoute = async () => {
   const traktUsername = import.meta.env.TRAKT_USERNAME;
   const traktClientId = import.meta.env.TRAKT_CLIENT_ID;
 
+  if (!letterboxdUsername) {
+    console.error('[Nucleus] Missing PUBLIC_LETTERBOXD_USERNAME for watching route.');
+  }
+
+  if (!traktUsername || !traktClientId) {
+    console.error('[Nucleus] Missing TRAKT_USERNAME or TRAKT_CLIENT_ID for watching route.');
+  }
+
   const [filmResult, tvResult] = await Promise.allSettled([
     fetchLatestFilm(letterboxdUsername),
     fetchLatestTVShow(traktUsername, traktClientId)
@@ -85,6 +93,14 @@ export const GET: APIRoute = async () => {
 
   const filmSlide = filmResult.status === 'fulfilled' ? buildFilmSlide(filmResult.value) : null;
   const tvSlide = tvResult.status === 'fulfilled' ? buildTVSlide(tvResult.value) : null;
+
+  if (filmResult.status === 'fulfilled' && !filmSlide) {
+    console.error('[Nucleus] Letterboxd source returned no usable film payload.', filmResult.value);
+  }
+
+  if (tvResult.status === 'fulfilled' && !tvSlide) {
+    console.error('[Nucleus] Trakt source returned no usable TV payload.', tvResult.value);
+  }
 
   if (filmResult.status === 'rejected') {
     console.error('[Nucleus] Film source failed.', filmResult.reason);
@@ -112,6 +128,10 @@ export const GET: APIRoute = async () => {
 
     return filmTime > tvTime ? filmSlide : tvSlide;
   })();
+
+  if (!selected) {
+    console.error('[Nucleus] Watching route returned null after evaluating Letterboxd and Trakt data.');
+  }
 
   return new Response(JSON.stringify(selected), {
     headers: {
