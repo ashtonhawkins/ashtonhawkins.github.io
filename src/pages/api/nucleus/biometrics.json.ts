@@ -10,6 +10,7 @@ export const GET: APIRoute = async () => {
     }
 
     const ln = ouraCache.lastNight;
+    const wk = ouraCache.weeklyTrend;
     const hours = Math.floor(ln.totalSleepMinutes / 60);
     const minutes = ln.totalSleepMinutes % 60;
 
@@ -29,6 +30,15 @@ export const GET: APIRoute = async () => {
         bodyTempDeviation: ln.bodyTempDeviation,
         stressLevel: ln.stressLevel,
         sleepStages: ouraCache.sleepStages,
+        lastNightDate: (ouraCache as any).lastNightDate ?? null,
+        trend: {
+          sleepScores: wk.sleepScores,
+          readinessScores: wk.readinessScores,
+          hrvValues: wk.hrvValues,
+          restingHR: wk.restingHR,
+          bodyTemp: wk.bodyTemp,
+          spo2Values: (wk as any).spo2Values ?? [],
+        },
       }
     };
 

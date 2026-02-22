@@ -23,12 +23,11 @@ function formatDate(date: Date): string {
   return date.toISOString().split('T')[0];
 }
 
-function getDateRange(): { today: string; yesterday: string; weekAgo: string } {
+function getDateRange(): { today: string; twoWeeksAgo: string } {
   const now = new Date();
   const today = formatDate(now);
-  const yesterday = formatDate(new Date(now.getTime() - 86_400_000));
-  const weekAgo = formatDate(new Date(now.getTime() - 7 * 86_400_000));
-  return { today, yesterday, weekAgo };
+  const twoWeeksAgo = formatDate(new Date(now.getTime() - 14 * 86_400_000));
+  return { today, twoWeeksAgo };
 }
 
 // ── Token Refresh ────────────────────────────────────────────────
@@ -209,6 +208,7 @@ function mapStressLevel(summary: string | undefined): string {
 
 interface OuraCache {
   lastFetched: string | null;
+  lastNightDate: string | null;
   lastNight: {
     sleepScore: number;
     readinessScore: number;
@@ -224,6 +224,8 @@ interface OuraCache {
     respiratoryRate: number;
     bodyTempDeviation: number;
     stressLevel: string;
+    bedtimeStart: string | null;
+    bedtimeEnd: string | null;
   };
   weeklyTrend: {
     sleepScores: number[];
@@ -231,6 +233,7 @@ interface OuraCache {
     hrvValues: number[];
     restingHR: number[];
     bodyTemp: number[];
+    spo2Values: number[];
   };
   sleepStages: Array<{ stage: string; startOffset: number; endOffset: number }>;
 }
@@ -256,16 +259,16 @@ export async function main() {
   }
 
   const existing = await loadExistingCache();
-  const { today, yesterday, weekAgo } = getDateRange();
+  const { today, twoWeeksAgo } = getDateRange();
 
   const [dailySleep, dailyReadiness, heartRate, dailySpo2, dailyStress, sleepSessions] =
     await Promise.allSettled([
-      ouraGet<OuraDailySleep>(`/v2/usercollection/daily_sleep?start_date=${weekAgo}&end_date=${today}`, token),
-      ouraGet<OuraDailyReadiness>(`/v2/usercollection/daily_readiness?start_date=${weekAgo}&end_date=${today}`, token),
+      ouraGet<OuraDailySleep>(`/v2/usercollection/daily_sleep?start_date=${twoWeeksAgo}&end_date=${today}`, token),
+      ouraGet<OuraDailyReadiness>(`/v2/usercollection/daily_readiness?start_date=${twoWeeksAgo}&end_date=${today}`, token),
       ouraGet<OuraHeartRate>(`/v2/usercollection/heartrate?start_date=${today}&end_date=${today}`, token),
-      ouraGet<OuraDailySpo2>(`/v2/usercollection/daily_spo2?start_date=${weekAgo}&end_date=${today}`, token),
-      ouraGet<OuraDailyStress>(`/v2/usercollection/daily_stress?start_date=${weekAgo}&end_date=${today}`, token),
-      ouraGet<OuraSleepSession>(`/v2/usercollection/sleep?start_date=${yesterday}&end_date=${today}`, token),
+      ouraGet<OuraDailySpo2>(`/v2/usercollection/daily_spo2?start_date=${twoWeeksAgo}&end_date=${today}`, token),
+      ouraGet<OuraDailyStress>(`/v2/usercollection/daily_stress?start_date=${twoWeeksAgo}&end_date=${today}`, token),
+      ouraGet<OuraSleepSession>(`/v2/usercollection/sleep?start_date=${twoWeeksAgo}&end_date=${today}`, token),
     ]);
 
   const sleepData = dailySleep.status === 'fulfilled' ? dailySleep.value : null;
@@ -280,9 +283,9 @@ export async function main() {
     (a, b) => new Date(b.bedtime_end).getTime() - new Date(a.bedtime_end).getTime()
   )[0];
 
-  // Extract weekly arrays (last 7 entries, padded if needed)
-  const sleepScores = (sleepData?.data || []).slice(-7).map((d) => d.score);
-  const readinessScores = (readinessData?.data || []).slice(-7).map((d) => d.score);
+  // Extract 14-day arrays (last 14 entries, padded if needed)
+  const sleepScores = (sleepData?.data || []).slice(-14).map((d) => d.score);
+  const readinessScores = (readinessData?.data || []).slice(-14).map((d) => d.score);
 
   // Build resting HR from heart rate samples (use lowest from rest period)
   const restingSamples = (hrData?.data || [])
@@ -302,6 +305,7 @@ export async function main() {
 
   const payload: OuraCache = {
     lastFetched: new Date().toISOString(),
+    lastNightDate: latestSession?.day ?? existing?.lastNightDate ?? null,
     lastNight: {
       sleepScore: latestSleepScore ?? existing?.lastNight?.sleepScore ?? 0,
       readinessScore: latestReadiness ?? existing?.lastNight?.readinessScore ?? 0,
@@ -317,6 +321,8 @@ export async function main() {
       respiratoryRate: latestSession?.average_breath ?? existing?.lastNight?.respiratoryRate ?? 0,
       bodyTempDeviation: latestSession?.temperature_deviation ?? existing?.lastNight?.bodyTempDeviation ?? 0,
       stressLevel: mapStressLevel(latestStress?.day_summary) || existing?.lastNight?.stressLevel || 'normal',
+      bedtimeStart: latestSession?.bedtime_start ?? existing?.lastNight?.bedtimeStart ?? null,
+      bedtimeEnd: latestSession?.bedtime_end ?? existing?.lastNight?.bedtimeEnd ?? null,
     },
     weeklyTrend: {
       sleepScores: sleepScores.length >= 7 ? sleepScores : existing?.weeklyTrend?.sleepScores ?? [],
@@ -324,20 +330,27 @@ export async function main() {
       hrvValues: existing?.weeklyTrend?.hrvValues ?? [],
       restingHR: existing?.weeklyTrend?.restingHR ?? [],
       bodyTemp: existing?.weeklyTrend?.bodyTemp ?? [],
+      spo2Values: existing?.weeklyTrend?.spo2Values ?? [],
     },
     sleepStages: latestSession
       ? parseSleepStages(latestSession.sleep_phase_5_min, totalSleepMinutes ?? 0)
       : existing?.sleepStages ?? [],
   };
 
-  // Fill in weekly HRV and resting HR from sessions if available
+  // Fill in HRV, resting HR, body temp, and SpO2 from sessions if available
   if (sessionData?.data && sessionData.data.length >= 7) {
     const sorted = sessionData.data
       .sort((a, b) => new Date(a.bedtime_end).getTime() - new Date(b.bedtime_end).getTime())
-      .slice(-7);
+      .slice(-14);
     payload.weeklyTrend.hrvValues = sorted.map((s) => s.hrv?.mean_sdnn ? Math.round(s.hrv.mean_sdnn) : 0);
     payload.weeklyTrend.restingHR = sorted.map((s) => s.heart_rate?.lowest ?? 0);
     payload.weeklyTrend.bodyTemp = sorted.map((s) => s.temperature_deviation ?? 0);
+  }
+
+  // Fill in SpO2 from daily data if available
+  const spo2Values = (spo2Data?.data || []).slice(-14).map((d) => d.spo2_percentage?.average ?? 0);
+  if (spo2Values.length >= 7) {
+    payload.weeklyTrend.spo2Values = spo2Values;
   }
 
   const counts = [

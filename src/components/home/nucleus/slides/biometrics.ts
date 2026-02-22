@@ -11,12 +11,26 @@ export type BiometricsRenderData = {
   bodyTempDeviation: number;
   stressLevel: string;
   sleepStages: Array<{ stage: string; startOffset: number; endOffset: number }>;
+  lastNightDate?: string | null;
+  trend?: {
+    sleepScores: number[];
+    readinessScores: number[];
+    hrvValues: number[];
+    restingHR: number[];
+    bodyTemp: number[];
+    spo2Values: number[];
+  };
 };
 
-const SCAN_DURATION = 8000;
-const PAUSE_DURATION = 2000;
+// ── Timing ────────────────────────────────────────────────────────
+const SCAN_DURATION = 9000; // ~9s for one full pass
+const PAUSE_DURATION = 1000;
 const FADE_DURATION = 500;
 const CYCLE_DURATION = SCAN_DURATION + PAUSE_DURATION + FADE_DURATION;
+const BREATHING_PERIOD = 4000; // 4s breathing cycle
+const LABEL_STAGGER = 300; // ms between each label appearing
+const SCRAMBLE_DURATION = 200; // ms of random character cycling
+const HEADER_FADE_DELAY = 500; // header fades in 0.5s after slide visible
 
 let revealStart: number | null = null;
 let scanCycle = 0;
@@ -40,6 +54,50 @@ const withAlpha = (color: string, alpha: number): string => {
 };
 
 const MONO_FONT = '"IBM Plex Mono", "Courier New", monospace';
+const SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*<>{}[]';
+
+// ── Trend Calculation ─────────────────────────────────────────────
+
+type TrendDir = 'up' | 'down' | 'neutral';
+
+const computeTrend = (current: number, values: number[]): TrendDir => {
+  if (!values.length) return 'neutral';
+  const avg = values.reduce((s, v) => s + v, 0) / values.length;
+  if (avg === 0) return 'neutral';
+  const pctDiff = ((current - avg) / Math.abs(avg)) * 100;
+  if (pctDiff > 2) return 'up';
+  if (pctDiff < -2) return 'down';
+  return 'neutral';
+};
+
+const getTrendArrow = (dir: TrendDir): string => {
+  if (dir === 'up') return '↑';
+  if (dir === 'down') return '↓';
+  return '→';
+};
+
+// For metrics where higher is better: up=green, down=red
+// For metrics where lower is better (HR): up=red, down=green
+const getTrendColor = (dir: TrendDir, higherIsBetter: boolean): string => {
+  if (dir === 'neutral') return '';  // will use tertiary
+  if (higherIsBetter) {
+    return dir === 'up' ? 'rgba(100, 200, 120, 0.9)' : 'rgba(220, 100, 100, 0.9)';
+  }
+  return dir === 'up' ? 'rgba(220, 100, 100, 0.9)' : 'rgba(100, 200, 120, 0.9)';
+};
+
+// ── Date Formatting ───────────────────────────────────────────────
+
+const formatDateHeader = (dateStr: string | null | undefined): string => {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr + 'T00:00:00');
+    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  } catch {
+    return '';
+  }
+};
 
 // ── Body Silhouette ──────────────────────────────────────────────
 
@@ -49,80 +107,94 @@ const drawBodySilhouette = (
   cy: number,
   bodyH: number,
   accent: string,
-  scannedProgress: number
+  scanProgress: number,
+  breathingPhase: number
 ): void => {
   const scale = bodyH / 200;
+  const breathAlpha = 0.05 * Math.sin(breathingPhase * Math.PI * 2);
 
   ctx.save();
   ctx.translate(cx, cy - bodyH * 0.5);
   ctx.scale(scale, scale);
 
-  // Head
-  ctx.beginPath();
-  ctx.ellipse(0, 12, 10, 13, 0, 0, Math.PI * 2);
+  // Define body segments with their Y ranges (in local coords, 0-200)
+  const segments: Array<{ path: () => void; yMin: number; yMax: number }> = [
+    {
+      // Head
+      path: () => {
+        ctx.beginPath();
+        ctx.ellipse(0, 12, 10, 13, 0, 0, Math.PI * 2);
+      },
+      yMin: 0, yMax: 25,
+    },
+    {
+      // Neck + Shoulders
+      path: () => {
+        ctx.beginPath();
+        ctx.moveTo(-4, 25); ctx.lineTo(-4, 32);
+        ctx.moveTo(4, 25); ctx.lineTo(4, 32);
+        ctx.moveTo(-4, 32); ctx.lineTo(-30, 38);
+        ctx.moveTo(4, 32); ctx.lineTo(30, 38);
+      },
+      yMin: 25, yMax: 40,
+    },
+    {
+      // Arms
+      path: () => {
+        ctx.beginPath();
+        ctx.moveTo(-30, 38); ctx.lineTo(-34, 80); ctx.lineTo(-32, 110);
+        ctx.moveTo(30, 38); ctx.lineTo(34, 80); ctx.lineTo(32, 110);
+      },
+      yMin: 38, yMax: 110,
+    },
+    {
+      // Torso
+      path: () => {
+        ctx.beginPath();
+        ctx.moveTo(-28, 40); ctx.lineTo(-22, 90); ctx.lineTo(-18, 105);
+        ctx.moveTo(28, 40); ctx.lineTo(22, 90); ctx.lineTo(18, 105);
+      },
+      yMin: 40, yMax: 105,
+    },
+    {
+      // Hips
+      path: () => {
+        ctx.beginPath();
+        ctx.moveTo(-18, 105); ctx.lineTo(-22, 112);
+        ctx.moveTo(18, 105); ctx.lineTo(22, 112);
+      },
+      yMin: 105, yMax: 112,
+    },
+    {
+      // Legs
+      path: () => {
+        ctx.beginPath();
+        ctx.moveTo(-22, 112); ctx.lineTo(-20, 150); ctx.lineTo(-18, 185); ctx.lineTo(-22, 195);
+        ctx.moveTo(22, 112); ctx.lineTo(20, 150); ctx.lineTo(18, 185); ctx.lineTo(22, 195);
+        ctx.moveTo(-10, 112); ctx.lineTo(-10, 150); ctx.lineTo(-10, 185);
+        ctx.moveTo(10, 112); ctx.lineTo(10, 150); ctx.lineTo(10, 185);
+      },
+      yMin: 112, yMax: 200,
+    },
+  ];
 
-  // Neck
-  ctx.moveTo(-4, 25);
-  ctx.lineTo(-4, 32);
-  ctx.moveTo(4, 25);
-  ctx.lineTo(4, 32);
+  for (const seg of segments) {
+    seg.path();
 
-  // Shoulders
-  ctx.moveTo(-4, 32);
-  ctx.lineTo(-30, 38);
-  ctx.moveTo(4, 32);
-  ctx.lineTo(30, 38);
+    // Determine if scan line is near this segment
+    const scanY200 = scanProgress * 200;
+    const nearScan = scanY200 >= seg.yMin - 10 && scanY200 <= seg.yMax + 20;
+    const distFromScan = nearScan
+      ? 1 - Math.min(Math.abs(scanY200 - (seg.yMin + seg.yMax) / 2) / 30, 1)
+      : 0;
 
-  // Arms (left)
-  ctx.moveTo(-30, 38);
-  ctx.lineTo(-34, 80);
-  ctx.lineTo(-32, 110);
+    const baseAlpha = 0.12 + breathAlpha;
+    const brightened = baseAlpha + distFromScan * 0.45;
 
-  // Arms (right)
-  ctx.moveTo(30, 38);
-  ctx.lineTo(34, 80);
-  ctx.lineTo(32, 110);
-
-  // Torso sides
-  ctx.moveTo(-28, 40);
-  ctx.lineTo(-22, 90);
-  ctx.lineTo(-18, 105);
-
-  ctx.moveTo(28, 40);
-  ctx.lineTo(22, 90);
-  ctx.lineTo(18, 105);
-
-  // Hips
-  ctx.moveTo(-18, 105);
-  ctx.lineTo(-22, 112);
-  ctx.moveTo(18, 105);
-  ctx.lineTo(22, 112);
-
-  // Legs (left)
-  ctx.moveTo(-22, 112);
-  ctx.lineTo(-20, 150);
-  ctx.lineTo(-18, 185);
-  ctx.lineTo(-22, 195);
-
-  // Legs (right)
-  ctx.moveTo(22, 112);
-  ctx.lineTo(20, 150);
-  ctx.lineTo(18, 185);
-  ctx.lineTo(22, 195);
-
-  // Inner legs
-  ctx.moveTo(-10, 112);
-  ctx.lineTo(-10, 150);
-  ctx.lineTo(-10, 185);
-
-  ctx.moveTo(10, 112);
-  ctx.lineTo(10, 150);
-  ctx.lineTo(10, 185);
-
-  const baseAlpha = 0.15 + scannedProgress * 0.10;
-  ctx.strokeStyle = withAlpha(accent, baseAlpha);
-  ctx.lineWidth = 1;
-  ctx.stroke();
+    ctx.strokeStyle = withAlpha(accent, clamp01(brightened));
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
 
   ctx.restore();
 };
@@ -165,22 +237,28 @@ const drawScanLine = (
   scanY: number,
   accent: string
 ): void => {
-  // Main line
   ctx.save();
-  ctx.strokeStyle = withAlpha(accent, 0.6);
-  ctx.lineWidth = 1;
+
+  // Main line with glow
+  ctx.strokeStyle = withAlpha(accent, 0.8);
+  ctx.lineWidth = 1.5;
+  ctx.shadowColor = accent;
+  ctx.shadowBlur = 8;
   ctx.beginPath();
   ctx.moveTo(0, scanY);
   ctx.lineTo(width, scanY);
   ctx.stroke();
+  ctx.shadowBlur = 0;
 
-  // Glow above and below
-  const gradient = ctx.createLinearGradient(0, scanY - 6, 0, scanY + 6);
+  // Wider glow gradient
+  const gradient = ctx.createLinearGradient(0, scanY - 12, 0, scanY + 12);
   gradient.addColorStop(0, withAlpha(accent, 0));
-  gradient.addColorStop(0.5, withAlpha(accent, 0.2));
+  gradient.addColorStop(0.3, withAlpha(accent, 0.08));
+  gradient.addColorStop(0.5, withAlpha(accent, 0.25));
+  gradient.addColorStop(0.7, withAlpha(accent, 0.08));
   gradient.addColorStop(1, withAlpha(accent, 0));
   ctx.fillStyle = gradient;
-  ctx.fillRect(0, scanY - 6, width, 12);
+  ctx.fillRect(0, scanY - 12, width, 24);
 
   ctx.restore();
 };
@@ -190,32 +268,99 @@ const drawScanLine = (
 interface Callout {
   label: string;
   value: string;
+  unit: string;
   yPct: number;
   side: 'left' | 'right';
+  trendDir: TrendDir;
+  trendColor: string;
+  orderIndex: number; // 0-5, controls boot-up sequence
 }
 
 const buildCallouts = (data: BiometricsRenderData): Callout[] => {
   const hasData = data.sleepScore > 0;
   const dash = '--';
+  const trend = data.trend;
 
-  // Build tiny sleep stage bar representation
-  const sleepLabel = hasData ? `SLEEP ${data.sleepScore}` : `SLEEP ${dash}`;
-  const hrLabel = hasData ? `HR ${data.restingHeartRate} BPM / HRV ${data.hrv}ms` : `HR ${dash} BPM / HRV ${dash}ms`;
-  const spo2Label = hasData ? `SPO2 ${data.spo2}% / RESP ${data.respiratoryRate}` : `SPO2 ${dash}% / RESP ${dash}`;
-  const readinessLabel = hasData ? `READINESS ${data.readinessScore}` : `READINESS ${dash}`;
-  const tempDev = hasData
-    ? `TEMP ${data.bodyTempDeviation >= 0 ? '+' : ''}${data.bodyTempDeviation.toFixed(2)}°`
-    : `TEMP ${dash}°`;
-  const recoveryLabel = hasData ? `RECOVERY: ${data.stressLevel.toUpperCase()}` : `RECOVERY: ${dash}`;
+  const hrDir = trend ? computeTrend(data.restingHeartRate, trend.restingHR) : 'neutral';
+  const hrvDir = trend ? computeTrend(data.hrv, trend.hrvValues) : 'neutral';
+  const spo2Dir = trend ? computeTrend(data.spo2, trend.spo2Values) : 'neutral';
+  const respDir = computeTrend(data.respiratoryRate, []); // no trend data for resp
+  const tempDir = trend ? computeTrend(data.bodyTempDeviation, trend.bodyTemp) : 'neutral';
+  const readyDir = trend ? computeTrend(data.readinessScore, trend.readinessScores) : 'neutral';
 
   return [
-    { label: 'SLEEP', value: sleepLabel, yPct: 0.15, side: 'right' },
-    { label: 'CARDIAC', value: hrLabel, yPct: 0.35, side: 'left' },
-    { label: 'SPO2', value: spo2Label, yPct: 0.40, side: 'right' },
-    { label: 'READINESS', value: readinessLabel, yPct: 0.50, side: 'left' },
-    { label: 'THERMAL', value: tempDev, yPct: 0.55, side: 'left' },
-    { label: 'RECOVERY', value: recoveryLabel, yPct: 0.85, side: 'right' },
+    {
+      label: 'HR',
+      value: hasData ? `${data.restingHeartRate}` : dash,
+      unit: 'BPM',
+      yPct: 0.30,
+      side: 'left',
+      trendDir: hrDir,
+      trendColor: getTrendColor(hrDir, false), // lower HR is better
+      orderIndex: 0,
+    },
+    {
+      label: 'HRV',
+      value: hasData ? `${data.hrv}` : dash,
+      unit: 'MS',
+      yPct: 0.38,
+      side: 'left',
+      trendDir: hrvDir,
+      trendColor: getTrendColor(hrvDir, true),
+      orderIndex: 1,
+    },
+    {
+      label: 'SPO2',
+      value: hasData ? `${data.spo2}` : dash,
+      unit: '%',
+      yPct: 0.35,
+      side: 'right',
+      trendDir: spo2Dir,
+      trendColor: getTrendColor(spo2Dir, true),
+      orderIndex: 2,
+    },
+    {
+      label: 'RESP',
+      value: hasData ? `${data.respiratoryRate}` : dash,
+      unit: '/MIN',
+      yPct: 0.43,
+      side: 'right',
+      trendDir: respDir,
+      trendColor: getTrendColor(respDir, false),
+      orderIndex: 3,
+    },
+    {
+      label: 'TEMP',
+      value: hasData
+        ? `${data.bodyTempDeviation >= 0 ? '+' : ''}${data.bodyTempDeviation.toFixed(2)}°`
+        : `${dash}°`,
+      unit: 'DEV',
+      yPct: 0.55,
+      side: 'left',
+      trendDir: tempDir,
+      trendColor: getTrendColor(tempDir, false),
+      orderIndex: 4,
+    },
+    {
+      label: 'READINESS',
+      value: hasData ? `${data.readinessScore}` : dash,
+      unit: 'SCORE',
+      yPct: 0.65,
+      side: 'right',
+      trendDir: readyDir,
+      trendColor: getTrendColor(readyDir, true),
+      orderIndex: 5,
+    },
   ];
+};
+
+// Generate a scrambled string for boot-up effect
+const getScrambledText = (length: number, seed: number): string => {
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += SCRAMBLE_CHARS[Math.floor(((seed * (i + 1) * 7 + i * 13) % 1000) / 1000 * SCRAMBLE_CHARS.length) % SCRAMBLE_CHARS.length];
+  }
+  return result;
 };
 
 const drawCallout = (
@@ -226,20 +371,45 @@ const drawCallout = (
   bodyLeft: number,
   bodyRight: number,
   accent: string,
-  opacity: number
+  elapsed: number,
+  reducedMotion: boolean
 ): void => {
-  if (opacity <= 0) return;
+  // Boot-up timing: each callout appears after LABEL_STAGGER * orderIndex ms
+  const bootDelay = callout.orderIndex * LABEL_STAGGER;
+  const calloutElapsed = elapsed - bootDelay;
+
+  if (calloutElapsed < 0 && !reducedMotion) return;
 
   const y = height * callout.yPct;
   const isRight = callout.side === 'right';
   const anchorX = isRight ? bodyRight + 4 : bodyLeft - 4;
   const textX = isRight ? width - 12 : 12;
-  const lineEndX = isRight ? textX - 4 : textX + ctx.measureText(callout.value).width + 4;
+
+  // Determine display text (scrambled vs resolved)
+  let displayLabel = callout.label;
+  let displayValue = `${callout.value} ${callout.unit}`;
+  let showTrend = true;
+  let opacity = 1;
+
+  if (!reducedMotion && calloutElapsed < SCRAMBLE_DURATION) {
+    // Scramble phase
+    const progress = calloutElapsed / SCRAMBLE_DURATION;
+    const seed = Math.floor(calloutElapsed * 7);
+    const totalText = `${callout.label} ${callout.value} ${callout.unit}`;
+    const resolvedCount = Math.floor(progress * totalText.length);
+    const scrambled = getScrambledText(totalText.length, seed);
+    const mixed = totalText.slice(0, resolvedCount) + scrambled.slice(resolvedCount);
+    displayLabel = mixed.slice(0, callout.label.length);
+    displayValue = mixed.slice(callout.label.length + 1);
+    showTrend = false;
+    opacity = 0.6 + progress * 0.4;
+  }
 
   ctx.save();
   ctx.globalAlpha = opacity;
 
   // Connecting line
+  const lineEndX = isRight ? textX - 4 : textX + ctx.measureText(`${displayLabel}  ${displayValue}`).width + 4;
   ctx.strokeStyle = withAlpha(accent, 0.3);
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -258,12 +428,96 @@ const drawCallout = (
   ctx.closePath();
   ctx.stroke();
 
-  // Text
-  ctx.font = `9px ${MONO_FONT}`;
+  // Label text
+  ctx.font = `bold 9px ${MONO_FONT}`;
   ctx.textBaseline = 'middle';
   ctx.textAlign = isRight ? 'right' : 'left';
-  ctx.fillStyle = withAlpha(accent, 0.8);
-  ctx.fillText(callout.value, textX, y);
+  ctx.fillStyle = withAlpha(accent, 0.5);
+
+  let curX = textX;
+  const labelWidth = ctx.measureText(displayLabel + '  ').width;
+
+  if (isRight) {
+    // Draw from right: trend arrow + value + label
+    let totalStr = `${displayLabel}  ${displayValue}`;
+    if (showTrend && callout.trendDir !== 'neutral') {
+      totalStr += ` ${getTrendArrow(callout.trendDir)}`;
+    }
+    ctx.fillStyle = withAlpha(accent, 0.5);
+    ctx.fillText(displayLabel, textX, y);
+
+    ctx.font = `9px ${MONO_FONT}`;
+    ctx.fillStyle = withAlpha(accent, 0.9);
+    const valX = textX - labelWidth;
+    ctx.fillText(displayValue, valX, y);
+
+    // Trend arrow
+    if (showTrend && callout.trendDir !== 'neutral') {
+      ctx.font = `7px ${MONO_FONT}`;
+      const arrowX = valX - ctx.measureText(displayValue).width - 6;
+      ctx.fillStyle = callout.trendColor || withAlpha(accent, 0.5);
+      ctx.fillText(getTrendArrow(callout.trendDir), arrowX, y);
+    }
+  } else {
+    // Draw from left: label + value + trend arrow
+    ctx.fillStyle = withAlpha(accent, 0.5);
+    ctx.fillText(displayLabel, curX, y);
+
+    ctx.font = `9px ${MONO_FONT}`;
+    ctx.fillStyle = withAlpha(accent, 0.9);
+    curX += labelWidth;
+    ctx.fillText(displayValue, curX, y);
+
+    // Trend arrow
+    if (showTrend && callout.trendDir !== 'neutral') {
+      ctx.font = `7px ${MONO_FONT}`;
+      curX += ctx.measureText(displayValue).width + 4;
+      ctx.fillStyle = callout.trendColor || withAlpha(accent, 0.5);
+      ctx.textAlign = 'left';
+      ctx.fillText(getTrendArrow(callout.trendDir), curX, y);
+    }
+  }
+
+  ctx.restore();
+};
+
+// ── Timestamp Header ─────────────────────────────────────────────
+
+const drawTimestampHeader = (
+  ctx: CanvasRenderingContext2D,
+  _width: number,
+  accent: string,
+  dateStr: string | null | undefined,
+  elapsed: number,
+  reducedMotion: boolean
+): void => {
+  // Fade in after HEADER_FADE_DELAY
+  let headerAlpha: number;
+  if (reducedMotion) {
+    headerAlpha = 1;
+  } else {
+    const fadeElapsed = elapsed - HEADER_FADE_DELAY;
+    headerAlpha = fadeElapsed < 0 ? 0 : clamp01(fadeElapsed / 500);
+  }
+
+  if (headerAlpha <= 0) return;
+
+  ctx.save();
+  ctx.globalAlpha = headerAlpha;
+
+  // "LAST NIGHT" label
+  ctx.font = `9px ${MONO_FONT}`;
+  ctx.textBaseline = 'top';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = withAlpha(accent, 0.4);
+  ctx.fillText('LAST NIGHT', 12, 10);
+
+  // Date below
+  const formatted = formatDateHeader(dateStr);
+  if (formatted) {
+    ctx.fillStyle = withAlpha(accent, 0.6);
+    ctx.fillText(formatted, 12, 22);
+  }
 
   ctx.restore();
 };
@@ -341,27 +595,20 @@ const renderBiometrics = (
 
   // Calculate scan position
   let scanProgress: number;
-  let calloutOpacity: number;
+  const breathingPhase = (elapsed % BREATHING_PERIOD) / BREATHING_PERIOD;
 
   if (reducedMotion) {
     scanProgress = 0.5;
-    calloutOpacity = 1;
     scanCycle = 1;
   } else {
     const cycleElapsed = elapsed % CYCLE_DURATION;
 
     if (cycleElapsed < SCAN_DURATION) {
-      // Sweeping
       scanProgress = cycleElapsed / SCAN_DURATION;
-      calloutOpacity = 1;
     } else if (cycleElapsed < SCAN_DURATION + PAUSE_DURATION) {
-      // Paused at bottom
       scanProgress = 1;
-      calloutOpacity = 1;
     } else {
-      // Fading out, about to reset
       scanProgress = 1;
-      calloutOpacity = 1 - (cycleElapsed - SCAN_DURATION - PAUSE_DURATION) / FADE_DURATION;
     }
 
     scanCycle = Math.floor(elapsed / CYCLE_DURATION) + 1;
@@ -369,29 +616,21 @@ const renderBiometrics = (
 
   const scanY = height * 0.04 + scanProgress * height * 0.92;
 
-  // Draw body with scanned brightening
-  drawBodySilhouette(ctx, cx, cy, bodyH, accent, scanProgress);
+  // Draw body with scanned brightening + breathing
+  drawBodySilhouette(ctx, cx, cy, bodyH, accent, scanProgress, breathingPhase);
 
   // Scan line
   if (!reducedMotion || scanProgress === 0.5) {
     drawScanLine(ctx, width, scanY, accent);
   }
 
-  // Data callouts - appear when scan reaches their Y position
+  // Timestamp header (top-left) — fades in after delay
+  drawTimestampHeader(ctx, width, accent, data.lastNightDate, elapsed, reducedMotion);
+
+  // Data callouts with sequential boot-up animation
   const callouts = buildCallouts(data);
   for (const callout of callouts) {
-    const calloutY = callout.yPct;
-    let co: number;
-    if (reducedMotion) {
-      co = 1;
-    } else if (scanProgress >= calloutY) {
-      // Fade in quickly once scan passes
-      const fadeIn = clamp01((scanProgress - calloutY) * SCAN_DURATION / 200);
-      co = fadeIn * calloutOpacity;
-    } else {
-      co = 0;
-    }
-    drawCallout(ctx, callout, width, height, bodyLeft, bodyRight, accent, co);
+    drawCallout(ctx, callout, width, height, bodyLeft, bodyRight, accent, elapsed, reducedMotion);
   }
 
   // Ambient labels

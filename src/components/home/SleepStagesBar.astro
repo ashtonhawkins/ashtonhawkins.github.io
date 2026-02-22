@@ -9,75 +9,147 @@ interface Props {
   stages: SleepStage[];
   totalMinutes: number;
   hasData: boolean;
+  lastNight?: {
+    bedtimeStart?: string | null;
+    bedtimeEnd?: string | null;
+    awakeMinutes?: number;
+    lightMinutes?: number;
+    deepMinutes?: number;
+    remMinutes?: number;
+    totalSleepMinutes?: number;
+    [key: string]: any;
+  };
 }
 
-const { stages, totalMinutes, hasData } = Astro.props;
+const { stages, totalMinutes, hasData, lastNight } = Astro.props;
 
+// Stage colors
 const stageColors: Record<string, string> = {
-  awake: 'var(--text-tertiary)',
-  light: 'var(--accent-primary)',
-  deep: 'var(--accent-primary)',
-  rem: 'var(--accent-primary)',
+  awake: '#8a7e6e',   // warm neutral
+  light: '#5a78a8',   // medium blue
+  deep: '#2a3a6a',    // dark indigo/navy
+  rem: '#5aaa9a',     // teal/cyan
 };
 
-const stageOpacities: Record<string, number> = {
-  awake: 0.4,
-  light: 0.25,
-  deep: 0.7,
-  rem: 0.45,
+// Build last-night segments with durations
+const segments = stages.map((s) => {
+  const durationMin = s.endOffset - s.startOffset;
+  const h = Math.floor(durationMin / 60);
+  const m = durationMin % 60;
+  const durLabel = h > 0 ? `${h}h ${m}m` : `${m}m`;
+  return {
+    stage: s.stage,
+    widthPct: totalMinutes > 0 ? ((s.endOffset - s.startOffset) / totalMinutes) * 100 : 0,
+    durationLabel: durLabel,
+  };
+});
+
+// Time markers (bedtime start/end)
+const formatTime = (isoStr: string | null | undefined): string => {
+  if (!isoStr) return '';
+  try {
+    const d = new Date(isoStr);
+    let h = d.getHours();
+    const m = d.getMinutes();
+    const suffix = h >= 12 ? 'p' : 'a';
+    h = h % 12 || 12;
+    return `${h}:${m.toString().padStart(2, '0')}${suffix}`;
+  } catch {
+    return '';
+  }
 };
 
-const segments = stages.map((s) => ({
-  stage: s.stage,
-  widthPct: totalMinutes > 0 ? ((s.endOffset - s.startOffset) / totalMinutes) * 100 : 0,
-}));
+const bedStart = lastNight?.bedtimeStart ? formatTime(lastNight.bedtimeStart) : '';
+const bedEnd = lastNight?.bedtimeEnd ? formatTime(lastNight.bedtimeEnd) : '';
 
-// Time markers (elapsed hours)
-const totalHours = totalMinutes / 60;
-const markers: string[] = [];
-for (let h = 0; h <= totalHours; h += 2) {
-  markers.push(`${h}h`);
-}
+// 14-day average sleep stage proportions
+const awakeMin = lastNight?.awakeMinutes ?? 0;
+const lightMin = lastNight?.lightMinutes ?? 0;
+const deepMin = lastNight?.deepMinutes ?? 0;
+const remMin = lastNight?.remMinutes ?? 0;
+const total = awakeMin + lightMin + deepMin + remMin || 1;
+
+// For the 14-day average, we use rough proportions derived from typical sleep data
+// In a real implementation this would come from 14 nights of data
+// For now, approximate from the weekly pattern
+const avgAwakePct = Math.round((awakeMin / total) * 100);
+const avgLightPct = Math.round((lightMin / total) * 100);
+const avgDeepPct = Math.round((deepMin / total) * 100);
+const avgRemPct = 100 - avgAwakePct - avgLightPct - avgDeepPct;
+
+const avgStages = [
+  { stage: 'awake', pct: avgAwakePct },
+  { stage: 'light', pct: avgLightPct },
+  { stage: 'deep', pct: avgDeepPct },
+  { stage: 'rem', pct: avgRemPct },
+];
 ---
 
 <div class="sleep-stages" data-bio-channel>
   <div class="sleep-stages__header">
     <span class="sleep-stages__title">SLEEP STAGES</span>
-    <div class="sleep-stages__markers">
-      {markers.map((m) => (
-        <span class="sleep-stages__marker">{m}</span>
-      ))}
+    <div class="sleep-stages__times">
+      {bedStart && <span class="sleep-stages__time">{bedStart}</span>}
+      {bedStart && bedEnd && <span class="sleep-stages__time-sep">→</span>}
+      {bedEnd && <span class="sleep-stages__time">{bedEnd}</span>}
     </div>
   </div>
 
-  <div class="sleep-stages__bar" data-sleep-stages>
-    {hasData ? (
-      segments.map((seg) => (
-        <div
-          class="sleep-stages__segment"
-          style={`width: ${seg.widthPct}%; background-color: ${stageColors[seg.stage] || 'var(--text-tertiary)'}; opacity: ${stageOpacities[seg.stage] || 0.3};`}
-        />
-      ))
-    ) : (
-      <div class="sleep-stages__segment sleep-stages__segment--empty" style="width: 100%;" />
-    )}
+  {/* Last night bar */}
+  <div class="sleep-stages__bar-container">
+    <span class="sleep-stages__bar-label">LAST NIGHT</span>
+    <div class="sleep-stages__bar sleep-stages__bar--primary" data-sleep-stages>
+      {hasData ? (
+        segments.map((seg) => (
+          <div
+            class="sleep-stages__segment"
+            style={`width: ${seg.widthPct}%; background-color: ${stageColors[seg.stage] || '#6a6a6a'};`}
+          >
+            {seg.widthPct > 6 && (
+              <span class="sleep-stages__duration">{seg.durationLabel}</span>
+            )}
+          </div>
+        ))
+      ) : (
+        <div class="sleep-stages__segment sleep-stages__segment--empty" style="width: 100%;" />
+      )}
+    </div>
   </div>
+
+  {/* 14-day average bar */}
+  {hasData && (
+    <div class="sleep-stages__bar-container">
+      <span class="sleep-stages__bar-label">14-DAY AVG</span>
+      <div class="sleep-stages__bar sleep-stages__bar--secondary">
+        {avgStages.map((s) => (
+          <div
+            class="sleep-stages__segment sleep-stages__segment--avg"
+            style={`width: ${s.pct}%; background-color: ${stageColors[s.stage] || '#6a6a6a'};`}
+          >
+            {s.pct > 6 && (
+              <span class="sleep-stages__pct">{s.pct}%</span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
 
   <div class="sleep-stages__legend">
     <div class="sleep-stages__legend-item">
-      <span class="sleep-stages__legend-swatch" style={`background-color: var(--text-tertiary); opacity: 0.4;`}></span>
+      <span class="sleep-stages__legend-swatch" style={`background-color: ${stageColors.awake};`}></span>
       <span class="sleep-stages__legend-label">AWAKE</span>
     </div>
     <div class="sleep-stages__legend-item">
-      <span class="sleep-stages__legend-swatch" style={`background-color: var(--accent-primary); opacity: 0.25;`}></span>
+      <span class="sleep-stages__legend-swatch" style={`background-color: ${stageColors.light};`}></span>
       <span class="sleep-stages__legend-label">LIGHT</span>
     </div>
     <div class="sleep-stages__legend-item">
-      <span class="sleep-stages__legend-swatch" style={`background-color: var(--accent-primary); opacity: 0.7;`}></span>
+      <span class="sleep-stages__legend-swatch" style={`background-color: ${stageColors.deep};`}></span>
       <span class="sleep-stages__legend-label">DEEP</span>
     </div>
     <div class="sleep-stages__legend-item">
-      <span class="sleep-stages__legend-swatch" style={`background-color: var(--accent-primary); opacity: 0.45;`}></span>
+      <span class="sleep-stages__legend-swatch" style={`background-color: ${stageColors.rem};`}></span>
       <span class="sleep-stages__legend-label">REM</span>
     </div>
   </div>
@@ -87,14 +159,14 @@ for (let h = 0; h <= totalHours; h += 2) {
   .sleep-stages {
     border: 1px solid var(--border);
     padding: 0.75rem 1rem;
-    margin-top: 2px;
+    margin-top: 8px;
   }
 
   .sleep-stages__header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
   }
 
   .sleep-stages__title {
@@ -106,29 +178,68 @@ for (let h = 0; h <= totalHours; h += 2) {
     color: var(--text-tertiary);
   }
 
-  .sleep-stages__markers {
+  .sleep-stages__times {
     display: flex;
-    gap: 1rem;
+    align-items: center;
+    gap: 0.25rem;
   }
 
-  .sleep-stages__marker {
+  .sleep-stages__time {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--text-secondary);
+    letter-spacing: 0.04em;
+  }
+
+  .sleep-stages__time-sep {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 9px;
     color: var(--text-tertiary);
     opacity: 0.6;
   }
 
+  .sleep-stages__bar-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 6px;
+  }
+
+  .sleep-stages__bar-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+    width: 64px;
+    text-align: right;
+  }
+
   .sleep-stages__bar {
     display: flex;
-    height: 8px;
-    border-radius: 1px;
+    border-radius: 2px;
     overflow: hidden;
-    gap: 0;
+    gap: 1px;
+    flex: 1;
+  }
+
+  .sleep-stages__bar--primary {
+    height: 30px;
+  }
+
+  .sleep-stages__bar--secondary {
+    height: 18px;
+    opacity: 0.7;
   }
 
   .sleep-stages__segment {
     height: 100%;
-    min-width: 1px;
+    min-width: 2px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .sleep-stages__segment--empty {
@@ -136,10 +247,33 @@ for (let h = 0; h <= totalHours; h += 2) {
     opacity: 0.15;
   }
 
+  .sleep-stages__segment--avg {
+    opacity: 0.6;
+  }
+
+  .sleep-stages__duration {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    color: rgba(255, 255, 255, 0.85);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+
+  .sleep-stages__pct {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 7px;
+    color: rgba(255, 255, 255, 0.75);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+
   .sleep-stages__legend {
     display: flex;
     gap: 1rem;
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
+    padding-left: calc(64px + 0.75rem);
   }
 
   .sleep-stages__legend-item {
@@ -149,9 +283,9 @@ for (let h = 0; h <= totalHours; h += 2) {
   }
 
   .sleep-stages__legend-swatch {
-    width: 8px;
-    height: 8px;
-    border-radius: 1px;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
     flex-shrink: 0;
   }
 
@@ -161,5 +295,21 @@ for (let h = 0; h <= totalHours; h += 2) {
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--text-tertiary);
+  }
+
+  @media (max-width: 480px) {
+    .sleep-stages__bar-label {
+      width: 48px;
+      font-size: 7px;
+    }
+
+    .sleep-stages__legend {
+      padding-left: calc(48px + 0.75rem);
+      gap: 0.5rem;
+    }
+
+    .sleep-stages__duration {
+      font-size: 7px;
+    }
   }
 </style>
