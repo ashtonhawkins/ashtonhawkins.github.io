@@ -4,7 +4,7 @@ import StatusChip from '@components/ui/StatusChip.astro';
 import feeds from '@data/feeds-cache.json';
 
 const watching = (feeds as any)?.items?.letterboxd?.[0] ?? null;
-const reading = (feeds as any)?.items?.literal?.[0] ?? null;
+const reading = (feeds as any)?.items?.goodreads?.[0] ?? null;
 const listening = (feeds as any)?.items?.lastfm?.[0] ?? (feeds as any)?.items?.spotify?.[0] ?? null;
 ---
 <section id="consumption" class="media-feeds">
@@ -19,7 +19,7 @@ const listening = (feeds as any)?.items?.lastfm?.[0] ?? (feeds as any)?.items?.s
     <article class="consumption-card">
       <StatusChip label={reading?.status === 'reading' ? 'CURRENTLY READING' : 'RECENTLY FINISHED'} />
       <h3 class="consumption-card__title">{reading?.title ?? 'No recent book cached'}</h3>
-      <p class="consumption-card__subtitle">{reading?.author ?? 'Awaiting Literal feed sync'}</p>
+      <p class="consumption-card__subtitle">{reading?.author ?? 'Awaiting Goodreads feed sync'}</p>
     </article>
     <article class="consumption-card">
       <StatusChip label="LAST PLAYED" />

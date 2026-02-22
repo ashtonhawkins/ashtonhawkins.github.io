@@ -70,68 +70,77 @@ async function fetchLetterboxd(): Promise<LetterboxdCacheEntry[]> {
   }
 }
 
-// ── Literal (GraphQL) ─────────────────────────────────────────────
+// ── Goodreads (RSS) ──────────────────────────────────────────────
 
-interface LiteralCacheEntry {
+interface GoodreadsCacheEntry {
   title: string;
   author: string;
   status: 'reading' | 'finished';
 }
 
-async function fetchLiteral(): Promise<LiteralCacheEntry[]> {
-  const token = process.env.LITERAL_API_TOKEN;
-  if (!token) {
-    console.log('[feeds] Skipping Literal: LITERAL_API_TOKEN not set');
+function cdataContent(raw: string | null): string {
+  if (!raw) return '';
+  return raw.replace(/^\s*<!\[CDATA\[/, '').replace(/\]\]>\s*$/, '').trim();
+}
+
+function decodeXmlEntities(value: string): string {
+  return value
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
+
+async function fetchGoodreadsShelf(userId: string, shelf: string): Promise<GoodreadsCacheEntry | null> {
+  const rssUrl = `https://www.goodreads.com/review/list_rss/${userId}?shelf=${shelf}`;
+  const response = await fetch(rssUrl, {
+    headers: { Accept: 'application/rss+xml, application/xml, text/xml' },
+    signal: withTimeout(TIMEOUT_MS),
+  });
+
+  if (!response.ok) {
+    console.error(`[feeds] Goodreads RSS (${shelf}) returned ${response.status}`);
+    return null;
+  }
+
+  const xml = await response.text();
+  const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/i);
+  if (!itemMatch) return null;
+
+  const itemXml = itemMatch[1];
+  const rawTitle = textBetween(itemXml, 'title');
+  const title = rawTitle ? decodeXmlEntities(cdataContent(rawTitle)) : null;
+  if (!title) return null;
+
+  const rawAuthor = textBetween(itemXml, 'author_name');
+  const author = rawAuthor ? decodeXmlEntities(cdataContent(rawAuthor)) : 'Unknown Author';
+
+  return {
+    title,
+    author,
+    status: shelf === 'currently-reading' ? 'reading' : 'finished',
+  };
+}
+
+async function fetchGoodreads(): Promise<GoodreadsCacheEntry[]> {
+  const userId = process.env.PUBLIC_GOODREADS_USER_ID;
+  if (!userId) {
+    console.log('[feeds] Skipping Goodreads: PUBLIC_GOODREADS_USER_ID not set');
     return [];
   }
 
-  const query = `query myReadingStates {
-    myReadingStates {
-      status
-      book { title authors { name } }
-      updatedAt
-    }
-  }`;
-
   try {
-    const response = await fetch('https://literal.club/graphql', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ query }),
-      signal: withTimeout(TIMEOUT_MS),
-    });
+    const current = await fetchGoodreadsShelf(userId, 'currently-reading');
+    if (current) return [current];
 
-    if (!response.ok) {
-      console.error(`[feeds] Literal API returned ${response.status}`);
-      return [];
-    }
+    const read = await fetchGoodreadsShelf(userId, 'read');
+    if (read) return [read];
 
-    const json = (await response.json()) as any;
-    if (json.errors?.length) {
-      console.error('[feeds] Literal GraphQL errors:', json.errors);
-      return [];
-    }
-
-    const states = json.data?.myReadingStates ?? [];
-    const sorted = [...states].sort(
-      (a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    );
-
-    const current = sorted.find((s: any) => s.status === 'IS_READING' && s.book);
-    const finished = sorted.find((s: any) => s.status === 'FINISHED' && s.book);
-    const pick = current ?? finished;
-    if (!pick?.book) return [];
-
-    return [{
-      title: pick.book.title,
-      author: pick.book.authors?.[0]?.name ?? 'Unknown Author',
-      status: pick.status === 'IS_READING' ? 'reading' : 'finished',
-    }];
+    console.log('[feeds] Goodreads: no books found on currently-reading or read shelves');
+    return [];
   } catch (error) {
-    console.error('[feeds] Literal fetch failed:', error instanceof Error ? error.message : error);
+    console.error('[feeds] Goodreads fetch failed:', error instanceof Error ? error.message : error);
     return [];
   }
 }
@@ -192,9 +201,9 @@ export async function main() {
 
   console.log('[feeds] Fetching external feeds...');
 
-  const [letterboxd, literal, lastfm] = await Promise.allSettled([
+  const [letterboxd, goodreads, lastfm] = await Promise.allSettled([
     fetchLetterboxd(),
-    fetchLiteral(),
+    fetchGoodreads(),
     fetchLastfm(),
   ]);
 
@@ -204,7 +213,7 @@ export async function main() {
     updatedAt: new Date().toISOString(),
     items: {
       letterboxd: letterboxd.status === 'fulfilled' ? letterboxd.value : [],
-      literal: literal.status === 'fulfilled' ? literal.value : [],
+      goodreads: goodreads.status === 'fulfilled' ? goodreads.value : [],
       lastfm: lastfmItems,
       spotify: lastfmItems,
       x: []
@@ -213,7 +222,7 @@ export async function main() {
 
   const counts = [
     `letterboxd: ${payload.items.letterboxd.length}`,
-    `literal: ${payload.items.literal.length}`,
+    `goodreads: ${payload.items.goodreads.length}`,
     `lastfm/spotify: ${payload.items.spotify.length}`,
   ].join(', ');
   console.log(`[feeds] Done (${counts})`);
