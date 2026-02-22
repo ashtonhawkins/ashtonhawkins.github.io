@@ -5,6 +5,7 @@ import { readingSlide } from './reading';
 import { travelSlide } from './travel';
 import { cyclingSlide } from './cycling';
 import { writingSlide } from './writing';
+import { biometricsSlide } from './biometrics';
 
 export const slideModules: SlideModule[] = [
   listeningSlide,
@@ -12,5 +13,6 @@ export const slideModules: SlideModule[] = [
   readingSlide,
   travelSlide,
   cyclingSlide,
-  writingSlide
+  writingSlide,
+  biometricsSlide
 ];

@@ -1,0 +1,165 @@
+---
+interface SleepStage {
+  stage: string;
+  startOffset: number;
+  endOffset: number;
+}
+
+interface Props {
+  stages: SleepStage[];
+  totalMinutes: number;
+  hasData: boolean;
+}
+
+const { stages, totalMinutes, hasData } = Astro.props;
+
+const stageColors: Record<string, string> = {
+  awake: 'var(--text-tertiary)',
+  light: 'var(--accent-primary)',
+  deep: 'var(--accent-primary)',
+  rem: 'var(--accent-primary)',
+};
+
+const stageOpacities: Record<string, number> = {
+  awake: 0.4,
+  light: 0.25,
+  deep: 0.7,
+  rem: 0.45,
+};
+
+const segments = stages.map((s) => ({
+  stage: s.stage,
+  widthPct: totalMinutes > 0 ? ((s.endOffset - s.startOffset) / totalMinutes) * 100 : 0,
+}));
+
+// Time markers (elapsed hours)
+const totalHours = totalMinutes / 60;
+const markers: string[] = [];
+for (let h = 0; h <= totalHours; h += 2) {
+  markers.push(`${h}h`);
+}
+---
+
+<div class="sleep-stages" data-bio-channel>
+  <div class="sleep-stages__header">
+    <span class="sleep-stages__title">SLEEP STAGES</span>
+    <div class="sleep-stages__markers">
+      {markers.map((m) => (
+        <span class="sleep-stages__marker">{m}</span>
+      ))}
+    </div>
+  </div>
+
+  <div class="sleep-stages__bar" data-sleep-stages>
+    {hasData ? (
+      segments.map((seg) => (
+        <div
+          class="sleep-stages__segment"
+          style={`width: ${seg.widthPct}%; background-color: ${stageColors[seg.stage] || 'var(--text-tertiary)'}; opacity: ${stageOpacities[seg.stage] || 0.3};`}
+        />
+      ))
+    ) : (
+      <div class="sleep-stages__segment sleep-stages__segment--empty" style="width: 100%;" />
+    )}
+  </div>
+
+  <div class="sleep-stages__legend">
+    <div class="sleep-stages__legend-item">
+      <span class="sleep-stages__legend-swatch" style={`background-color: var(--text-tertiary); opacity: 0.4;`}></span>
+      <span class="sleep-stages__legend-label">AWAKE</span>
+    </div>
+    <div class="sleep-stages__legend-item">
+      <span class="sleep-stages__legend-swatch" style={`background-color: var(--accent-primary); opacity: 0.25;`}></span>
+      <span class="sleep-stages__legend-label">LIGHT</span>
+    </div>
+    <div class="sleep-stages__legend-item">
+      <span class="sleep-stages__legend-swatch" style={`background-color: var(--accent-primary); opacity: 0.7;`}></span>
+      <span class="sleep-stages__legend-label">DEEP</span>
+    </div>
+    <div class="sleep-stages__legend-item">
+      <span class="sleep-stages__legend-swatch" style={`background-color: var(--accent-primary); opacity: 0.45;`}></span>
+      <span class="sleep-stages__legend-label">REM</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .sleep-stages {
+    border: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    margin-top: 2px;
+  }
+
+  .sleep-stages__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .sleep-stages__title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-tertiary);
+  }
+
+  .sleep-stages__markers {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .sleep-stages__marker {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--text-tertiary);
+    opacity: 0.6;
+  }
+
+  .sleep-stages__bar {
+    display: flex;
+    height: 8px;
+    border-radius: 1px;
+    overflow: hidden;
+    gap: 0;
+  }
+
+  .sleep-stages__segment {
+    height: 100%;
+    min-width: 1px;
+  }
+
+  .sleep-stages__segment--empty {
+    background-color: var(--text-tertiary);
+    opacity: 0.15;
+  }
+
+  .sleep-stages__legend {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .sleep-stages__legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .sleep-stages__legend-swatch {
+    width: 8px;
+    height: 8px;
+    border-radius: 1px;
+    flex-shrink: 0;
+  }
+
+  .sleep-stages__legend-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-tertiary);
+  }
+</style>
