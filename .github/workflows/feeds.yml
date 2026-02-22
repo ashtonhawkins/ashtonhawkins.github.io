@@ -28,6 +28,7 @@ jobs:
       - name: Fetch external feeds
         run: npm run feeds:fetch
       - name: Fetch Oura Ring data
+        continue-on-error: true
         run: npm run oura:fetch
         env:
           OURA_ACCESS_TOKEN: ${{ secrets.OURA_ACCESS_TOKEN }}
