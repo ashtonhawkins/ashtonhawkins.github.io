@@ -65,7 +65,7 @@ async function refreshAccessToken(): Promise<string> {
       client_id: clientId,
       client_secret: clientSecret,
       refresh_token: refreshToken,
-    }),
+    }).toString(),
     signal: withTimeout(TIMEOUT_MS),
   });
 
@@ -368,10 +368,9 @@ export async function main() {
     token = await getAccessToken();
   } catch (error) {
     console.error(
-      '[oura] Auth failed:',
+      '[oura] Auth failed (continuing with cached data):',
       error instanceof Error ? error.message : error
     );
-    process.exitCode = 1;
     return;
   }
 

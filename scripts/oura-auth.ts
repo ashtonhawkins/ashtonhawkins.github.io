@@ -102,7 +102,7 @@ async function main() {
             client_id: clientId,
             client_secret: clientSecret,
             redirect_uri: REDIRECT_URI,
-          }),
+          }).toString(),
         });
 
         if (!tokenResponse.ok) {
