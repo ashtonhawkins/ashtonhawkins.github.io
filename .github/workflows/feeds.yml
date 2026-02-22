@@ -2,7 +2,9 @@ name: Refresh external feeds cache
 
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 */6 * * *'   # Every 6 hours (existing feeds)
+    - cron: '0 14 * * *'    # 6:00 AM PST — catches last night's sleep data
+    - cron: '0 3 * * *'     # 7:00 PM PST — catches daytime activity data
   workflow_dispatch:
 
 permissions:
@@ -36,7 +38,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/feeds-cache.json src/data/oura-cache.json
+          git add src/data/feeds-cache.json src/data/oura/
           if git diff --cached --quiet; then
             echo "No changes to commit"
             exit 0

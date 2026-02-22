@@ -34,6 +34,13 @@ jobs:
           PUBLIC_LASTFM_USERNAME: ${{ secrets.PUBLIC_LASTFM_USERNAME }}
           PUBLIC_LETTERBOXD_USERNAME: ${{ secrets.PUBLIC_LETTERBOXD_USERNAME }}
           PUBLIC_GOODREADS_USER_ID: ${{ secrets.PUBLIC_GOODREADS_USER_ID }}
+      - name: Fetch Oura Ring data
+        run: npm run oura:fetch
+        env:
+          OURA_ACCESS_TOKEN: ${{ secrets.OURA_ACCESS_TOKEN }}
+          OURA_CLIENT_ID: ${{ secrets.OURA_CLIENT_ID }}
+          OURA_CLIENT_SECRET: ${{ secrets.OURA_CLIENT_SECRET }}
+          OURA_REFRESH_TOKEN: ${{ secrets.OURA_REFRESH_TOKEN }}
       - name: Build site
         run: npm run build
         env:
