@@ -206,148 +206,148 @@ interface OuraApiResponse<T> {
 
 interface DailySleepEntry {
   day: string;
-  score: number;
+  score: number | null;
   contributors?: {
-    deep_sleep?: number;
-    efficiency?: number;
-    latency?: number;
-    rem_sleep?: number;
-    restfulness?: number;
-    timing?: number;
-    total_sleep?: number;
-  };
+    deep_sleep?: number | null;
+    efficiency?: number | null;
+    latency?: number | null;
+    rem_sleep?: number | null;
+    restfulness?: number | null;
+    timing?: number | null;
+    total_sleep?: number | null;
+  } | null;
 }
 
 interface SleepPeriodEntry {
   day: string;
-  bedtime_start: string;
-  bedtime_end: string;
-  total_sleep_duration: number;
-  deep_sleep_duration: number;
-  light_sleep_duration: number;
-  rem_sleep_duration: number;
-  awake_time: number;
-  efficiency: number;
-  lowest_heart_rate?: number;
-  average_heart_rate?: number;
-  average_hrv?: number;
-  average_breath?: number;
-  sleep_phase_5_min?: string;
+  bedtime_start: string | null;
+  bedtime_end: string | null;
+  total_sleep_duration: number | null;
+  deep_sleep_duration: number | null;
+  light_sleep_duration: number | null;
+  rem_sleep_duration: number | null;
+  awake_time: number | null;
+  efficiency: number | null;
+  lowest_heart_rate?: number | null;
+  average_heart_rate?: number | null;
+  average_hrv?: number | null;
+  average_breath?: number | null;
+  sleep_phase_5_min?: string | null;
   heart_rate?: {
     interval: number;
     items: (number | null)[];
     timestamp: string;
-  };
+  } | null;
   hrv?: {
     interval: number;
     items: (number | null)[];
     timestamp: string;
-  };
-  type?: string;
+  } | null;
+  type?: string | null;
 }
 
 interface DailyReadinessEntry {
   day: string;
-  score: number;
-  temperature_deviation?: number;
-  temperature_trend_deviation?: number;
+  score: number | null;
+  temperature_deviation?: number | null;
+  temperature_trend_deviation?: number | null;
   contributors?: {
-    activity_balance?: number;
-    body_temperature?: number;
-    hrv_balance?: number;
+    activity_balance?: number | null;
+    body_temperature?: number | null;
+    hrv_balance?: number | null;
     previous_day_activity?: number | null;
-    previous_night?: number;
-    recovery_index?: number;
-    resting_heart_rate?: number;
-    sleep_balance?: number;
-  };
+    previous_night?: number | null;
+    recovery_index?: number | null;
+    resting_heart_rate?: number | null;
+    sleep_balance?: number | null;
+  } | null;
 }
 
 interface DailyResilienceEntry {
   day: string;
-  level?: string;
+  level?: string | null;
   contributors?: {
-    sleep_recovery?: number;
-    daytime_recovery?: number;
-    stress?: number;
-  };
+    sleep_recovery?: number | null;
+    daytime_recovery?: number | null;
+    stress?: number | null;
+  } | null;
 }
 
 interface DailyActivityEntry {
   day: string;
-  score?: number;
-  active_calories?: number;
-  total_calories?: number;
-  steps?: number;
-  equivalent_walking_distance?: number;
-  high_activity_met_minutes?: number;
-  medium_activity_met_minutes?: number;
-  low_activity_met_minutes?: number;
-  sedentary_met_minutes?: number;
-  inactivity_alerts?: number;
-  target_calories?: number;
-  target_meters?: number;
+  score?: number | null;
+  active_calories?: number | null;
+  total_calories?: number | null;
+  steps?: number | null;
+  equivalent_walking_distance?: number | null;
+  high_activity_met_minutes?: number | null;
+  medium_activity_met_minutes?: number | null;
+  low_activity_met_minutes?: number | null;
+  sedentary_met_minutes?: number | null;
+  inactivity_alerts?: number | null;
+  target_calories?: number | null;
+  target_meters?: number | null;
   met?: {
     interval: number;
-    items: number[];
+    items: (number | null)[];
     timestamp: string;
-  };
-  class_5_min?: string;
+  } | null;
+  class_5_min?: string | null;
 }
 
 interface DailySpo2Entry {
   day: string;
-  spo2_percentage?: { average?: number };
-  breathing_disturbance_index?: number;
+  spo2_percentage?: { average?: number | null } | null;
+  breathing_disturbance_index?: number | null;
 }
 
 interface DailyStressEntry {
   day: string;
-  stress_high?: number;
-  recovery_high?: number;
-  day_summary?: string;
+  stress_high?: number | null;
+  recovery_high?: number | null;
+  day_summary?: string | null;
 }
 
 interface CardiovascularAgeEntry {
   day: string;
-  vascular_age?: number;
+  vascular_age?: number | null;
 }
 
 interface Vo2MaxEntry {
   day: string;
-  vo2_max?: number;
+  vo2_max?: number | null;
 }
 
 interface RingConfigEntry {
-  id?: string;
-  color?: string;
-  design?: string;
-  firmware_version?: string;
-  hardware_type?: string;
-  set_up_at?: string;
-  size?: number;
+  id?: string | null;
+  color?: string | null;
+  design?: string | null;
+  firmware_version?: string | null;
+  hardware_type?: string | null;
+  set_up_at?: string | null;
+  size?: number | null;
 }
 
 interface WorkoutEntry {
   day: string;
-  activity?: string;
-  calories?: number;
-  distance?: number;
-  duration?: number;
-  intensity?: string;
-  average_heart_rate?: number;
-  source?: string;
+  activity?: string | null;
+  calories?: number | null;
+  distance?: number | null;
+  duration?: number | null;
+  intensity?: string | null;
+  average_heart_rate?: number | null;
+  source?: string | null;
 }
 
 interface SessionEntry {
   day: string;
-  type?: string;
-  duration?: number;
+  type?: string | null;
+  duration?: number | null;
   heart_rate?: {
     interval: number;
     items: (number | null)[];
-  };
-  mood?: string;
+  } | null;
+  mood?: string | null;
 }
 
 // ── File Writers ─────────────────────────────────────────────────
