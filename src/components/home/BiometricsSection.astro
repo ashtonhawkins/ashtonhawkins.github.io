@@ -14,25 +14,59 @@ const minutes = ln.totalSleepMinutes % 60;
 const tempSign = ln.bodyTempDeviation >= 0 ? '+' : '';
 const tempDisplay = `${tempSign}${ln.bodyTempDeviation.toFixed(2)}°`;
 
-// --- 14-day sparkline polyline generation ---
-// Each channel's sparkline viewBox is 0 0 280 40 (14 points, wider for readability)
-const spark14 = (arr: number[], centerBaseline = false) => {
-  if (!arr.length) return '';
-  const min = centerBaseline ? Math.min(...arr, 0) : Math.min(...arr);
-  const max = centerBaseline ? Math.max(...arr, 0) : Math.max(...arr);
-  const range = max - min || 1;
-  return arr.map((v, i) => {
-    const x = (i / (arr.length - 1 || 1)) * 280;
-    const y = 36 - ((v - min) / range) * 32 - 2;
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(' ');
-};
+type MaybePoint = number | null;
 
-const baselinePct14 = (arr: number[]) => {
-  const min = Math.min(...arr, 0);
-  const max = Math.max(...arr, 0);
+const GAP_START = 3;
+const GAP_END = 5;
+const toSeriesWithGap = (arr: number[]): MaybePoint[] => arr.map((value, index) => (index >= GAP_START && index <= GAP_END ? null : value));
+
+const presentValues = (arr: MaybePoint[]): number[] => arr.filter((value): value is number => typeof value === 'number');
+
+const baselinePct14 = (arr: MaybePoint[]) => {
+  const values = presentValues(arr);
+  const min = Math.min(...values, 0);
+  const max = Math.max(...values, 0);
   const range = max - min || 1;
   return 36 - ((0 - min) / range) * 32 - 2;
+};
+
+const sparkSegments = (arr: MaybePoint[], centerBaseline = false): string[] => {
+  if (!arr.length) return [];
+  const values = presentValues(arr);
+  if (!values.length) return [];
+  const min = centerBaseline ? Math.min(...values, 0) : Math.min(...values);
+  const max = centerBaseline ? Math.max(...values, 0) : Math.max(...values);
+  const range = max - min || 1;
+
+  const segments: string[] = [];
+  let current: string[] = [];
+  arr.forEach((value, index) => {
+    if (value === null) {
+      if (current.length > 1) segments.push(current.join(' '));
+      current = [];
+      return;
+    }
+    const x = (index / (arr.length - 1 || 1)) * 280;
+    const y = 36 - ((value - min) / range) * 32 - 2;
+    current.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+  });
+  if (current.length > 1) segments.push(current.join(' '));
+  return segments;
+};
+
+const sparkDots = (arr: MaybePoint[], centerBaseline = false): Array<{ x: number; y: number }> => {
+  if (!arr.length) return [];
+  const values = presentValues(arr);
+  if (!values.length) return [];
+  const min = centerBaseline ? Math.min(...values, 0) : Math.min(...values);
+  const max = centerBaseline ? Math.max(...values, 0) : Math.max(...values);
+  const range = max - min || 1;
+  return arr.flatMap((value, index) => {
+    if (value === null) return [];
+    const x = (index / (arr.length - 1 || 1)) * 280;
+    const y = 36 - ((value - min) / range) * 32 - 2;
+    return [{ x, y }];
+  });
 };
 
 // Gridline positions: every 2 days across 14-day window
@@ -57,14 +91,25 @@ const lastUpdated = oura.lastFetched
   : '';
 
 // Current value dot position (rightmost point)
-const dotPosition = (arr: number[], centerBaseline = false) => {
+const dotPosition = (arr: MaybePoint[], centerBaseline = false) => {
   if (!arr.length) return { x: 280, y: 20 };
-  const min = centerBaseline ? Math.min(...arr, 0) : Math.min(...arr);
-  const max = centerBaseline ? Math.max(...arr, 0) : Math.max(...arr);
+  const values = presentValues(arr);
+  if (!values.length) return { x: 280, y: 20 };
+  const min = centerBaseline ? Math.min(...values, 0) : Math.min(...values);
+  const max = centerBaseline ? Math.max(...values, 0) : Math.max(...values);
   const range = max - min || 1;
-  const lastVal = arr[arr.length - 1];
+  let lastVal = values[values.length - 1];
+  let lastIndex = arr.length - 1;
+  for (let i = arr.length - 1; i >= 0; i--) {
+    if (arr[i] !== null) {
+      lastVal = arr[i] as number;
+      lastIndex = i;
+      break;
+    }
+  }
   const y = 36 - ((lastVal - min) / range) * 32 - 2;
-  return { x: 280, y };
+  const x = (lastIndex / (arr.length - 1 || 1)) * 280;
+  return { x, y };
 };
 
 const stressMap: Record<string, { active: boolean; label: string }> = {
@@ -82,7 +127,7 @@ const channels = [
     label: 'CARDIAC',
     secondary: 'RESTING',
     colorClass: 'cardiac',
-    data: wk.restingHR,
+    data: toSeriesWithGap(wk.restingHR),
     centerBaseline: false,
     value: hasData ? ln.restingHeartRate : null,
     unit: 'BPM',
@@ -95,7 +140,7 @@ const channels = [
     label: 'SLEEP',
     secondary: 'LAST NIGHT',
     colorClass: 'sleep',
-    data: wk.sleepScores,
+    data: toSeriesWithGap(wk.sleepScores),
     centerBaseline: false,
     value: hasData ? ln.sleepScore : null,
     unit: 'SCORE',
@@ -108,7 +153,7 @@ const channels = [
     label: 'THERMAL',
     secondary: 'BODY TEMP',
     colorClass: 'thermal',
-    data: wk.bodyTemp,
+    data: toSeriesWithGap(wk.bodyTemp),
     centerBaseline: true,
     value: hasData ? tempDisplay : null,
     valueRaw: tempDisplay,
@@ -122,7 +167,7 @@ const channels = [
     label: 'RECOVERY',
     secondary: 'READINESS',
     colorClass: 'recovery',
-    data: wk.readinessScores,
+    data: toSeriesWithGap(wk.readinessScores),
     centerBaseline: false,
     value: hasData ? ln.readinessScore : null,
     unit: 'SCORE',
@@ -142,7 +187,8 @@ const channels = [
   {!hasData && <div class="biometrics__awaiting">AWAITING DATA</div>}
 
   {channels.map((ch) => {
-    const points = hasData ? spark14(ch.data, ch.centerBaseline) : '';
+    const lineSegments = hasData ? sparkSegments(ch.data, ch.centerBaseline) : [];
+    const dots = hasData ? sparkDots(ch.data, ch.centerBaseline) : [];
     const dot = hasData ? dotPosition(ch.data, ch.centerBaseline) : null;
     const displayValue = ch.value !== null ? (typeof ch.value === 'number' ? String(ch.value) : ch.value) : '--';
     return (
@@ -158,6 +204,7 @@ const channels = [
         </div>
         <div class="biometrics__sparkline-wrap">
           <svg class={`biometrics__sparkline biometrics__sparkline--${ch.colorClass}`} viewBox="0 0 280 40" preserveAspectRatio="none" data-bio-sparkline>
+            <rect x={(GAP_START / 13) * 280} y="0" width={((GAP_END - GAP_START + 1) / 14) * 280} height="40" class="biometrics__gap-band" />
             {/* Vertical gridlines */}
             {gridlineXPositions.map((gx) => (
               <line
@@ -175,10 +222,20 @@ const channels = [
             )}
             {/* Sparkline polyline */}
             {hasData ? (
-              <polyline
-                points={points}
-                class={`biometrics__sparkline-line biometrics__sparkline-line--${ch.colorClass}`}
-              />
+              <>
+                {lineSegments.map((segment) => (
+                  <path d={`M ${segment} L ${segment.split(' ').at(-1)?.split(',')[0] ?? 280},40 L ${segment.split(' ').at(0)?.split(',')[0] ?? 0},40 Z`} class={`biometrics__sparkline-fill biometrics__sparkline-fill--${ch.colorClass}`} />
+                ))}
+                {lineSegments.map((segment) => (
+                  <polyline
+                    points={segment}
+                    class={`biometrics__sparkline-line biometrics__sparkline-line--${ch.colorClass}`}
+                  />
+                ))}
+                {dots.map((pt) => (
+                  <circle cx={pt.x} cy={pt.y} r="1.5" class={`biometrics__sparkline-marker biometrics__sparkline-marker--${ch.colorClass}`} />
+                ))}
+              </>
             ) : (
               <polyline
                 points="0,20 280,20"
@@ -218,8 +275,8 @@ const channels = [
   <div class="biometrics__date-axis" aria-hidden="true">
     <div class="biometrics__date-axis-spacer"></div>
     <div class="biometrics__date-axis-labels">
-      {gridlineDates.map((dateLabel) => (
-        <span class="biometrics__date-label">{dateLabel}</span>
+      {gridlineDates.map((dateLabel, index) => (
+        <span class:list={['biometrics__date-label', { 'biometrics__date-label--missing': index >= 1 && index <= 2 }]}>{dateLabel}</span>
       ))}
     </div>
     <div class="biometrics__date-axis-spacer biometrics__date-axis-spacer--right"></div>
@@ -335,7 +392,7 @@ const channels = [
 
   .biometrics__updated {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
+    font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--text-tertiary);
@@ -344,7 +401,7 @@ const channels = [
 
   .biometrics__awaiting {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
+    font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--text-tertiary);
@@ -361,7 +418,7 @@ const channels = [
     padding: 0.75rem 1rem;
     margin-bottom: 0;
     border-bottom: none;
-    min-height: 60px;
+    min-height: 78px;
     transition: border-color 0.3s ease;
   }
 
@@ -405,7 +462,7 @@ const channels = [
 
   .biometrics__channel-label {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -414,7 +471,7 @@ const channels = [
 
   .biometrics__channel-secondary {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--text-tertiary);
@@ -424,43 +481,53 @@ const channels = [
   .biometrics__sparkline-wrap {
     flex: 1;
     min-width: 0;
-    height: 40px;
+    height: 48px;
   }
 
   .biometrics__sparkline {
     width: 100%;
-    height: 40px;
+    height: 48px;
     display: block;
     overflow: visible;
   }
 
   .biometrics__gridline {
     stroke: var(--border);
-    stroke-width: 0.5;
-    stroke-dasharray: 2 2;
+    stroke-width: 1;
+    stroke-dasharray: 4 4;
     vector-effect: non-scaling-stroke;
-    opacity: 0.6;
+    opacity: 0.4;
   }
+
+  .biometrics__gap-band {
+    fill: color-mix(in srgb, var(--border) 15%, transparent);
+  }
+
+  .biometrics__sparkline-fill {
+    opacity: 0.08;
+  }
+  .biometrics__sparkline-fill--cardiac { fill: color-mix(in srgb, var(--text-primary) 100%, transparent); }
+  .biometrics__sparkline-fill--sleep { fill: color-mix(in srgb, var(--text-primary) 85%, transparent); }
+  .biometrics__sparkline-fill--thermal { fill: color-mix(in srgb, var(--text-primary) 70%, transparent); }
+  .biometrics__sparkline-fill--recovery { fill: color-mix(in srgb, var(--text-primary) 55%, transparent); }
 
   .biometrics__sparkline-line {
     fill: none;
-    stroke-width: 1.5;
+    stroke-width: 2;
     vector-effect: non-scaling-stroke;
   }
 
   /* Channel-specific sparkline colors */
-  .biometrics__sparkline-line--cardiac {
-    stroke: #e07060;
-  }
-  .biometrics__sparkline-line--sleep {
-    stroke: #6080c0;
-  }
-  .biometrics__sparkline-line--thermal {
-    stroke: #c0a050;
-  }
-  .biometrics__sparkline-line--recovery {
-    stroke: #60b080;
-  }
+  .biometrics__sparkline-line--cardiac { stroke: color-mix(in srgb, var(--text-primary) 100%, transparent); }
+  .biometrics__sparkline-line--sleep { stroke: color-mix(in srgb, var(--text-primary) 85%, transparent); }
+  .biometrics__sparkline-line--thermal { stroke: color-mix(in srgb, var(--text-primary) 70%, transparent); }
+  .biometrics__sparkline-line--recovery { stroke: color-mix(in srgb, var(--text-primary) 55%, transparent); }
+
+  .biometrics__sparkline-marker { opacity: 0.5; }
+  .biometrics__sparkline-marker--cardiac { fill: color-mix(in srgb, var(--text-primary) 100%, transparent); }
+  .biometrics__sparkline-marker--sleep { fill: color-mix(in srgb, var(--text-primary) 85%, transparent); }
+  .biometrics__sparkline-marker--thermal { fill: color-mix(in srgb, var(--text-primary) 70%, transparent); }
+  .biometrics__sparkline-marker--recovery { fill: color-mix(in srgb, var(--text-primary) 55%, transparent); }
 
   .biometrics__sparkline-line--empty {
     stroke: var(--text-tertiary);
@@ -482,10 +549,7 @@ const channels = [
     animation: bio-dot-pulse 2s ease-in-out infinite;
     transform-origin: center;
   }
-  .biometrics__dot--cardiac { fill: #e07060; }
-  .biometrics__dot--sleep { fill: #6080c0; }
-  .biometrics__dot--thermal { fill: #c0a050; }
-  .biometrics__dot--recovery { fill: #60b080; }
+  .biometrics__dot--cardiac, .biometrics__dot--sleep, .biometrics__dot--thermal, .biometrics__dot--recovery { fill: var(--accent-primary); }
 
   @keyframes bio-dot-pulse {
     0%, 100% { r: 3; }
@@ -502,7 +566,7 @@ const channels = [
 
   .biometrics__value {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 18px;
+    font-size: 30px;
     font-weight: 700;
     color: var(--text-primary);
     line-height: 1;
@@ -510,7 +574,7 @@ const channels = [
 
   .biometrics__unit {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
+    font-size: 12px;
     text-transform: uppercase;
     color: var(--text-tertiary);
     letter-spacing: 0.06em;
@@ -518,7 +582,7 @@ const channels = [
 
   .biometrics__sub-value {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-secondary);
   }
 
@@ -554,7 +618,7 @@ const channels = [
 
   .biometrics__date-label {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 8px;
+    font-size: 10px;
     color: var(--text-tertiary);
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -602,5 +666,8 @@ const channels = [
       flex-direction: column;
       align-items: flex-start;
     }
+  }
+  .biometrics__date-label--missing {
+    opacity: 0.5;
   }
 </style>

@@ -25,10 +25,10 @@ const { stages, totalMinutes, hasData, lastNight } = Astro.props;
 
 // Stage colors
 const stageColors: Record<string, string> = {
-  awake: '#8a7e6e',   // warm neutral
-  light: '#5a78a8',   // medium blue
-  deep: '#2a3a6a',    // dark indigo/navy
-  rem: '#5aaa9a',     // teal/cyan
+  awake: 'var(--text-tertiary)',
+  light: 'var(--text-secondary)',
+  deep: 'color-mix(in srgb, var(--accent-primary) 60%, transparent)',
+  rem: 'var(--accent-primary)',
 };
 
 // Build last-night segments with durations
@@ -171,7 +171,7 @@ const avgStages = [
 
   .sleep-stages__title {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -186,16 +186,16 @@ const avgStages = [
 
   .sleep-stages__time {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
+    font-size: 10px;
     color: var(--text-secondary);
     letter-spacing: 0.04em;
   }
 
   .sleep-stages__time-sep {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
+    font-size: 10px;
     color: var(--text-tertiary);
-    opacity: 0.6;
+    opacity: 0.4;
   }
 
   .sleep-stages__bar-container {
@@ -207,7 +207,7 @@ const avgStages = [
 
   .sleep-stages__bar-label {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 8px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--text-tertiary);
@@ -225,12 +225,12 @@ const avgStages = [
   }
 
   .sleep-stages__bar--primary {
-    height: 30px;
+    height: 34px;
   }
 
   .sleep-stages__bar--secondary {
     height: 18px;
-    opacity: 0.7;
+    opacity: 0.4;
   }
 
   .sleep-stages__segment {
@@ -248,12 +248,12 @@ const avgStages = [
   }
 
   .sleep-stages__segment--avg {
-    opacity: 0.6;
+    opacity: 0.4;
   }
 
   .sleep-stages__duration {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 8px;
+    font-size: 10px;
     color: rgba(255, 255, 255, 0.85);
     letter-spacing: 0.02em;
     white-space: nowrap;
@@ -262,7 +262,7 @@ const avgStages = [
 
   .sleep-stages__pct {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 7px;
+    font-size: 10px;
     color: rgba(255, 255, 255, 0.75);
     letter-spacing: 0.02em;
     white-space: nowrap;
@@ -291,7 +291,7 @@ const avgStages = [
 
   .sleep-stages__legend-label {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--text-tertiary);
@@ -300,7 +300,7 @@ const avgStages = [
   @media (max-width: 480px) {
     .sleep-stages__bar-label {
       width: 48px;
-      font-size: 7px;
+      font-size: 10px;
     }
 
     .sleep-stages__legend {
@@ -309,7 +309,7 @@ const avgStages = [
     }
 
     .sleep-stages__duration {
-      font-size: 7px;
+      font-size: 10px;
     }
   }
 </style>
