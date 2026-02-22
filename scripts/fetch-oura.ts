@@ -57,17 +57,38 @@ async function refreshAccessToken(): Promise<string> {
     );
   }
 
-  const response = await fetch(`${BASE_URL}/oauth/token`, {
+  // Primary approach: Basic Auth header with credentials
+  let response = await fetch(`${BASE_URL}/oauth/token`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
+    },
     body: new URLSearchParams({
       grant_type: 'refresh_token',
-      client_id: clientId,
-      client_secret: clientSecret,
       refresh_token: refreshToken,
-    }),
+    }).toString(),
     signal: withTimeout(TIMEOUT_MS),
   });
+
+  // Fallback: send all credentials in the body
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.warn(`[oura] Basic Auth token refresh failed (${response.status}): ${errorText}`);
+    console.warn('[oura] Retrying with credentials in request body...');
+
+    response = await fetch(`${BASE_URL}/oauth/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: clientId,
+        client_secret: clientSecret,
+      }).toString(),
+      signal: withTimeout(TIMEOUT_MS),
+    });
+  }
 
   if (!response.ok) {
     const text = await response.text();
@@ -371,7 +392,7 @@ export async function main() {
       '[oura] Auth failed:',
       error instanceof Error ? error.message : error
     );
-    process.exitCode = 1;
+    console.error('[oura] Skipping data fetch — cached JSON files will be preserved.');
     return;
   }
 
@@ -557,7 +578,7 @@ export async function main() {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
+    console.error('[oura] Unexpected error:', error);
+    // Exit cleanly so cached JSON files are preserved and the build continues
   });
 }
