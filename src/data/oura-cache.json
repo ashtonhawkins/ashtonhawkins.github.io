@@ -1,0 +1,38 @@
+{
+  "lastFetched": "2026-02-22T08:00:00Z",
+  "lastNight": {
+    "sleepScore": 82,
+    "readinessScore": 87,
+    "totalSleepMinutes": 452,
+    "remMinutes": 98,
+    "deepMinutes": 67,
+    "lightMinutes": 241,
+    "awakeMinutes": 46,
+    "sleepEfficiency": 91,
+    "restingHeartRate": 52,
+    "hrv": 42,
+    "spo2": 97.5,
+    "respiratoryRate": 14.8,
+    "bodyTempDeviation": -0.12,
+    "stressLevel": "restored"
+  },
+  "weeklyTrend": {
+    "sleepScores": [78, 82, 71, 85, 79, 82, 82],
+    "readinessScores": [83, 87, 72, 89, 85, 87, 87],
+    "hrvValues": [38, 42, 35, 45, 40, 42, 42],
+    "restingHR": [54, 52, 55, 51, 53, 52, 52],
+    "bodyTemp": [-0.08, -0.12, 0.15, -0.22, -0.05, -0.12, -0.12]
+  },
+  "sleepStages": [
+    { "stage": "awake", "startOffset": 0, "endOffset": 12 },
+    { "stage": "light", "startOffset": 12, "endOffset": 45 },
+    { "stage": "deep", "startOffset": 45, "endOffset": 78 },
+    { "stage": "rem", "startOffset": 78, "endOffset": 112 },
+    { "stage": "light", "startOffset": 112, "endOffset": 180 },
+    { "stage": "deep", "startOffset": 180, "endOffset": 210 },
+    { "stage": "rem", "startOffset": 210, "endOffset": 255 },
+    { "stage": "light", "startOffset": 255, "endOffset": 340 },
+    { "stage": "rem", "startOffset": 340, "endOffset": 390 },
+    { "stage": "light", "startOffset": 390, "endOffset": 452 }
+  ]
+}

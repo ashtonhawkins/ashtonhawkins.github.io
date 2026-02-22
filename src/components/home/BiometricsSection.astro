@@ -1,0 +1,396 @@
+---
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import StatusChip from '@components/ui/StatusChip.astro';
+import SleepStagesBar from '@components/home/SleepStagesBar.astro';
+import oura from '@data/oura-cache.json';
+
+const hasData = oura.lastFetched !== null && oura.lastNight.sleepScore > 0;
+const ln = oura.lastNight;
+const wk = oura.weeklyTrend;
+
+const hours = Math.floor(ln.totalSleepMinutes / 60);
+const minutes = ln.totalSleepMinutes % 60;
+
+const tempSign = ln.bodyTempDeviation >= 0 ? '+' : '';
+const tempDisplay = `${tempSign}${ln.bodyTempDeviation.toFixed(2)}°`;
+
+const spark = (arr: number[], centerBaseline = false) => {
+  if (!arr.length) return '';
+  const min = centerBaseline ? Math.min(...arr, 0) : Math.min(...arr);
+  const max = centerBaseline ? Math.max(...arr, 0) : Math.max(...arr);
+  const range = max - min || 1;
+  return arr.map((v, i) => {
+    const x = (i / (arr.length - 1 || 1)) * 100;
+    const y = 24 - ((v - min) / range) * 20 - 2;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+};
+
+const baselinePct = (arr: number[]) => {
+  const min = Math.min(...arr, 0);
+  const max = Math.max(...arr, 0);
+  const range = max - min || 1;
+  return 24 - ((0 - min) / range) * 20 - 2;
+};
+
+const stressMap: Record<string, { active: boolean; label: string }> = {
+  restored: { active: true, label: 'RESTORED' },
+  normal: { active: false, label: 'NORMAL' },
+  stressed: { active: false, label: 'STRESSED' },
+  high: { active: false, label: 'HIGH' },
+};
+const stressInfo = stressMap[ln.stressLevel] ?? stressMap.normal;
+---
+
+<section id="biometrics" class="biometrics">
+  <SectionHeader label="Biometrics" />
+
+  {!hasData && <div class="biometrics__awaiting">AWAITING DATA</div>}
+
+  <!-- Channel 1: CARDIAC -->
+  <div class="biometrics__channel" data-bio-channel>
+    <div class="biometrics__channel-left">
+      <svg class="biometrics__icon biometrics__icon--pulse" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M8 2.5C6.5 1 3.5 1 2 3s-.5 5 6 9.5C14.5 8 15 5 13.5 3S9.5 1 8 2.5z" />
+      </svg>
+      <div class="biometrics__channel-labels">
+        <span class="biometrics__channel-label">CARDIAC</span>
+        <span class="biometrics__channel-secondary">RESTING</span>
+      </div>
+    </div>
+    <div class="biometrics__sparkline-wrap">
+      <svg class="biometrics__sparkline" viewBox="0 0 100 24" preserveAspectRatio="none" data-bio-sparkline>
+        <polyline points={hasData ? spark(wk.restingHR) : '0,12 100,12'} class:list={['biometrics__sparkline-line', { 'biometrics__sparkline-line--empty': !hasData }]} />
+      </svg>
+    </div>
+    <div class="biometrics__channel-right">
+      <span class="biometrics__value" data-bio-value={hasData ? ln.restingHeartRate : ''}>{hasData ? ln.restingHeartRate : '--'}</span>
+      <span class="biometrics__unit">BPM</span>
+      <span class="biometrics__sub-value">HRV {hasData ? `${ln.hrv}ms` : '--'}</span>
+    </div>
+  </div>
+
+  <!-- Channel 2: SLEEP -->
+  <div class="biometrics__channel" data-bio-channel>
+    <div class="biometrics__channel-left">
+      <svg class="biometrics__icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M13.5 8a5.5 5.5 0 1 1-4-5.3A4 4 0 0 0 13.5 8z" />
+      </svg>
+      <div class="biometrics__channel-labels">
+        <span class="biometrics__channel-label">SLEEP</span>
+        <span class="biometrics__channel-secondary">LAST NIGHT</span>
+      </div>
+    </div>
+    <div class="biometrics__sparkline-wrap">
+      <svg class="biometrics__sparkline" viewBox="0 0 100 24" preserveAspectRatio="none" data-bio-sparkline>
+        <polyline points={hasData ? spark(wk.sleepScores) : '0,12 100,12'} class:list={['biometrics__sparkline-line', { 'biometrics__sparkline-line--empty': !hasData }]} />
+      </svg>
+    </div>
+    <div class="biometrics__channel-right">
+      <span class="biometrics__value" data-bio-value={hasData ? ln.sleepScore : ''}>{hasData ? ln.sleepScore : '--'}</span>
+      <span class="biometrics__unit">SCORE</span>
+      <span class="biometrics__sub-value">{hasData ? `${hours}h ${minutes}m` : '--'}</span>
+    </div>
+  </div>
+
+  <!-- Channel 3: THERMAL -->
+  <div class="biometrics__channel" data-bio-channel>
+    <div class="biometrics__channel-left">
+      <svg class="biometrics__icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M8 1v9.5" />
+        <circle cx="8" cy="12.5" r="2.5" />
+        <path d="M10 8V3a2 2 0 1 0-4 0v5" />
+      </svg>
+      <div class="biometrics__channel-labels">
+        <span class="biometrics__channel-label">THERMAL</span>
+        <span class="biometrics__channel-secondary">BODY TEMP</span>
+      </div>
+    </div>
+    <div class="biometrics__sparkline-wrap">
+      <svg class="biometrics__sparkline" viewBox="0 0 100 24" preserveAspectRatio="none" data-bio-sparkline>
+        {hasData && (
+          <line
+            x1="0" y1={baselinePct(wk.bodyTemp)}
+            x2="100" y2={baselinePct(wk.bodyTemp)}
+            class="biometrics__sparkline-baseline"
+          />
+        )}
+        <polyline points={hasData ? spark(wk.bodyTemp, true) : '0,12 100,12'} class:list={['biometrics__sparkline-line', { 'biometrics__sparkline-line--empty': !hasData }]} />
+      </svg>
+    </div>
+    <div class="biometrics__channel-right">
+      <span class="biometrics__value">{hasData ? tempDisplay : '--'}</span>
+      <span class="biometrics__unit">DEV</span>
+      <span class="biometrics__sub-value">SPO2 {hasData ? `${ln.spo2}%` : '--'}</span>
+    </div>
+  </div>
+
+  <!-- Channel 4: RECOVERY -->
+  <div class="biometrics__channel" data-bio-channel>
+    <div class="biometrics__channel-left">
+      <svg class="biometrics__icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M1 8a7 7 0 0 1 7-7" />
+        <path d="M15 8a7 7 0 0 1-7 7" />
+        <polyline points="1 4 1 8 5 8" />
+        <polyline points="15 12 15 8 11 8" />
+      </svg>
+      <div class="biometrics__channel-labels">
+        <span class="biometrics__channel-label">RECOVERY</span>
+        <span class="biometrics__channel-secondary">READINESS</span>
+      </div>
+    </div>
+    <div class="biometrics__sparkline-wrap">
+      <svg class="biometrics__sparkline" viewBox="0 0 100 24" preserveAspectRatio="none" data-bio-sparkline>
+        <polyline points={hasData ? spark(wk.readinessScores) : '0,12 100,12'} class:list={['biometrics__sparkline-line', { 'biometrics__sparkline-line--empty': !hasData }]} />
+      </svg>
+    </div>
+    <div class="biometrics__channel-right">
+      <span class="biometrics__value" data-bio-value={hasData ? ln.readinessScore : ''}>{hasData ? ln.readinessScore : '--'}</span>
+      <span class="biometrics__unit">SCORE</span>
+      <div class="biometrics__sub-chip">
+        <StatusChip label={stressInfo.label} active={stressInfo.active} />
+      </div>
+    </div>
+  </div>
+
+  <!-- Sleep Stages Bar -->
+  <SleepStagesBar
+    stages={oura.sleepStages}
+    totalMinutes={ln.totalSleepMinutes}
+    hasData={hasData}
+  />
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const section = document.getElementById('biometrics');
+    if (!section) return;
+
+    let animated = false;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && !animated) {
+          animated = true;
+          observer.disconnect();
+
+          if (reducedMotion) return;
+
+          // Animate sparklines: stroke-dasharray reveal
+          const sparklines = section.querySelectorAll('[data-bio-sparkline] .biometrics__sparkline-line');
+          sparklines.forEach((line) => {
+            if (!(line instanceof SVGPolylineElement)) return;
+            const length = line.getTotalLength?.() || 200;
+            line.style.strokeDasharray = `${length}`;
+            line.style.strokeDashoffset = `${length}`;
+            line.style.transition = 'stroke-dashoffset 1s ease-out';
+            requestAnimationFrame(() => {
+              line.style.strokeDashoffset = '0';
+            });
+          });
+
+          // Animate values: count up
+          const values = section.querySelectorAll('[data-bio-value]');
+          values.forEach((el) => {
+            if (!(el instanceof HTMLElement)) return;
+            const target = Number(el.dataset.bioValue);
+            if (!target || Number.isNaN(target)) return;
+
+            const start = performance.now();
+            const duration = 1200;
+
+            const tick = (now: number) => {
+              const progress = Math.min((now - start) / duration, 1);
+              const eased = 1 - Math.pow(1 - progress, 3);
+              el.textContent = String(Math.round(target * eased));
+              if (progress < 1) requestAnimationFrame(tick);
+              else el.textContent = String(target);
+            };
+
+            el.textContent = '0';
+            requestAnimationFrame(tick);
+          });
+
+          // Animate sleep stages bar
+          const stagesBar = section.querySelector('[data-sleep-stages]');
+          if (stagesBar instanceof HTMLElement) {
+            stagesBar.style.clipPath = 'inset(0 100% 0 0)';
+            stagesBar.style.transition = 'clip-path 1.5s ease-out';
+            requestAnimationFrame(() => {
+              stagesBar.style.clipPath = 'inset(0 0% 0 0)';
+            });
+          }
+        }
+      });
+    }, { threshold: 0.2 });
+
+    observer.observe(section);
+  });
+</script>
+
+<style>
+  .biometrics {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .biometrics__awaiting {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-tertiary);
+    opacity: 0.6;
+    text-align: center;
+    padding: 0.5rem 0;
+  }
+
+  .biometrics__channel {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    margin-bottom: 2px;
+    min-height: 60px;
+    transition: border-color 0.3s ease;
+  }
+
+  .biometrics__channel:hover {
+    border-color: color-mix(in srgb, var(--accent-primary) 30%, transparent);
+  }
+
+  .biometrics__channel-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    min-width: 110px;
+  }
+
+  .biometrics__icon {
+    width: 16px;
+    height: 16px;
+    color: var(--accent-primary);
+    flex-shrink: 0;
+  }
+
+  .biometrics__icon--pulse {
+    animation: bio-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes bio-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+
+  .biometrics__channel-labels {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .biometrics__channel-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-tertiary);
+  }
+
+  .biometrics__channel-secondary {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-tertiary);
+    opacity: 0.6;
+  }
+
+  .biometrics__sparkline-wrap {
+    flex: 1;
+    min-width: 0;
+    height: 24px;
+  }
+
+  .biometrics__sparkline {
+    width: 100%;
+    height: 24px;
+    display: block;
+  }
+
+  .biometrics__sparkline-line {
+    fill: none;
+    stroke: var(--accent-primary);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .biometrics__sparkline-line--empty {
+    stroke: var(--text-tertiary);
+    opacity: 0.3;
+  }
+
+  .biometrics__sparkline-baseline {
+    stroke: var(--text-tertiary);
+    stroke-width: 0.5;
+    stroke-dasharray: 2 2;
+    opacity: 0.4;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .biometrics__channel-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+    min-width: 70px;
+  }
+
+  .biometrics__value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .biometrics__unit {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    letter-spacing: 0.06em;
+  }
+
+  .biometrics__sub-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .biometrics__sub-chip {
+    margin-top: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .biometrics__icon--pulse {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .biometrics__channel-left {
+      min-width: 80px;
+    }
+    .biometrics__channel-right {
+      min-width: 55px;
+    }
+    .biometrics__value {
+      font-size: 16px;
+    }
+  }
+</style>

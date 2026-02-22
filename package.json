@@ -10,7 +10,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "check": "astro check",
-    "feeds:fetch": "tsx scripts/fetch-feeds.ts"
+    "feeds:fetch": "tsx scripts/fetch-feeds.ts",
+    "oura:fetch": "tsx scripts/fetch-oura.ts"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.3.2",
