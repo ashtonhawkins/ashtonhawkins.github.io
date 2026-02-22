@@ -23,7 +23,7 @@ export type BiometricsRenderData = {
 };
 
 // ── Timing ────────────────────────────────────────────────────────
-const SCAN_DURATION = 9000; // ~9s for one full pass
+const SCAN_DURATION = 8000; // ~8s for one full pass
 const PAUSE_DURATION = 1000;
 const FADE_DURATION = 500;
 const CYCLE_DURATION = SCAN_DURATION + PAUSE_DURATION + FADE_DURATION;
@@ -240,25 +240,22 @@ const drawScanLine = (
   ctx.save();
 
   // Main line with glow
-  ctx.strokeStyle = withAlpha(accent, 0.8);
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = withAlpha(accent, 1);
+  ctx.lineWidth = 2;
   ctx.shadowColor = accent;
-  ctx.shadowBlur = 8;
+  ctx.shadowBlur = 10;
   ctx.beginPath();
   ctx.moveTo(0, scanY);
   ctx.lineTo(width, scanY);
   ctx.stroke();
   ctx.shadowBlur = 0;
 
-  // Wider glow gradient
-  const gradient = ctx.createLinearGradient(0, scanY - 12, 0, scanY + 12);
-  gradient.addColorStop(0, withAlpha(accent, 0));
-  gradient.addColorStop(0.3, withAlpha(accent, 0.08));
-  gradient.addColorStop(0.5, withAlpha(accent, 0.25));
-  gradient.addColorStop(0.7, withAlpha(accent, 0.08));
-  gradient.addColorStop(1, withAlpha(accent, 0));
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, scanY - 12, width, 24);
+  ctx.strokeStyle = withAlpha(accent, 0.3);
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(0, scanY);
+  ctx.lineTo(width, scanY);
+  ctx.stroke();
 
   ctx.restore();
 };
@@ -293,7 +290,7 @@ const buildCallouts = (data: BiometricsRenderData): Callout[] => {
       label: 'HR',
       value: hasData ? `${data.restingHeartRate}` : dash,
       unit: 'BPM',
-      yPct: 0.30,
+      yPct: 0.28,
       side: 'left',
       trendDir: hrDir,
       trendColor: getTrendColor(hrDir, false), // lower HR is better
@@ -303,7 +300,7 @@ const buildCallouts = (data: BiometricsRenderData): Callout[] => {
       label: 'HRV',
       value: hasData ? `${data.hrv}` : dash,
       unit: 'MS',
-      yPct: 0.38,
+      yPct: 0.40,
       side: 'left',
       trendDir: hrvDir,
       trendColor: getTrendColor(hrvDir, true),
@@ -313,7 +310,7 @@ const buildCallouts = (data: BiometricsRenderData): Callout[] => {
       label: 'SPO2',
       value: hasData ? `${data.spo2}` : dash,
       unit: '%',
-      yPct: 0.35,
+      yPct: 0.30,
       side: 'right',
       trendDir: spo2Dir,
       trendColor: getTrendColor(spo2Dir, true),
@@ -323,7 +320,7 @@ const buildCallouts = (data: BiometricsRenderData): Callout[] => {
       label: 'RESP',
       value: hasData ? `${data.respiratoryRate}` : dash,
       unit: '/MIN',
-      yPct: 0.43,
+      yPct: 0.42,
       side: 'right',
       trendDir: respDir,
       trendColor: getTrendColor(respDir, false),
@@ -335,7 +332,7 @@ const buildCallouts = (data: BiometricsRenderData): Callout[] => {
         ? `${data.bodyTempDeviation >= 0 ? '+' : ''}${data.bodyTempDeviation.toFixed(2)}°`
         : `${dash}°`,
       unit: 'DEV',
-      yPct: 0.55,
+      yPct: 0.62,
       side: 'left',
       trendDir: tempDir,
       trendColor: getTrendColor(tempDir, false),
@@ -345,7 +342,7 @@ const buildCallouts = (data: BiometricsRenderData): Callout[] => {
       label: 'READINESS',
       value: hasData ? `${data.readinessScore}` : dash,
       unit: 'SCORE',
-      yPct: 0.65,
+      yPct: 0.66,
       side: 'right',
       trendDir: readyDir,
       trendColor: getTrendColor(readyDir, true),
@@ -382,8 +379,10 @@ const drawCallout = (
 
   const y = height * callout.yPct;
   const isRight = callout.side === 'right';
-  const anchorX = isRight ? bodyRight + 4 : bodyLeft - 4;
-  const textX = isRight ? width - 12 : 12;
+  const anchorX = isRight ? bodyRight + 10 : bodyLeft - 10;
+  const textX = isRight ? width * 0.77 : width * 0.23;
+  const yOffset = isRight ? (callout.orderIndex % 2 ? -10 : 8) : (callout.orderIndex % 2 ? 8 : -10);
+  const textY = y + yOffset;
 
   // Determine display text (scrambled vs resolved)
   let displayLabel = callout.label;
@@ -409,27 +408,22 @@ const drawCallout = (
   ctx.globalAlpha = opacity;
 
   // Connecting line
-  const lineEndX = isRight ? textX - 4 : textX + ctx.measureText(`${displayLabel}  ${displayValue}`).width + 4;
-  ctx.strokeStyle = withAlpha(accent, 0.3);
+  const lineEndX = isRight ? textX - 10 : textX + ctx.measureText(`${displayLabel}  ${displayValue}`).width + 10;
+  ctx.strokeStyle = withAlpha(accent, 0.35);
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(anchorX, y);
-  ctx.lineTo(lineEndX, y);
+  ctx.lineTo((anchorX + lineEndX) / 2, textY);
+  ctx.lineTo(lineEndX, textY);
   ctx.stroke();
 
-  // Crosshair bracket at anchor
-  const bSize = 4;
-  ctx.strokeStyle = withAlpha(accent, 0.5);
+  ctx.fillStyle = withAlpha(accent, 0.85);
   ctx.beginPath();
-  ctx.moveTo(anchorX - bSize, y - bSize);
-  ctx.lineTo(anchorX + bSize, y - bSize);
-  ctx.lineTo(anchorX + bSize, y + bSize);
-  ctx.lineTo(anchorX - bSize, y + bSize);
-  ctx.closePath();
-  ctx.stroke();
+  ctx.arc(anchorX, y, 2.5, 0, Math.PI * 2);
+  ctx.fill();
 
   // Label text
-  ctx.font = `bold 9px ${MONO_FONT}`;
+  ctx.font = `600 12px ${MONO_FONT}`;
   ctx.textBaseline = 'middle';
   ctx.textAlign = isRight ? 'right' : 'left';
   ctx.fillStyle = withAlpha(accent, 0.5);
@@ -444,37 +438,37 @@ const drawCallout = (
       totalStr += ` ${getTrendArrow(callout.trendDir)}`;
     }
     ctx.fillStyle = withAlpha(accent, 0.5);
-    ctx.fillText(displayLabel, textX, y);
+    ctx.fillText(displayLabel, textX, textY - 12);
 
-    ctx.font = `9px ${MONO_FONT}`;
+    ctx.font = `600 14px ${MONO_FONT}`;
     ctx.fillStyle = withAlpha(accent, 0.9);
     const valX = textX - labelWidth;
-    ctx.fillText(displayValue, valX, y);
+    ctx.fillText(displayValue, valX, textY + 8);
 
     // Trend arrow
     if (showTrend && callout.trendDir !== 'neutral') {
-      ctx.font = `7px ${MONO_FONT}`;
+      ctx.font = `700 20px ${MONO_FONT}`;
       const arrowX = valX - ctx.measureText(displayValue).width - 6;
       ctx.fillStyle = callout.trendColor || withAlpha(accent, 0.5);
-      ctx.fillText(getTrendArrow(callout.trendDir), arrowX, y);
+      ctx.fillText(getTrendArrow(callout.trendDir), arrowX, textY + 8);
     }
   } else {
     // Draw from left: label + value + trend arrow
     ctx.fillStyle = withAlpha(accent, 0.5);
-    ctx.fillText(displayLabel, curX, y);
+    ctx.fillText(displayLabel, curX, textY - 12);
 
-    ctx.font = `9px ${MONO_FONT}`;
+    ctx.font = `600 14px ${MONO_FONT}`;
     ctx.fillStyle = withAlpha(accent, 0.9);
     curX += labelWidth;
-    ctx.fillText(displayValue, curX, y);
+    ctx.fillText(displayValue, curX, textY + 8);
 
     // Trend arrow
     if (showTrend && callout.trendDir !== 'neutral') {
-      ctx.font = `7px ${MONO_FONT}`;
+      ctx.font = `700 20px ${MONO_FONT}`;
       curX += ctx.measureText(displayValue).width + 4;
       ctx.fillStyle = callout.trendColor || withAlpha(accent, 0.5);
       ctx.textAlign = 'left';
-      ctx.fillText(getTrendArrow(callout.trendDir), curX, y);
+      ctx.fillText(getTrendArrow(callout.trendDir), curX, textY + 8);
     }
   }
 
@@ -506,7 +500,7 @@ const drawTimestampHeader = (
   ctx.globalAlpha = headerAlpha;
 
   // "LAST NIGHT" label
-  ctx.font = `9px ${MONO_FONT}`;
+  ctx.font = `600 14px ${MONO_FONT}`;
   ctx.textBaseline = 'top';
   ctx.textAlign = 'left';
   ctx.fillStyle = withAlpha(accent, 0.4);
@@ -516,7 +510,8 @@ const drawTimestampHeader = (
   const formatted = formatDateHeader(dateStr);
   if (formatted) {
     ctx.fillStyle = withAlpha(accent, 0.6);
-    ctx.fillText(formatted, 12, 22);
+    ctx.font = `500 13px ${MONO_FONT}`;
+    ctx.fillText(formatted, 12, 28);
   }
 
   ctx.restore();
@@ -583,8 +578,8 @@ const renderBiometrics = (
   const elapsed = performance.now() - revealStart;
 
   const cx = width * 0.5;
-  const cy = height * 0.52;
-  const bodyH = height * 0.65;
+  const cy = height * 0.50;
+  const bodyH = height * 0.68;
   const bodyLeft = cx - bodyH * 0.1;
   const bodyRight = cx + bodyH * 0.1;
 
