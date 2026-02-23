@@ -7,15 +7,28 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
     <div class="nucleus__frame" data-nucleus>
       <NucleusCanvas />
     </div>
-
-    <!-- Edge metadata — film frame markings -->
-    <div class="nucleus__meta" id="nucleus-meta">
-      <span class="nucleus__meta-item nucleus__meta--tl" data-field="label"></span>
-      <span class="nucleus__meta-item nucleus__meta--tr" data-field="stat"></span>
-      <span class="nucleus__meta-item nucleus__meta--bl" data-field="position"></span>
-      <a class="nucleus__meta-item nucleus__meta--br" data-field="link" href="#">EXPLORE →</a>
-    </div>
   </section>
+
+  <div class="nucleus-ticker" id="nucleus-ticker">
+    <a class="nucleus-ticker__label" href="/music">
+      <span class="nucleus-ticker__icon" aria-hidden="true">♫</span>
+      <span class="nucleus-ticker__name">LISTENING</span>
+    </a>
+
+    <div class="nucleus-ticker__stream">
+      <div class="nucleus-ticker__scroll" id="nucleus-ticker-scroll">
+        <span class="nucleus-ticker__item">NO DATA CACHED</span>
+        <span class="nucleus-ticker__separator" aria-hidden="true">·</span>
+        <span class="nucleus-ticker__item">NO DATA CACHED</span>
+        <span class="nucleus-ticker__separator" aria-hidden="true">·</span>
+      </div>
+    </div>
+
+    <div class="nucleus-ticker__controls">
+      <button class="nucleus-ticker__arrow" id="nucleus-prev" aria-label="Previous mode">‹</button>
+      <button class="nucleus-ticker__arrow" id="nucleus-next" aria-label="Next mode">›</button>
+    </div>
+  </div>
 </div>
 
 <style is:global>
@@ -25,7 +38,8 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
     position: relative;
     overflow: hidden;
     border: 1px solid var(--border);
-    margin-top: 1rem;
+    border-bottom: none;
+    margin-top: 0;
     margin-bottom: 0;
     background: var(--surface-primary);
   }
@@ -37,143 +51,138 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
     background: var(--surface-primary);
   }
 
-  /* ══════════════════════════════════════
-     EDGE METADATA — Film frame markings
-     ══════════════════════════════════════ */
-
-  .nucleus__meta {
-    position: absolute;
-    inset: 0;
-    z-index: 5;
-    pointer-events: none;
-    padding: 12px 14px;
+  .nucleus-ticker {
+    width: 100%;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-top: none;
+    background: var(--surface-primary);
+    overflow: hidden;
   }
 
-  .nucleus__meta-item {
-    position: absolute;
+  .nucleus-ticker__label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0 12px;
+    height: 100%;
+    flex-shrink: 0;
+    text-decoration: none;
+    color: inherit;
+    border-right: 1px solid var(--border);
+    transition: opacity 0.15s ease;
+  }
+
+  .nucleus-ticker__label:hover { opacity: 0.7; }
+  .nucleus-ticker__icon { font-size: 10px; color: var(--accent-primary); line-height: 1; }
+
+  .nucleus-ticker__name {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 9px;
-    letter-spacing: 0.12em;
+    font-weight: 600;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--text-tertiary);
-    opacity: 0.15;
-    transition: opacity 0.6s ease;
+    color: var(--text-primary);
     line-height: 1;
     white-space: nowrap;
   }
 
-  /* Positions */
-  .nucleus__meta--tl { top: 12px; left: 14px; }
-  .nucleus__meta--tr { top: 12px; right: 14px; }
-  .nucleus__meta--bl { bottom: 12px; left: 14px; }
-  .nucleus__meta--br {
-    bottom: 12px;
-    right: 14px;
-    pointer-events: auto;
-    text-decoration: none;
+  .nucleus-ticker__stream {
+    flex: 1;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    mask-image: linear-gradient(to right, transparent 0%, black 24px, black calc(100% - 24px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 24px, black calc(100% - 24px), transparent 100%);
+  }
+
+  .nucleus-ticker__scroll {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    white-space: nowrap;
+    animation: ticker-scroll 30s linear infinite;
+  }
+
+  .nucleus-ticker:hover .nucleus-ticker__scroll { animation-play-state: paused; }
+
+  @keyframes ticker-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .nucleus-ticker__item {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    padding: 0 6px;
+  }
+
+  .nucleus-ticker__separator {
     color: var(--text-tertiary);
+    opacity: 0.3;
+    font-size: 10px;
+    padding: 0 2px;
   }
 
-  /* ══════════════════════════════════════
-     STATE TRANSITIONS via data-state
-     ══════════════════════════════════════ */
-
-  /* State 2: cursor entered — scanning */
-  .nucleus[data-state="scanning"] .nucleus__meta-item {
-    opacity: 0.35;
+  .nucleus-ticker__controls {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: 100%;
+    flex-shrink: 0;
+    border-left: 1px solid var(--border);
   }
 
-  /* State 3: hovering zones — exploring */
-  .nucleus[data-state="exploring"] .nucleus__meta-item {
-    opacity: 0.5;
-  }
-
-  /* State 4: focused / locked */
-  .nucleus[data-state="focused"] .nucleus__meta-item {
-    opacity: 0.85;
-    transition: opacity 0.3s ease;
-  }
-
-  .nucleus[data-state="focused"] .nucleus__meta--br {
-    color: var(--accent-primary);
+  .nucleus-ticker__arrow {
+    appearance: none;
+    -webkit-appearance: none;
+    border: none;
+    background: none;
     cursor: pointer;
+    padding: 0 8px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    color: var(--text-tertiary);
+    transition: color 0.1s ease, background 0.1s ease;
   }
 
-  /* ══════════════════════════════════════
-     FOCUSED STATE — Subtle vignette glow
-     ══════════════════════════════════════ */
+  .nucleus-ticker__arrow:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.03); }
 
-  .nucleus::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border: 1px solid rgba(96, 165, 250, 0.2);
-    box-shadow: inset 0 0 30px rgba(96, 165, 250, 0.05);
-    pointer-events: none;
-    z-index: 4;
-    opacity: 0;
-    transition: opacity 0.3s ease;
+  .nucleus-ticker__arrow:focus-visible {
+    outline: 1.5px solid var(--accent-primary);
+    outline-offset: -1.5px;
   }
 
-  .nucleus[data-state="focused"]::after {
-    opacity: 1;
-  }
+  .nucleus-ticker__arrow + .nucleus-ticker__arrow { border-left: 1px solid var(--border); }
 
-  /* ══════════════════════════════════════
-     CURSOR SCAN BEAM
-     ══════════════════════════════════════ */
-
-  .nucleus__scanbeam {
-    position: absolute;
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(96, 165, 250, 0.04) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 3;
-    transform: translate(-50%, -50%);
-    opacity: 0;
-    transition: opacity 0.4s ease;
-  }
-
-  .nucleus[data-state="scanning"] .nucleus__scanbeam,
-  .nucleus[data-state="exploring"] .nucleus__scanbeam {
-    opacity: 1;
-  }
-
-  /* ══════════════════════════════════════
-     MOBILE
-     ══════════════════════════════════════ */
+  [data-theme="light"] .nucleus-ticker__arrow:hover,
+  .light .nucleus-ticker__arrow:hover { background: rgba(0, 0, 0, 0.03); }
 
   @media (max-width: 640px) {
-    .nucleus__meta-item {
-      font-size: 8px;
-      opacity: 0.35;
-    }
-
-    .nucleus__meta {
-      padding: 8px 10px;
-    }
-
-    .nucleus__meta--tl { top: 8px; left: 10px; }
-    .nucleus__meta--tr { top: 8px; right: 10px; }
-    .nucleus__meta--bl { bottom: 8px; left: 10px; }
-    .nucleus__meta--br { bottom: 8px; right: 10px; }
+    .nucleus-ticker { height: 24px; }
+    .nucleus-ticker__label { padding: 0 8px; }
+    .nucleus-ticker__name { font-size: 8px; }
+    .nucleus-ticker__item { font-size: 9px; }
+    .nucleus-ticker__arrow { padding: 0 6px; font-size: 12px; }
   }
 
-  /* ══════════════════════════════════════
-     REDUCED MOTION
-     ══════════════════════════════════════ */
-
   @media (prefers-reduced-motion: reduce) {
-    .nucleus__meta-item {
-      transition: none;
-    }
-    .nucleus__scanbeam {
-      display: none;
-    }
-    .nucleus::after {
-      transition: none;
+    .nucleus-ticker__scroll {
+      animation: none;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
   }
 </style>

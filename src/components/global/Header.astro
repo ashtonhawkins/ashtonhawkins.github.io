@@ -1,6 +1,6 @@
 ---
 import ThemeToggle from '@components/global/ThemeToggle.astro';
-import Ticker from '@components/global/Ticker.astro';
+import NavTicker from '@components/global/NavTicker.astro';
 import Cursor from '@components/ui/Cursor.astro';
 import NoiseTexture from '@components/ui/NoiseTexture.astro';
 import AnalogClock from '@components/ui/AnalogClock.astro';
@@ -11,10 +11,21 @@ const links = [
   { href: '/about', label: 'About' },
   { href: '/work', label: 'Work' },
   { href: '/ventures', label: 'Ventures' },
-  { href: '/travel', label: 'Travel' },
-  { href: '/photos', label: 'Photos' },
+  { href: '/travel', label: 'Travel' }
+];
+
+const mobileLinks = [
+  ...links,
+  { href: '/now', label: 'Now' },
   { href: '/writing', label: 'Writing' },
-  { href: '/now', label: 'Now' }
+  { href: '/photos', label: 'Photos' },
+  { href: '/quotes', label: 'Quotes' }
+];
+
+const nowFlyoutLinks = [
+  { href: '/writing', label: 'Writing' },
+  { href: '/photos', label: 'Photos' },
+  { href: '/quotes', label: 'Quotes' }
 ];
 
 const isActive = (href: string) => {
@@ -39,26 +50,38 @@ const isActive = (href: string) => {
             <a href={link.href} aria-current={isActive(link.href) ? 'page' : undefined} class={isActive(link.href) ? 'active' : undefined}>{link.label}</a>
           </li>
         ))}
+        <li class="nav__item nav__item--dropdown">
+          <a href="/now" class={`nav__link ${isActive('/now') ? 'active' : ''}`.trim()} aria-current={isActive('/now') ? 'page' : undefined}>NOW</a>
+          <div class="nav__flyout" aria-label="Now links">
+            {nowFlyoutLinks.map((link) => (
+              <a href={link.href} class="nav__flyout-link">{link.label}</a>
+            ))}
+          </div>
+        </li>
       </ul>
     </nav>
 
-    <div class="header__clock">
-      <AnalogClock />
-    </div>
+    <div class="header__instruments">
+      <div class="header__ticker" id="header-ticker">
+        <NavTicker />
+      </div>
 
-    <div class="header__utilities">
-      <ThemeToggle />
-      <button class="cmd-trigger" type="button" aria-label="Open command palette"><span>⌘K</span></button>
-      <button class="menu-trigger" type="button" aria-label="Open menu" aria-expanded="false" data-menu-toggle><span></span><span></span><span></span></button>
+      <div class="header__clock">
+        <AnalogClock />
+      </div>
+
+      <div class="header__utilities">
+        <ThemeToggle />
+        <button class="cmd-trigger" type="button" aria-label="Open command palette"><span>⌘K</span></button>
+        <button class="menu-trigger" type="button" aria-label="Open menu" aria-expanded="false" data-menu-toggle><span></span><span></span><span></span></button>
+      </div>
     </div>
   </div>
-
-  <Ticker />
 
   <div class="mobile-overlay" data-mobile-menu hidden>
     <nav aria-label="Mobile Primary" class="mobile-nav">
       <ul>
-        {links.map((link) => (
+        {mobileLinks.map((link) => (
           <li><a href={link.href} aria-current={isActive(link.href) ? 'page' : undefined}>{link.label}</a></li>
         ))}
       </ul>
@@ -117,15 +140,58 @@ const isActive = (href: string) => {
 <style>
   .skip-link { position:absolute; left:-999px; top:0; }
   .skip-link:focus-visible { left:1rem; top:1rem; background:var(--surface-primary); padding:.5rem .75rem; z-index:60; }
-  .site-header { position: sticky; top:0; z-index:50; backdrop-filter: blur(8px); background: color-mix(in srgb, var(--surface-primary) 90%, transparent); isolation:isolate; }
-  .site-header.scrolled { border-bottom-color: transparent; }
-  .header-inner { position:relative; z-index:2; display:flex; align-items:center; width:100%; min-height:48px; padding-inline:var(--content-padding); }
+  .site-header { position: sticky; top:0; z-index:50; backdrop-filter: blur(8px); background: color-mix(in srgb, var(--surface-primary) 90%, transparent); isolation:isolate; border-bottom:1px solid var(--border); }
+  .site-header.scrolled { border-bottom-color: var(--border); }
+  .header-inner { position:relative; z-index:2; display:flex; align-items:center; width:100%; min-height:56px; padding-inline:var(--content-padding); gap:1.5rem; }
   .logotype { flex-shrink:0; font-family:'IBM Plex Mono',monospace; font-weight:700; color:var(--text-primary); text-decoration:none; display:inline-flex; align-items:center; font-size:1.25rem; letter-spacing:.15em; text-transform:uppercase; }
   .logotype__cursor { margin-left:.15rem; }
-  .desktop-nav{display:none;flex-shrink:0;margin-left:2rem;} .desktop-nav ul{list-style:none;display:flex;gap:1.25rem;padding:0;margin:0;}
-  .desktop-nav a{font-family:'IBM Plex Mono',monospace;font-size:.8rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);text-decoration:none;padding:.35rem 0;border-bottom:2px solid transparent;}
-  .desktop-nav a.active,.desktop-nav a:hover{color:var(--text-primary);} .desktop-nav a.active{border-bottom-color:var(--accent-primary);} 
-  .header__clock{flex:1;display:flex;justify-content:center;align-items:center;}
+  .desktop-nav{display:none;flex-shrink:0;} .desktop-nav ul{list-style:none;display:flex;gap:1.1rem;padding:0;margin:0;align-items:center;}
+  .desktop-nav a, .nav__link{font-family:'IBM Plex Mono',monospace;font-size:.75rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);text-decoration:none;padding:.35rem 0;border-bottom:2px solid transparent;display:inline-flex;align-items:center;height:100%;}
+  .desktop-nav a.active,.desktop-nav a:hover,.nav__link.active,.nav__link:hover{color:var(--text-primary);} .desktop-nav a.active,.nav__link.active{border-bottom-color:var(--accent-primary);} 
+  .nav__item--dropdown { position: relative; }
+  .nav__flyout {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 120px;
+    background: var(--surface-primary);
+    border: 1px solid var(--border);
+    border-top: none;
+    padding: 6px 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+    z-index: 100;
+  }
+  .nav__item--dropdown:hover .nav__flyout,
+  .nav__item--dropdown:focus-within .nav__flyout {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  .nav__flyout-link {
+    display: block;
+    padding: 6px 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.1s ease, background 0.1s ease;
+    white-space: nowrap;
+  }
+  .nav__flyout-link:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.03); }
+  [data-theme="light"] .nav__flyout-link:hover,
+  .light .nav__flyout-link:hover { background: rgba(0, 0, 0, 0.03); }
+
+  .header__instruments {display:flex;align-items:center;gap:12px;margin-left:auto;min-width:0;}
+  .header__ticker {font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.04em;color:var(--text-tertiary);max-width:280px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0;}
+  .header__clock{display:flex;justify-content:center;align-items:center;}
   .header__utilities{flex-shrink:0;display:flex;align-items:center;gap:.5rem;}
   .cmd-trigger,.menu-trigger{border:1px solid var(--border);background:var(--surface-primary);color:var(--text-secondary);border-radius:999px;padding:.4rem .6rem;}
   .cmd-trigger{display:none;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;}
@@ -137,5 +203,11 @@ const isActive = (href: string) => {
     .desktop-nav, .cmd-trigger { display:flex; }
     .menu-trigger, .mobile-overlay { display:none; }
     .logotype { font-size:1.5rem; }
+  }
+  @media (max-width: 1024px) {
+    .header__ticker { max-width:200px; }
+  }
+  @media (max-width: 768px) {
+    .header__ticker { display:none; }
   }
 </style>
