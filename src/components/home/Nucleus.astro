@@ -4,24 +4,23 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
 
 <div class="container-shell max-wide">
   <section class="nucleus" id="nucleus" aria-label="Nucleus" data-state="ambient">
-    <div class="nucleus__mode-label" id="nucleus-mode-label">LISTENING</div>
     <div class="nucleus__frame" data-nucleus>
       <NucleusCanvas />
     </div>
   </section>
 
   <div class="nucleus-ticker" id="nucleus-ticker">
-    <a class="nucleus-ticker__label" href="/music">
-      <span class="nucleus-ticker__icon" aria-hidden="true">♫</span>
-      <span class="nucleus-ticker__name">LISTENING</span>
+    <a class="nucleus-ticker__mode-label" href="/music">
+      <span class="nucleus-ticker__mode-icon" aria-hidden="true">♫</span>
+      <span class="nucleus-ticker__mode-name">LISTENING</span>
     </a>
 
     <div class="nucleus-ticker__stream">
-      <div class="nucleus-ticker__scroll" id="nucleus-ticker-scroll">
-        <span class="nucleus-ticker__item">NO DATA CACHED</span>
-        <span class="nucleus-ticker__separator" aria-hidden="true">·</span>
-        <span class="nucleus-ticker__item">NO DATA CACHED</span>
-        <span class="nucleus-ticker__separator" aria-hidden="true">·</span>
+      <div class="nucleus-ticker__scroll-content" id="nucleus-ticker-scroll">
+        <span class="ticker-item ticker-item--text">NO DATA CACHED</span>
+        <span class="ticker-sep" aria-hidden="true">·</span>
+        <span class="ticker-item ticker-item--text">NO DATA CACHED</span>
+        <span class="ticker-sep" aria-hidden="true">·</span>
       </div>
     </div>
 
@@ -39,7 +38,6 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
     position: relative;
     overflow: hidden;
     border: 1px solid var(--border);
-    border-bottom: none;
     margin-top: 0;
     margin-bottom: 0;
     background: var(--surface-primary);
@@ -52,60 +50,42 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
     background: var(--surface-primary);
   }
 
-  .nucleus__mode-label {
-    position: absolute;
-    top: 10px;
-    left: 12px;
-    z-index: 3;
-    pointer-events: none;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--text-primary);
-    text-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    opacity: 0.85;
-  }
-
   .nucleus-ticker {
     width: 100%;
-    height: 28px;
+    height: 30px;
     display: flex;
     align-items: center;
     gap: 0;
-    border: 1px solid var(--border);
-    border-top: none;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+    padding-top: 4px;
     background: var(--surface-primary);
     overflow: hidden;
   }
 
-  .nucleus-ticker__label {
+  .nucleus-ticker__mode-label {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
     padding: 0 12px;
     height: 100%;
     flex-shrink: 0;
     text-decoration: none;
-    color: inherit;
+    white-space: nowrap;
     border-right: 1px solid var(--border);
-    transition: opacity 0.15s ease;
-  }
-
-  .nucleus-ticker__label:hover { opacity: 0.7; }
-  .nucleus-ticker__icon { font-size: 10px; color: var(--accent-primary); line-height: 1; }
-
-  .nucleus-ticker__name {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--text-primary);
-    line-height: 1;
-    white-space: nowrap;
+    transition: color 0.15s ease;
   }
+
+  .nucleus-ticker__mode-label:hover { color: var(--accent-primary); }
+  .nucleus-ticker__mode-icon { margin-right: 4px; font-size: 10px; line-height: 1; }
+
+  .nucleus-ticker__mode-name { line-height: 1; }
 
   .nucleus-ticker__stream {
     flex: 1;
@@ -117,7 +97,7 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
     -webkit-mask-image: linear-gradient(to right, transparent 0%, black 24px, black calc(100% - 24px), transparent 100%);
   }
 
-  .nucleus-ticker__scroll {
+  .nucleus-ticker__scroll-content {
     display: flex;
     align-items: center;
     gap: 0;
@@ -125,73 +105,89 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
     animation: ticker-scroll 30s linear infinite;
   }
 
-  .nucleus-ticker:hover .nucleus-ticker__scroll { animation-play-state: paused; }
+  .nucleus-ticker:hover .nucleus-ticker__scroll-content { animation-play-state: paused; }
 
   @keyframes ticker-scroll {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
   }
 
-  .nucleus-ticker__item {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
+  .ticker-item {
     white-space: nowrap;
-    padding: 0 6px;
+    padding: 0 2px;
     display: inline-flex;
     align-items: baseline;
-    gap: 2px;
+    gap: 0;
+    font-size: 11px;
   }
 
-  .nucleus-ticker__value {
+  .ticker-item--numeric .ticker-val {
     font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
     font-weight: 600;
     color: var(--text-primary);
-    font-size: 10px;
   }
 
-  .nucleus-ticker__unit {
+  .ticker-item--numeric .ticker-unit {
     font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
     font-weight: 400;
     color: var(--text-tertiary);
-    font-size: 9px;
     margin-left: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
   }
 
-  .nucleus-ticker__text {
+  .ticker-item--text {
     font-family: 'IBM Plex Sans', sans-serif;
     font-style: italic;
     color: var(--text-secondary);
-    font-size: 10px;
+    font-size: 11px;
     text-transform: none;
   }
 
-  .nucleus-ticker__chip {
+  .ticker-item--chip {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 8px;
+    font-size: 9px;
     letter-spacing: 0.06em;
     color: var(--text-secondary);
-    border: 1px solid var(--border);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 3px;
-    padding: 1px 5px;
+    padding: 2px 6px;
     white-space: nowrap;
     line-height: 1.2;
   }
 
-  .nucleus-ticker__date {
+  .ticker-item--label {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 8px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     color: var(--text-tertiary);
+    text-transform: uppercase;
+    opacity: 0.6;
   }
 
-  .nucleus-ticker__separator {
+  .ticker-sep {
     color: var(--text-tertiary);
-    opacity: 0.3;
-    font-size: 10px;
-    padding: 0 2px;
+    opacity: 0.25;
+    margin: 0 10px;
+    font-size: 8px;
+  }
+
+  .nucleus-ticker__scroll-content.entering .ticker-item {
+    animation: ticker-item-enter 0.3s ease-out forwards;
+    opacity: 0;
+  }
+
+  .nucleus-ticker__scroll-content.entering .ticker-item:nth-child(1) { animation-delay: 0s; }
+  .nucleus-ticker__scroll-content.entering .ticker-item:nth-child(2) { animation-delay: 0.05s; }
+  .nucleus-ticker__scroll-content.entering .ticker-item:nth-child(3) { animation-delay: 0.1s; }
+  .nucleus-ticker__scroll-content.entering .ticker-item:nth-child(4) { animation-delay: 0.15s; }
+  .nucleus-ticker__scroll-content.entering .ticker-item:nth-child(5) { animation-delay: 0.2s; }
+
+  @keyframes ticker-item-enter {
+    from { opacity: 0; transform: translateX(8px); }
+    to { opacity: 1; transform: translateX(0); }
   }
 
   .nucleus-ticker__controls {
@@ -233,18 +229,22 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
   .light .nucleus-ticker__arrow:hover { background: rgba(0, 0, 0, 0.03); }
 
   @media (max-width: 640px) {
-    .nucleus-ticker { height: 24px; }
-    .nucleus-ticker__label { padding: 0 8px; }
-    .nucleus-ticker__name { font-size: 11px; }
-    .nucleus-ticker__item { font-size: 9px; }
+    .nucleus-ticker { height: 26px; }
+    .nucleus-ticker__mode-label { padding: 0 8px; }
+    .ticker-item { font-size: 10px; }
     .nucleus-ticker__arrow { padding: 0 6px; font-size: 12px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .nucleus-ticker__scroll {
+    .nucleus-ticker__scroll-content {
       animation: none;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
+    }
+
+    .nucleus-ticker__scroll-content.entering .ticker-item {
+      animation: none;
+      opacity: 1;
     }
   }
 </style>
