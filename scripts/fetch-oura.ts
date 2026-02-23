@@ -1,5 +1,7 @@
 import { writeFile, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { seal } from 'tweetnacl-sealedbox-js';
+import { encodeBase64, decodeBase64 } from 'tweetnacl-util';
 
 /**
  * Populates src/data/oura/*.json with data from the Oura Ring API V2.
@@ -42,6 +44,51 @@ function getDateRange(): { startDate: string; endDate: string } {
   const start = new Date(now.getTime() - ROLLING_WINDOW_DAYS * 86_400_000);
   const startDate = formatDate(start);
   return { startDate, endDate };
+}
+
+// ── GitHub Secret Update ─────────────────────────────────────────
+
+async function updateGitHubSecret(secretName: string, secretValue: string): Promise<void> {
+  const repo = process.env.GITHUB_REPOSITORY;
+  const ghPat = process.env.GH_PAT;
+
+  if (!repo || !ghPat) {
+    console.log('[oura] Warning: Cannot update GitHub secret — GH_PAT or GITHUB_REPOSITORY not set (running locally?)');
+    return;
+  }
+
+  // Step 1: Get the repo's public key for secret encryption
+  const keyResponse = await fetch(
+    `https://api.github.com/repos/${repo}/actions/secrets/public-key`,
+    { headers: { Authorization: `Bearer ${ghPat}`, Accept: 'application/vnd.github+json' } }
+  );
+  const { key, key_id } = await keyResponse.json() as { key: string; key_id: string };
+
+  // Step 2: Encrypt the secret value using libsodium sealed box
+  const messageBytes = new TextEncoder().encode(secretValue);
+  const keyBytes = decodeBase64(key);
+  const encryptedBytes = seal(messageBytes, keyBytes);
+  const encryptedValue = encodeBase64(encryptedBytes);
+
+  // Step 3: Update the secret
+  const updateResponse = await fetch(
+    `https://api.github.com/repos/${repo}/actions/secrets/${secretName}`,
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${ghPat}`,
+        Accept: 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ encrypted_value: encryptedValue, key_id }),
+    }
+  );
+
+  if (updateResponse.status === 201 || updateResponse.status === 204) {
+    console.log(`[oura] Successfully updated GitHub secret: ${secretName}`);
+  } else {
+    console.error(`[oura] Failed to update secret: ${updateResponse.status} ${await updateResponse.text()}`);
+  }
 }
 
 // ── Token Refresh ────────────────────────────────────────────────
@@ -105,11 +152,16 @@ async function refreshAccessToken(): Promise<string> {
   }
 
   if (json.refresh_token && json.refresh_token !== refreshToken) {
-    console.warn(
-      '[oura] WARNING: API returned a new refresh_token. ' +
-        'Update the OURA_REFRESH_TOKEN GitHub secret with this value:\n' +
-        `  ${json.refresh_token}`
-    );
+    console.log('[oura] New refresh token received — persisting to GitHub Secrets...');
+    try {
+      await updateGitHubSecret('OURA_REFRESH_TOKEN', json.refresh_token);
+    } catch (error) {
+      console.warn(
+        '[oura] Warning: Failed to persist new refresh token to GitHub Secrets:',
+        error instanceof Error ? error.message : error
+      );
+      console.warn('[oura] Continuing with data fetch — token may need manual update.');
+    }
   }
 
   return json.access_token;

@@ -42,6 +42,8 @@ jobs:
           OURA_CLIENT_ID: ${{ secrets.OURA_CLIENT_ID }}
           OURA_CLIENT_SECRET: ${{ secrets.OURA_CLIENT_SECRET }}
           OURA_REFRESH_TOKEN: ${{ secrets.OURA_REFRESH_TOKEN }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
       - name: Build site
         run: npm run build
         env:
