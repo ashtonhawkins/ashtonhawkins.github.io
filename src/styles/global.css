@@ -17,6 +17,15 @@
   --surface-hover: #1a1e28;
   --surface-primary: var(--bg-primary);
   --surface-secondary: var(--bg-secondary);
+
+  /* Mode accent tints */
+  --accent-listening: #b8956e;
+  --accent-watching: #7babc4;
+  --accent-reading: #b8a87b;
+  --accent-travel: #6eb8a8;
+  --accent-cycling: #7bb87b;
+  --accent-writing: #9b7bb8;
+  --accent-biometrics: #b87b7b;
 }
 
 html[data-theme='light'] {
@@ -36,6 +45,15 @@ html[data-theme='light'] {
   --surface-hover: #eceef2;
   --surface-primary: var(--bg-primary);
   --surface-secondary: var(--bg-secondary);
+
+  /* Mode accent tints */
+  --accent-listening: #806040;
+  --accent-watching: #3d7090;
+  --accent-reading: #70653d;
+  --accent-travel: #3d8070;
+  --accent-cycling: #408040;
+  --accent-writing: #603d80;
+  --accent-biometrics: #803d3d;
 }
 
 html,
