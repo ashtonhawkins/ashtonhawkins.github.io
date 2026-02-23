@@ -24,7 +24,7 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
   </section>
 </div>
 
-<style>
+<style is:global>
   .nucleus-wrapper {
     position: relative;
   }
@@ -110,21 +110,32 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
   }
 
   .nucleus-track__segment {
+    /* Reset */
     appearance: none;
+    -webkit-appearance: none;
     border: none;
     background: none;
     padding: 0;
+    margin: 0;
     cursor: pointer;
+    box-sizing: content-box;
+
+    /* Visual segment: 32px wide, 3px tall bar */
     width: 32px;
     height: 3px;
     border-radius: 1.5px;
     position: relative;
     overflow: hidden;
-    background: var(--border);
+    background: var(--border, #334155);
     opacity: 0.4;
-    padding: 10px 0;
-    margin: -10px 0;
+
+    /* Enlarged hit target without affecting visual size */
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-top: -10px;
+    margin-bottom: -10px;
     background-clip: content-box;
+
     transition: opacity 0.3s ease, width 0.3s ease;
   }
 
@@ -133,27 +144,41 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
   }
 
   .nucleus-track__segment:focus-visible {
-    outline: 2px solid var(--accent-primary);
+    outline: 2px solid var(--accent-primary, #60a5fa);
     outline-offset: 4px;
     border-radius: 2px;
   }
 
+  /* Active segment — wider, full opacity, transparent bg so the fill span shows through */
   .nucleus-track__segment[aria-current='true'] {
     width: 48px;
     opacity: 1;
-    background: transparent;
+    background-color: transparent;
+    background-clip: content-box;
   }
 
+  /* Give inactive segments a visible bar background via content-box clipping */
+  .nucleus-track__segment[aria-current='false'] {
+    background-color: var(--border, #334155);
+    background-clip: content-box;
+  }
+
+  /* Fill bar inside active segment — animates left to right to show auto-advance progress */
   .nucleus-track__fill {
-    display: block;
     position: absolute;
-    top: 50%;
     left: 0;
-    height: 3px;
     width: 0%;
-    margin-top: -1.5px;
     border-radius: 1.5px;
-    background: var(--accent-primary);
+    background: var(--accent-primary, #60a5fa);
+    animation: track-fill var(--slide-duration, 9s) linear forwards;
+    /* Ensure fill sits within the content-box area, not the padded hit target */
+    top: 10px;
+    height: 3px;
+  }
+
+  /* Only show fill on active segment */
+  .nucleus-track__segment[aria-current='false'] .nucleus-track__fill {
+    display: none;
   }
 
   .nucleus-track__segment[aria-current='true'] .nucleus-track__fill {
@@ -193,22 +218,25 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
     background: var(--accent-biometrics, var(--accent-primary));
   }
 
+  /* Mode label below the track */
   .nucleus-track__label {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 9px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--text-tertiary);
+    color: var(--text-tertiary, #64748b);
     opacity: 0;
     transition: opacity 0.3s ease;
     white-space: nowrap;
     user-select: none;
   }
 
+  /* Label appears on hover */
   .nucleus-track:hover .nucleus-track__label {
     opacity: 1;
   }
 
+  /* Reduced motion */
   @media (prefers-reduced-motion: reduce) {
     .nucleus-track__segment[aria-current='true'] .nucleus-track__fill {
       animation: none;
