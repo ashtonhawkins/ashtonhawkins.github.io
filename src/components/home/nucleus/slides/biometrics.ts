@@ -524,7 +524,7 @@ const drawAmbient = (
   width: number,
   height: number,
   accent: string,
-  cycle: number
+  _cycle: number
 ): void => {
   ctx.save();
   ctx.font = `8px ${MONO_FONT}`;
@@ -535,10 +535,6 @@ const drawAmbient = (
   ctx.textAlign = 'right';
   ctx.fillText('DIAGNOSTIC v2.1', width - 12, 10);
   ctx.fillText('OURA GEN4', width - 12, 22);
-
-  // Bottom left
-  ctx.textAlign = 'left';
-  ctx.fillText(`SCAN CYCLE ${cycle}`, 12, height - 18);
 
   // Measurement rules at body area top/bottom
   ctx.strokeStyle = withAlpha(accent, 0.08);

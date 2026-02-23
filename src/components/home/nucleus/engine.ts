@@ -86,78 +86,102 @@ const escapeHtml = (value: unknown): string => String(value ?? '')
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#39;');
 
-const tickerText = (value: unknown): string => `<span class="nucleus-ticker__item"><em class="nucleus-ticker__text">${escapeHtml(value)}</em></span>`;
-const tickerNumber = (value: unknown, unit: string): string => `<span class="nucleus-ticker__item"><span class="nucleus-ticker__value">${escapeHtml(value)}</span><span class="nucleus-ticker__unit">${escapeHtml(unit)}</span></span>`;
-const tickerChip = (value: unknown): string => `<span class="nucleus-ticker__item"><span class="nucleus-ticker__chip">${escapeHtml(value)}</span></span>`;
-const tickerDate = (value: unknown): string => `<span class="nucleus-ticker__item"><span class="nucleus-ticker__date">${escapeHtml(value)}</span></span>`;
+const tickerLabelPrefix = (value: unknown): string => `<span class="ticker-item ticker-item--label">${escapeHtml(value)}</span>`;
+const tickerText = (value: unknown): string => `<span class="ticker-item ticker-item--text">${escapeHtml(value)}</span>`;
+const tickerNumber = (value: unknown, unit?: string): string => `<span class="ticker-item ticker-item--numeric"><span class="ticker-val">${escapeHtml(value)}</span>${unit ? `<span class="ticker-unit">${escapeHtml(unit)}</span>` : ''}</span>`;
+const tickerChip = (value: unknown): string => `<span class="ticker-item ticker-item--chip">${escapeHtml(value)}</span>`;
 
 const subTickerItems = (slide: ActiveSlide): string[] => {
-  const { module, data } = slide;
-  const renderData = data.renderData ?? {};
+  const { module } = slide;
 
-  if (module.id === 'listening') {
+  if (module.id === 'biometrics') {
     return [
-      tickerText(renderData.artist && renderData.track ? `${renderData.track} — ${renderData.artist}` : 'Hot Blooded — New Constellations'),
-      tickerNumber(renderData.plays ?? 847, 'SCROBBLES'),
-      tickerText(`TOP GENRE: ${(renderData.genre ?? 'INDIE').toString().toUpperCase()}`)
-    ];
-  }
-
-  if (module.id === 'watching') {
-    return [
-      tickerText(renderData.title ?? 'The Omega Man'),
-      tickerDate(renderData.year ?? '1971'),
-      tickerChip(`★ ${renderData.rating ?? 5}`),
-      tickerDate(data.updatedAt ? new Date(data.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase() : 'FEB 21')
-    ];
-  }
-
-  if (module.id === 'travel') {
-    const miles = Number.parseFloat(String(renderData.distance ?? 142000));
-    return [
-      tickerText(renderData.city ?? renderData.destination ?? 'Tokyo'),
-      tickerText(renderData.country ?? 'Japan'),
-      tickerDate(renderData.tripDate ?? 'NOV 2025'),
-      tickerNumber(renderData.countries ?? 23, 'COUNTRIES'),
-      tickerNumber(Number.isFinite(miles) ? miles.toLocaleString() : (renderData.distance ?? '142,000'), 'MI FLOWN')
+      tickerLabelPrefix('LAST NIGHT'),
+      tickerText('FEB 22'),
+      tickerLabelPrefix('DEEP'),
+      tickerNumber('1h 42m'),
+      tickerLabelPrefix('REM'),
+      tickerNumber('2h 15m'),
+      tickerLabelPrefix('STEPS'),
+      tickerNumber('8,423'),
+      tickerLabelPrefix('7D AVG HRV'),
+      tickerNumber('47', 'ms')
     ];
   }
 
   if (module.id === 'cycling') {
     return [
-      tickerNumber(renderData.distance ?? '2.6', 'MI LAST RIDE'),
-      tickerNumber(renderData.elevation ?? '56', 'FT ELEV'),
-      tickerNumber(renderData.monthlyMiles ?? renderData.monthDistance ?? '127', 'MI THIS MONTH'),
-      tickerNumber(renderData.speed ?? '9.7', 'MPH AVG')
+      tickerLabelPrefix('LAST RIDE'),
+      tickerText('FEB 20'),
+      tickerLabelPrefix('THIS MONTH'),
+      tickerNumber('127', 'mi'),
+      tickerLabelPrefix('LONGEST'),
+      tickerNumber('34', 'mi'),
+      tickerLabelPrefix('YTD ELEV'),
+      tickerNumber('2,400', 'ft'),
+      tickerLabelPrefix('AVG SPEED'),
+      tickerNumber('9.7', 'mph')
+    ];
+  }
+
+  if (module.id === 'listening') {
+    return [
+      tickerLabelPrefix('THIS WEEK'),
+      tickerNumber('847', 'scrobbles'),
+      tickerLabelPrefix('TOP ARTIST'),
+      tickerText('Cocteau Twins'),
+      tickerLabelPrefix('TOP GENRE'),
+      tickerText('Dream Pop'),
+      tickerChip('12 DAY STREAK')
+    ];
+  }
+
+  if (module.id === 'watching') {
+    return [
+      tickerLabelPrefix('2026 TOTAL'),
+      tickerNumber('23', 'films'),
+      tickerChip('AVG ★ 3.8'),
+      tickerLabelPrefix('LAST LOGGED'),
+      tickerText('FEB 21'),
+      tickerLabelPrefix('TOP DECADE'),
+      tickerText('1970s')
     ];
   }
 
   if (module.id === 'writing') {
-    const latestDate = data.updatedAt
-      ? new Date(data.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()
-      : 'FEB 18';
-
     return [
-      tickerText(renderData.title ?? data.detail ?? 'Building a Data-Driven Personal Site'),
-      tickerNumber(renderData.wordCount ?? 26, 'WORDS'),
-      tickerDate(`LATEST: ${latestDate}`)
+      tickerNumber('12', 'posts in 2026'),
+      tickerNumber('14,200', 'total words'),
+      tickerLabelPrefix('MOST TAGGED'),
+      tickerText('CRO'),
+      tickerLabelPrefix('LAST PUBLISHED'),
+      tickerText('FEB 18')
     ];
   }
 
-  if (module.id === 'biometrics') {
-    const sleep = typeof renderData.totalSleepMinutes === 'number'
-      ? `${Math.floor(renderData.totalSleepMinutes / 60)}h ${String(renderData.totalSleepMinutes % 60).padStart(2, '0')}m`
-      : '7h 59m';
-
+  if (module.id === 'travel') {
     return [
-      tickerChip(`${renderData.readinessScore ?? renderData.readiness ?? 76} SCORE`),
-      tickerNumber(renderData.hrv ?? 43, 'MS HRV'),
-      tickerNumber(sleep, 'SLEEP'),
-      tickerNumber(renderData.restingHeartRate ?? renderData.rhr ?? 62, 'BPM RHR')
+      tickerNumber('23', 'countries'),
+      tickerNumber('6', 'continents'),
+      tickerNumber('142,000', 'mi flown'),
+      tickerLabelPrefix('LAST TRIP'),
+      tickerText('London'),
+      tickerLabelPrefix('AIRPORTS'),
+      tickerNumber('47')
     ];
   }
 
-  return [tickerText(data.detail ?? 'NO DATA CACHED')];
+  if (module.id === 'reading') {
+    return [
+      tickerLabelPrefix('CURRENT'),
+      tickerText('Systems Thinking'),
+      tickerLabelPrefix('PAGES THIS WEEK'),
+      tickerNumber('214'),
+      tickerChip('6 DAY STREAK')
+    ];
+  }
+
+  return [tickerText('NO DATA CACHED')];
 };
 
 const renderSlide = (slide: ActiveSlide, ctx: CanvasRenderingContext2D, width: number, height: number, frame: number) => {
@@ -186,11 +210,10 @@ export const initNucleus = async () => {
   if (!(canvas instanceof HTMLCanvasElement) || !(ctx instanceof CanvasRenderingContext2D)) return;
 
   const nucleus = document.getElementById('nucleus');
-  const tickerLabel = document.querySelector<HTMLAnchorElement>('.nucleus-ticker__label');
-  const tickerIcon = document.querySelector<HTMLElement>('.nucleus-ticker__icon');
-  const tickerName = document.querySelector<HTMLElement>('.nucleus-ticker__name');
+  const tickerLabel = document.querySelector<HTMLAnchorElement>('.nucleus-ticker__mode-label');
+  const tickerIcon = document.querySelector<HTMLElement>('.nucleus-ticker__mode-icon');
+  const tickerName = document.querySelector<HTMLElement>('.nucleus-ticker__mode-name');
   const tickerScroll = document.getElementById('nucleus-ticker-scroll');
-  const modeLabel = document.getElementById('nucleus-mode-label');
   const prevBtn = document.getElementById('nucleus-prev');
   const nextBtn = document.getElementById('nucleus-next');
 
@@ -232,31 +255,27 @@ export const initNucleus = async () => {
     const mode = modeDisplay[slide.module.id] ?? { icon: '◌', name: slide.data.label, href: slide.data.link };
     tickerIcon.textContent = mode.icon;
     tickerName.textContent = mode.name;
-    if (modeLabel instanceof HTMLElement) modeLabel.textContent = mode.name;
     tickerLabel.href = mode.href;
 
     const items = subTickerItems(slide);
     const source = items.length ? items : [tickerText('NO DATA CACHED')];
     const segment = source.map((item, i) => {
-      const sep = i < source.length - 1 ? '<span class="nucleus-ticker__separator" aria-hidden="true">·</span>' : '';
+      const sep = i < source.length - 1 ? '<span class="ticker-sep" aria-hidden="true">·</span>' : '';
       return `${item}${sep}`;
     }).join('');
-    const html = `${segment}<span class="nucleus-ticker__separator" aria-hidden="true">·</span>${segment}<span class="nucleus-ticker__separator" aria-hidden="true">·</span>`;
+    const html = `${segment}<span class="ticker-sep" aria-hidden="true">·</span>${segment}<span class="ticker-sep" aria-hidden="true">·</span>`;
+
+    tickerScroll.innerHTML = html;
 
     if (reducedMotion) {
-      tickerScroll.innerHTML = html;
+      tickerScroll.classList.remove('entering');
       return;
     }
 
-    tickerScroll.style.transition = 'opacity 0.2s ease';
-    tickerScroll.style.opacity = '0';
-    window.setTimeout(() => {
-      tickerScroll.innerHTML = html;
-      tickerScroll.style.animation = 'none';
-      void tickerScroll.offsetWidth;
-      tickerScroll.style.animation = '';
-      tickerScroll.style.opacity = '1';
-    }, 200);
+    tickerScroll.classList.remove('entering');
+    void tickerScroll.offsetWidth;
+    tickerScroll.classList.add('entering');
+    window.setTimeout(() => tickerScroll.classList.remove('entering'), 400);
   };
 
   const applySlideState = (index: number) => {
