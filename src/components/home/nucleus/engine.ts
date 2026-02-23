@@ -133,81 +133,96 @@ const scrambleText = (
 
 type ActiveSlide = { module: SlideModule; data: SlideData };
 
-const createTrack = (slides: ActiveSlide[]) => {
-  const segmentsHost = document.getElementById('nucleus-track-segments');
-  if (!(segmentsHost instanceof HTMLElement)) return;
-  segmentsHost.innerHTML = '';
+/* ══════════════════════════════════════
+   NUCLEUS BAR — Mode icons by slide ID
+   ══════════════════════════════════════ */
 
-  document.documentElement.style.setProperty('--slide-duration', `${SLIDE_DURATION}ms`);
+const MODE_ICONS: Record<string, string> = {
+  listening: '♫',
+  watching: '▶',
+  reading: '⊡',
+  travel: '✈',
+  cycling: '◎',
+  writing: '✎',
+  biometrics: '♡'
+};
+
+const createBar = (slides: ActiveSlide[]) => {
+  const nav = document.getElementById('nucleus-bar-nav');
+  if (!(nav instanceof HTMLElement)) return;
+  nav.innerHTML = '';
 
   slides.forEach((slide) => {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'nucleus-track__segment';
+    button.className = 'nucleus-bar__indicator';
     button.dataset.mode = slide.module.id;
     button.setAttribute('aria-label', slide.data.label);
     button.setAttribute('aria-current', 'false');
 
-    const fill = document.createElement('span');
-    fill.className = 'nucleus-track__fill';
-    button.appendChild(fill);
+    const tooltip = document.createElement('span');
+    tooltip.className = 'nucleus-bar__tooltip';
+    tooltip.textContent = slide.data.label;
+    button.appendChild(tooltip);
 
-    segmentsHost.append(button);
+    nav.append(button);
   });
 };
 
-const updateTrack = (mode: string) => {
-  const segments = document.querySelectorAll('.nucleus-track__segment');
-  const label = document.querySelector('.nucleus-track__label');
+const updateBar = (slide: ActiveSlide, reducedMotion: boolean) => {
+  const mode = slide.module.id;
 
-  segments.forEach((seg) => {
-    const isActive = (seg as HTMLElement).dataset.mode === mode;
-    seg.setAttribute('aria-current', isActive ? 'true' : 'false');
-
-    if (isActive) {
-      const fill = seg.querySelector('.nucleus-track__fill');
-      if (fill instanceof HTMLElement) {
-        fill.style.animation = 'none';
-        void fill.offsetWidth;
-        fill.style.animation = '';
-      }
-    }
+  // Update indicators — instant swap, no transition on aria-current
+  document.querySelectorAll('.nucleus-bar__indicator').forEach((ind) => {
+    ind.setAttribute('aria-current', (ind as HTMLElement).dataset.mode === mode ? 'true' : 'false');
   });
 
-  if (label) {
-    label.textContent = mode.toUpperCase();
+  // Update readout
+  const readout = document.getElementById('nucleus-bar-readout');
+  const icon = document.getElementById('nucleus-bar-icon');
+  const label = document.getElementById('nucleus-bar-label');
+  const stat = document.getElementById('nucleus-bar-stat');
+
+  if (readout instanceof HTMLAnchorElement) {
+    readout.href = slide.data.link;
   }
-};
-
-const resetProgress = () => {
-  const bar = document.getElementById('nucleus-progress');
-  if (!bar) return;
-  bar.classList.remove('nucleus__progress--filling');
-  bar.style.opacity = '0';
-  void bar.getBoundingClientRect();
-  bar.classList.add('nucleus__progress--filling');
-};
-
-const startCaptionTransition = (slide: ActiveSlide, reducedMotion: boolean) => {
-  const labelEl = document.getElementById('nucleus-label');
-  const detailEl = document.getElementById('nucleus-detail');
-  const linkEl = document.getElementById('nucleus-link');
+  if (icon) {
+    icon.textContent = MODE_ICONS[mode] || '◎';
+  }
 
   if (reducedMotion) {
-    if (labelEl) labelEl.textContent = slide.data.label;
-    if (detailEl) detailEl.textContent = slide.data.detail;
-    if (linkEl instanceof HTMLAnchorElement) linkEl.href = slide.data.link;
+    if (label) label.textContent = slide.data.label;
+    if (stat) stat.textContent = slide.data.detail;
     return;
   }
 
+  // Animate: label updates via scramble, stat fades out → updates → fades in
   const scrambleDuration = 250;
-  scrambleText(labelEl, labelEl?.textContent || '', scrambleDuration, 0, false);
-  scrambleText(detailEl, detailEl?.textContent || '', scrambleDuration, 0, false);
+
+  // Scramble the label text
+  scrambleText(label, label?.textContent || '', scrambleDuration, 0, false);
+
+  // Fade out the stat text
+  if (stat) {
+    stat.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
+    stat.style.opacity = '0';
+    stat.style.transform = 'translateY(4px)';
+  }
 
   window.setTimeout(() => {
-    if (linkEl instanceof HTMLAnchorElement) linkEl.href = slide.data.link;
-    scrambleText(labelEl, slide.data.label, 250, 0, true);
-    scrambleText(detailEl, slide.data.detail, 250, 0, true);
+    // Resolve label
+    scrambleText(label, slide.data.label, 250, 0, true);
+
+    // Update stat text and fade it back in
+    if (stat) {
+      stat.textContent = slide.data.detail;
+      // Force reflow then animate in
+      requestAnimationFrame(() => {
+        stat.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        stat.style.opacity = '';
+        stat.style.transform = '';
+      });
+    }
   }, scrambleDuration);
 };
 
@@ -280,7 +295,7 @@ export const initNucleus = async () => {
     ];
   }
 
-  createTrack(slides);
+  createBar(slides);
 
   let frame = 0;
   let currentSlide = pickStartingSlide(slides);
@@ -296,8 +311,6 @@ export const initNucleus = async () => {
   const applySlideState = (index: number) => {
     currentSlide = index;
     slides[currentSlide].module.reset?.();
-    updateTrack(slides[currentSlide].module.id);
-    resetProgress();
   };
 
   const crtTransition = (nextIndex: number, callback: () => void) => {
@@ -355,7 +368,7 @@ export const initNucleus = async () => {
 
   const transitionToSlide = (nextIndex: number) => {
     const nextSlide = slides[nextIndex];
-    startCaptionTransition(nextSlide, reducedMotion);
+    updateBar(nextSlide, reducedMotion);
 
     if (reducedMotion) {
       applySlideState(nextIndex);
@@ -367,14 +380,13 @@ export const initNucleus = async () => {
     });
   };
 
-  const bindTrack = () => {
-    document.querySelectorAll('.nucleus-track__segment').forEach((seg) => {
-      seg.addEventListener('click', () => {
-        const mode = (seg as HTMLElement).dataset.mode;
+  const bindBar = () => {
+    document.querySelectorAll('.nucleus-bar__indicator').forEach((ind) => {
+      ind.addEventListener('click', () => {
+        const mode = (ind as HTMLElement).dataset.mode;
         const index = slides.findIndex((s) => s.module.id === mode);
         if (index >= 0 && index !== currentSlide && !transitioning) {
           lastSwitch = Date.now();
-          resetProgress();
           transitionToSlide(index);
         }
       });
@@ -384,17 +396,10 @@ export const initNucleus = async () => {
   const { width, height } = getDimensions();
   renderSlide(slides[currentSlide], ctx, width, height, frame);
   slides[currentSlide].module.reset?.();
-  updateTrack(slides[currentSlide].module.id);
-  resetProgress();
-  bindTrack();
 
-  // Set initial caption to match the starting slide
-  const labelEl = document.getElementById('nucleus-label');
-  const detailEl = document.getElementById('nucleus-detail');
-  const linkEl = document.getElementById('nucleus-link');
-  if (labelEl) labelEl.textContent = slides[currentSlide].data.label;
-  if (detailEl) detailEl.textContent = slides[currentSlide].data.detail;
-  if (linkEl instanceof HTMLAnchorElement) linkEl.href = slides[currentSlide].data.link;
+  // Set initial bar state to match the starting slide
+  updateBar(slides[currentSlide], true); // use reducedMotion=true for initial set (no animation)
+  bindBar();
 
   window.addEventListener('resize', () => resizeCanvas(canvas, ctx));
 
