@@ -143,7 +143,7 @@ export interface Vo2Max {
 export interface RingConfig {
   id?: string;
   color?: string;
-  design?: string;
+  design?: string | null;
   firmware_version?: string;
   hardware_type?: string;
   set_up_at?: string;
