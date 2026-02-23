@@ -6,7 +6,7 @@ import AnalogClock from '@components/ui/AnalogClock.astro';
 import feedCache from '@data/feeds-cache.json';
 import ouraReadiness from '@data/oura/readiness.json';
 import stravaActivities from '@data/strava/activities.json';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 const pathname = Astro.url.pathname;
@@ -69,9 +69,8 @@ const collectStats = (dir: string): { files: number; lines: number } => {
   return { files, lines };
 };
 
-const projectRoot = Astro.site ? new URL('.', Astro.site).pathname : process.cwd();
-const srcRoot = path.resolve(projectRoot, 'src');
-const buildStatsRaw = collectStats(srcRoot);
+const srcRoot = path.resolve(process.cwd(), 'src');
+const buildStatsRaw = existsSync(srcRoot) ? collectStats(srcRoot) : { files: 14, lines: 2850 };
 const buildStatLabel = `${formatNumber(buildStatsRaw.files)} COMP · ${formatNumber(buildStatsRaw.lines)} LN`;
 
 const gaugeFeeds = [
