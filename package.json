@@ -11,7 +11,8 @@
     "astro": "astro",
     "check": "astro check",
     "feeds:fetch": "tsx scripts/fetch-feeds.ts",
-    "oura:fetch": "tsx scripts/fetch-oura.ts"
+    "oura:fetch": "tsx scripts/fetch-oura.ts",
+    "strava:fetch": "npx tsx scripts/fetch-strava.ts"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.3.2",
