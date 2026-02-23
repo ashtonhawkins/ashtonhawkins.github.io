@@ -37,11 +37,20 @@ jobs:
           OURA_REFRESH_TOKEN: ${{ secrets.OURA_REFRESH_TOKEN }}
           GH_PAT: ${{ secrets.GH_PAT }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+      - name: Fetch Strava data
+        continue-on-error: true
+        run: npm run strava:fetch
+        env:
+          STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
+          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
       - name: Commit cache changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/feeds-cache.json src/data/oura/
+          git add src/data/feeds-cache.json src/data/oura/ src/data/strava/ src/data/cycling.json
           if git diff --cached --quiet; then
             echo "No changes to commit"
             exit 0
