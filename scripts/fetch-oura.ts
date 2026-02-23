@@ -1,7 +1,6 @@
 import { writeFile, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { seal } from 'tweetnacl-sealedbox-js';
-import { encodeBase64, decodeBase64 } from 'tweetnacl-util';
+import _sodium from 'libsodium-wrappers';
 
 /**
  * Populates src/data/oura/*.json with data from the Oura Ring API V2.
@@ -49,6 +48,9 @@ function getDateRange(): { startDate: string; endDate: string } {
 // ── GitHub Secret Update ─────────────────────────────────────────
 
 async function updateGitHubSecret(secretName: string, secretValue: string): Promise<void> {
+  await _sodium.ready;
+  const sodium = _sodium;
+
   const repo = process.env.GITHUB_REPOSITORY;
   const ghPat = process.env.GH_PAT;
 
@@ -58,20 +60,20 @@ async function updateGitHubSecret(secretName: string, secretValue: string): Prom
   }
 
   // Step 1: Get the repo's public key for secret encryption
-  const keyResponse = await fetch(
+  const keyRes = await fetch(
     `https://api.github.com/repos/${repo}/actions/secrets/public-key`,
     { headers: { Authorization: `Bearer ${ghPat}`, Accept: 'application/vnd.github+json' } }
   );
-  const { key, key_id } = await keyResponse.json() as { key: string; key_id: string };
+  const { key, key_id } = await keyRes.json() as { key: string; key_id: string };
 
-  // Step 2: Encrypt the secret value using libsodium sealed box
-  const messageBytes = new TextEncoder().encode(secretValue);
-  const keyBytes = decodeBase64(key);
-  const encryptedBytes = seal(messageBytes, keyBytes);
-  const encryptedValue = encodeBase64(encryptedBytes);
+  // Step 2: Encrypt with libsodium sealed box
+  const binKey = sodium.from_base64(key, sodium.base64_variants.ORIGINAL);
+  const binMsg = sodium.from_string(secretValue);
+  const encrypted = sodium.crypto_box_seal(binMsg, binKey);
+  const encryptedB64 = sodium.to_base64(encrypted, sodium.base64_variants.ORIGINAL);
 
   // Step 3: Update the secret
-  const updateResponse = await fetch(
+  const res = await fetch(
     `https://api.github.com/repos/${repo}/actions/secrets/${secretName}`,
     {
       method: 'PUT',
@@ -80,14 +82,14 @@ async function updateGitHubSecret(secretName: string, secretValue: string): Prom
         Accept: 'application/vnd.github+json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ encrypted_value: encryptedValue, key_id }),
+      body: JSON.stringify({ encrypted_value: encryptedB64, key_id }),
     }
   );
 
-  if (updateResponse.status === 201 || updateResponse.status === 204) {
-    console.log(`[oura] Successfully updated GitHub secret: ${secretName}`);
+  if (res.status === 201 || res.status === 204) {
+    console.log(`[oura] Updated GitHub secret: ${secretName}`);
   } else {
-    console.error(`[oura] Failed to update secret: ${updateResponse.status} ${await updateResponse.text()}`);
+    console.error(`[oura] Failed to update secret: ${res.status}`);
   }
 }
 
