@@ -72,6 +72,7 @@ const collectStats = (dir: string): { files: number; lines: number } => {
 const srcRoot = path.resolve(process.cwd(), 'src');
 const buildStatsRaw = existsSync(srcRoot) ? collectStats(srcRoot) : { files: 14, lines: 2850 };
 const buildStatLabel = `${formatNumber(buildStatsRaw.files)} COMP · ${formatNumber(buildStatsRaw.lines)} LN`;
+const buildDensityPct = Math.min(100, Math.round((buildStatsRaw.lines / 15000) * 100));
 
 const gaugeFeeds = [
   { name: 'strava', active: Array.isArray(stravaActivities) && stravaActivities.length > 0 },
@@ -85,6 +86,18 @@ const activeFeedCount = gaugeFeeds.filter((feed) => feed.active).length;
 
 const approximateWeightKb = Math.round((buildStatsRaw.lines * 44) / 1024);
 const weightGaugeValue = Number.isFinite(approximateWeightKb) ? approximateWeightKb : 0;
+const weightPct = Math.min(100, Math.round((weightGaugeValue / 1500) * 100));
+const weightClass = weightGaugeValue < 500 ? 'lean' : weightGaugeValue < 1000 ? 'moderate' : 'heavy';
+
+const cacheUpdatedAt = (feedCache as any)?.updatedAt ? new Date((feedCache as any).updatedAt) : new Date();
+const cacheHoursAgo = Math.max(0, Math.floor((Date.now() - cacheUpdatedAt.getTime()) / (1000 * 60 * 60)));
+const cacheState = cacheHoursAgo < 4 ? 'fresh' : cacheHoursAgo <= 12 ? 'aging' : 'stale';
+const cacheLabel = `${cacheState.toUpperCase()} · ${cacheHoursAgo}H AGO`;
+
+const packageJson = JSON.parse(readFileSync(path.resolve(process.cwd(), 'package.json'), 'utf8'));
+const astroVersion = String(packageJson?.dependencies?.astro ?? packageJson?.devDependencies?.astro ?? '5').replace(/^[^\d]*/, '').split('.')[0] || '5';
+const tsVersion = String(packageJson?.devDependencies?.typescript ?? packageJson?.dependencies?.typescript ?? '5').replace(/^[^\d]*/, '').split('.')[0] || '5';
+const nodeVersion = process.versions.node.split('.')[0] || '20';
 ---
 
 <a href="#content" class="skip-link">Skip to content</a>
@@ -115,43 +128,72 @@ const weightGaugeValue = Number.isFinite(approximateWeightKb) ? approximateWeigh
     </nav>
 
     <div class="header__instruments">
-      <div class="header__gauges" aria-label="Site vitals">
-        <div class="header__gauge" data-gauge="deploy" data-deploy-ts={DEPLOY_DATE.toISOString()}>
+      <div class="header__gauge-slot" id="gauge-slot" aria-label="Site vitals">
+        <div class="header__gauge header__gauge--deploy" data-gauge="deploy" data-deploy-ts={DEPLOY_DATE.toISOString()}>
           <span class="header__gauge-label">DEPLOY</span>
           <span class="header__gauge-value" id="gauge-deploy">{DEPLOY_TIMESTAMP}</span>
+          <span class="header__gauge-dot header__gauge-dot--deploy" id="deploy-dot"></span>
         </div>
 
-        <div class="header__gauge" data-gauge="live">
+        <div class="header__gauge header__gauge--live" data-gauge="live">
           <span class="header__gauge-label">LIVE</span>
-          <span class="header__gauge-value header__gauge-value--accent" id="gauge-live">0</span>
+          <span class="header__gauge-value header__gauge-value--live" id="gauge-live">0</span>
+          <span class="header__gauge-unit">SEC</span>
         </div>
 
-        <div class="header__gauge" data-gauge="signal">
+        <div class="header__gauge header__gauge--signal" data-gauge="signal">
           <span class="header__gauge-label">SIGNAL</span>
-          <span class="header__gauge-value" id="gauge-signal">--</span>
+          <span class="header__gauge-signal-geo" id="gauge-signal-geo">US</span>
+          <span class="header__gauge-value" id="gauge-signal-text">--</span>
         </div>
 
-        <div class="header__gauge" data-gauge="build">
+        <div class="header__gauge header__gauge--weather" data-gauge="weather">
+          <span class="header__gauge-label">WEATHER</span>
+          <span class="header__gauge-weather-icon" id="gauge-weather-icon" aria-hidden="true">☀</span>
+          <span class="header__gauge-value" id="gauge-weather-temp">--°</span>
+          <span class="header__gauge-weather-cond" id="gauge-weather-cond">LOADING</span>
+        </div>
+
+        <div class="header__gauge header__gauge--build" data-gauge="build">
           <span class="header__gauge-label">BUILD</span>
           <span class="header__gauge-value" id="gauge-build">{buildStatLabel}</span>
+          <span class="header__gauge-bar" id="gauge-build-bar"><span class="header__gauge-bar-fill" style={`width: ${buildDensityPct}%`}></span></span>
         </div>
 
-        <div class="header__gauge" data-gauge="feeds">
+        <div class="header__gauge header__gauge--feeds" data-gauge="feeds">
           <span class="header__gauge-label">FEEDS</span>
-          <span class="header__gauge-value" id="gauge-feeds">
-            <span class="header__gauge-dots" id="gauge-feed-dots">
-              {gaugeFeeds.map((feed) => (
-                <span class={`header__gauge-dot header__gauge-dot--${feed.active ? 'active' : 'inactive'}`} title={feed.name}></span>
-              ))}
-            </span>
-            <span id="gauge-feed-count">{activeFeedCount}/{gaugeFeeds.length}</span>
+          <span class="header__gauge-dots" id="gauge-feed-dots">
+            {gaugeFeeds.map((feed) => (
+              <span class={`header__gauge-dot header__gauge-dot--${feed.active ? 'active' : 'inactive'}`} title={feed.name}></span>
+            ))}
           </span>
+          <span class="header__gauge-value" id="gauge-feed-count">{activeFeedCount}/{gaugeFeeds.length}</span>
         </div>
 
-        <div class="header__gauge" data-gauge="weight">
+        <div class={`header__gauge header__gauge--weight ${weightClass}`} data-gauge="weight">
           <span class="header__gauge-label">WEIGHT</span>
-          <span class="header__gauge-value" id="gauge-weight">
-            <span id="gauge-weight-number">{formatNumber(weightGaugeValue)}</span><span class="header__gauge-unit">KB</span>
+          <span class="header__gauge-value"><span id="gauge-weight-number">{formatNumber(weightGaugeValue)}</span><span class="header__gauge-unit">KB</span></span>
+          <span class="header__gauge-meter" id="gauge-weight-meter"><span class="header__gauge-meter-fill" id="gauge-weight-fill" style={`width: ${weightPct}%`}></span></span>
+        </div>
+
+        <div class={`header__gauge header__gauge--cache ${cacheState}`} data-gauge="cache" data-cache-updated={cacheUpdatedAt.toISOString()}>
+          <span class="header__gauge-label">CACHE</span>
+          <span class="header__gauge-cache-indicator" id="gauge-cache-indicator">●</span>
+          <span class="header__gauge-value" id="gauge-cache-value">{cacheLabel}</span>
+        </div>
+
+        <div class="header__gauge header__gauge--commits" data-gauge="commits">
+          <span class="header__gauge-label">COMMITS</span>
+          <span class="header__gauge-value" id="gauge-commits-count">-- THIS WEEK</span>
+          <span class="header__gauge-sparkline" id="gauge-commits-sparkline"></span>
+        </div>
+
+        <div class="header__gauge header__gauge--stack" data-gauge="stack">
+          <span class="header__gauge-label">STACK</span>
+          <span class="header__gauge-pills">
+            <span class="header__gauge-pill" id="gauge-stack-astro">ASTRO {astroVersion}</span>
+            <span class="header__gauge-pill" id="gauge-stack-node">NODE {nodeVersion}</span>
+            <span class="header__gauge-pill" id="gauge-stack-ts">TS {tsVersion}</span>
           </span>
         </div>
       </div>
@@ -227,9 +269,23 @@ const weightGaugeValue = Number.isFinite(approximateWeightKb) ? approximateWeigh
   }
 
   const liveEl = document.getElementById('gauge-live');
-  const signalEl = document.getElementById('gauge-signal');
+  const signalTextEl = document.getElementById('gauge-signal-text');
+  const signalGeoEl = document.getElementById('gauge-signal-geo');
   const deployGauge = document.querySelector('[data-gauge="deploy"]');
+  const weatherGauge = document.querySelector('[data-gauge="weather"]');
+  const weatherIconEl = document.getElementById('gauge-weather-icon');
+  const weatherTempEl = document.getElementById('gauge-weather-temp');
+  const weatherCondEl = document.getElementById('gauge-weather-cond');
+  const commitsCountEl = document.getElementById('gauge-commits-count');
+  const commitsSparklineEl = document.getElementById('gauge-commits-sparkline');
+  const cacheGauge = document.querySelector('[data-gauge="cache"]');
+  const cacheValueEl = document.getElementById('gauge-cache-value');
+  const gaugeSlot = document.getElementById('gauge-slot');
   const LAUNCH_DATE = new Date('2025-02-19T00:00:00Z');
+  const GAUGE_ORDER = ['deploy', 'live', 'signal', 'weather', 'build', 'feeds', 'weight', 'cache', 'commits', 'stack'];
+  const ROTATION_INTERVAL = 5500;
+  let currentGaugeIndex = 0;
+  let rotationTimer = null;
 
   const updateLive = () => {
     if (!liveEl) return;
@@ -246,23 +302,170 @@ const weightGaugeValue = Number.isFinite(approximateWeightKb) ? approximateWeigh
     return 'UNKNOWN';
   };
 
-  const updateSignal = () => {
-    if (!signalEl) return;
-    signalEl.textContent = `${detectBrowser()} · ${window.innerWidth}×${window.innerHeight}`;
+  const showGauge = (index) => {
+    const gauges = document.querySelectorAll('.header__gauge');
+    gauges.forEach((g, i) => g.classList.toggle('active', i === index));
+    currentGaugeIndex = index;
+  };
+
+  const advanceGauge = () => showGauge((currentGaugeIndex + 1) % GAUGE_ORDER.length);
+  const startRotation = () => {
+    if (rotationTimer) clearInterval(rotationTimer);
+    rotationTimer = window.setInterval(advanceGauge, ROTATION_INTERVAL);
+  };
+  const stopRotation = () => {
+    if (!rotationTimer) return;
+    clearInterval(rotationTimer);
+    rotationTimer = null;
+  };
+
+  const renderStateOutline = (abbr) => {
+    const states = {
+      CA: 'M2,10 L4,2 L8,1 L10,4 L9,8 L11,13 L8,15 L3,14 L1,11 Z',
+      NY: 'M2,6 L5,3 L11,4 L13,7 L10,8 L7,11 L3,10 Z',
+      TX: 'M3,2 L8,2 L10,5 L14,6 L12,10 L8,12 L6,15 L2,12 L1,7 Z',
+      FL: 'M2,3 L9,3 L12,6 L10,8 L11,11 L8,13 L6,10 L4,9 L3,6 Z'
+    };
+    const d = states[abbr];
+    if (!d) return null;
+    return `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="${d}"/></svg>`;
+  };
+
+  const updateSignalFromGeo = (geo = {}) => {
+    if (signalTextEl) {
+      const city = String(geo.city || 'UNKNOWN').toUpperCase();
+      signalTextEl.textContent = `${city} · ${detectBrowser()}`;
+    }
+    if (signalGeoEl) {
+      const country = String(geo.country_code || 'US').toUpperCase();
+      const region = String(geo.region_code || '').toUpperCase();
+      if (country === 'US') {
+        const svg = renderStateOutline(region);
+        signalGeoEl.innerHTML = svg || region || 'US';
+      } else {
+        signalGeoEl.textContent = country;
+      }
+      const signalGauge = document.querySelector('[data-gauge="signal"]');
+      signalGauge?.classList.add('scanning');
+      setTimeout(() => signalGauge?.classList.remove('scanning'), 1700);
+    }
+  };
+
+  const updateCacheAge = () => {
+    if (!(cacheGauge instanceof HTMLElement) || !(cacheValueEl instanceof HTMLElement)) return;
+    const raw = cacheGauge.dataset.cacheUpdated;
+    if (!raw) return;
+    const hours = Math.max(0, Math.floor((Date.now() - new Date(raw).getTime()) / (1000 * 60 * 60)));
+    const state = hours < 4 ? 'fresh' : hours <= 12 ? 'aging' : 'stale';
+    cacheGauge.classList.remove('fresh', 'aging', 'stale');
+    cacheGauge.classList.add(state);
+    cacheValueEl.textContent = `${state.toUpperCase()} · ${hours}H AGO`;
+  };
+
+  const WEATHER_CODE_MAP = {
+    clear: { icon: '☀', cond: 'CLEAR', className: 'sunny' },
+    cloudy: { icon: '☁', cond: 'CLOUDY', className: 'cloudy' },
+    rainy: { icon: '☂', cond: 'RAIN', className: 'rainy' },
+    snowy: { icon: '❄', cond: 'SNOW', className: 'snowy' }
+  };
+
+  const classifyWeather = (code) => {
+    if (code === 0) return WEATHER_CODE_MAP.clear;
+    if ([1, 2, 3, 45, 48].includes(code)) return WEATHER_CODE_MAP.cloudy;
+    if ([61, 63, 65, 80, 81, 82, 51, 53, 55].includes(code)) return WEATHER_CODE_MAP.rainy;
+    if ([71, 73, 75, 77, 85, 86].includes(code)) return WEATHER_CODE_MAP.snowy;
+    return WEATHER_CODE_MAP.cloudy;
+  };
+
+  const renderCommits = (days) => {
+    if (!(commitsSparklineEl instanceof HTMLElement)) return;
+    commitsSparklineEl.innerHTML = '';
+    const max = Math.max(...days, 1);
+    days.forEach((count, idx) => {
+      const col = document.createElement('span');
+      col.className = `header__gauge-spark-col ${idx === days.length - 1 ? 'today' : ''}`;
+      col.style.height = `${Math.max(1, Math.round((count / max) * 12))}px`;
+      commitsSparklineEl.append(col);
+    });
+  };
+
+  const loadCommits = async () => {
+    const cached = sessionStorage.getItem('header-commit-activity');
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      commitsCountEl && (commitsCountEl.textContent = `${parsed.total} THIS WEEK`);
+      renderCommits(parsed.days);
+      return;
+    }
+    try {
+      const res = await fetch('https://api.github.com/repos/ashtonhawkins/ashtonhawkins.github.io/stats/commit_activity');
+      const data = await res.json();
+      const lastWeek = Array.isArray(data) ? data.at(-1) : null;
+      const days = Array.isArray(lastWeek?.days) ? lastWeek.days : [0, 0, 0, 0, 0, 0, 0];
+      const total = days.reduce((sum, n) => sum + n, 0);
+      commitsCountEl && (commitsCountEl.textContent = `${total} THIS WEEK`);
+      renderCommits(days);
+      sessionStorage.setItem('header-commit-activity', JSON.stringify({ days, total }));
+    } catch {
+      commitsCountEl && (commitsCountEl.textContent = 'N/A THIS WEEK');
+      renderCommits([1, 1, 1, 1, 1, 1, 1]);
+    }
+  };
+
+  const loadGeoAndWeather = async () => {
+    const cached = sessionStorage.getItem('header-geo-weather');
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      updateSignalFromGeo(parsed.geo);
+      if (weatherTempEl) weatherTempEl.textContent = parsed.temp;
+      if (weatherCondEl) weatherCondEl.textContent = parsed.cond;
+      if (weatherIconEl) weatherIconEl.textContent = parsed.icon;
+      weatherGauge?.classList.add(parsed.className);
+      return;
+    }
+    try {
+      const geoRes = await fetch('https://ipapi.co/json/');
+      const geo = await geoRes.json();
+      updateSignalFromGeo(geo);
+      const units = String(geo.country_code || '').toUpperCase() === 'US' ? 'fahrenheit' : 'celsius';
+      const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${geo.latitude}&longitude=${geo.longitude}&current=temperature_2m,weather_code&temperature_unit=${units}`);
+      const weather = await wRes.json();
+      const tempNum = Math.round(weather?.current?.temperature_2m ?? 0);
+      const weatherInfo = classifyWeather(Number(weather?.current?.weather_code));
+      const temp = `${tempNum}°${units === 'fahrenheit' ? 'F' : 'C'}`;
+      if (weatherTempEl) weatherTempEl.textContent = temp;
+      if (weatherCondEl) weatherCondEl.textContent = weatherInfo.cond;
+      if (weatherIconEl) weatherIconEl.textContent = weatherInfo.icon;
+      weatherGauge?.classList.add(weatherInfo.className);
+      sessionStorage.setItem('header-geo-weather', JSON.stringify({ geo, temp, cond: weatherInfo.cond, icon: weatherInfo.icon, className: weatherInfo.className }));
+    } catch {
+      updateSignalFromGeo({ city: 'UNKNOWN', country_code: 'US' });
+      if (weatherTempEl) weatherTempEl.textContent = '--°';
+      if (weatherCondEl) weatherCondEl.textContent = 'OFFLINE';
+    }
   };
 
   const deployTs = deployGauge instanceof HTMLElement ? deployGauge.dataset.deployTs : null;
   if (deployGauge instanceof HTMLElement && deployTs) {
     const deployTime = new Date(deployTs).getTime();
     if (Number.isFinite(deployTime) && (Date.now() - deployTime) <= 60 * 60 * 1000) {
-      deployGauge.classList.add('header__gauge--fresh');
+      deployGauge.classList.add('fresh');
     }
   }
 
+  showGauge(0);
+  startRotation();
+  if (gaugeSlot) {
+    gaugeSlot.addEventListener('mouseenter', stopRotation);
+    gaugeSlot.addEventListener('mouseleave', startRotation);
+  }
+
   updateLive();
-  updateSignal();
+  updateCacheAge();
+  loadGeoAndWeather();
+  loadCommits();
   setInterval(updateLive, 1000);
-  window.addEventListener('resize', updateSignal, { passive: true });
+  setInterval(updateCacheAge, 60 * 1000);
 </script>
 
 <style>
@@ -317,30 +520,36 @@ const weightGaugeValue = Number.isFinite(approximateWeightKb) ? approximateWeigh
   .light .nav__flyout-link:hover { background: rgba(0, 0, 0, 0.03); }
 
   .header__instruments {display:flex;align-items:center;gap:12px;margin-left:auto;min-width:0;}
-  .header__gauges {
+  .header__gauge-slot {
+    position: relative;
+    min-width: 180px;
+    max-width: 260px;
+    height: 36px;
     display: flex;
-    align-items: center;
-    gap: 2px;
-    margin-left: auto;
-    margin-right: 12px;
-  }
-  .header__gauge {
-    display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 3px 10px;
-    min-width: 56px;
+    margin-left: auto;
+    margin-right: 12px;
+    overflow: hidden;
+  }
+  .header__gauge {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 4px 12px;
     border-radius: 3px;
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.04);
-    gap: 1px;
-    cursor: default;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
   }
-  .header__gauge:hover {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.08);
+  .header__gauge.active {
+    opacity: 1;
+    pointer-events: auto;
   }
   .header__gauge-label {
     font-family: 'IBM Plex Mono', monospace;
@@ -354,28 +563,73 @@ const weightGaugeValue = Number.isFinite(approximateWeightKb) ? approximateWeigh
   }
   .header__gauge-value {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 500;
     letter-spacing: 0.04em;
     color: var(--text-secondary);
     line-height: 1;
     white-space: nowrap;
   }
-  .header__gauge-value--accent {
+  .header__gauge-value--live {
     color: var(--accent-primary);
     font-weight: 600;
+    font-variant-numeric: tabular-nums;
   }
   .header__gauge-unit {
     font-size: 7px;
-    font-weight: 400;
     color: var(--text-tertiary);
+    opacity: 0.5;
     margin-left: 2px;
   }
-  .header__gauge-dots {
+  .header__gauge-dot--deploy {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+  }
+  .header__gauge--deploy.fresh .header__gauge-dot--deploy {
+    background: #4ade80;
+    box-shadow: 0 0 4px rgba(74, 222, 128, 0.5);
+    animation: deploy-breathe 2s ease-in-out infinite;
+  }
+  .header__gauge--deploy.fresh .header__gauge-value { color: #4ade80; }
+  @keyframes deploy-breathe {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .header__gauge-signal-geo {
+    width: 18px;
+    height: 14px;
+    flex-shrink: 0;
+    opacity: 0.6;
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    color: var(--text-tertiary);
+  }
+  .header__gauge-signal-geo svg { width: 100%; height: 100%; fill: none; stroke: var(--text-tertiary); stroke-width: 1; }
+  .header__gauge--signal.scanning .header__gauge-value { animation: signal-scan 1.5s ease-out 1; }
+  @keyframes signal-scan {
+    0% { opacity: 0; letter-spacing: 0.3em; }
+    100% { opacity: 1; letter-spacing: 0.04em; }
+  }
+
+  .header__gauge-weather-icon { font-size: 14px; line-height: 1; }
+  .header__gauge-weather-cond { font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 0.08em; color: var(--text-tertiary); text-transform: uppercase; }
+  .header__gauge--weather.sunny .header__gauge-weather-icon { color: #fbbf24; }
+  .header__gauge--weather.cloudy .header__gauge-weather-icon { color: #94a3b8; }
+  .header__gauge--weather.rainy .header__gauge-weather-icon { color: #60a5fa; }
+  .header__gauge--weather.snowy .header__gauge-weather-icon { color: #e2e8f0; }
+
+  .header__gauge-bar { width: 24px; height: 3px; border-radius: 1.5px; background: rgba(255,255,255,.08); overflow: hidden; }
+  .header__gauge-bar-fill { display:block; height:100%; border-radius:1.5px; background:var(--accent-primary); opacity:.5; }
+  .header__gauge-dots {
+    display: flex;
     gap: 3px;
     align-items: center;
-    margin-right: 4px;
   }
   .header__gauge-dot {
     width: 4px;
@@ -387,16 +641,47 @@ const weightGaugeValue = Number.isFinite(approximateWeightKb) ? approximateWeigh
     background: #4ade80;
     box-shadow: 0 0 3px rgba(74, 222, 128, 0.4);
   }
+  .header__gauge-dot--active:nth-child(1) { animation: dot-pulse 3s ease-in-out 0s infinite; }
+  .header__gauge-dot--active:nth-child(2) { animation: dot-pulse 3s ease-in-out .3s infinite; }
+  .header__gauge-dot--active:nth-child(3) { animation: dot-pulse 3s ease-in-out .6s infinite; }
+  .header__gauge-dot--active:nth-child(4) { animation: dot-pulse 3s ease-in-out .9s infinite; }
+  .header__gauge-dot--active:nth-child(5) { animation: dot-pulse 3s ease-in-out 1.2s infinite; }
+  .header__gauge-dot--active:nth-child(6) { animation: dot-pulse 3s ease-in-out 1.5s infinite; }
   .header__gauge-dot--inactive {
     background: rgba(255, 255, 255, 0.15);
   }
-  .header__gauge[data-gauge="deploy"].header__gauge--fresh .header__gauge-value {
-    color: #4ade80;
-    animation: deploy-pulse 2s ease-out 1;
+  @keyframes dot-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
   }
-  @keyframes deploy-pulse {
-    0% { color: #4ade80; }
-    100% { color: var(--text-secondary); }
+
+  .header__gauge-meter { width: 32px; height:4px; border-radius:2px; background:rgba(255,255,255,.08); overflow:hidden; }
+  .header__gauge-meter-fill { display:block; height:100%; border-radius:2px; transition: width .5s ease; }
+  .header__gauge--weight.lean .header__gauge-meter-fill { background:#4ade80; }
+  .header__gauge--weight.moderate .header__gauge-meter-fill { background:#fbbf24; }
+  .header__gauge--weight.heavy .header__gauge-meter-fill { background:#f87171; }
+
+  .header__gauge-cache-indicator { font-size:8px; transition: color .3s ease; }
+  .header__gauge--cache.fresh .header__gauge-cache-indicator { color:#4ade80; }
+  .header__gauge--cache.aging .header__gauge-cache-indicator { color:#fbbf24; }
+  .header__gauge--cache.stale .header__gauge-cache-indicator { color:#f87171; }
+  .header__gauge--cache.stale .header__gauge-value { opacity:.6; }
+
+  .header__gauge-sparkline { display:flex; align-items:flex-end; gap:1px; height:12px; }
+  .header__gauge-spark-col { width:3px; border-radius:1px 1px 0 0; background:var(--accent-primary); opacity:.4; min-height:1px; }
+  .header__gauge-spark-col.today { opacity:.8; }
+
+  .header__gauge-pills { display:flex; gap:3px; align-items:center; }
+  .header__gauge-pill {
+    font-family:'IBM Plex Mono',monospace;
+    font-size:7px;
+    letter-spacing:.06em;
+    color:var(--text-tertiary);
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:2px;
+    padding:1px 4px;
+    line-height:1.2;
   }
 
   .header__clock{display:flex;justify-content:center;align-items:center;}
@@ -413,35 +698,30 @@ const weightGaugeValue = Number.isFinite(approximateWeightKb) ? approximateWeigh
     background: rgba(0, 0, 0, 0.02);
     border-color: rgba(0, 0, 0, 0.05);
   }
-  [data-theme="light"] .header__gauge:hover,
-  .light .header__gauge:hover {
-    background: rgba(0, 0, 0, 0.04);
-    border-color: rgba(0, 0, 0, 0.08);
-  }
+  [data-theme="light"] .header__gauge-bar,
+  [data-theme="light"] .header__gauge-meter,
+  .light .header__gauge-bar,
+  .light .header__gauge-meter { background: rgba(0,0,0,.08); }
   [data-theme="light"] .header__gauge-dot--inactive,
   .light .header__gauge-dot--inactive {
     background: rgba(0, 0, 0, 0.15);
   }
+  [data-theme="light"] .header__gauge-dot--deploy,
+  .light .header__gauge-dot--deploy { background: rgba(0,0,0,.15); }
+  [data-theme="light"] .header__gauge-pill,
+  .light .header__gauge-pill { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.06); }
 
   @media (width >= 52rem) {
     .desktop-nav, .cmd-trigger { display:flex; }
     .menu-trigger, .mobile-overlay { display:none; }
     .logotype { font-size:1.5rem; }
   }
-  @media (max-width: 1200px) {
-    .header__gauge[data-gauge="weight"],
-    .header__gauge[data-gauge="build"] { display: none; }
-  }
-  @media (max-width: 900px) {
-    .header__gauge[data-gauge="deploy"],
-    .header__gauge[data-gauge="signal"],
-    .header__gauge[data-gauge="weight"],
-    .header__gauge[data-gauge="build"] { display: none; }
-  }
   @media (max-width: 768px) {
-    .header__gauges { display:none; }
+    .header__gauge-slot { display:none; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .header__gauge[data-gauge="deploy"].header__gauge--fresh .header__gauge-value { animation: none; }
+    .header__gauge { transition: none; }
+    .header__gauge-dot--active,
+    .header__gauge--deploy.fresh .header__gauge-dot--deploy { animation: none; }
   }
 </style>
