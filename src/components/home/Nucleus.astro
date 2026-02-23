@@ -2,35 +2,23 @@
 import NucleusCanvas from '@components/home/NucleusCanvas.astro';
 ---
 
-<div class="nucleus-wrapper container-shell max-wide">
-  <section class="nucleus" aria-label="Nucleus">
+<div class="container-shell max-wide">
+  <section class="nucleus" id="nucleus" aria-label="Nucleus" data-state="ambient">
     <div class="nucleus__frame" data-nucleus>
       <NucleusCanvas />
+    </div>
 
-      <div class="nucleus-bar" id="nucleus-bar">
-        <!-- Left: mode indicators (populated dynamically by engine.ts) -->
-        <nav class="nucleus-bar__nav" aria-label="Carousel navigation" id="nucleus-bar-nav"></nav>
-
-        <!-- Center divider -->
-        <span class="nucleus-bar__divider" aria-hidden="true"></span>
-
-        <!-- Right: current mode readout + link -->
-        <a class="nucleus-bar__readout" href="#" id="nucleus-bar-readout">
-          <span class="nucleus-bar__mode-icon" aria-hidden="true" id="nucleus-bar-icon"></span>
-          <span class="nucleus-bar__mode-label" id="nucleus-bar-label"></span>
-          <span class="nucleus-bar__mode-stat" id="nucleus-bar-stat"></span>
-          <span class="nucleus-bar__mode-action" aria-hidden="true">→</span>
-        </a>
-      </div>
+    <!-- Edge metadata — film frame markings -->
+    <div class="nucleus__meta" id="nucleus-meta">
+      <span class="nucleus__meta-item nucleus__meta--tl" data-field="label"></span>
+      <span class="nucleus__meta-item nucleus__meta--tr" data-field="stat"></span>
+      <span class="nucleus__meta-item nucleus__meta--bl" data-field="position"></span>
+      <a class="nucleus__meta-item nucleus__meta--br" data-field="link" href="#">EXPLORE →</a>
     </div>
   </section>
 </div>
 
 <style is:global>
-  .nucleus-wrapper {
-    position: relative;
-  }
-
   .nucleus {
     height: clamp(180px, 22vh, 320px);
     width: 100%;
@@ -50,282 +38,142 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
   }
 
   /* ══════════════════════════════════════
-     NUCLEUS BAR — Unified bottom control
+     EDGE METADATA — Film frame markings
      ══════════════════════════════════════ */
 
-  .nucleus-bar {
+  .nucleus__meta {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 10;
-    pointer-events: auto;
-
-    display: flex;
-    align-items: center;
-    gap: 0;
-    height: 36px;
-
-    /* Frosted glass strip spanning full width of nucleus */
-    background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-
-    padding: 0 16px;
-
-    font-family: 'IBM Plex Mono', monospace;
-  }
-
-  /* ── Left: Mode indicators ── */
-
-  .nucleus-bar__nav {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding-right: 12px;
-  }
-
-  .nucleus-bar__indicator {
-    /* Reset */
-    appearance: none;
-    -webkit-appearance: none;
-    border: none;
-    background: none;
-    padding: 0;
-    margin: 0;
-    cursor: pointer;
-    position: relative;
-
-    /* Visual: small rounded bar */
-    width: 20px;
-    height: 3px;
-    border-radius: 1.5px;
-    background: rgba(255, 255, 255, 0.18);
-    transition: all 0.2s ease;
-  }
-
-  .nucleus-bar__indicator:hover {
-    background: rgba(255, 255, 255, 0.4);
-    transform: scaleX(1.15);
-  }
-
-  .nucleus-bar__indicator:focus-visible {
-    outline: 1.5px solid var(--accent-primary, #60a5fa);
-    outline-offset: 4px;
-    border-radius: 2px;
-  }
-
-  /* Active indicator */
-  .nucleus-bar__indicator[aria-current="true"] {
-    width: 28px;
-    background: var(--accent-primary, #60a5fa);
-    box-shadow: 0 0 6px rgba(96, 165, 250, 0.35);
-  }
-
-  .nucleus-bar__indicator[aria-current="true"]:hover {
-    transform: none; /* Don't scale if already active */
-  }
-
-  /* Tooltip on hover */
-  .nucleus-bar__tooltip {
-    position: absolute;
-    bottom: calc(100% + 10px);
-    left: 50%;
-    transform: translateX(-50%) translateY(4px);
-    white-space: nowrap;
-
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.7);
-
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 4px;
-    padding: 3px 8px;
-
-    opacity: 0;
+    inset: 0;
+    z-index: 5;
     pointer-events: none;
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    padding: 12px 14px;
   }
 
-  .nucleus-bar__indicator:hover .nucleus-bar__tooltip {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-
-  /* ── Divider ── */
-
-  .nucleus-bar__divider {
-    width: 1px;
-    height: 16px;
-    background: rgba(255, 255, 255, 0.1);
-    flex-shrink: 0;
-  }
-
-  /* ── Right: Mode readout ── */
-
-  .nucleus-bar__readout {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding-left: 12px;
-    text-decoration: none;
-    color: inherit;
-    flex: 1;
-    min-width: 0; /* Allow text truncation */
-    transition: opacity 0.2s ease;
-  }
-
-  .nucleus-bar__readout:hover {
-    opacity: 0.85;
-  }
-
-  .nucleus-bar__readout:hover .nucleus-bar__mode-action {
-    transform: translateX(2px);
-    opacity: 1;
-  }
-
-  /* Mode icon — small symbol before the label */
-  .nucleus-bar__mode-icon {
-    font-size: 11px;
-    color: var(--accent-primary, #60a5fa);
-    flex-shrink: 0;
-    line-height: 1;
-  }
-
-  /* Mode label — the category name, styled as a micro-pill */
-  .nucleus-bar__mode-label {
+  .nucleus__meta-item {
+    position: absolute;
+    font-family: 'IBM Plex Mono', monospace;
     font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--accent-primary, #60a5fa);
-    background: rgba(96, 165, 250, 0.1);
-    border: 1px solid rgba(96, 165, 250, 0.2);
-    border-radius: 3px;
-    padding: 2px 6px;
-    flex-shrink: 0;
-    line-height: 1.2;
-  }
-
-  /* Mode stat — the data readout, the key info for this mode */
-  .nucleus-bar__mode-stat {
-    font-size: 11px;
-    letter-spacing: 0.02em;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-tertiary);
+    opacity: 0.15;
+    transition: opacity 0.6s ease;
+    line-height: 1;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1;
   }
 
-  /* Arrow — links to the mode's full page */
-  .nucleus-bar__mode-action {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.3);
-    flex-shrink: 0;
-    transition: transform 0.2s ease, opacity 0.2s ease;
-    margin-left: auto;
-    line-height: 1;
+  /* Positions */
+  .nucleus__meta--tl { top: 12px; left: 14px; }
+  .nucleus__meta--tr { top: 12px; right: 14px; }
+  .nucleus__meta--bl { bottom: 12px; left: 14px; }
+  .nucleus__meta--br {
+    bottom: 12px;
+    right: 14px;
+    pointer-events: auto;
+    text-decoration: none;
+    color: var(--text-tertiary);
   }
 
-  /* ══════════════════════
-     LIGHT MODE
-     ══════════════════════ */
+  /* ══════════════════════════════════════
+     STATE TRANSITIONS via data-state
+     ══════════════════════════════════════ */
 
-  [data-theme="light"] .nucleus-bar,
-  .light .nucleus-bar {
-    background: rgba(255, 255, 255, 0.55);
-    border-top-color: rgba(0, 0, 0, 0.06);
+  /* State 2: cursor entered — scanning */
+  .nucleus[data-state="scanning"] .nucleus__meta-item {
+    opacity: 0.35;
   }
 
-  [data-theme="light"] .nucleus-bar__indicator,
-  .light .nucleus-bar__indicator {
-    background: rgba(0, 0, 0, 0.15);
+  /* State 3: hovering zones — exploring */
+  .nucleus[data-state="exploring"] .nucleus__meta-item {
+    opacity: 0.5;
   }
 
-  [data-theme="light"] .nucleus-bar__indicator:hover,
-  .light .nucleus-bar__indicator:hover {
-    background: rgba(0, 0, 0, 0.3);
+  /* State 4: focused / locked */
+  .nucleus[data-state="focused"] .nucleus__meta-item {
+    opacity: 0.85;
+    transition: opacity 0.3s ease;
   }
 
-  [data-theme="light"] .nucleus-bar__divider,
-  .light .nucleus-bar__divider {
-    background: rgba(0, 0, 0, 0.1);
+  .nucleus[data-state="focused"] .nucleus__meta--br {
+    color: var(--accent-primary);
+    cursor: pointer;
   }
 
-  [data-theme="light"] .nucleus-bar__mode-stat,
-  .light .nucleus-bar__mode-stat {
-    color: rgba(0, 0, 0, 0.55);
+  /* ══════════════════════════════════════
+     FOCUSED STATE — Subtle vignette glow
+     ══════════════════════════════════════ */
+
+  .nucleus::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid rgba(96, 165, 250, 0.2);
+    box-shadow: inset 0 0 30px rgba(96, 165, 250, 0.05);
+    pointer-events: none;
+    z-index: 4;
+    opacity: 0;
+    transition: opacity 0.3s ease;
   }
 
-  [data-theme="light"] .nucleus-bar__mode-action,
-  .light .nucleus-bar__mode-action {
-    color: rgba(0, 0, 0, 0.3);
+  .nucleus[data-state="focused"]::after {
+    opacity: 1;
   }
 
-  [data-theme="light"] .nucleus-bar__tooltip,
-  .light .nucleus-bar__tooltip {
-    color: rgba(0, 0, 0, 0.7);
-    background: rgba(255, 255, 255, 0.85);
-    border-color: rgba(0, 0, 0, 0.1);
+  /* ══════════════════════════════════════
+     CURSOR SCAN BEAM
+     ══════════════════════════════════════ */
+
+  .nucleus__scanbeam {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(96, 165, 250, 0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 3;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
   }
 
-  /* ══════════════════════
-     RESPONSIVE
-     ══════════════════════ */
+  .nucleus[data-state="scanning"] .nucleus__scanbeam,
+  .nucleus[data-state="exploring"] .nucleus__scanbeam {
+    opacity: 1;
+  }
+
+  /* ══════════════════════════════════════
+     MOBILE
+     ══════════════════════════════════════ */
 
   @media (max-width: 640px) {
-    .nucleus-bar {
-      height: 32px;
-      padding: 0 10px;
+    .nucleus__meta-item {
+      font-size: 8px;
+      opacity: 0.35;
     }
 
-    .nucleus-bar__nav {
-      gap: 4px;
-      padding-right: 8px;
+    .nucleus__meta {
+      padding: 8px 10px;
     }
 
-    .nucleus-bar__indicator {
-      width: 16px;
-    }
-
-    .nucleus-bar__indicator[aria-current="true"] {
-      width: 22px;
-    }
-
-    .nucleus-bar__readout {
-      gap: 6px;
-      padding-left: 8px;
-    }
-
-    .nucleus-bar__mode-icon {
-      display: none; /* Hide icon on mobile to save space */
-    }
-
-    .nucleus-bar__mode-stat {
-      font-size: 10px;
-    }
+    .nucleus__meta--tl { top: 8px; left: 10px; }
+    .nucleus__meta--tr { top: 8px; right: 10px; }
+    .nucleus__meta--bl { bottom: 8px; left: 10px; }
+    .nucleus__meta--br { bottom: 8px; right: 10px; }
   }
 
-  /* ══════════════════════
+  /* ══════════════════════════════════════
      REDUCED MOTION
-     ══════════════════════ */
+     ══════════════════════════════════════ */
 
   @media (prefers-reduced-motion: reduce) {
-    .nucleus-bar__indicator,
-    .nucleus-bar__tooltip,
-    .nucleus-bar__readout,
-    .nucleus-bar__mode-action {
+    .nucleus__meta-item {
       transition: none;
     }
-    .nucleus-bar__indicator:hover {
-      transform: none;
+    .nucleus__scanbeam {
+      display: none;
+    }
+    .nucleus::after {
+      transition: none;
     }
   }
 </style>

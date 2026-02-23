@@ -84,147 +84,41 @@ export const resizeCanvas = (canvas: HTMLCanvasElement, ctx: CanvasRenderingCont
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 };
 
-const SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-const SLIDE_DURATION = 9000;
-
-const scrambleText = (
-  element: HTMLElement | null,
-  targetText: string,
-  duration: number,
-  delay = 0,
-  decode = true
-) => {
-  if (!(element instanceof HTMLElement)) return;
-  const startText = element.textContent || '';
-  const length = Math.max(startText.length, targetText.length);
-  const stagger = 18;
-  const startTime = performance.now() + delay;
-
-  const update = () => {
-    const elapsed = performance.now() - startTime;
-    if (elapsed < 0) {
-      requestAnimationFrame(update);
-      return;
-    }
-
-    const progress = Math.min(elapsed / duration, 1);
-    const resolvedCount = decode ? Math.min(targetText.length, Math.floor(elapsed / stagger)) : 0;
-    let output = '';
-
-    for (let i = 0; i < length; i++) {
-      if (decode && i < resolvedCount && i < targetText.length) {
-        output += targetText[i];
-      } else {
-        output += SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
-      }
-    }
-
-    element.textContent = output.slice(0, decode ? Math.max(resolvedCount, targetText.length) : length);
-
-    if (progress < 1) {
-      requestAnimationFrame(update);
-    } else if (decode) {
-      element.textContent = targetText;
-    }
-  };
-
-  requestAnimationFrame(update);
-};
-
-type ActiveSlide = { module: SlideModule; data: SlideData };
-
 /* ══════════════════════════════════════
-   NUCLEUS BAR — Mode icons by slide ID
+   Constants
    ══════════════════════════════════════ */
 
-const MODE_ICONS: Record<string, string> = {
-  listening: '♫',
-  watching: '▶',
-  reading: '⊡',
-  travel: '✈',
-  cycling: '◎',
-  writing: '✎',
-  biometrics: '♡'
+const AUTO_ADVANCE_INTERVAL = 30000; // 30s per mode
+const IDLE_TIMEOUT = 5000; // 5s no movement → resume auto
+
+type ActiveSlide = { module: SlideModule; data: SlideData };
+type NucleusState = 'ambient' | 'scanning' | 'exploring' | 'focused';
+
+/* ══════════════════════════════════════
+   Edge Metadata
+   ══════════════════════════════════════ */
+
+const updateMeta = (slide: ActiveSlide, index: number, total: number) => {
+  const meta = document.getElementById('nucleus-meta');
+  if (!meta) return;
+
+  const labelEl = meta.querySelector<HTMLElement>('[data-field="label"]');
+  const statEl = meta.querySelector<HTMLElement>('[data-field="stat"]');
+  const posEl = meta.querySelector<HTMLElement>('[data-field="position"]');
+  const linkEl = meta.querySelector<HTMLAnchorElement>('[data-field="link"]');
+
+  if (labelEl) labelEl.textContent = slide.data.label;
+  if (statEl) statEl.textContent = slide.data.detail;
+  if (posEl) posEl.textContent = String(index + 1).padStart(2, '0') + ' / ' + String(total).padStart(2, '0');
+  if (linkEl) {
+    linkEl.href = slide.data.link;
+    linkEl.textContent = 'EXPLORE \u2192';
+  }
 };
 
-const createBar = (slides: ActiveSlide[]) => {
-  const nav = document.getElementById('nucleus-bar-nav');
-  if (!(nav instanceof HTMLElement)) return;
-  nav.innerHTML = '';
-
-  slides.forEach((slide) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'nucleus-bar__indicator';
-    button.dataset.mode = slide.module.id;
-    button.setAttribute('aria-label', slide.data.label);
-    button.setAttribute('aria-current', 'false');
-
-    const tooltip = document.createElement('span');
-    tooltip.className = 'nucleus-bar__tooltip';
-    tooltip.textContent = slide.data.label;
-    button.appendChild(tooltip);
-
-    nav.append(button);
-  });
-};
-
-const updateBar = (slide: ActiveSlide, reducedMotion: boolean) => {
-  const mode = slide.module.id;
-
-  // Update indicators — instant swap, no transition on aria-current
-  document.querySelectorAll('.nucleus-bar__indicator').forEach((ind) => {
-    ind.setAttribute('aria-current', (ind as HTMLElement).dataset.mode === mode ? 'true' : 'false');
-  });
-
-  // Update readout
-  const readout = document.getElementById('nucleus-bar-readout');
-  const icon = document.getElementById('nucleus-bar-icon');
-  const label = document.getElementById('nucleus-bar-label');
-  const stat = document.getElementById('nucleus-bar-stat');
-
-  if (readout instanceof HTMLAnchorElement) {
-    readout.href = slide.data.link;
-  }
-  if (icon) {
-    icon.textContent = MODE_ICONS[mode] || '◎';
-  }
-
-  if (reducedMotion) {
-    if (label) label.textContent = slide.data.label;
-    if (stat) stat.textContent = slide.data.detail;
-    return;
-  }
-
-  // Animate: label updates via scramble, stat fades out → updates → fades in
-  const scrambleDuration = 250;
-
-  // Scramble the label text
-  scrambleText(label, label?.textContent || '', scrambleDuration, 0, false);
-
-  // Fade out the stat text
-  if (stat) {
-    stat.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
-    stat.style.opacity = '0';
-    stat.style.transform = 'translateY(4px)';
-  }
-
-  window.setTimeout(() => {
-    // Resolve label
-    scrambleText(label, slide.data.label, 250, 0, true);
-
-    // Update stat text and fade it back in
-    if (stat) {
-      stat.textContent = slide.data.detail;
-      // Force reflow then animate in
-      requestAnimationFrame(() => {
-        stat.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-        stat.style.opacity = '';
-        stat.style.transform = '';
-      });
-    }
-  }, scrambleDuration);
-};
+/* ══════════════════════════════════════
+   Rendering
+   ══════════════════════════════════════ */
 
 const renderSlide = (
   slide: ActiveSlide,
@@ -259,13 +153,22 @@ const pickStartingSlide = (slides: ActiveSlide[]): number => {
   return ranked[0].index;
 };
 
+/* ══════════════════════════════════════
+   Init
+   ══════════════════════════════════════ */
+
 export const initNucleus = async () => {
   const canvas = document.getElementById('nucleus-canvas');
   const ctx = canvas instanceof HTMLCanvasElement ? canvas.getContext('2d') : null;
 
   if (!(canvas instanceof HTMLCanvasElement) || !(ctx instanceof CanvasRenderingContext2D)) return;
 
+  const nucleus = document.getElementById('nucleus');
+  if (!nucleus) return;
+
   resizeCanvas(canvas, ctx);
+
+  /* ── Fetch slide data ── */
 
   const fetched = await Promise.all(
     slideModules.map(async (module) => {
@@ -295,18 +198,70 @@ export const initNucleus = async () => {
     ];
   }
 
-  createBar(slides);
+  /* ── Create scanbeam element ── */
+
+  const scanbeam = document.createElement('div');
+  scanbeam.className = 'nucleus__scanbeam';
+  nucleus.appendChild(scanbeam);
+
+  /* ── State ── */
 
   let frame = 0;
   let currentSlide = pickStartingSlide(slides);
   let transitioning = false;
   let lastSwitch = Date.now();
+  let currentState: NucleusState = 'ambient';
+  let autoAdvanceTimer: ReturnType<typeof setInterval> | null = null;
+  let idleTimer: ReturnType<typeof setTimeout> | null = null;
+  let cursorX = 0;
+  let cursorY = 0;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const getDimensions = () => ({
     width: canvas.width / (window.devicePixelRatio || 1),
     height: canvas.height / (window.devicePixelRatio || 1)
   });
+
+  /* ── State management ── */
+
+  const setState = (newState: NucleusState) => {
+    currentState = newState;
+    nucleus.setAttribute('data-state', newState);
+  };
+
+  const setSlide = (index: number) => {
+    currentSlide = index;
+    updateMeta(slides[currentSlide], currentSlide, slides.length);
+  };
+
+  /* ── Auto-advance ── */
+
+  const startAutoAdvance = () => {
+    stopAutoAdvance();
+    autoAdvanceTimer = setInterval(() => {
+      if (transitioning) return;
+      const nextIndex = (currentSlide + 1) % slides.length;
+      transitionToSlide(nextIndex);
+    }, AUTO_ADVANCE_INTERVAL);
+  };
+
+  const stopAutoAdvance = () => {
+    if (autoAdvanceTimer) {
+      clearInterval(autoAdvanceTimer);
+      autoAdvanceTimer = null;
+    }
+  };
+
+  const resetIdleTimer = () => {
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      // No movement for 5s — resume ambient
+      setState('ambient');
+      startAutoAdvance();
+    }, IDLE_TIMEOUT);
+  };
+
+  /* ── CRT Transition ── */
 
   const applySlideState = (index: number) => {
     currentSlide = index;
@@ -367,8 +322,9 @@ export const initNucleus = async () => {
   };
 
   const transitionToSlide = (nextIndex: number) => {
+    if (nextIndex === currentSlide) return;
     const nextSlide = slides[nextIndex];
-    updateBar(nextSlide, reducedMotion);
+    updateMeta(nextSlide, nextIndex, slides.length);
 
     if (reducedMotion) {
       applySlideState(nextIndex);
@@ -380,39 +336,186 @@ export const initNucleus = async () => {
     });
   };
 
-  const bindBar = () => {
-    document.querySelectorAll('.nucleus-bar__indicator').forEach((ind) => {
-      ind.addEventListener('click', () => {
-        const mode = (ind as HTMLElement).dataset.mode;
-        const index = slides.findIndex((s) => s.module.id === mode);
-        if (index >= 0 && index !== currentSlide && !transitioning) {
-          lastSwitch = Date.now();
-          transitionToSlide(index);
-        }
-      });
-    });
-  };
+  /* ══════════════════════════════════════
+     Mouse interactions
+     ══════════════════════════════════════ */
+
+  // Mouse enter: pause auto-advance, enter scanning state
+  nucleus.addEventListener('mouseenter', () => {
+    stopAutoAdvance();
+    setState('scanning');
+    resetIdleTimer();
+  });
+
+  // Mouse leave: return to ambient (unless focused)
+  nucleus.addEventListener('mouseleave', () => {
+    if (currentState === 'focused') return;
+    setState('ambient');
+    scanbeam.style.opacity = '0';
+    if (idleTimer) clearTimeout(idleTimer);
+    startAutoAdvance();
+  });
+
+  // Mouse move: update scanbeam, detect hover zones
+  nucleus.addEventListener('mousemove', (e) => {
+    if (currentState === 'focused') return;
+
+    const rect = nucleus.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    cursorX = x;
+    cursorY = y;
+
+    // Move scan beam
+    scanbeam.style.left = x + 'px';
+    scanbeam.style.top = y + 'px';
+
+    // Determine zone (N equal vertical zones, one per slide)
+    const zoneWidth = rect.width / slides.length;
+    const zoneIndex = Math.min(Math.floor(x / zoneWidth), slides.length - 1);
+
+    if (zoneIndex !== currentSlide && !transitioning) {
+      setState('exploring');
+      lastSwitch = Date.now();
+      transitionToSlide(zoneIndex);
+    } else if (currentState !== 'exploring') {
+      setState('scanning');
+    }
+
+    resetIdleTimer();
+  });
+
+  // Click: toggle focus
+  nucleus.addEventListener('click', (e) => {
+    // Don't capture clicks on the EXPLORE link
+    if ((e.target as Element)?.closest('[data-field="link"]')) return;
+
+    if (currentState === 'focused') {
+      // Unlock — return to scanning
+      setState('scanning');
+      resetIdleTimer();
+    } else {
+      // Lock focus on current mode
+      setState('focused');
+      stopAutoAdvance();
+      if (idleTimer) clearTimeout(idleTimer);
+    }
+  });
+
+  /* ══════════════════════════════════════
+     Keyboard support
+     ══════════════════════════════════════ */
+
+  document.addEventListener('keydown', (e) => {
+    // Only respond if nucleus is in viewport
+    const rect = nucleus.getBoundingClientRect();
+    const inView = rect.top < window.innerHeight && rect.bottom > 0;
+    if (!inView) return;
+
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const nextIndex = (currentSlide + 1) % slides.length;
+      stopAutoAdvance();
+      lastSwitch = Date.now();
+      transitionToSlide(nextIndex);
+      setState('exploring');
+      resetIdleTimer();
+    }
+
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prevIndex = (currentSlide - 1 + slides.length) % slides.length;
+      stopAutoAdvance();
+      lastSwitch = Date.now();
+      transitionToSlide(prevIndex);
+      setState('exploring');
+      resetIdleTimer();
+    }
+
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (currentState === 'focused') {
+        setState('scanning');
+        resetIdleTimer();
+      } else {
+        setState('focused');
+        stopAutoAdvance();
+        if (idleTimer) clearTimeout(idleTimer);
+      }
+    }
+
+    if (e.key === 'Escape' && currentState === 'focused') {
+      setState('scanning');
+      resetIdleTimer();
+    }
+  });
+
+  /* ══════════════════════════════════════
+     Mobile: swipe + tap
+     ══════════════════════════════════════ */
+
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  nucleus.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  nucleus.addEventListener('touchend', (e) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const dx = touchEndX - touchStartX;
+    const dy = touchEndY - touchStartY;
+
+    // Detect horizontal swipe (min 50px, more horizontal than vertical)
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) {
+        // Swipe left → next
+        const nextIndex = (currentSlide + 1) % slides.length;
+        transitionToSlide(nextIndex);
+      } else {
+        // Swipe right → prev
+        const prevIndex = (currentSlide - 1 + slides.length) % slides.length;
+        transitionToSlide(prevIndex);
+      }
+      setState('exploring');
+      stopAutoAdvance();
+      resetIdleTimer();
+    } else if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+      // Tap (minimal movement) → toggle focus
+      // Don't capture taps on the EXPLORE link
+      if ((e.target as Element)?.closest('[data-field="link"]')) return;
+
+      if (currentState === 'focused') {
+        setState('ambient');
+        startAutoAdvance();
+      } else {
+        setState('focused');
+        stopAutoAdvance();
+      }
+    }
+  });
+
+  /* ══════════════════════════════════════
+     Initialize & animate
+     ══════════════════════════════════════ */
+
+  setState('ambient');
+  setSlide(currentSlide);
+  slides[currentSlide].module.reset?.();
 
   const { width, height } = getDimensions();
   renderSlide(slides[currentSlide], ctx, width, height, frame);
-  slides[currentSlide].module.reset?.();
 
-  // Set initial bar state to match the starting slide
-  updateBar(slides[currentSlide], true); // use reducedMotion=true for initial set (no animation)
-  bindBar();
+  startAutoAdvance();
 
   window.addEventListener('resize', () => resizeCanvas(canvas, ctx));
 
   const animate = () => {
     frame += 1;
     if (!transitioning) {
-      const now = Date.now();
-      if (now - lastSwitch > SLIDE_DURATION) {
-        lastSwitch = now;
-        const next = (currentSlide + 1) % slides.length;
-        transitionToSlide(next);
-      }
-
       const current = slides[currentSlide];
       const dims = getDimensions();
       renderSlide(current, ctx, dims.width, dims.height, frame);
