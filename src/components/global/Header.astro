@@ -1,9 +1,13 @@
 ---
 import ThemeToggle from '@components/global/ThemeToggle.astro';
-import NavTicker from '@components/global/NavTicker.astro';
 import Cursor from '@components/ui/Cursor.astro';
 import NoiseTexture from '@components/ui/NoiseTexture.astro';
 import AnalogClock from '@components/ui/AnalogClock.astro';
+import feedCache from '@data/feeds-cache.json';
+import ouraReadiness from '@data/oura/readiness.json';
+import stravaActivities from '@data/strava/activities.json';
+import { readdirSync, readFileSync } from 'node:fs';
+import path from 'node:path';
 
 const pathname = Astro.url.pathname;
 const links = [
@@ -28,10 +32,60 @@ const nowFlyoutLinks = [
   { href: '/quotes', label: 'Quotes' }
 ];
 
+const DEPLOY_TIMESTAMP = '2026.02.23 · 18:53 UTC';
+const DEPLOY_DATE = new Date('2026-02-23T18:53:37.418Z');
+
 const isActive = (href: string) => {
   if (href === '/') return pathname === '/';
   return pathname === href || pathname.startsWith(`${href}/`);
 };
+
+const formatNumber = (value: number) => new Intl.NumberFormat('en-US').format(value);
+
+const collectStats = (dir: string): { files: number; lines: number } => {
+  const stack = [dir];
+  let files = 0;
+  let lines = 0;
+  const exts = new Set(['.astro', '.ts', '.tsx', '.css', '.js']);
+
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current) continue;
+    for (const entry of readdirSync(current, { withFileTypes: true })) {
+      if (entry.name.startsWith('.')) continue;
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === 'dist' || entry.name === 'node_modules') continue;
+        stack.push(fullPath);
+        continue;
+      }
+      if (!exts.has(path.extname(entry.name))) continue;
+      files += 1;
+      const content = readFileSync(fullPath, 'utf8');
+      lines += content.split('\n').length;
+    }
+  }
+
+  return { files, lines };
+};
+
+const projectRoot = Astro.site ? new URL('.', Astro.site).pathname : process.cwd();
+const srcRoot = path.resolve(projectRoot, 'src');
+const buildStatsRaw = collectStats(srcRoot);
+const buildStatLabel = `${formatNumber(buildStatsRaw.files)} COMP · ${formatNumber(buildStatsRaw.lines)} LN`;
+
+const gaugeFeeds = [
+  { name: 'strava', active: Array.isArray(stravaActivities) && stravaActivities.length > 0 },
+  { name: 'lastfm', active: ((feedCache as any)?.items?.lastfm?.length ?? 0) > 0 },
+  { name: 'letterboxd', active: ((feedCache as any)?.items?.letterboxd?.length ?? 0) > 0 },
+  { name: 'oura', active: Array.isArray(ouraReadiness) && ouraReadiness.length > 0 },
+  { name: 'goodreads', active: ((feedCache as any)?.items?.goodreads?.length ?? 0) > 0 },
+  { name: 'github', active: ((feedCache as any)?.items?.x?.length ?? 0) > 0 }
+];
+const activeFeedCount = gaugeFeeds.filter((feed) => feed.active).length;
+
+const approximateWeightKb = Math.round((buildStatsRaw.lines * 44) / 1024);
+const weightGaugeValue = Number.isFinite(approximateWeightKb) ? approximateWeightKb : 0;
 ---
 
 <a href="#content" class="skip-link">Skip to content</a>
@@ -62,8 +116,45 @@ const isActive = (href: string) => {
     </nav>
 
     <div class="header__instruments">
-      <div class="header__ticker" id="header-ticker">
-        <NavTicker />
+      <div class="header__gauges" aria-label="Site vitals">
+        <div class="header__gauge" data-gauge="deploy" data-deploy-ts={DEPLOY_DATE.toISOString()}>
+          <span class="header__gauge-label">DEPLOY</span>
+          <span class="header__gauge-value" id="gauge-deploy">{DEPLOY_TIMESTAMP}</span>
+        </div>
+
+        <div class="header__gauge" data-gauge="live">
+          <span class="header__gauge-label">LIVE</span>
+          <span class="header__gauge-value header__gauge-value--accent" id="gauge-live">0</span>
+        </div>
+
+        <div class="header__gauge" data-gauge="signal">
+          <span class="header__gauge-label">SIGNAL</span>
+          <span class="header__gauge-value" id="gauge-signal">--</span>
+        </div>
+
+        <div class="header__gauge" data-gauge="build">
+          <span class="header__gauge-label">BUILD</span>
+          <span class="header__gauge-value" id="gauge-build">{buildStatLabel}</span>
+        </div>
+
+        <div class="header__gauge" data-gauge="feeds">
+          <span class="header__gauge-label">FEEDS</span>
+          <span class="header__gauge-value" id="gauge-feeds">
+            <span class="header__gauge-dots" id="gauge-feed-dots">
+              {gaugeFeeds.map((feed) => (
+                <span class={`header__gauge-dot header__gauge-dot--${feed.active ? 'active' : 'inactive'}`} title={feed.name}></span>
+              ))}
+            </span>
+            <span id="gauge-feed-count">{activeFeedCount}/{gaugeFeeds.length}</span>
+          </span>
+        </div>
+
+        <div class="header__gauge" data-gauge="weight">
+          <span class="header__gauge-label">WEIGHT</span>
+          <span class="header__gauge-value" id="gauge-weight">
+            <span id="gauge-weight-number">{formatNumber(weightGaugeValue)}</span><span class="header__gauge-unit">KB</span>
+          </span>
+        </div>
       </div>
 
       <div class="header__clock">
@@ -135,6 +226,44 @@ const isActive = (href: string) => {
     updateTime();
     setInterval(updateTime, 1000);
   }
+
+  const liveEl = document.getElementById('gauge-live');
+  const signalEl = document.getElementById('gauge-signal');
+  const deployGauge = document.querySelector('[data-gauge="deploy"]');
+  const LAUNCH_DATE = new Date('2025-02-19T00:00:00Z');
+
+  const updateLive = () => {
+    if (!liveEl) return;
+    const seconds = Math.floor((Date.now() - LAUNCH_DATE.getTime()) / 1000);
+    liveEl.textContent = seconds.toLocaleString();
+  };
+
+  const detectBrowser = () => {
+    const ua = navigator.userAgent;
+    if (/Edg\//.test(ua)) return 'EDGE';
+    if (/Firefox\//.test(ua)) return 'FIREFOX';
+    if (/Chrome\//.test(ua) && !/Edg\//.test(ua)) return 'CHROME';
+    if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) return 'SAFARI';
+    return 'UNKNOWN';
+  };
+
+  const updateSignal = () => {
+    if (!signalEl) return;
+    signalEl.textContent = `${detectBrowser()} · ${window.innerWidth}×${window.innerHeight}`;
+  };
+
+  const deployTs = deployGauge instanceof HTMLElement ? deployGauge.dataset.deployTs : null;
+  if (deployGauge instanceof HTMLElement && deployTs) {
+    const deployTime = new Date(deployTs).getTime();
+    if (Number.isFinite(deployTime) && (Date.now() - deployTime) <= 60 * 60 * 1000) {
+      deployGauge.classList.add('header__gauge--fresh');
+    }
+  }
+
+  updateLive();
+  updateSignal();
+  setInterval(updateLive, 1000);
+  window.addEventListener('resize', updateSignal, { passive: true });
 </script>
 
 <style>
@@ -148,22 +277,21 @@ const isActive = (href: string) => {
   .desktop-nav{display:none;flex-shrink:0;} .desktop-nav ul{list-style:none;display:flex;gap:1.1rem;padding:0;margin:0;align-items:center;}
   .desktop-nav a, .nav__link{font-family:'IBM Plex Mono',monospace;font-size:.75rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);text-decoration:none;padding:.35rem 0;border-bottom:2px solid transparent;display:inline-flex;align-items:center;height:100%;}
   .desktop-nav a.active,.desktop-nav a:hover,.nav__link.active,.nav__link:hover{color:var(--text-primary);} .desktop-nav a.active,.nav__link.active{border-bottom-color:var(--accent-primary);} 
-  .nav__item--dropdown { position: relative; }
+  .nav__item--dropdown { position: relative; display:flex; align-items:center; }
   .nav__flyout {
     position: absolute;
-    top: 100%;
-    right: 0;
+    top: calc(100% + 2px);
+    left: 0;
     display: flex;
     flex-direction: column;
     gap: 0;
-    min-width: 120px;
+    min-width: max-content;
     background: var(--surface-primary);
     border: 1px solid var(--border);
-    border-top: none;
-    padding: 6px 0;
+    padding: 2px 0;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-4px);
+    transform: translateY(-2px);
     transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
     z-index: 100;
   }
@@ -175,7 +303,7 @@ const isActive = (href: string) => {
   }
   .nav__flyout-link {
     display: block;
-    padding: 6px 14px;
+    padding: 4px 8px;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 10px;
     letter-spacing: 0.08em;
@@ -190,7 +318,88 @@ const isActive = (href: string) => {
   .light .nav__flyout-link:hover { background: rgba(0, 0, 0, 0.03); }
 
   .header__instruments {display:flex;align-items:center;gap:12px;margin-left:auto;min-width:0;}
-  .header__ticker {font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.04em;color:var(--text-tertiary);max-width:280px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0;}
+  .header__gauges {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: auto;
+    margin-right: 12px;
+  }
+  .header__gauge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 10px;
+    min-width: 56px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    gap: 1px;
+    cursor: default;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .header__gauge:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  .header__gauge-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 7px;
+    font-weight: 400;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    line-height: 1;
+    opacity: 0.6;
+  }
+  .header__gauge-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .header__gauge-value--accent {
+    color: var(--accent-primary);
+    font-weight: 600;
+  }
+  .header__gauge-unit {
+    font-size: 7px;
+    font-weight: 400;
+    color: var(--text-tertiary);
+    margin-left: 2px;
+  }
+  .header__gauge-dots {
+    display: inline-flex;
+    gap: 3px;
+    align-items: center;
+    margin-right: 4px;
+  }
+  .header__gauge-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .header__gauge-dot--active {
+    background: #4ade80;
+    box-shadow: 0 0 3px rgba(74, 222, 128, 0.4);
+  }
+  .header__gauge-dot--inactive {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  .header__gauge[data-gauge="deploy"].header__gauge--fresh .header__gauge-value {
+    color: #4ade80;
+    animation: deploy-pulse 2s ease-out 1;
+  }
+  @keyframes deploy-pulse {
+    0% { color: #4ade80; }
+    100% { color: var(--text-secondary); }
+  }
+
   .header__clock{display:flex;justify-content:center;align-items:center;}
   .header__utilities{flex-shrink:0;display:flex;align-items:center;gap:.5rem;}
   .cmd-trigger,.menu-trigger{border:1px solid var(--border);background:var(--surface-primary);color:var(--text-secondary);border-radius:999px;padding:.4rem .6rem;}
@@ -199,15 +408,41 @@ const isActive = (href: string) => {
   .mobile-overlay{position:fixed;inset:4.25rem 0 0 0;background:var(--surface-primary);padding:2rem 1.5rem 1.25rem;display:flex;flex-direction:column;justify-content:space-between;border-top:1px solid var(--border);} 
   .mobile-nav ul{list-style:none;margin:0;padding:0;display:grid;gap:1rem;} .mobile-nav a{font-family:'IBM Plex Mono',monospace;font-size:1rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-primary);text-decoration:none;}
   .mobile-kbd-hint{color:var(--text-secondary);} .mobile-time{font-family:'IBM Plex Mono',monospace;color:var(--text-tertiary);font-size:.85rem;}
+
+  [data-theme="light"] .header__gauge,
+  .light .header__gauge {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.05);
+  }
+  [data-theme="light"] .header__gauge:hover,
+  .light .header__gauge:hover {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+  [data-theme="light"] .header__gauge-dot--inactive,
+  .light .header__gauge-dot--inactive {
+    background: rgba(0, 0, 0, 0.15);
+  }
+
   @media (width >= 52rem) {
     .desktop-nav, .cmd-trigger { display:flex; }
     .menu-trigger, .mobile-overlay { display:none; }
     .logotype { font-size:1.5rem; }
   }
-  @media (max-width: 1024px) {
-    .header__ticker { max-width:200px; }
+  @media (max-width: 1200px) {
+    .header__gauge[data-gauge="weight"],
+    .header__gauge[data-gauge="build"] { display: none; }
+  }
+  @media (max-width: 900px) {
+    .header__gauge[data-gauge="deploy"],
+    .header__gauge[data-gauge="signal"],
+    .header__gauge[data-gauge="weight"],
+    .header__gauge[data-gauge="build"] { display: none; }
   }
   @media (max-width: 768px) {
-    .header__ticker { display:none; }
+    .header__gauges { display:none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .header__gauge[data-gauge="deploy"].header__gauge--fresh .header__gauge-value { animation: none; }
   }
 </style>
