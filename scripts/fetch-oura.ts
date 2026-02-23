@@ -1,4 +1,4 @@
-import { writeFile, mkdir } from 'node:fs/promises';
+import { writeFile, readFile, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import _sodium from 'libsodium-wrappers';
 
@@ -19,6 +19,7 @@ import _sodium from 'libsodium-wrappers';
 const TIMEOUT_MS = 15_000;
 const BASE_URL = 'https://api.ouraring.com';
 const DATA_DIR = resolve('src/data/oura');
+const CACHE_PATH = resolve('src/data/oura-cache.json');
 const ROLLING_WINDOW_DAYS = 90;
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -318,6 +319,12 @@ interface SleepPeriodEntry {
     items: (number | null)[];
     timestamp: string;
   };
+  readiness?: {
+    score?: number;
+    temperature_deviation?: number;
+    temperature_trend_deviation?: number;
+    contributors?: Record<string, number | null>;
+  };
   type?: string;
 }
 
@@ -431,6 +438,183 @@ async function writeJson(filename: string, data: unknown): Promise<void> {
   const path = resolve(DATA_DIR, filename);
   await writeFile(path, JSON.stringify(data, null, 2) + '\n', 'utf8');
   console.log(`[oura] Wrote ${path}`);
+}
+
+// ── Cache Generation ─────────────────────────────────────────────
+
+interface CacheSleepStage {
+  stage: string;
+  startOffset: number;
+  endOffset: number;
+}
+
+/**
+ * Reads the raw JSON files from src/data/oura/ and generates
+ * src/data/oura-cache.json in the shape the frontend components expect.
+ */
+async function generateOuraCache(fetchedAt: string): Promise<void> {
+  console.log('[oura] Generating oura-cache.json...');
+
+  // Read raw data files
+  const [sleepRaw, readinessRaw, bodyRaw] = await Promise.all([
+    readFile(resolve(DATA_DIR, 'sleep.json'), 'utf8'),
+    readFile(resolve(DATA_DIR, 'readiness.json'), 'utf8'),
+    readFile(resolve(DATA_DIR, 'body.json'), 'utf8'),
+  ]);
+
+  const sleep = JSON.parse(sleepRaw) as {
+    daily: DailySleepEntry[];
+    periods: SleepPeriodEntry[];
+  };
+  const readiness = JSON.parse(readinessRaw) as {
+    readiness: DailyReadinessEntry[];
+  };
+  const body = JSON.parse(bodyRaw) as {
+    spo2: DailySpo2Entry[];
+    stress: DailyStressEntry[];
+  };
+
+  const dailySleep = sleep.daily ?? [];
+  const periods = sleep.periods ?? [];
+  const dailyReadiness = readiness.readiness ?? [];
+  const spo2Data = body.spo2 ?? [];
+  const stressData = body.stress ?? [];
+
+  // Find most recent long_sleep period (sorted by bedtime_end descending)
+  const longSleepPeriods = periods
+    .filter((p) => p.type === 'long_sleep')
+    .sort((a, b) => new Date(b.bedtime_end).getTime() - new Date(a.bedtime_end).getTime());
+  const latestPeriod = longSleepPeriods[0] ?? null;
+
+  // Most recent daily sleep entry
+  const latestDailySleep = dailySleep.length > 0 ? dailySleep[dailySleep.length - 1] : null;
+
+  // Most recent daily readiness entry
+  const latestReadiness = dailyReadiness.length > 0 ? dailyReadiness[dailyReadiness.length - 1] : null;
+
+  // Most recent spo2
+  const latestSpo2 = spo2Data.length > 0 ? spo2Data[spo2Data.length - 1] : null;
+
+  // Most recent stress
+  const latestStress = stressData.length > 0 ? stressData[stressData.length - 1] : null;
+
+  // Determine the last night date
+  const lastNightDate = latestDailySleep?.day ?? latestPeriod?.day ?? '';
+
+  // Map stress day_summary to the stressLevel format components expect
+  function mapStressLevel(summary: string | undefined): string {
+    if (!summary) return 'normal';
+    const s = summary.toLowerCase();
+    if (s === 'restored') return 'restored';
+    if (s === 'normal') return 'normal';
+    if (s === 'stressed' || s === 'stressful') return 'stressed';
+    if (s === 'high') return 'high';
+    return 'normal';
+  }
+
+  // Build lastNight object
+  const lastNight = {
+    sleepScore: latestDailySleep?.score ?? 0,
+    readinessScore: latestReadiness?.score ?? 0,
+    totalSleepMinutes: latestPeriod ? Math.round(latestPeriod.total_sleep_duration / 60) : 0,
+    remMinutes: latestPeriod ? Math.round(latestPeriod.rem_sleep_duration / 60) : 0,
+    deepMinutes: latestPeriod ? Math.round(latestPeriod.deep_sleep_duration / 60) : 0,
+    lightMinutes: latestPeriod ? Math.round(latestPeriod.light_sleep_duration / 60) : 0,
+    awakeMinutes: latestPeriod ? Math.round(latestPeriod.awake_time / 60) : 0,
+    sleepEfficiency: latestPeriod?.efficiency ?? 0,
+    restingHeartRate: latestPeriod?.lowest_heart_rate ?? 0,
+    hrv: latestPeriod?.average_hrv ?? 0,
+    spo2: latestSpo2?.spo2_percentage?.average ?? 0,
+    respiratoryRate: latestPeriod?.average_breath ?? 0,
+    bodyTempDeviation: latestPeriod?.readiness?.temperature_deviation
+      ?? latestReadiness?.temperature_deviation ?? 0,
+    stressLevel: mapStressLevel(latestStress?.day_summary),
+    bedtimeStart: latestPeriod?.bedtime_start ?? null,
+    bedtimeEnd: latestPeriod?.bedtime_end ?? null,
+  };
+
+  // Build 14-day trend arrays
+  // Create lookup maps by day for each data source
+  const sleepByDay = new Map(dailySleep.map((d) => [d.day, d]));
+  const readinessByDay = new Map(dailyReadiness.map((d) => [d.day, d]));
+  const spo2ByDay = new Map(spo2Data.map((d) => [d.day, d]));
+
+  // For HRV, resting HR, and body temp, use the most recent long_sleep period per day
+  const periodByDay = new Map<string, SleepPeriodEntry>();
+  for (const p of periods) {
+    if (p.type !== 'long_sleep') continue;
+    const existing = periodByDay.get(p.day);
+    if (!existing || new Date(p.bedtime_end).getTime() > new Date(existing.bedtime_end).getTime()) {
+      periodByDay.set(p.day, p);
+    }
+  }
+
+  // Generate date strings for the last 14 days (oldest first)
+  const trendDays: string[] = [];
+  const now = new Date();
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(now.getTime() - i * 86_400_000);
+    trendDays.push(d.toISOString().split('T')[0]);
+  }
+
+  const weeklyTrend = {
+    sleepScores: trendDays.map((day) => sleepByDay.get(day)?.score ?? null),
+    readinessScores: trendDays.map((day) => readinessByDay.get(day)?.score ?? null),
+    hrvValues: trendDays.map((day) => periodByDay.get(day)?.average_hrv ?? null),
+    restingHR: trendDays.map((day) => periodByDay.get(day)?.lowest_heart_rate ?? null),
+    bodyTemp: trendDays.map((day) => {
+      const period = periodByDay.get(day);
+      if (period?.readiness?.temperature_deviation != null) return period.readiness.temperature_deviation;
+      const r = readinessByDay.get(day);
+      return r?.temperature_deviation ?? null;
+    }),
+    spo2Values: trendDays.map((day) => spo2ByDay.get(day)?.spo2_percentage?.average ?? null),
+  };
+
+  // Build sleep stages from sleep_phase_5_min of the most recent period
+  const sleepStages: CacheSleepStage[] = [];
+  if (latestPeriod?.sleep_phase_5_min) {
+    const phaseStr = latestPeriod.sleep_phase_5_min;
+    const stageMap: Record<string, string> = {
+      '1': 'deep',
+      '2': 'light',
+      '3': 'rem',
+      '4': 'awake',
+    };
+
+    let currentStage = stageMap[phaseStr[0]] ?? 'awake';
+    let startOffset = 0;
+
+    for (let i = 1; i < phaseStr.length; i++) {
+      const stage = stageMap[phaseStr[i]] ?? 'awake';
+      if (stage !== currentStage) {
+        sleepStages.push({
+          stage: currentStage,
+          startOffset,
+          endOffset: i * 5,
+        });
+        currentStage = stage;
+        startOffset = i * 5;
+      }
+    }
+    // Push the final segment
+    sleepStages.push({
+      stage: currentStage,
+      startOffset,
+      endOffset: phaseStr.length * 5,
+    });
+  }
+
+  const cache = {
+    lastFetched: fetchedAt,
+    lastNightDate,
+    lastNight,
+    weeklyTrend,
+    sleepStages,
+  };
+
+  await writeFile(CACHE_PATH, JSON.stringify(cache, null, 2) + '\n', 'utf8');
+  console.log(`[oura] Wrote ${CACHE_PATH}`);
 }
 
 // ── Main ─────────────────────────────────────────────────────────
@@ -628,6 +812,16 @@ export async function main() {
   ].join(', ');
 
   console.log(`[oura] Done (${counts})`);
+
+  // Generate the derived cache file for frontend components
+  try {
+    await generateOuraCache(fetchedAt);
+  } catch (error) {
+    console.error(
+      '[oura] Failed to generate oura-cache.json:',
+      error instanceof Error ? error.message : error
+    );
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
