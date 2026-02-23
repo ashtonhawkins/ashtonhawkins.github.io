@@ -1,4 +1,14 @@
 {
-  "fetched_at": null,
-  "data": []
+  "fetched_at": "2026-02-23T01:22:24.834Z",
+  "data": [
+    {
+      "id": "54afc472-644b-4163-b648-e6ca0794c60f",
+      "color": "stealth_black",
+      "design": null,
+      "firmware_version": "2.9.8",
+      "hardware_type": "gen4",
+      "set_up_at": "2025-09-27T00:00:00.000Z",
+      "size": 11
+    }
+  ]
 }
