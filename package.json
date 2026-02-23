@@ -27,6 +27,9 @@
     "@astrojs/check": "^0.9.4",
     "@types/node": "^22.10.2",
     "tsx": "^4.19.2",
+    "tweetnacl": "^1.0.3",
+    "tweetnacl-sealedbox-js": "^1.2.0",
+    "tweetnacl-util": "^0.15.1",
     "typescript": "^5.7.2"
   }
 }
