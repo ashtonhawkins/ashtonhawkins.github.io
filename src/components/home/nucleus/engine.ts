@@ -69,8 +69,6 @@ const AUTO_ADVANCE_INTERVAL = 30000;
 const IDLE_TIMEOUT = 5000;
 
 type ActiveSlide = { module: SlideModule; data: SlideData };
-type NucleusState = 'ambient' | 'scanning' | 'exploring' | 'focused';
-
 const modeDisplay: Record<string, { icon: string; name: string; href: string }> = {
   listening: { icon: '♫', name: 'LISTENING', href: '/music' },
   watching: { icon: '▶', name: 'WATCHING', href: '/watching' },
@@ -81,43 +79,85 @@ const modeDisplay: Record<string, { icon: string; name: string; href: string }> 
   biometrics: { icon: '♡', name: 'BIOMETRICS', href: '/biometrics' }
 };
 
+const escapeHtml = (value: unknown): string => String(value ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
+const tickerText = (value: unknown): string => `<span class="nucleus-ticker__item"><em class="nucleus-ticker__text">${escapeHtml(value)}</em></span>`;
+const tickerNumber = (value: unknown, unit: string): string => `<span class="nucleus-ticker__item"><span class="nucleus-ticker__value">${escapeHtml(value)}</span><span class="nucleus-ticker__unit">${escapeHtml(unit)}</span></span>`;
+const tickerChip = (value: unknown): string => `<span class="nucleus-ticker__item"><span class="nucleus-ticker__chip">${escapeHtml(value)}</span></span>`;
+const tickerDate = (value: unknown): string => `<span class="nucleus-ticker__item"><span class="nucleus-ticker__date">${escapeHtml(value)}</span></span>`;
+
 const subTickerItems = (slide: ActiveSlide): string[] => {
   const { module, data } = slide;
-  const items: string[] = [];
-
-  const push = (value: unknown) => {
-    if (typeof value === 'string' && value.trim()) items.push(value.trim().toUpperCase());
-  };
-
-  push(data.detail);
+  const renderData = data.renderData ?? {};
 
   if (module.id === 'listening') {
-    push(data.renderData?.artist && data.renderData?.track ? `${data.renderData.artist} — ${data.renderData.track}` : 'LAST TRACK LOGGED');
-    push(data.renderData?.album ? `ALBUM: ${data.renderData.album}` : 'AUDIO SIGNAL LIVE');
-    push(data.renderData?.plays ? `${data.renderData.plays} SCROBBLES` : 'RECENT SCROBBLES CACHED');
-  } else if (module.id === 'watching') {
-    push(data.renderData?.title ? `LAST WATCHED: ${data.renderData.title}` : 'FILM LOG UPDATED');
-    push(data.renderData?.rating ? `RATING ${data.renderData.rating}` : 'LETTERBOXD SIGNAL LIVE');
-    push(data.renderData?.year ? `${data.renderData.year} RELEASE` : 'WATCHLIST ROTATING');
-  } else if (module.id === 'travel') {
-    push(data.renderData?.country ? `${data.renderData.country} RECENT REGION` : 'ROUTES TRACKED');
-    push(data.renderData?.distance ? `${data.renderData.distance} LOGGED` : 'MILES FLOWN ARCHIVED');
-    push(data.renderData?.cities ? `${data.renderData.cities} CITIES` : 'ITINERARY ACTIVE');
-  } else if (module.id === 'cycling') {
-    push(data.renderData?.distance ? `${data.renderData.distance} LAST RIDE` : 'LAST RIDE LOGGED');
-    push(data.renderData?.elevation ? `${data.renderData.elevation} ELEVATION` : 'ELEVATION CAPTURED');
-    push(data.renderData?.speed ? `${data.renderData.speed} AVG SPEED` : 'MONTHLY MILEAGE TRACKED');
-  } else if (module.id === 'writing') {
-    push(data.renderData?.title ? `LATEST: ${data.renderData.title}` : 'LATEST POST INDEXED');
-    push(data.renderData?.wordCount ? `${data.renderData.wordCount} WORDS` : 'WORD COUNT SYNCED');
-    push(data.renderData?.published ? `PUBLISHED ${data.renderData.published}` : 'ESSAYS IN ROTATION');
-  } else if (module.id === 'biometrics') {
-    push(data.renderData?.readiness ? `READINESS ${data.renderData.readiness}` : 'RECOVERY SIGNAL');
-    push(data.renderData?.sleep ? `SLEEP ${data.renderData.sleep}` : 'SLEEP WINDOW TRACKED');
-    push(data.renderData?.hrv ? `HRV ${data.renderData.hrv}` : 'HRV BASELINE UPDATING');
+    return [
+      tickerText(renderData.artist && renderData.track ? `${renderData.track} — ${renderData.artist}` : 'Hot Blooded — New Constellations'),
+      tickerNumber(renderData.plays ?? 847, 'SCROBBLES'),
+      tickerText(`TOP GENRE: ${(renderData.genre ?? 'INDIE').toString().toUpperCase()}`)
+    ];
   }
 
-  return [...new Set(items)].filter(Boolean).slice(0, 6);
+  if (module.id === 'watching') {
+    return [
+      tickerText(renderData.title ?? 'The Omega Man'),
+      tickerDate(renderData.year ?? '1971'),
+      tickerChip(`★ ${renderData.rating ?? 5}`),
+      tickerDate(data.updatedAt ? new Date(data.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase() : 'FEB 21')
+    ];
+  }
+
+  if (module.id === 'travel') {
+    const miles = Number.parseFloat(String(renderData.distance ?? 142000));
+    return [
+      tickerText(renderData.city ?? renderData.destination ?? 'Tokyo'),
+      tickerText(renderData.country ?? 'Japan'),
+      tickerDate(renderData.tripDate ?? 'NOV 2025'),
+      tickerNumber(renderData.countries ?? 23, 'COUNTRIES'),
+      tickerNumber(Number.isFinite(miles) ? miles.toLocaleString() : (renderData.distance ?? '142,000'), 'MI FLOWN')
+    ];
+  }
+
+  if (module.id === 'cycling') {
+    return [
+      tickerNumber(renderData.distance ?? '2.6', 'MI LAST RIDE'),
+      tickerNumber(renderData.elevation ?? '56', 'FT ELEV'),
+      tickerNumber(renderData.monthlyMiles ?? renderData.monthDistance ?? '127', 'MI THIS MONTH'),
+      tickerNumber(renderData.speed ?? '9.7', 'MPH AVG')
+    ];
+  }
+
+  if (module.id === 'writing') {
+    const latestDate = data.updatedAt
+      ? new Date(data.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()
+      : 'FEB 18';
+
+    return [
+      tickerText(renderData.title ?? data.detail ?? 'Building a Data-Driven Personal Site'),
+      tickerNumber(renderData.wordCount ?? 26, 'WORDS'),
+      tickerDate(`LATEST: ${latestDate}`)
+    ];
+  }
+
+  if (module.id === 'biometrics') {
+    const sleep = typeof renderData.totalSleepMinutes === 'number'
+      ? `${Math.floor(renderData.totalSleepMinutes / 60)}h ${String(renderData.totalSleepMinutes % 60).padStart(2, '0')}m`
+      : '7h 59m';
+
+    return [
+      tickerChip(`${renderData.readinessScore ?? renderData.readiness ?? 76} SCORE`),
+      tickerNumber(renderData.hrv ?? 43, 'MS HRV'),
+      tickerNumber(sleep, 'SLEEP'),
+      tickerNumber(renderData.restingHeartRate ?? renderData.rhr ?? 62, 'BPM RHR')
+    ];
+  }
+
+  return [tickerText(data.detail ?? 'NO DATA CACHED')];
 };
 
 const renderSlide = (slide: ActiveSlide, ctx: CanvasRenderingContext2D, width: number, height: number, frame: number) => {
@@ -146,11 +186,11 @@ export const initNucleus = async () => {
   if (!(canvas instanceof HTMLCanvasElement) || !(ctx instanceof CanvasRenderingContext2D)) return;
 
   const nucleus = document.getElementById('nucleus');
-  const ticker = document.getElementById('nucleus-ticker');
   const tickerLabel = document.querySelector<HTMLAnchorElement>('.nucleus-ticker__label');
   const tickerIcon = document.querySelector<HTMLElement>('.nucleus-ticker__icon');
   const tickerName = document.querySelector<HTMLElement>('.nucleus-ticker__name');
   const tickerScroll = document.getElementById('nucleus-ticker-scroll');
+  const modeLabel = document.getElementById('nucleus-mode-label');
   const prevBtn = document.getElementById('nucleus-prev');
   const nextBtn = document.getElementById('nucleus-next');
 
@@ -180,27 +220,26 @@ export const initNucleus = async () => {
   let frame = 0;
   let currentSlide = pickStartingSlide(slides);
   let transitioning = false;
-  let currentState: NucleusState = 'ambient';
   let autoAdvanceTimer: ReturnType<typeof setInterval> | null = null;
   let idleTimer: ReturnType<typeof setTimeout> | null = null;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const getDimensions = () => ({ width: canvas.width / (window.devicePixelRatio || 1), height: canvas.height / (window.devicePixelRatio || 1) });
-  const setState = (newState: NucleusState) => { currentState = newState; nucleus.setAttribute('data-state', newState); };
+  const setState = (newState: 'ambient' | 'scanning' | 'exploring') => { nucleus.setAttribute('data-state', newState); };
 
   const updateSubTicker = (slide: ActiveSlide) => {
     if (!tickerScroll || !tickerLabel || !tickerIcon || !tickerName) return;
     const mode = modeDisplay[slide.module.id] ?? { icon: '◌', name: slide.data.label, href: slide.data.link };
     tickerIcon.textContent = mode.icon;
     tickerName.textContent = mode.name;
+    if (modeLabel instanceof HTMLElement) modeLabel.textContent = mode.name;
     tickerLabel.href = mode.href;
 
     const items = subTickerItems(slide);
-    const source = items.length ? items : ['NO DATA CACHED'];
+    const source = items.length ? items : [tickerText('NO DATA CACHED')];
     const segment = source.map((item, i) => {
-      const span = `<span class="nucleus-ticker__item">${item}</span>`;
       const sep = i < source.length - 1 ? '<span class="nucleus-ticker__separator" aria-hidden="true">·</span>' : '';
-      return `${span}${sep}`;
+      return `${item}${sep}`;
     }).join('');
     const html = `${segment}<span class="nucleus-ticker__separator" aria-hidden="true">·</span>${segment}<span class="nucleus-ticker__separator" aria-hidden="true">·</span>`;
 
@@ -306,41 +345,10 @@ export const initNucleus = async () => {
   nextBtn?.addEventListener('click', () => goRelative(1));
 
   const pause = () => stopAutoAdvance();
-  const resume = () => { if (currentState !== 'focused') startAutoAdvance(); };
+  const resume = () => startAutoAdvance();
 
-  [nucleus, ticker].forEach((el) => {
-    if (!el) return;
-    el.addEventListener('mouseenter', pause);
-    el.addEventListener('mouseleave', resume);
-  });
-
-  nucleus.addEventListener('mousemove', (e) => {
-    if (currentState === 'focused') return;
-    const rect = nucleus.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const zoneWidth = rect.width / slides.length;
-    const zoneIndex = Math.min(Math.floor(x / zoneWidth), slides.length - 1);
-
-    if (zoneIndex !== currentSlide && !transitioning) {
-      setState('exploring');
-      transitionToSlide(zoneIndex);
-    } else if (currentState !== 'exploring') {
-      setState('scanning');
-    }
-
-    resetIdleTimer();
-  });
-
-  nucleus.addEventListener('click', () => {
-    if (currentState === 'focused') {
-      setState('scanning');
-      resetIdleTimer();
-    } else {
-      setState('focused');
-      stopAutoAdvance();
-      if (idleTimer) clearTimeout(idleTimer);
-    }
-  });
+  nucleus.addEventListener('mouseenter', pause);
+  nucleus.addEventListener('mouseleave', resume);
 
   document.addEventListener('keydown', (e) => {
     const rect = nucleus.getBoundingClientRect();
@@ -350,22 +358,6 @@ export const initNucleus = async () => {
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); goRelative(1); }
     if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goRelative(-1); }
 
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      if (currentState === 'focused') {
-        setState('scanning');
-        resetIdleTimer();
-      } else {
-        setState('focused');
-        stopAutoAdvance();
-        if (idleTimer) clearTimeout(idleTimer);
-      }
-    }
-
-    if (e.key === 'Escape' && currentState === 'focused') {
-      setState('scanning');
-      resetIdleTimer();
-    }
   });
 
   let touchStartX = 0;
@@ -383,14 +375,6 @@ export const initNucleus = async () => {
 
     if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
       goRelative(dx < 0 ? 1 : -1);
-    } else if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
-      if (currentState === 'focused') {
-        setState('ambient');
-        startAutoAdvance();
-      } else {
-        setState('focused');
-        stopAutoAdvance();
-      }
     }
   });
 
