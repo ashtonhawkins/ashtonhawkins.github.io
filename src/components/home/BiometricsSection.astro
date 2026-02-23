@@ -18,7 +18,7 @@ type MaybePoint = number | null;
 
 const GAP_START = 3;
 const GAP_END = 5;
-const toSeriesWithGap = (arr: number[]): MaybePoint[] => arr.map((value, index) => (index >= GAP_START && index <= GAP_END ? null : value));
+const toSeriesWithGap = (arr: (number | null)[]): MaybePoint[] => arr.map((value, index) => (index >= GAP_START && index <= GAP_END ? null : value));
 
 const presentValues = (arr: MaybePoint[]): number[] => arr.filter((value): value is number => typeof value === 'number');
 
