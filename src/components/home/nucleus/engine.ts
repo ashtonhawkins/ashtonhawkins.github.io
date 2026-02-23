@@ -133,48 +133,50 @@ const scrambleText = (
 
 type ActiveSlide = { module: SlideModule; data: SlideData };
 
-const createDots = (slides: ActiveSlide[]) => {
-  const dotsHost = document.getElementById('nucleus-dots');
-  if (!(dotsHost instanceof HTMLElement)) return;
-  dotsHost.innerHTML = '';
+const createTrack = (slides: ActiveSlide[]) => {
+  const segmentsHost = document.getElementById('nucleus-track-segments');
+  if (!(segmentsHost instanceof HTMLElement)) return;
+  segmentsHost.innerHTML = '';
 
-  slides.forEach((slide, index) => {
+  document.documentElement.style.setProperty('--slide-duration', `${SLIDE_DURATION}ms`);
+
+  slides.forEach((slide) => {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'nucleus__dot';
-    button.dataset.dot = String(index);
-    button.setAttribute('aria-label', `Show ${slide.data.label.toLowerCase()} slide`);
-    button.innerHTML = `
-      <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
-        <circle cx="5" cy="5" r="4" class="nucleus__dot-bg"></circle>
-        <circle
-          cx="5"
-          cy="5"
-          r="3.5"
-          class="nucleus__dot-ring"
-          stroke-dasharray="21.99"
-          stroke-dashoffset="21.99"
-          transform="rotate(-90 5 5)"
-        ></circle>
-      </svg>
-    `;
-    dotsHost.append(button);
+    button.className = 'nucleus-track__segment';
+    button.dataset.mode = slide.module.id;
+    button.setAttribute('aria-label', slide.data.label);
+    button.setAttribute('aria-current', 'false');
+
+    const fill = document.createElement('span');
+    fill.className = 'nucleus-track__fill';
+    button.appendChild(fill);
+
+    segmentsHost.append(button);
   });
 };
 
-const updateDots = (slideIndex: number) => {
-  document.querySelectorAll('.nucleus__dot').forEach((dot) => {
-    dot.classList.remove('nucleus__dot--active');
-    const ring = dot.querySelector('.nucleus__dot-ring');
-    if (ring instanceof SVGCircleElement) {
-      ring.style.animation = 'none';
-      void ring.getBoundingClientRect();
-      ring.style.animation = '';
+const updateTrack = (mode: string) => {
+  const segments = document.querySelectorAll('.nucleus-track__segment');
+  const label = document.querySelector('.nucleus-track__label');
+
+  segments.forEach((seg) => {
+    const isActive = (seg as HTMLElement).dataset.mode === mode;
+    seg.setAttribute('aria-current', isActive ? 'true' : 'false');
+
+    if (isActive) {
+      const fill = seg.querySelector('.nucleus-track__fill');
+      if (fill instanceof HTMLElement) {
+        fill.style.animation = 'none';
+        void fill.offsetWidth;
+        fill.style.animation = '';
+      }
     }
   });
 
-  const activeDot = document.querySelector(`.nucleus__dot[data-dot="${slideIndex}"]`);
-  if (activeDot instanceof HTMLElement) activeDot.classList.add('nucleus__dot--active');
+  if (label) {
+    label.textContent = mode.toUpperCase();
+  }
 };
 
 const resetProgress = () => {
@@ -278,7 +280,7 @@ export const initNucleus = async () => {
     ];
   }
 
-  createDots(slides);
+  createTrack(slides);
 
   let frame = 0;
   let currentSlide = pickStartingSlide(slides);
@@ -294,7 +296,7 @@ export const initNucleus = async () => {
   const applySlideState = (index: number) => {
     currentSlide = index;
     slides[currentSlide].module.reset?.();
-    updateDots(currentSlide);
+    updateTrack(slides[currentSlide].module.id);
     resetProgress();
   };
 
@@ -365,11 +367,12 @@ export const initNucleus = async () => {
     });
   };
 
-  const bindDots = () => {
-    document.querySelectorAll('.nucleus__dot').forEach((dot) => {
-      dot.addEventListener('click', () => {
-        const index = Number.parseInt(dot.getAttribute('data-dot') || '-1', 10);
-        if (index >= 0 && index < slides.length && index !== currentSlide && !transitioning) {
+  const bindTrack = () => {
+    document.querySelectorAll('.nucleus-track__segment').forEach((seg) => {
+      seg.addEventListener('click', () => {
+        const mode = (seg as HTMLElement).dataset.mode;
+        const index = slides.findIndex((s) => s.module.id === mode);
+        if (index >= 0 && index !== currentSlide && !transitioning) {
           lastSwitch = Date.now();
           resetProgress();
           transitionToSlide(index);
@@ -381,9 +384,9 @@ export const initNucleus = async () => {
   const { width, height } = getDimensions();
   renderSlide(slides[currentSlide], ctx, width, height, frame);
   slides[currentSlide].module.reset?.();
-  updateDots(currentSlide);
+  updateTrack(slides[currentSlide].module.id);
   resetProgress();
-  bindDots();
+  bindTrack();
 
   // Set initial caption to match the starting slide
   const labelEl = document.getElementById('nucleus-label');

@@ -14,11 +14,14 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
         </a>
       </div>
 
+      <nav class="nucleus-track" id="nucleus-track" aria-label="Carousel navigation">
+        <div class="nucleus-track__segments" id="nucleus-track-segments"></div>
+        <span class="nucleus-track__label" aria-live="polite"></span>
+      </nav>
+
       <div class="nucleus__progress" id="nucleus-progress"></div>
     </div>
   </section>
-
-  <div class="nucleus__dots" id="nucleus-dots" aria-label="Nucleus slide indicators"></div>
 </div>
 
 <style>
@@ -87,59 +90,143 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
     color: var(--accent-primary);
   }
 
-  .nucleus__dots {
+  .nucleus-track {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
-    justify-content: flex-end;
-    gap: 4px;
-    padding-top: 8px;
-    padding-right: 4px;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    z-index: 10;
+    pointer-events: auto;
   }
 
-  .nucleus__dot {
-    min-width: 44px;
-    min-height: 44px;
+  .nucleus-track__segments {
     display: flex;
+    gap: 3px;
     align-items: center;
-    justify-content: center;
+  }
+
+  .nucleus-track__segment {
+    appearance: none;
+    border: none;
     background: none;
-    border: 0;
     padding: 0;
     cursor: pointer;
-  }
-
-  .nucleus__dot-bg {
-    fill: var(--text-tertiary);
+    width: 32px;
+    height: 3px;
+    border-radius: 1.5px;
+    position: relative;
+    overflow: hidden;
+    background: var(--border);
     opacity: 0.4;
-    transition: opacity 0.3s, fill 0.3s;
+    padding: 10px 0;
+    margin: -10px 0;
+    background-clip: content-box;
+    transition: opacity 0.3s ease, width 0.3s ease;
   }
 
-  .nucleus__dot--active .nucleus__dot-bg {
-    fill: var(--accent-primary);
+  .nucleus-track__segment:hover {
+    opacity: 0.7;
+  }
+
+  .nucleus-track__segment:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 4px;
+    border-radius: 2px;
+  }
+
+  .nucleus-track__segment[aria-current='true'] {
+    width: 48px;
     opacity: 1;
+    background: transparent;
   }
 
-  .nucleus__dot-ring {
-    fill: none;
-    stroke: var(--accent-primary);
-    stroke-width: 1.5;
-    stroke-dasharray: 21.99;
-    stroke-dashoffset: 21.99;
+  .nucleus-track__fill {
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 3px;
+    width: 0%;
+    margin-top: -1.5px;
+    border-radius: 1.5px;
+    background: var(--accent-primary);
+  }
+
+  .nucleus-track__segment[aria-current='true'] .nucleus-track__fill {
+    animation: track-fill var(--slide-duration, 9s) linear forwards;
+  }
+
+  @keyframes track-fill {
+    from { width: 0%; }
+    to { width: 100%; }
+  }
+
+  .nucleus-track__segment[data-mode='listening'][aria-current='true'] .nucleus-track__fill {
+    background: var(--accent-listening, var(--accent-primary));
+  }
+
+  .nucleus-track__segment[data-mode='watching'][aria-current='true'] .nucleus-track__fill {
+    background: var(--accent-watching, var(--accent-primary));
+  }
+
+  .nucleus-track__segment[data-mode='reading'][aria-current='true'] .nucleus-track__fill {
+    background: var(--accent-reading, var(--accent-primary));
+  }
+
+  .nucleus-track__segment[data-mode='travel'][aria-current='true'] .nucleus-track__fill {
+    background: var(--accent-travel, var(--accent-primary));
+  }
+
+  .nucleus-track__segment[data-mode='cycling'][aria-current='true'] .nucleus-track__fill {
+    background: var(--accent-cycling, var(--accent-primary));
+  }
+
+  .nucleus-track__segment[data-mode='writing'][aria-current='true'] .nucleus-track__fill {
+    background: var(--accent-writing, var(--accent-primary));
+  }
+
+  .nucleus-track__segment[data-mode='biometrics'][aria-current='true'] .nucleus-track__fill {
+    background: var(--accent-biometrics, var(--accent-primary));
+  }
+
+  .nucleus-track__label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
     opacity: 0;
-    transition: opacity 0.3s;
+    transition: opacity 0.3s ease;
+    white-space: nowrap;
+    user-select: none;
   }
 
-  .nucleus__dot--active .nucleus__dot-ring {
+  .nucleus-track:hover .nucleus-track__label {
     opacity: 1;
-    animation: dot-fill 9s linear forwards;
   }
 
-  @keyframes dot-fill {
-    from {
-      stroke-dashoffset: 21.99;
+  @media (prefers-reduced-motion: reduce) {
+    .nucleus-track__segment[aria-current='true'] .nucleus-track__fill {
+      animation: none;
+      width: 100%;
     }
 
-    to {
-      stroke-dashoffset: 0;
+    .nucleus-track__segment {
+      transition: none;
+    }
+  }
+
+  @media (max-height: 400px) {
+    .nucleus-track {
+      bottom: 8px;
+    }
+
+    .nucleus-track__label {
+      display: none;
     }
   }
 
