@@ -213,6 +213,7 @@ export const initNucleus = async () => {
   const tickerLabel = document.querySelector<HTMLAnchorElement>('.nucleus-ticker__mode-label');
   const tickerIcon = document.querySelector<HTMLElement>('.nucleus-ticker__mode-icon');
   const tickerName = document.querySelector<HTMLElement>('.nucleus-ticker__mode-name');
+  const tickerRoot = document.getElementById('nucleus-ticker');
   const tickerScroll = document.getElementById('nucleus-ticker-scroll');
   const prevBtn = document.getElementById('nucleus-prev');
   const nextBtn = document.getElementById('nucleus-next');
@@ -263,9 +264,22 @@ export const initNucleus = async () => {
       const sep = i < source.length - 1 ? '<span class="ticker-sep" aria-hidden="true">·</span>' : '';
       return `${item}${sep}`;
     }).join('');
-    const html = `${segment}<span class="ticker-sep" aria-hidden="true">·</span>${segment}<span class="ticker-sep" aria-hidden="true">·</span>`;
 
-    tickerScroll.innerHTML = html;
+    tickerScroll.classList.remove('is-animated');
+    tickerScroll.style.removeProperty('--scroll-duration');
+    tickerScroll.innerHTML = segment;
+
+    const stream = tickerScroll.parentElement;
+    if (!reducedMotion && stream instanceof HTMLElement) {
+      const contentWidth = tickerScroll.scrollWidth;
+      if (contentWidth > stream.clientWidth) {
+        const copy = `<span class="ticker-copy">${segment}<span class="ticker-sep" aria-hidden="true">·</span></span>`;
+        tickerScroll.innerHTML = `${copy}${copy}`;
+        tickerScroll.classList.add('is-animated');
+        const duration = Math.max(30, Math.min(40, contentWidth / 22));
+        tickerScroll.style.setProperty('--scroll-duration', `${duration}s`);
+      }
+    }
 
     if (reducedMotion) {
       tickerScroll.classList.remove('entering');
@@ -368,6 +382,8 @@ export const initNucleus = async () => {
 
   nucleus.addEventListener('mouseenter', pause);
   nucleus.addEventListener('mouseleave', resume);
+  tickerRoot?.addEventListener('mouseenter', pause);
+  tickerRoot?.addEventListener('mouseleave', resume);
 
   document.addEventListener('keydown', (e) => {
     const rect = nucleus.getBoundingClientRect();
