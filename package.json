@@ -12,6 +12,8 @@
     "check": "astro check",
     "feeds:fetch": "tsx scripts/fetch-feeds.ts",
     "oura:fetch": "tsx scripts/fetch-oura.ts",
+    "spotify:auth": "tsx scripts/spotify-auth.ts",
+    "spotify:fetch": "tsx scripts/fetch-spotify.ts",
     "strava:fetch": "npx tsx scripts/fetch-strava.ts",
     "prebuild": "node scripts/generate-header-gauge-data.mjs"
   },
