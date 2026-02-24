@@ -9,598 +9,553 @@ import '@styles/coming-soon.css';
   robots="noindex"
 >
   <main class="os-root">
-    <section class="os-viewport">
-      <div id="boot" class="os-terminal"></div>
-    </section>
-
-    <footer class="os-query-bar">
-      <div id="query-log" class="os-query-log"></div>
-      <div class="os-query-prompt">
-        <span class="os-prompt-label">QUERY //</span>
-        <input
-          id="query-input"
-          type="text"
-          autocapitalize="off"
-          autocomplete="off"
-          autocorrect="off"
-          spellcheck="false"
-          placeholder="ENTER COMMAND OR TYPE 'CATALOG' FOR DIRECTORY"
-        />
-      </div>
-    </footer>
+    <div class="os-container">
+      <div id="terminal" class="os-terminal"></div>
+    </div>
   </main>
 </Base>
 
 <script is:inline>
   (() => {
-    const bootEl = document.getElementById('boot');
-    const queryLogEl = document.getElementById('query-log');
-    const queryInput = document.getElementById('query-input');
-    if (!bootEl || !queryLogEl || !queryInput) return;
+    const terminal = document.getElementById('terminal');
+    if (!(terminal instanceof HTMLElement)) return;
 
-    const EPOCH_MS = Date.parse('2025-01-15T00:00:00Z');
     const DIVIDER = '————————————————————————————————';
+    const EPOCH_MS = Date.parse('2025-01-15T00:00:00Z');
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const booted = sessionStorage.getItem('ah-booted') === '1';
+    const instantBoot = reducedMotion || sessionStorage.getItem('ah-booted') === '1';
 
-    if (window.matchMedia('(max-width: 640px)').matches) {
-      queryInput.placeholder = "ENTER COMMAND OR 'CATALOG'";
-    }
-
-    const history = [];
-    let historyIndex = -1;
-    let subjectId = '';
-    let uptimeValueEl = null;
-    let uptimeInterval = null;
-    let detected = null;
+    const state = {
+      subjectId: '',
+      detect: null,
+      bootNodes: [],
+      commandNodes: [],
+      history: [],
+      historyIndex: -1,
+      uptimeEl: null,
+      promptWrap: null,
+      queryInput: null,
+      uptimeTimer: null
+    };
 
     const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-    const rand = (min, max) => Math.floor(min + Math.random() * (max - min + 1));
+    const random = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-    const makeLine = (target, className = 'os-line') => {
-      const line = document.createElement('div');
-      line.className = className;
-      target.appendChild(line);
-      return line;
+    const line = (text = '', cls = 'os-line') => {
+      const el = document.createElement('div');
+      el.className = cls;
+      el.textContent = text;
+      return el;
     };
 
-    const appendTextLine = (target, text, className = 'os-line', colorClass = '') => {
-      const line = makeLine(target, className);
-      if (colorClass) line.classList.add(colorClass);
-      line.textContent = text;
-      return line;
+    const appendBootNode = (node) => {
+      state.bootNodes.push(node);
+      terminal.appendChild(node);
+      return node;
     };
 
-    const createKeyValLine = (target, key, value, valueClass = 'c-val') => {
-      const line = makeLine(target);
-      const keySpan = document.createElement('span');
-      keySpan.className = 'c-dim';
-      keySpan.textContent = key.padEnd(18, ' ');
-
-      const valueSpan = document.createElement('span');
-      valueSpan.className = valueClass;
-      valueSpan.textContent = value;
-
-      line.append(keySpan, valueSpan);
-      return { line, keySpan, valueSpan };
+    const appendCommandNode = (node) => {
+      state.commandNodes.push(node);
+      terminal.insertBefore(node, state.promptWrap);
+      return node;
     };
 
-    const appendPromptLine = (value) => {
-      const line = makeLine(queryLogEl);
-      const span = document.createElement('span');
-      span.className = 'c-dim';
-      span.textContent = `> ${value}`;
-      line.appendChild(span);
-      queryLogEl.scrollTop = queryLogEl.scrollHeight;
+    const scrollToPrompt = () => {
+      state.promptWrap?.scrollIntoView({ block: 'end', behavior: instantBoot ? 'auto' : 'smooth' });
     };
 
-    const appendResponseLine = (text, className = 'c-val') => {
-      const line = makeLine(queryLogEl);
-      const span = document.createElement('span');
-      span.className = className;
-      span.textContent = text;
-      line.appendChild(span);
-      queryLogEl.scrollTop = queryLogEl.scrollHeight;
-      return span;
-    };
-
-    const typeToSpan = async (span, text, min = 35, max = 50) => {
-      for (const ch of text) {
-        span.textContent += ch;
-        await delay(rand(min, max) + rand(-10, 10));
+    const typeInto = async (node, text, min = 20, max = 20) => {
+      if (instantBoot) {
+        node.textContent = text;
+        return;
       }
+      for (const ch of text) {
+        node.textContent += ch;
+        await delay(random(min, max));
+      }
+    };
+
+    const updateUptime = () => {
+      if (!state.uptimeEl) return;
+      const seconds = Math.max(0, Math.floor((Date.now() - EPOCH_MS) / 1000));
+      state.uptimeEl.textContent = seconds.toLocaleString();
     };
 
     const parseUA = (ua) => {
-      const source = ua.toUpperCase();
-      const versionFrom = (token) => {
-        const m = ua.match(token);
-        return m ? m[1] : '';
-      };
-
+      const upper = ua.toUpperCase();
+      const pick = (re) => (ua.match(re)?.[1] || '').trim();
       let browser = 'UNKNOWN';
       let engine = 'UNKNOWN';
-
-      if (source.includes('FIREFOX')) {
-        browser = `FIREFOX ${versionFrom(/FIREFOX\/(\d+)/i) || ''}`.trim();
+      if (upper.includes('FIREFOX')) {
+        browser = `FIREFOX ${pick(/FIREFOX\/(\d+)/i)}`.trim();
         engine = 'GECKO';
-      } else if (source.includes('EDG/')) {
-        browser = `EDGE ${versionFrom(/EDG\/(\d+)/i) || ''}`.trim();
+      } else if (upper.includes('EDG/')) {
+        browser = `EDGE ${pick(/EDG\/(\d+)/i)}`.trim();
         engine = 'BLINK';
-      } else if (source.includes('CHROME') && !source.includes('EDG/')) {
-        browser = `CHROME ${versionFrom(/CHROME\/(\d+)/i) || ''}`.trim();
+      } else if (upper.includes('CHROME')) {
+        browser = `CHROME ${pick(/CHROME\/(\d+)/i)}`.trim();
         engine = 'BLINK';
-      } else if (source.includes('SAFARI') && !source.includes('CHROME')) {
-        browser = `SAFARI ${versionFrom(/VERSION\/(\d+)/i) || ''}`.trim();
+      } else if (upper.includes('SAFARI')) {
+        browser = `SAFARI ${pick(/VERSION\/(\d+)/i)}`.trim();
         engine = 'WEBKIT';
       }
-
       let os = 'UNKNOWN';
-      if (source.includes('WINDOWS')) os = 'WINDOWS';
-      else if (source.includes('ANDROID')) os = 'ANDROID';
-      else if (source.includes('IPHONE') || source.includes('IPAD') || source.includes('IOS')) os = 'IOS';
-      else if (source.includes('MAC OS X') || source.includes('MACINTOSH')) os = 'MACOS';
-      else if (source.includes('LINUX')) os = 'LINUX';
-
-      return {
-        browserOs: `${browser} / ${os}`,
-        engine
-      };
+      if (upper.includes('MAC')) os = 'MACOS';
+      else if (upper.includes('WINDOWS')) os = 'WINDOWS';
+      else if (upper.includes('ANDROID')) os = 'ANDROID';
+      else if (upper.includes('IPHONE') || upper.includes('IPAD')) os = 'IOS';
+      else if (upper.includes('LINUX')) os = 'LINUX';
+      return { browserOs: `${browser} / ${os}`, engine };
     };
 
-    const parseRenderer = (renderer) => {
-      if (!renderer) return 'UNAVAILABLE';
-      const upper = renderer.toUpperCase();
-      const paren = upper.match(/\((.*?)\)/);
-      const bucket = [upper, paren ? paren[1] : ''].join(' ');
-      const patterns = [
-        /APPLE\s+M\d+/,
-        /NVIDIA\s+[A-Z0-9\s-]+/,
-        /AMD\s+[A-Z0-9\s-]+/,
-        /INTEL\(R\)\s+[A-Z0-9\s-]+/,
-        /ADRENO\s*\(?(?:TM)?\)?\s*\d+/,
-        /MALI-[A-Z0-9]+/
-      ];
-      for (const p of patterns) {
-        const m = bucket.match(p);
-        if (m) return m[0].replace('INTEL(R)', 'INTEL').replace(/\s+/g, ' ').trim();
-      }
-      return upper.replace(/^ANGLE\s*\(/, '').replace(/\)$/, '').split(',')[0].trim();
-    };
+    const detectVisitor = async () => {
+      const ua = parseUA(navigator.userAgent || '');
+      const display = `${innerWidth} × ${innerHeight} @ ${String(devicePixelRatio || 1).replace(/\.0$/, '')}X / ${screen.colorDepth}-BIT`;
 
-    const detectEnvironment = async () => {
-      const uaInfo = parseUA(navigator.userAgent || '');
-      const pixelRatio = Number(window.devicePixelRatio || 1).toFixed(2).replace(/\.00$/, '');
-      const display = `${window.innerWidth} × ${window.innerHeight} @ ${pixelRatio}X / ${screen.colorDepth}-BIT`;
-
-      let glVersion = 'NONE';
+      let renderer = 'UNAVAILABLE';
+      let webgl = 'NONE';
       let maxTexture = 'N/A';
-      let gpu = 'UNAVAILABLE';
-
       try {
-        const canvas = document.createElement('canvas');
-        let gl = canvas.getContext('webgl2');
+        const c = document.createElement('canvas');
+        const gl2 = c.getContext('webgl2');
+        const gl = gl2 || c.getContext('webgl');
         if (gl) {
-          glVersion = '2.0';
-        } else {
-          gl = canvas.getContext('webgl');
-          if (gl) glVersion = '1.0';
-        }
-        if (gl) {
+          webgl = gl2 ? '2.0' : '1.0';
           const ext = gl.getExtension('WEBGL_debug_renderer_info');
-          const renderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
-          gpu = `${parseRenderer(String(renderer || 'UNAVAILABLE'))} [WEBGL ${glVersion}]`;
+          const raw = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+          renderer = `${String(raw).toUpperCase().replace(/\s+/g, ' ').split(',')[0]} [WEBGL ${webgl}]`;
           maxTexture = String(gl.getParameter(gl.MAX_TEXTURE_SIZE));
         }
-      } catch {
-        gpu = 'UNAVAILABLE';
-      }
+      } catch {}
 
-      const processing = Number.isFinite(navigator.hardwareConcurrency)
-        ? `${navigator.hardwareConcurrency} LOGICAL CORES`
-        : 'UNKNOWN';
+      let battery = null;
+      if (typeof navigator.getBattery === 'function') {
+        try {
+          const b = await navigator.getBattery();
+          battery = `${Math.round((b.level || 0) * 100)}% [${b.charging ? 'CHARGING' : 'DISCHARGING'}]`;
+        } catch {}
+      }
 
       const conn = navigator.connection;
       const network = conn?.effectiveType
         ? `${String(conn.effectiveType).toUpperCase()} / ~${conn.rtt || '?'}MS RTT`
         : 'UNRESOLVED';
 
-      let power = null;
-      if (typeof navigator.getBattery === 'function') {
-        try {
-          const battery = await navigator.getBattery();
-          const pct = Math.round((battery.level || 0) * 100);
-          power = `${pct}% [${battery.charging ? 'CHARGING' : 'DISCHARGING'}]`;
-        } catch {
-          power = null;
-        }
-      }
-
-      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const colorPref = isDark ? 'DARK MODE ENABLED' : 'LIGHT MODE ENABLED';
-
-      const touchPoints = navigator.maxTouchPoints || 0;
-      const inputMethod = touchPoints > 0 ? `TOUCH / ${touchPoints} CONTACT POINTS` : 'POINTER / NO TOUCH DETECTED';
-
       return {
-        ...uaInfo,
+        ...ua,
         display,
-        gpu,
-        processing,
+        renderer,
+        processing: navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} LOGICAL CORES` : 'UNKNOWN',
         network,
-        power,
-        colorPref,
-        inputMethod,
+        battery,
+        color: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'DARK MODE ENABLED' : 'LIGHT MODE ENABLED',
+        input: (navigator.maxTouchPoints || 0) > 0 ? 'TOUCH / POINTER HYBRID' : 'POINTER / NO TOUCH DETECTED',
         locale: (navigator.language || 'UNSET').toUpperCase(),
-        languages: (navigator.languages || []).map((v) => v.toUpperCase()).join(' / ') || 'UNSET',
+        languages: (navigator.languages || []).map((l) => l.toUpperCase()).join(' / ') || 'UNSET',
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UNSET',
         platform: navigator.platform || 'UNSET',
         cookies: navigator.cookieEnabled ? 'ENABLED' : 'DISABLED',
         dnt: navigator.doNotTrack || 'UNSET',
         screenNative: `${screen.width} × ${screen.height}`,
         colorDepth: `${screen.colorDepth}-BIT`,
-        glVersion,
+        webgl,
         maxTexture
       };
     };
 
-    const newSubjectId = () => `AH-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
+    const renderPrompt = () => {
+      const wrap = document.createElement('div');
+      wrap.className = 'os-query-inline';
+      if (!instantBoot) {
+        wrap.style.opacity = '0';
+        wrap.style.transition = 'opacity 300ms ease';
+      }
+      wrap.innerHTML = `<span class="os-prompt-label">QUERY //</span>
+        <input class="os-query-input" type="text" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="TYPE 'CATALOG' FOR COMMAND DIRECTORY" />
+        <span class="os-cursor">▮</span>`;
 
-    const bootRows = () => {
-      const today = new Date();
-      const buildDate = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
-      const rows = [
-        { type: 'text', cls: 'c-head', text: 'ASHTON HAWKINS — PERSONAL OPERATING SYSTEM', hover: true },
-        { type: 'text', cls: 'c-sub', text: `BUILD [${buildDate}] — REV 847` },
-        { type: 'text', cls: 'c-dim', text: 'CLASSIFICATION: UNRESTRICTED' },
-        { type: 'divider' },
-        { type: 'text', cls: 'c-head', text: 'INCOMING CONNECTION LOGGED', hover: true },
-        { type: 'text', cls: 'c-sub', text: `SUBJECT ID: ${subjectId}` },
-        { type: 'blank' },
-        { type: 'kv', key: 'BROWSER IDENT', value: detected.browserOs },
-        { type: 'kv', key: 'DISPLAY CONFIG', value: detected.display },
-        { type: 'kv', key: 'GPU SUBSYSTEM', value: detected.gpu },
-        { type: 'kv', key: 'PROCESSING', value: detected.processing },
-        { type: 'kv', key: 'NETWORK CLASS', value: detected.network },
-        ...(detected.power ? [{ type: 'kv', key: 'POWER STATUS', value: detected.power }] : []),
-        { type: 'kv', key: 'COLOR PREF', value: detected.colorPref },
-        { type: 'kv', key: 'INPUT METHOD', value: detected.inputMethod },
-        { type: 'kv', key: 'LOCALE', value: detected.locale },
-        { type: 'divider' },
-        { type: 'text', cls: 'c-status', text: 'CONNECTION PERMITTED — READ-ONLY ACCESS GRANTED', hover: true },
-        { type: 'uptime' },
-        { type: 'kvh', key: 'STATUS', value: 'SITE RECONSTRUCTION IN PROGRESS', vcls: 'c-head' },
-        { type: 'cursor' }
-      ];
-      return rows;
+      const input = wrap.querySelector('input');
+      if (!(input instanceof HTMLInputElement)) return;
+      if (matchMedia('(max-width: 640px)').matches) {
+        input.placeholder = "'CATALOG' FOR COMMANDS";
+      }
+      terminal.appendChild(wrap);
+      state.promptWrap = wrap;
+      state.queryInput = input;
+      requestAnimationFrame(() => {
+        wrap.style.opacity = '1';
+        input.focus();
+      });
     };
 
-    const renderBootRows = async (target, animate) => {
-      const rows = bootRows();
-      for (const row of rows) {
-        if (row.type === 'divider') {
-          appendTextLine(target, DIVIDER, 'os-divider');
-          continue;
-        }
-        if (row.type === 'blank') {
-          appendTextLine(target, '', 'os-line');
-          continue;
-        }
-        if (row.type === 'kv') {
-          const { keySpan, valueSpan } = createKeyValLine(target, row.key, '');
-          valueSpan.className = 'c-val';
-          if (animate) {
-            await typeToSpan(keySpan, row.key.padEnd(18, ' '), 20, 35);
-            await typeToSpan(valueSpan, row.value, 20, 35);
-          } else {
-            keySpan.textContent = row.key.padEnd(18, ' ');
-            valueSpan.textContent = row.value;
-          }
-        } else if (row.type === 'kvh') {
-          createKeyValLine(target, row.key, row.value, row.vcls);
-        } else if (row.type === 'uptime') {
-          const { valueSpan } = createKeyValLine(target, 'SYS UPTIME', '0S', 'c-accent');
-          uptimeValueEl = valueSpan;
-        } else if (row.type === 'cursor') {
-          const line = makeLine(target);
-          const span = document.createElement('span');
-          span.className = 'os-cursor';
-          span.textContent = '▮';
-          line.appendChild(span);
-        } else if (row.type === 'text') {
-          if (animate) {
-            const line = makeLine(target);
-            if (row.hover) line.dataset.hover = '1';
-            const span = document.createElement('span');
-            span.className = row.cls;
-            line.appendChild(span);
-            const speed = row.cls === 'c-head' ? [42, 56] : [34, 48];
-            await typeToSpan(span, row.text, speed[0], speed[1]);
-          } else {
-            const line = appendTextLine(target, row.text, 'os-line', row.cls);
-            if (row.hover) line.dataset.hover = '1';
-          }
-        }
-        if (animate) await delay(rand(150, 250));
-      }
-    };
+    const runIntakeBlock = async (boot = false) => {
+      const append = boot ? appendBootNode : appendCommandNode;
+      const incoming = line('', 'os-line c-head');
+      append(incoming);
+      await typeInto(incoming, 'INCOMING CONNECTION LOGGED', 30, 40);
+      if (!instantBoot) await delay(200);
 
-    const startUptime = () => {
-      if (!uptimeValueEl) return;
-      if (uptimeInterval) clearInterval(uptimeInterval);
-      const update = () => {
-        const seconds = Math.max(0, Math.floor((Date.now() - EPOCH_MS) / 1000));
-        uptimeValueEl.textContent = `${seconds.toLocaleString()}S`;
-      };
-      update();
-      uptimeInterval = setInterval(update, 1000);
-    };
+      state.subjectId = `AH-${new Date().getFullYear()}-${random(10000, 99999)}`;
+      const subjectLine = line('', 'os-line c-sub');
+      const prefix = document.createElement('span');
+      prefix.textContent = `SUBJECT ID: AH-${new Date().getFullYear()}-`;
+      const digits = document.createElement('span');
+      subjectLine.append(prefix, digits);
+      append(subjectLine);
 
-    const typeResponse = async (text, className = 'c-val', speed = 20) => {
-      const span = appendResponseLine('', className);
-      for (const ch of text) {
-        span.textContent += ch;
-        queryLogEl.scrollTop = queryLogEl.scrollHeight;
-        await delay(speed);
-      }
-    };
-
-    const appendDividerToLog = () => appendResponseLine(DIVIDER, 'c-border');
-
-    const runRescan = async () => {
-      subjectId = newSubjectId();
-      appendDividerToLog();
-      await typeResponse('INCOMING CONNECTION LOGGED', 'c-head', 18);
-      await typeResponse(`SUBJECT ID: ${subjectId}`, 'c-sub', 18);
-      appendResponseLine('', 'c-val');
-      const pairs = [
-        ['BROWSER IDENT', detected.browserOs],
-        ['DISPLAY CONFIG', detected.display],
-        ['GPU SUBSYSTEM', detected.gpu],
-        ['PROCESSING', detected.processing],
-        ['NETWORK CLASS', detected.network],
-        ...(detected.power ? [['POWER STATUS', detected.power]] : []),
-        ['COLOR PREF', detected.colorPref],
-        ['INPUT METHOD', detected.inputMethod],
-        ['LOCALE', detected.locale]
-      ];
-      for (const [k, v] of pairs) {
-        await typeResponse(`${k.padEnd(18, ' ')}${v}`, 'c-dim', 12);
-      }
-      appendDividerToLog();
-      await typeResponse('CONNECTION PERMITTED — READ-ONLY ACCESS GRANTED', 'c-status', 18);
-      queryLogEl.scrollTop = queryLogEl.scrollHeight;
-    };
-
-    const commandHandlers = {
-      async catalog() {
-        appendDividerToLog();
-        appendResponseLine('AVAILABLE QUERIES', 'c-head');
-        appendDividerToLog();
-        ['CATALOG      THIS DIRECTORY', 'SUBJECT      CONNECTION INTAKE REPORT', 'DOSSIER      PERSONNEL FILE: HAWKINS, A.', 'MANIFEST     PROJECT FILE INDEX', 'SYSREPORT    SYSTEM DIAGNOSTIC', 'NETCHECK     NETWORK SUBSYSTEM AUDIT', 'RESCAN       RE-EXECUTE CONNECTION INTAKE', 'CLEAR        PURGE TERMINAL OUTPUT'].forEach((line) => appendResponseLine(line, 'c-dim'));
-        appendDividerToLog();
-      },
-      async subject() {
-        appendDividerToLog();
-        appendResponseLine('SUBJECT INTAKE REPORT', 'c-head');
-        appendResponseLine(`ID: ${subjectId}`, 'c-sub');
-        appendDividerToLog();
-        const lines = [
-          ['BROWSER IDENT', detected.browserOs],
-          ['ENGINE', detected.engine],
-          ['DISPLAY CONFIG', detected.display],
-          ['SCREEN NATIVE', detected.screenNative],
-          ['COLOR DEPTH', detected.colorDepth],
-          ['GPU SUBSYSTEM', detected.gpu],
-          ['PROCESSING', detected.processing],
-          ['NETWORK CLASS', detected.network],
-          ['POWER STATUS', detected.power || 'UNAVAILABLE'],
-          ['COLOR PREF', detected.colorPref],
-          ['INPUT METHOD', detected.inputMethod],
-          ['LOCALE', detected.locale],
-          ['LANGUAGES', detected.languages],
-          ['TIMEZONE', detected.timezone],
-          ['PLATFORM', detected.platform],
-          ['COOKIES', detected.cookies],
-          ['DO NOT TRACK', detected.dnt],
-          ['WEBGL VERSION', detected.glVersion],
-          ['MAX TEXTURE', detected.maxTexture]
-        ];
-        lines.forEach(([k, v]) => appendResponseLine(`${k.padEnd(18, ' ')}${v}`, 'c-dim'));
-        appendDividerToLog();
-      },
-      async dossier() {
-        appendDividerToLog();
-        appendResponseLine('PERSONNEL FILE — RESTRICTED', 'c-head');
-        appendDividerToLog();
-        const rows = [
-          'SURNAME          HAWKINS',
-          'GIVEN            ASHTON',
-          'CLASSIFICATION   LEVEL 4 — SYSTEMS OPERATOR',
-          'DOMAIN           DIGITAL INFRASTRUCTURE &',
-          '                 GROWTH SYSTEMS',
-          '',
-          'CORE FUNCTIONS   CONVERSION ARCHITECTURE',
-          '                 ORGANIC ACQUISITION SYSTEMS',
-          '                 INFORMATION TOPOLOGY',
-          '                 BEHAVIORAL ANALYTICS',
-          '                 PLATFORM OPERATIONS',
-          '',
-          'DEPLOYMENT       ENTERPRISE ECOMMERCE — FORTUNE 1',
-          'HISTORY          HEALTHCARE SYSTEMS',
-          '                 CONSULTING OPERATIONS',
-          '                 INDEPENDENT CONTRACTS',
-          '',
-          'METHODOLOGY      COMPOUND GROWTH THROUGH',
-          '                 SYSTEMATIC OPTIMIZATION'
-        ];
-        rows.forEach((row) => appendResponseLine(row, 'c-dim'));
-        const statusLine = makeLine(queryLogEl);
-        const lead = document.createElement('span');
-        lead.className = 'c-dim';
-        lead.textContent = 'STATUS           ';
-        const accentLeft = document.createElement('span');
-        accentLeft.className = 'c-accent';
-        accentLeft.textContent = '████████';
-        const middle = document.createElement('span');
-        middle.className = 'c-dim';
-        middle.textContent = ' ACCEPTING ENGAGEMENTS ';
-        const accentRight = document.createElement('span');
-        accentRight.className = 'c-accent';
-        accentRight.textContent = '████████';
-        statusLine.append(lead, accentLeft, middle, accentRight);
-        appendDividerToLog();
-      },
-      async manifest() {
-        appendDividerToLog();
-        appendResponseLine('PROJECT MANIFEST — ashtonhawkins.com', 'c-head');
-        appendDividerToLog();
-        appendResponseLine('FILE                  STATUS      PRIORITY', 'c-dim');
-        const files = [
-          ['index.astro', '[LIVE]', '—', true],
-          ['about.astro', '[WIP]', 'HIGH'],
-          ['writing.astro', '[WIP]', 'HIGH'],
-          ['work.astro', '[WIP]', 'MEDIUM'],
-          ['cycling.astro', '[WIP]', 'MEDIUM'],
-          ['now.astro', '[WIP]', 'LOW'],
-          ['travel.astro', '[WIP]', 'LOW']
-        ];
-        files.forEach(([file, status, priority, live]) => {
-          const line = makeLine(queryLogEl);
-          const fileSpan = document.createElement('span');
-          fileSpan.className = 'c-dim';
-          fileSpan.textContent = String(file).padEnd(22, ' ');
-          const statusSpan = document.createElement('span');
-          statusSpan.className = live ? 'c-accent' : 'c-dim';
-          statusSpan.textContent = String(status).padEnd(12, ' ');
-          const pSpan = document.createElement('span');
-          pSpan.className = 'c-dim';
-          pSpan.textContent = String(priority);
-          line.append(fileSpan, statusSpan, pSpan);
-        });
-        appendDividerToLog();
-        appendResponseLine('TOTAL: 7 FILES — 1 LIVE / 6 IN PROGRESS', 'c-sub');
-        appendDividerToLog();
-      },
-      async sysreport() {
-        appendDividerToLog();
-        appendResponseLine('SYSTEM DIAGNOSTIC', 'c-head');
-        appendDividerToLog();
-        const lines = [
-          ['UPTIME', `${Math.floor((Date.now() - EPOCH_MS) / 1000).toLocaleString()}S`],
-          ['FRAMEWORK', 'ASTRO 5 + TYPESCRIPT'],
-          ['HOST', 'GITHUB PAGES'],
-          ['BUILD SYSTEM', 'GITHUB ACTIONS'],
-          ['DATA PIPELINE', 'CRON — 6H INTERVAL'],
-          ['INTEGRATIONS', 'STRAVA · LAST.FM · OURA · LETTERBOXD'],
-          ['API STATUS', '4/4 NOMINAL'],
-          ['LAST DEPLOY', '2026-02-23'],
-          ['REVISION', '847']
-        ];
-        lines.forEach(([k, v]) => appendResponseLine(`${k.padEnd(16, ' ')}${v}`, 'c-dim'));
-        appendDividerToLog();
-      },
-      async netcheck() {
-        appendDividerToLog();
-        appendResponseLine('NETWORK SUBSYSTEM AUDIT', 'c-head');
-        appendDividerToLog();
-        const services = ['STRAVA', 'LAST.FM', 'OURA', 'LETTERBOXD'];
-        let timedOut = false;
-        for (const service of services) {
-          await delay(rand(400, 700));
-          const timeout = Math.random() < 0.1;
-          if (timeout) timedOut = true;
-          const line = makeLine(queryLogEl);
-          const left = document.createElement('span');
-          left.className = 'c-dim';
-          left.textContent = `PINGING ${service}`.padEnd(25, '.') + ' ';
-          const ms = document.createElement('span');
-          ms.className = 'c-val';
-          ms.textContent = `${rand(15, 120)}MS `;
-          const state = document.createElement('span');
-          state.className = timeout ? 'c-warn' : 'c-accent';
-          state.textContent = timeout ? '[TIMEOUT]' : '[OK]';
-          line.append(left, ms, state);
-          queryLogEl.scrollTop = queryLogEl.scrollHeight;
-        }
-        appendResponseLine('', 'c-dim');
-        appendResponseLine(timedOut ? 'PARTIAL DEGRADATION DETECTED' : 'ALL SUBSYSTEMS NOMINAL', timedOut ? 'c-warn' : 'c-status');
-        appendDividerToLog();
-      },
-      async rescan() {
-        await runRescan();
-      },
-      async clear() {
-        queryLogEl.innerHTML = '';
-      },
-      async sudo() {
-        await typeResponse('ACCESS DENIED — CLEARANCE INSUFFICIENT. THIS INCIDENT HAS BEEN LOGGED.', 'c-warn');
-      },
-      async exit() {
-        await typeResponse('SESSION TERMINATED.', 'c-warn');
-        await delay(2000);
-        await typeResponse('SESSION CANNOT BE TERMINATED FROM THIS INTERFACE.', 'c-dim');
-      },
-      async greet() {
-        await typeResponse("THIS IS NOT A CONVERSATIONAL INTERFACE. TYPE 'CATALOG' FOR AVAILABLE QUERIES.", 'c-dim');
-      }
-    };
-
-    const executeCommand = async (rawInput) => {
-      const value = rawInput.trim();
-      if (!value) return;
-      appendPromptLine(value);
-
-      const normalized = value.toLowerCase();
-      if (normalized.startsWith('sudo')) {
-        await commandHandlers.sudo();
-        return;
-      }
-      if (normalized === 'hello' || normalized === 'hi' || normalized === 'hey') {
-        await commandHandlers.greet();
-        return;
-      }
-      if (commandHandlers[normalized]) {
-        await commandHandlers[normalized]();
+      const finalDigits = state.subjectId.split('-').at(-1) || '';
+      if (instantBoot) {
+        digits.textContent = finalDigits;
       } else {
-        await typeResponse(`UNRECOGNIZED QUERY: ${value.toUpperCase()}. TYPE 'CATALOG' FOR DIRECTORY.`, 'c-dim');
+        for (let i = 0; i < random(8, 10); i += 1) {
+          digits.textContent = String(random(10000, 99999));
+          await delay(80);
+        }
+        digits.textContent = finalDigits;
+        digits.classList.add('anim-flash');
       }
-      queryLogEl.scrollTop = queryLogEl.scrollHeight;
+
+      append(line('', 'os-blank'));
+      if (!instantBoot) await delay(300);
+
+      const scanBlock = document.createElement('div');
+      append(scanBlock);
+      const pairs = [
+        ['BROWSER IDENT', state.detect.browserOs],
+        ['DISPLAY CONFIG', state.detect.display],
+        ['GPU SUBSYSTEM', state.detect.renderer],
+        ['PROCESSING', state.detect.processing],
+        ['NETWORK CLASS', state.detect.network],
+        ...(state.detect.battery ? [['POWER STATUS', state.detect.battery]] : []),
+        ['COLOR PREF', state.detect.color],
+        ['INPUT METHOD', state.detect.input],
+        ['LOCALE', state.detect.locale]
+      ];
+
+      for (const [k, v] of pairs) {
+        const row = line('', 'os-line');
+        const ks = document.createElement('span');
+        ks.className = 'c-dim';
+        ks.textContent = k.padEnd(18, ' ');
+        const vs = document.createElement('span');
+        vs.className = 'c-val';
+        row.append(ks, vs);
+        scanBlock.appendChild(row);
+        await typeInto(vs, v, 30, 30);
+        if (!instantBoot) await delay(random(100, 150));
+      }
+
+      if (!instantBoot) {
+        scanBlock.classList.add('anim-scan');
+        await delay(300);
+      }
+
+      append(line(DIVIDER, 'os-divider'));
+      if (!instantBoot) await delay(600);
+
+      const grant = line('CONNECTION PERMITTED — READ-ONLY ACCESS GRANTED', 'os-line c-status crt-glow');
+      if (!instantBoot) grant.classList.add('anim-flash');
+      append(grant);
     };
 
-    queryInput.addEventListener('keydown', async (event) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        const value = queryInput.value;
-        queryInput.value = '';
-        history.push(value);
-        if (history.length > 20) history.shift();
-        historyIndex = history.length;
-        await executeCommand(value);
-      } else if (event.key === 'ArrowUp') {
-        event.preventDefault();
-        if (!history.length) return;
-        historyIndex = Math.max(0, historyIndex - 1);
-        queryInput.value = history[historyIndex] || '';
-      } else if (event.key === 'ArrowDown') {
-        event.preventDefault();
-        if (!history.length) return;
-        historyIndex = Math.min(history.length, historyIndex + 1);
-        queryInput.value = history[historyIndex] || '';
-      }
-    });
+    const runBoot = async () => {
+      const today = new Date();
+      const build = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
 
-    const init = async () => {
-      detected = await detectEnvironment();
-      subjectId = newSubjectId();
-      bootEl.innerHTML = '';
-      const animateBoot = !booted && !reducedMotion;
-      await renderBootRows(bootEl, animateBoot);
-      startUptime();
+      const header = line('', 'os-line c-head');
+      header.dataset.hover = '1';
+      appendBootNode(header);
+      await typeInto(header, 'ASHTON HAWKINS — PERSONAL OPERATING SYSTEM          ', 50, 50);
+
+      const buildLine = line('', 'os-line c-sub');
+      appendBootNode(buildLine);
+      await typeInto(buildLine, `BUILD [${build}] — REV 847                        `, 50, 50);
+
+      if (!instantBoot) await delay(600);
+
+      const classLine = line('', 'os-line');
+      classLine.innerHTML = '<span class="c-dim">CLASSIFICATION: </span>';
+      const value = document.createElement('span');
+      classLine.appendChild(value);
+      appendBootNode(classLine);
+
+      if (instantBoot) {
+        value.className = 'c-accent';
+        value.textContent = 'UNRESTRICTED';
+      } else {
+        const vals = [
+          ['CLASSIFIED', 'c-warn'],
+          ['RESTRICTED', 'c-warn'],
+          ['EYES ONLY', 'c-warn'],
+          ['DECLASSIFYING...', 'c-sub']
+        ];
+        value.classList.add('anim-glitch');
+        for (let i = 0; i < 4; i += 1) {
+          const [txt, cls] = vals[i];
+          value.className = `${cls} anim-glitch`;
+          value.textContent = txt;
+          await delay(300);
+        }
+        value.className = 'c-accent anim-flash';
+        value.textContent = 'UNRESTRICTED';
+      }
+
+      if (!instantBoot) await delay(400);
+      appendBootNode(line(DIVIDER, 'os-divider'));
+      if (!instantBoot) await delay(500);
+
+      await runIntakeBlock(true);
+      if (!instantBoot) await delay(500);
+
+      const uptimeRow = line('', 'os-line');
+      const k = document.createElement('span');
+      k.className = 'c-dim';
+      k.textContent = 'SYS UPTIME'.padEnd(18, ' ');
+      const v = document.createElement('span');
+      v.className = 'c-accent';
+      state.uptimeEl = v;
+      uptimeRow.append(k, v, document.createTextNode('S'));
+      appendBootNode(uptimeRow);
+      updateUptime();
+      state.uptimeTimer = window.setInterval(updateUptime, 1000);
+
+      if (!instantBoot) await delay(200);
+      const badge = document.createElement('div');
+      badge.className = 'os-status-badge';
+      badge.innerHTML = `<span class="c-dim">STATUS //</span>
+        <span class="c-head"> SITE RECONSTRUCTION IN PROGRESS</span>
+        <br>
+        <span class="c-dim">[</span><span class="progress-bar">████████████</span><span class="progress-track">████████</span><span class="c-dim">]</span>
+        <span class="c-sub"> 60%</span>
+        <br>
+        <span class="c-dim">NEW SYSTEM ONLINE // 2026</span>`;
+      if (!instantBoot) {
+        badge.style.opacity = '0';
+        badge.style.transition = 'opacity 400ms ease';
+      }
+      appendBootNode(badge);
+      requestAnimationFrame(() => {
+        badge.style.opacity = '1';
+      });
+
+      if (!instantBoot) await delay(400);
+      renderPrompt();
+      scrollToPrompt();
       sessionStorage.setItem('ah-booted', '1');
-      queryInput.focus();
     };
 
-    init();
+    const outputLines = async (rows, cls = 'c-val') => {
+      for (const row of rows) {
+        const l = line('', 'os-line');
+        const span = document.createElement('span');
+        span.className = row.cls || cls;
+        l.appendChild(span);
+        appendCommandNode(l);
+        await typeInto(span, row.text, 20, 20);
+      }
+    };
+
+    const runCommand = async (raw) => {
+      const input = raw.trim();
+      if (!input) return;
+      appendCommandNode(line(`> ${input}`, 'os-line c-dim'));
+      const cmd = input.toLowerCase();
+
+      if (cmd === 'clear') {
+        for (const n of state.commandNodes) n.remove();
+        state.commandNodes = [];
+        window.scrollTo({ top: 0, behavior: 'auto' });
+        return;
+      }
+
+      if (cmd === 'catalog') {
+        await outputLines([
+          { text: DIVIDER, cls: 'c-border' },
+          { text: 'AVAILABLE QUERIES', cls: 'c-head' },
+          { text: DIVIDER, cls: 'c-border' },
+          { text: 'CATALOG      THIS DIRECTORY' },
+          { text: 'SUBJECT      CONNECTION INTAKE REPORT' },
+          { text: 'DOSSIER      PERSONNEL FILE: HAWKINS, A.' },
+          { text: 'MANIFEST     PROJECT FILE INDEX' },
+          { text: 'SYSREPORT    SYSTEM DIAGNOSTIC' },
+          { text: 'NETCHECK     NETWORK SUBSYSTEM AUDIT' },
+          { text: 'RESCAN       RE-EXECUTE CONNECTION INTAKE' },
+          { text: 'CLEAR        PURGE TERMINAL OUTPUT' },
+          { text: DIVIDER, cls: 'c-border' }
+        ]);
+      } else if (cmd === 'subject') {
+        const d = state.detect;
+        await outputLines([
+          { text: DIVIDER, cls: 'c-border' },
+          { text: 'SUBJECT INTAKE REPORT', cls: 'c-head' },
+          { text: `ID: ${state.subjectId}`, cls: 'c-sub' },
+          { text: DIVIDER, cls: 'c-border' },
+          { text: `BROWSER IDENT    ${d.browserOs}` },
+          { text: `ENGINE           ${d.engine}` },
+          { text: `DISPLAY CONFIG   ${d.display}` },
+          { text: `SCREEN NATIVE    ${d.screenNative}` },
+          { text: `COLOR DEPTH      ${d.colorDepth}` },
+          { text: `GPU SUBSYSTEM    ${d.renderer}` },
+          { text: `PROCESSING       ${d.processing}` },
+          { text: `NETWORK CLASS    ${d.network}` },
+          { text: `POWER STATUS     ${d.battery || 'UNAVAILABLE'}` },
+          { text: `COLOR PREF       ${d.color}` },
+          { text: `INPUT METHOD     ${d.input}` },
+          { text: `LOCALE           ${d.locale}` },
+          { text: `LANGUAGES        ${d.languages}` },
+          { text: `TIMEZONE         ${d.timezone}` },
+          { text: `PLATFORM         ${d.platform}` },
+          { text: `COOKIES          ${d.cookies}` },
+          { text: `DO NOT TRACK     ${d.dnt}` },
+          { text: `WEBGL VERSION    ${d.webgl}` },
+          { text: `MAX TEXTURE      ${d.maxTexture}` },
+          { text: DIVIDER, cls: 'c-border' }
+        ]);
+      } else if (cmd === 'dossier') {
+        await outputLines([
+          { text: DIVIDER, cls: 'c-border' },
+          { text: 'PERSONNEL FILE — RESTRICTED', cls: 'c-head' },
+          { text: DIVIDER, cls: 'c-border' },
+          { text: 'SURNAME          HAWKINS' },
+          { text: 'GIVEN            ASHTON' },
+          { text: 'CLASSIFICATION   LEVEL 4 — SYSTEMS OPERATOR' },
+          { text: 'DOMAIN           DIGITAL INFRASTRUCTURE &' },
+          { text: '                 GROWTH SYSTEMS' },
+          { text: '' },
+          { text: 'CORE FUNCTIONS   CONVERSION ARCHITECTURE' },
+          { text: '                 ORGANIC ACQUISITION SYSTEMS' },
+          { text: '                 INFORMATION TOPOLOGY' },
+          { text: '                 BEHAVIORAL ANALYTICS' },
+          { text: '                 PLATFORM OPERATIONS' },
+          { text: '' },
+          { text: 'DEPLOYMENT       ENTERPRISE ECOMMERCE — FORTUNE 1' },
+          { text: 'HISTORY          HEALTHCARE SYSTEMS' },
+          { text: '                 CONSULTING OPERATIONS' },
+          { text: '                 INDEPENDENT CONTRACTS' },
+          { text: '' },
+          { text: 'METHODOLOGY      COMPOUND GROWTH THROUGH' },
+          { text: '                 SYSTEMATIC OPTIMIZATION' }
+        ]);
+        const status = line('STATUS           ████████ ACCEPTING ENGAGEMENTS ████████', 'os-line c-accent anim-flash');
+        appendCommandNode(status);
+        await outputLines([{ text: DIVIDER, cls: 'c-border' }]);
+      } else if (cmd === 'manifest') {
+        const l = [
+          `${DIVIDER}`,
+          'PROJECT MANIFEST — ashtonhawkins.com',
+          `${DIVIDER}`,
+          'FILE                  STATUS      PRIORITY',
+          'index.astro           [LIVE]      —',
+          'about.astro           [WIP]       HIGH',
+          'writing.astro         [WIP]       HIGH',
+          'work.astro            [WIP]       MEDIUM',
+          'cycling.astro         [WIP]       MEDIUM',
+          'now.astro             [WIP]       LOW',
+          'travel.astro          [WIP]       LOW',
+          DIVIDER,
+          'TOTAL: 7 FILES — 1 LIVE / 6 IN PROGRESS',
+          DIVIDER
+        ];
+        for (const t of l) {
+          const row = line('', 'os-line');
+          const span = document.createElement('span');
+          span.className = t.includes('[LIVE]') ? 'c-accent' : t.includes('[WIP]') ? 'c-dim' : 'c-val';
+          row.appendChild(span);
+          appendCommandNode(row);
+          await typeInto(span, t, 20, 20);
+        }
+      } else if (cmd === 'sysreport') {
+        const up = Math.max(0, Math.floor((Date.now() - EPOCH_MS) / 1000)).toLocaleString();
+        await outputLines([
+          { text: DIVIDER, cls: 'c-border' },
+          { text: 'SYSTEM DIAGNOSTIC', cls: 'c-head' },
+          { text: DIVIDER, cls: 'c-border' },
+          { text: `UPTIME           ${up}S` },
+          { text: 'FRAMEWORK        ASTRO 5 + TYPESCRIPT' },
+          { text: 'HOST             GITHUB PAGES' },
+          { text: 'BUILD SYSTEM     GITHUB ACTIONS' },
+          { text: 'DATA PIPELINE    CRON — 6H INTERVAL' },
+          { text: 'INTEGRATIONS     STRAVA · LAST.FM · OURA · LETTERBOXD' },
+          { text: 'API STATUS       4/4 NOMINAL' },
+          { text: 'LAST DEPLOY      2026-02-23' },
+          { text: 'REVISION         847' },
+          { text: DIVIDER, cls: 'c-border' }
+        ]);
+      } else if (cmd === 'netcheck') {
+        await outputLines([
+          { text: DIVIDER, cls: 'c-border' },
+          { text: 'NETWORK SUBSYSTEM AUDIT', cls: 'c-head' },
+          { text: DIVIDER, cls: 'c-border' }
+        ]);
+        const names = ['STRAVA', 'LAST.FM', 'OURA', 'LETTERBOXD'];
+        let timeout = false;
+        for (const name of names) {
+          const row = line('', 'os-line c-val');
+          appendCommandNode(row);
+          const head = document.createElement('span');
+          head.textContent = `PINGING ${name} `;
+          row.appendChild(head);
+          const dots = document.createElement('span');
+          row.appendChild(dots);
+          for (let i = 0; i < 13; i += 1) {
+            dots.textContent += '.';
+            await delay(40);
+          }
+          const t = Math.random() < 0.1;
+          timeout = timeout || t;
+          const tail = document.createElement('span');
+          tail.className = t ? 'c-warn' : 'c-accent';
+          tail.textContent = t ? ` [TIMEOUT]` : ` [${random(15, 120)}MS] [OK]`;
+          row.appendChild(tail);
+          await delay(random(400, 700));
+        }
+        await outputLines([
+          { text: timeout ? 'PARTIAL DEGRADATION DETECTED' : 'ALL SUBSYSTEMS NOMINAL', cls: timeout ? 'c-warn' : 'c-accent' },
+          { text: DIVIDER, cls: 'c-border' }
+        ]);
+      } else if (cmd === 'rescan') {
+        await runIntakeBlock(false);
+      } else if (cmd.startsWith('sudo')) {
+        await outputLines([{ text: 'ACCESS DENIED — CLEARANCE INSUFFICIENT. THIS INCIDENT HAS BEEN LOGGED.', cls: 'c-warn' }]);
+      } else if (cmd === 'exit') {
+        await outputLines([{ text: 'SESSION TERMINATED.', cls: 'c-warn' }]);
+        await delay(2000);
+        await outputLines([{ text: 'SESSION CANNOT BE TERMINATED FROM THIS INTERFACE.', cls: 'c-sub' }]);
+      } else if (['hello', 'hi', 'hey'].includes(cmd)) {
+        await outputLines([{ text: "THIS IS NOT A CONVERSATIONAL INTERFACE. TYPE 'CATALOG' FOR AVAILABLE QUERIES.", cls: 'c-sub' }]);
+      } else {
+        await outputLines([{ text: `UNRECOGNIZED QUERY: ${input.toUpperCase()}. TYPE 'CATALOG' FOR DIRECTORY.`, cls: 'c-dim' }]);
+      }
+      scrollToPrompt();
+    };
+
+    const bindInput = () => {
+      if (!state.queryInput) return;
+      state.queryInput.addEventListener('keydown', async (event) => {
+        if (event.key === 'Enter') {
+          const value = state.queryInput.value;
+          state.queryInput.value = '';
+          state.history.push(value);
+          if (state.history.length > 20) state.history.shift();
+          state.historyIndex = state.history.length;
+          await runCommand(value);
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          state.historyIndex = Math.max(0, state.historyIndex - 1);
+          state.queryInput.value = state.history[state.historyIndex] || '';
+        } else if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          state.historyIndex = Math.min(state.history.length, state.historyIndex + 1);
+          state.queryInput.value = state.history[state.historyIndex] || '';
+        }
+      });
+    };
+
+    (async () => {
+      state.detect = await detectVisitor();
+      await runBoot();
+      bindInput();
+      scrollToPrompt();
+    })();
   })();
 </script>
