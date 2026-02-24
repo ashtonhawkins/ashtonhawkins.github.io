@@ -43,6 +43,121 @@ const personSchema = {
         document.documentElement.setAttribute('data-theme', initialTheme);
       })();
     </script>
+    <script is:inline>
+      (() => {
+        if (window.__xWidgetsBooted) return;
+        window.__xWidgetsBooted = true;
+
+        const ensureTwitterWidgets = () => {
+          if (window.twttr?.widgets?.load) return Promise.resolve();
+          if (window.__xWidgetsPromise) return window.__xWidgetsPromise;
+
+          window.__xWidgetsPromise = new Promise((resolve, reject) => {
+            let resolved = false;
+            const resolveWhenReady = () => {
+              if (!resolved && window.twttr?.widgets?.load) {
+                resolved = true;
+                resolve();
+                return true;
+              }
+              return false;
+            };
+
+            let script = document.getElementById('twitter-wjs');
+            if (!script) {
+              script = document.createElement('script');
+              script.id = 'twitter-wjs';
+              script.src = 'https://platform.twitter.com/widgets.js';
+              script.async = true;
+              script.charset = 'utf-8';
+              document.head.appendChild(script);
+            }
+
+            const onLoad = () => {
+              if (resolveWhenReady()) return;
+              pollForWidgets();
+            };
+
+            const onError = () => {
+              if (!resolved) reject(new Error('twitter widgets failed to load'));
+            };
+
+            const pollForWidgets = () => {
+              const startedAt = Date.now();
+              const timer = window.setInterval(() => {
+                if (resolveWhenReady()) {
+                  window.clearInterval(timer);
+                  return;
+                }
+                if (Date.now() - startedAt > 7000) {
+                  window.clearInterval(timer);
+                  if (!resolved) reject(new Error('twitter widgets unavailable'));
+                }
+              }, 100);
+            };
+
+            script.addEventListener('load', onLoad, { once: true });
+            script.addEventListener('error', onError, { once: true });
+            if (!resolveWhenReady()) pollForWidgets();
+          }).catch((error) => {
+            window.__xWidgetsPromise = null;
+            throw error;
+          });
+
+          return window.__xWidgetsPromise;
+        };
+
+        const initXEmbeds = () => {
+          const feeds = Array.from(document.querySelectorAll('[data-x-feed]'));
+          if (!feeds.length) return;
+
+          const theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+          feeds.forEach((feed) => {
+            const embed = feed.querySelector('[data-x-embed]');
+            const fallback = feed.querySelector('[data-x-fallback]');
+            const anchor = embed?.querySelector('a.twitter-timeline');
+            if (!(embed instanceof HTMLElement) || !(fallback instanceof HTMLElement) || !(anchor instanceof HTMLAnchorElement)) return;
+
+            anchor.setAttribute('data-theme', theme);
+            anchor.setAttribute('data-tweet-limit', '1');
+            embed.style.display = '';
+            fallback.style.display = 'none';
+
+            ensureTwitterWidgets()
+              .then(() => {
+                if (!window.twttr?.widgets?.load) throw new Error('twitter widgets unavailable');
+                window.twttr.widgets.load(feed);
+
+                const startedAt = Date.now();
+                const timer = window.setInterval(() => {
+                  const iframe = embed.querySelector('iframe');
+                  if (iframe) {
+                    embed.style.display = '';
+                    fallback.style.display = 'none';
+                    window.clearInterval(timer);
+                    return;
+                  }
+                  if (Date.now() - startedAt > 7000) {
+                    embed.style.display = 'none';
+                    fallback.style.display = 'block';
+                    window.clearInterval(timer);
+                  }
+                }, 150);
+              })
+              .catch(() => {
+                embed.style.display = 'none';
+                fallback.style.display = 'block';
+              });
+          });
+        };
+
+        window.initXEmbeds = initXEmbeds;
+        document.addEventListener('astro:page-load', initXEmbeds);
+        document.addEventListener('astro:after-swap', initXEmbeds);
+        document.addEventListener('theme-change', initXEmbeds);
+        initXEmbeds();
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="canonical" href={canonical} />
