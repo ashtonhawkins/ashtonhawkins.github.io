@@ -3,7 +3,8 @@ import ThemeToggle from '@components/global/ThemeToggle.astro';
 import Cursor from '@components/ui/Cursor.astro';
 import NoiseTexture from '@components/ui/NoiseTexture.astro';
 import AnalogClock from '@components/ui/AnalogClock.astro';
-import siteStats from '@data/site-stats.json';
+import codebaseStats from '@data/codebase-stats.json';
+import activityData from '@data/activity-data.json';
 import buildWeight from '@data/build-weight.json';
 
 const pathname = Astro.url.pathname;
@@ -35,7 +36,8 @@ const isActive = (href: string) => {
 };
 
 const DEPLOY_DATE = new Date();
-const codebaseValue = `${(siteStats.lines / 1000).toFixed(1)}K lines · ${siteStats.components} modules`;
+const formatLines = (value: number) => (value >= 1000 ? `${(value / 1000).toFixed(1)}K` : String(value));
+const codebaseValue = `${formatLines(codebaseStats.lines)} lines · ${codebaseStats.modules} modules`;
 const payloadValue = Number(buildWeight.kb || 0);
 ---
 
@@ -78,7 +80,7 @@ const payloadValue = Number(buildWeight.kb || 0);
               </circle>
             </svg>
           </div>
-          <div class="header__gauge-text"><span class="header__gauge-label">UPDATED</span><span class="header__gauge-value" id="gauge-updated">just now</span></div>
+          <div class="header__gauge-text"><span class="header__gauge-label">LAST UPDATE</span><span class="header__gauge-value" id="gauge-updated">just now</span></div>
         </div>
 
         <div class="header__gauge" data-gauge="codebase">
@@ -86,7 +88,7 @@ const payloadValue = Number(buildWeight.kb || 0);
           <div class="header__gauge-text"><span class="header__gauge-label">CODEBASE</span><span class="header__gauge-value">{codebaseValue}</span></div>
         </div>
 
-        <div class="header__gauge" data-gauge="activity" data-commits="3" data-diff-add="added dark mode toggle" data-diff-remove="removed legacy nav">
+        <div class="header__gauge" data-gauge="activity" data-insertions={String(activityData.insertions)} data-deletions={String(activityData.deletions)} data-weekly-commits={String(activityData.weeklyCommits)}>
           <div class="header__gauge-viz gauge-viz--diff" aria-hidden="true">
             <div class="diff-line diff-line--remove"><span class="diff-prefix">-</span><span class="diff-text" id="diff-remove-text"></span></div>
             <div class="diff-line diff-line--add"><span class="diff-prefix">+</span><span class="diff-text" id="diff-add-text"></span></div>
@@ -212,21 +214,31 @@ const payloadValue = Number(buildWeight.kb || 0);
     const gaugeEl = document.querySelector('[data-gauge="activity"]');
     if (!(gaugeEl instanceof HTMLElement)) return;
 
-    const addText = gaugeEl.dataset.diffAdd || 'new feature';
-    const removeText = gaugeEl.dataset.diffRemove || 'old code';
     const removeTextEl = document.getElementById('diff-remove-text');
     const addTextEl = document.getElementById('diff-add-text');
     if (!removeTextEl || !addTextEl) return;
 
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      removeTextEl.textContent = removeText;
-      addTextEl.textContent = addText;
+    const insertions = gaugeEl.dataset.insertions || '0';
+    const deletions = gaugeEl.dataset.deletions || '0';
+    const removeStr = `${deletions} lines removed`;
+    const addStr = `${insertions} lines added`;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      removeTextEl.textContent = removeStr;
+      addTextEl.textContent = addStr;
       return;
     }
 
-    const typeText = (el, text, delay) => new Promise((resolve) => {
+    let activeRun = 0;
+
+    const typeText = (el, text, runId) => new Promise((resolve) => {
       let i = 0;
       const type = () => {
+        if (runId !== activeRun) {
+          resolve(undefined);
+          return;
+        }
         if (i <= text.length) {
           el.textContent = text.substring(0, i);
           i += 1;
@@ -235,10 +247,37 @@ const payloadValue = Number(buildWeight.kb || 0);
           resolve(undefined);
         }
       };
-      setTimeout(type, delay);
+      type();
     });
 
-    typeText(removeTextEl, removeText, 600).then(() => typeText(addTextEl, addText, 400));
+    const playAnimation = () => {
+      activeRun += 1;
+      const runId = activeRun;
+      removeTextEl.textContent = '';
+      addTextEl.textContent = '';
+      typeText(removeTextEl, removeStr, runId)
+        .then(() => new Promise((resolve) => setTimeout(resolve, 200)))
+        .then(() => {
+          if (runId !== activeRun) return;
+          return typeText(addTextEl, addStr, runId);
+        });
+    };
+
+    const reset = () => {
+      activeRun += 1;
+      removeTextEl.textContent = '';
+      addTextEl.textContent = '';
+    };
+
+    const observer = new MutationObserver(() => {
+      const opacity = Number.parseFloat(window.getComputedStyle(gaugeEl).opacity);
+      if (opacity > 0.5) playAnimation();
+      else reset();
+    });
+    observer.observe(gaugeEl, { attributes: true, attributeFilter: ['style', 'class'] });
+
+    if (Number.parseFloat(window.getComputedStyle(gaugeEl).opacity) > 0.5) playAnimation();
+    else reset();
   };
 
   const initPayloadGauge = () => {
@@ -251,17 +290,51 @@ const payloadValue = Number(buildWeight.kb || 0);
     const numberEl = valueEl?.querySelector('.payload-number');
     if (numberEl) numberEl.textContent = Number(weightKB).toLocaleString();
 
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      if (rocketEl) rocketEl.style.display = 'none';
       if (valueEl) valueEl.classList.add('payload-value--visible');
       return;
     }
 
-    setTimeout(() => {
-      if (rocketEl) rocketEl.classList.add('payload-rocket--launched');
-      setTimeout(() => {
-        if (valueEl) valueEl.classList.add('payload-value--visible');
-      }, 500);
-    }, 800);
+    let launchTimer = null;
+    let revealTimer = null;
+
+    const clearTimers = () => {
+      if (launchTimer) window.clearTimeout(launchTimer);
+      if (revealTimer) window.clearTimeout(revealTimer);
+      launchTimer = null;
+      revealTimer = null;
+    };
+
+    const resetAnimation = () => {
+      clearTimers();
+      if (rocketEl) {
+        rocketEl.classList.remove('payload-rocket--launched');
+        rocketEl.style.display = '';
+      }
+      if (valueEl) valueEl.classList.remove('payload-value--visible');
+    };
+
+    const playLaunch = () => {
+      resetAnimation();
+      launchTimer = window.setTimeout(() => {
+        if (rocketEl) rocketEl.classList.add('payload-rocket--launched');
+        revealTimer = window.setTimeout(() => {
+          if (valueEl) valueEl.classList.add('payload-value--visible');
+        }, 500);
+      }, 600);
+    };
+
+    const observer = new MutationObserver(() => {
+      const opacity = Number.parseFloat(window.getComputedStyle(gaugeEl).opacity);
+      if (opacity > 0.5) playLaunch();
+      else resetAnimation();
+    });
+    observer.observe(gaugeEl, { attributes: true, attributeFilter: ['style', 'class'] });
+
+    if (Number.parseFloat(window.getComputedStyle(gaugeEl).opacity) > 0.5) playLaunch();
+    else resetAnimation();
   };
 
   const initSiteCubeViz = () => {
@@ -330,9 +403,8 @@ const payloadValue = Number(buildWeight.kb || 0);
   .gauge-viz--diff{display:flex;flex-direction:column;gap:1px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.3;}
   .diff-line{display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;}
   .diff-prefix{font-weight:700;flex-shrink:0;width:10px;text-align:center;}
-  .diff-line--add .diff-prefix,.diff-line--add .diff-text{color:#4ade80;}
-  .diff-line--remove .diff-prefix,.diff-line--remove .diff-text{color:#f87171;}
-  .diff-line .diff-text{opacity:.7;}
+  .diff-line--add .diff-prefix,.diff-line--add .diff-text{color:#4ade80;opacity:.7;}
+  .diff-line--remove .diff-prefix,.diff-line--remove .diff-text{color:#f87171;opacity:.7;}
   :root[data-theme="light"] .diff-line--add .diff-prefix,:root[data-theme="light"] .diff-line--add .diff-text{color:#16a34a;}
   :root[data-theme="light"] .diff-line--remove .diff-prefix,:root[data-theme="light"] .diff-line--remove .diff-text{color:#dc2626;}
 
