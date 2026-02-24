@@ -98,7 +98,6 @@ const fmtDuration = (minutes: number | null | undefined): string | null => {
   const m = minutes % 60;
   return `${h}h ${String(m).padStart(2, '0')}m`;
 };
-const numericValue = (val: string): boolean => /^[\d,.★hmsK]+$/i.test(val.replace(/\s/g, ''));
 const isPresent = (value: unknown): boolean => value != null && String(value).trim() !== '' && String(value).trim().toUpperCase() !== 'N/A';
 
 const buildModeStats = (slide: ActiveSlide): TransmissionMode => {
@@ -199,16 +198,6 @@ export const initNucleus = async () => {
 
   const nucleus = document.getElementById('nucleus');
   const tickerRoot = document.getElementById('nucleus-ticker');
-  const tickerLogo = document.getElementById('ticker-service-logo') as HTMLImageElement | null;
-  const tickerName = document.getElementById('ticker-mode-name') as HTMLAnchorElement | null;
-  const tickerCounter = document.getElementById('ticker-mode-counter');
-  const tickerStat = document.getElementById('ticker-stat');
-  const tickerStatValue = document.getElementById('ticker-stat-value');
-  const tickerStatUnit = document.getElementById('ticker-stat-unit');
-  const tickerSignalDot = document.getElementById('ticker-signal-dot');
-  const tickerSignalRing = document.getElementById('ticker-signal-ring');
-  const prevBtn = document.getElementById('nucleus-prev');
-  const nextBtn = document.getElementById('nucleus-next');
 
   if (!nucleus) return;
   resizeCanvas(canvas, ctx);
@@ -243,130 +232,106 @@ export const initNucleus = async () => {
   const getDimensions = () => ({ width: canvas.width / (window.devicePixelRatio || 1), height: canvas.height / (window.devicePixelRatio || 1) });
   const setState = (newState: 'ambient' | 'scanning' | 'exploring') => { nucleus.setAttribute('data-state', newState); };
 
-  let statTimer: ReturnType<typeof setInterval> | null = null;
-  let currentStatIndex = 0;
-  let statAnimating = false;
+  class NucleusTicker {
+    modes: TransmissionMode[];
+    currentModeIndex = 0;
+    logoEl = document.getElementById('ticker-service-logo') as HTMLImageElement | null;
+    modeNameEl = document.getElementById('ticker-mode-name') as HTMLAnchorElement | null;
+    modeCounterEl = document.getElementById('ticker-mode-counter');
+    statsContainer = document.getElementById('ticker-stats');
+    prevBtn = document.getElementById('nucleus-prev');
+    nextBtn = document.getElementById('nucleus-next');
 
-  const HOLD_DURATION = 3500;
-  const FADE_OUT_DURATION = 300;
-  const FADE_IN_DURATION = 400;
-  const PULSE_DELAY = 200;
-
-  const pulseSignal = (large = false) => {
-    if (reducedMotion) return;
-    tickerSignalRing?.setAttribute('r', '3');
-    tickerSignalRing?.setAttribute('opacity', '0.6');
-    tickerSignalRing?.setAttribute('stroke-width', '1.5');
-    tickerSignalRing?.animate([
-      { r: 3, opacity: 0.6, strokeWidth: '1.5px' },
-      { r: large ? 10 : 10, opacity: 0, strokeWidth: '0.3px' }
-    ], { duration: 600, easing: 'ease-out', fill: 'forwards' });
-
-    tickerSignalDot?.animate([
-      { opacity: 1, r: 3 },
-      { opacity: 1, r: large ? 4.8 : 4.1 },
-      { opacity: 1, r: 3 }
-    ], { duration: 300, easing: 'ease-out' });
-  };
-
-  const updateStatContent = (stat: TransmissionStat) => {
-    if (!tickerStatValue || !tickerStatUnit) return;
-    tickerStatValue.textContent = stat.value;
-    tickerStatUnit.textContent = stat.unit;
-    tickerStatValue.style.fontSize = numericValue(stat.value) ? '18px' : '15px';
-    tickerStatValue.style.fontWeight = numericValue(stat.value) ? '700' : '600';
-  };
-
-  const renderStat = (mode: TransmissionMode, index: number, withPulse = false) => {
-    const stat = mode.stats[index] ?? { value: 'Awaiting first sync', unit: '' };
-    if (!tickerStat || !tickerStatValue || !tickerStatUnit) return;
-
-    if (reducedMotion) {
-      updateStatContent(stat);
-      tickerStat.className = 'nucleus-ticker__stat nucleus-ticker__stat--visible';
-      tickerStat.style.opacity = '1';
-      tickerStat.style.transform = 'translateY(0)';
-      return;
+    constructor(modesData: TransmissionMode[]) {
+      this.modes = modesData;
+      this.bindNav();
+      this.setMode(0);
     }
 
-    if (withPulse) {
-      tickerStat.style.opacity = '0';
-      tickerStat.style.transform = 'translateY(4px)';
-      updateStatContent(stat);
-      pulseSignal(true);
+    setMode(index: number) {
+      const mode = this.modes[index];
+      if (!mode) return;
+      this.currentModeIndex = index;
+
+      if (this.logoEl) {
+        this.logoEl.src = mode.logo;
+        this.logoEl.alt = mode.service;
+      }
+      if (this.modeNameEl) {
+        this.modeNameEl.textContent = mode.name;
+        this.modeNameEl.href = mode.link;
+      }
+      if (this.modeCounterEl) {
+        this.modeCounterEl.textContent = `${index + 1}/${this.modes.length}`;
+      }
+
+      this.renderStats(mode.stats);
+    }
+
+    renderStats(stats: TransmissionStat[]) {
+      if (!this.statsContainer) return;
+      this.statsContainer.style.opacity = '0';
       window.setTimeout(() => {
-        tickerStat.style.transition = `opacity ${FADE_IN_DURATION}ms ease-out, transform ${FADE_IN_DURATION}ms ease-out`;
-        tickerStat.style.opacity = '1';
-        tickerStat.style.transform = 'translateY(0)';
-      }, 400);
-      return;
+        if (!this.statsContainer) return;
+        this.statsContainer.innerHTML = '';
+
+        if (!stats || stats.length === 0) {
+          const col = document.createElement('div');
+          col.className = 'nucleus-ticker__stat-col';
+          col.innerHTML = `
+            <span class="nucleus-ticker__stat-value">—</span>
+            <span class="nucleus-ticker__stat-label">awaiting data</span>
+          `;
+          this.statsContainer.appendChild(col);
+        } else {
+          const displayStats = stats.slice(0, 5);
+          for (const stat of displayStats) {
+            const col = document.createElement('div');
+            col.className = 'nucleus-ticker__stat-col';
+            col.innerHTML = `
+              <span class="nucleus-ticker__stat-value">${this.escapeHtml(stat.value)}</span>
+              <span class="nucleus-ticker__stat-label">${this.escapeHtml(stat.unit)}</span>
+            `;
+            this.statsContainer.appendChild(col);
+          }
+        }
+
+        this.statsContainer.style.opacity = '1';
+      }, reducedMotion ? 0 : 200);
     }
 
-    if (statAnimating) return;
-    statAnimating = true;
-    tickerStat.style.transition = `opacity ${FADE_OUT_DURATION}ms ease, transform ${FADE_OUT_DURATION}ms ease`;
-    tickerStat.style.opacity = '0';
-    tickerStat.style.transform = 'translateY(-2px)';
-
-    window.setTimeout(() => {
-      pulseSignal();
-      window.setTimeout(() => {
-        updateStatContent(stat);
-        window.setTimeout(() => {
-          tickerStat.style.transition = `opacity ${FADE_IN_DURATION}ms ease-out, transform ${FADE_IN_DURATION}ms ease-out`;
-          tickerStat.style.opacity = '1';
-          tickerStat.style.transform = 'translateY(0)';
-          window.setTimeout(() => {
-            statAnimating = false;
-          }, FADE_IN_DURATION);
-        }, 100);
-      }, PULSE_DELAY);
-    }, FADE_OUT_DURATION);
-  };
-
-  const startStatCycle = (mode: TransmissionMode) => {
-    if (statTimer) clearInterval(statTimer);
-    currentStatIndex = 0;
-    renderStat(mode, currentStatIndex, true);
-    if (mode.stats.length <= 1) return;
-    statTimer = setInterval(() => {
-      currentStatIndex = (currentStatIndex + 1) % mode.stats.length;
-      renderStat(mode, currentStatIndex);
-    }, HOLD_DURATION + FADE_OUT_DURATION + FADE_IN_DURATION + PULSE_DELAY);
-  };
-
-  const updateSubTicker = (slide: ActiveSlide) => {
-    const mode = buildModeStats(slide);
-    if (tickerLogo) {
-      tickerLogo.style.opacity = '0';
-      window.setTimeout(() => {
-        tickerLogo.src = mode.logo;
-        tickerLogo.alt = mode.service;
-        tickerLogo.style.display = 'inline-block';
-        tickerLogo.style.opacity = '0.6';
-        tickerLogo.onerror = () => {
-          tickerLogo.style.display = 'inline-block';
-          tickerLogo.src = '/icons/globe-mono.svg';
-          if (tickerStatValue) tickerStatValue.textContent = mode.icon;
-        };
-      }, 180);
+    escapeHtml(str: string) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
     }
 
-    if (tickerName) {
-      tickerName.textContent = mode.name;
-      tickerName.href = mode.link;
+    bindNav() {
+      this.nextBtn?.addEventListener('click', () => {
+        const next = (this.currentModeIndex + 1) % this.modes.length;
+        this.setMode(next);
+        (window as any).nucleusCarousel?.goToSlide(next);
+      });
+
+      this.prevBtn?.addEventListener('click', () => {
+        const prev = (this.currentModeIndex - 1 + this.modes.length) % this.modes.length;
+        this.setMode(prev);
+        (window as any).nucleusCarousel?.goToSlide(prev);
+      });
     }
 
-    const modeIndex = slides.findIndex((item) => item.module.id === slide.module.id);
-    if (tickerCounter) tickerCounter.textContent = `${Math.max(1, modeIndex + 1)}/${slides.length}`;
+    onSlideChange(modeIndex: number) {
+      this.setMode(modeIndex);
+    }
+  }
 
-    startStatCycle(mode);
-  };
+  const ticker = new NucleusTicker(slides.map((slide) => buildModeStats(slide)));
+  (window as any).nucleusTicker = ticker;
 
   const applySlideState = (index: number) => {
     currentSlide = index;
     slides[currentSlide].module.reset?.();
-    updateSubTicker(slides[currentSlide]);
+    ticker.onSlideChange(index);
   };
 
   const crtTransition = (nextIndex: number, callback: () => void) => {
@@ -445,8 +410,17 @@ export const initNucleus = async () => {
     resetIdleTimer();
   };
 
-  prevBtn?.addEventListener('click', () => goRelative(-1));
-  nextBtn?.addEventListener('click', () => goRelative(1));
+  (window as any).nucleusCarousel = {
+    goToSlide: (index: number) => {
+      if (!Number.isFinite(index)) return;
+      const bounded = ((Math.trunc(index) % slides.length) + slides.length) % slides.length;
+      stopAutoAdvance();
+      setState('exploring');
+      transitionToSlide(bounded);
+      resetIdleTimer();
+    }
+  };
+
 
   const pause = () => stopAutoAdvance();
   const resume = () => startAutoAdvance();
