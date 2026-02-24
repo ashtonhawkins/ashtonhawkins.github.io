@@ -4,10 +4,9 @@ import Cursor from '@components/ui/Cursor.astro';
 import NoiseTexture from '@components/ui/NoiseTexture.astro';
 import AnalogClock from '@components/ui/AnalogClock.astro';
 import feedCache from '@data/feeds-cache.json';
-import ouraReadiness from '@data/oura/readiness.json';
-import stravaActivities from '@data/strava/activities.json';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import path from 'node:path';
+import siteStats from '@data/site-stats.json';
+import commitStats from '@data/commit-stats.json';
+import buildWeight from '@data/build-weight.json';
 
 const pathname = Astro.url.pathname;
 const links = [
@@ -32,73 +31,26 @@ const nowFlyoutLinks = [
   { href: '/quotes', label: 'Quotes' }
 ];
 
-const DEPLOY_TIMESTAMP = '2026.02.23 · 18:53 UTC';
-const DEPLOY_DATE = new Date('2026-02-23T18:53:37.418Z');
-
 const isActive = (href: string) => {
   if (href === '/') return pathname === '/';
   return pathname === href || pathname.startsWith(`${href}/`);
 };
 
-const formatNumber = (value: number) => new Intl.NumberFormat('en-US').format(value);
-const compactLines = (value: number) => (value >= 1000 ? `${(value / 1000).toFixed(1)}K` : formatNumber(value));
-
-const collectStats = (dir: string): { files: number; lines: number } => {
-  const stack = [dir];
-  let files = 0;
-  let lines = 0;
-  const exts = new Set(['.astro', '.ts', '.tsx', '.css', '.js']);
-
-  while (stack.length > 0) {
-    const current = stack.pop();
-    if (!current) continue;
-    for (const entry of readdirSync(current, { withFileTypes: true })) {
-      if (entry.name.startsWith('.')) continue;
-      const fullPath = path.join(current, entry.name);
-      if (entry.isDirectory()) {
-        if (entry.name === 'dist' || entry.name === 'node_modules') continue;
-        stack.push(fullPath);
-        continue;
-      }
-      if (!exts.has(path.extname(entry.name))) continue;
-      files += 1;
-      const content = readFileSync(fullPath, 'utf8');
-      lines += content.split('\n').length;
-    }
-  }
-
-  return { files, lines };
+const DEPLOY_DATE = new Date();
+const LAUNCH_EPOCH = '2025-02-19T00:00:00.000Z';
+const totalFeeds = 6;
+const feedFlags = {
+  letterboxd: ((feedCache as any)?.items?.letterboxd?.length ?? 0) > 0,
+  lastfm: ((feedCache as any)?.items?.lastfm?.length ?? 0) > 0,
+  strava: Array.isArray((feedCache as any)?.items?.strava) ? ((feedCache as any)?.items?.strava?.length ?? 0) > 0 : false,
+  oura: ((feedCache as any)?.items?.oura?.length ?? 0) > 0,
+  goodreads: ((feedCache as any)?.items?.goodreads?.length ?? 0) > 0,
+  github: ((feedCache as any)?.items?.x?.length ?? 0) > 0
 };
+const activeFeeds = Object.entries(feedFlags).filter(([, active]) => active).map(([name]) => name);
 
-const srcRoot = path.resolve(process.cwd(), 'src');
-const buildStatsRaw = existsSync(srcRoot) ? collectStats(srcRoot) : { files: 14, lines: 2850 };
-const buildStatLabel = `${formatNumber(buildStatsRaw.files)} COMP · ${compactLines(buildStatsRaw.lines)} LN`;
-const buildDensityPct = Math.min(100, Math.round((buildStatsRaw.lines / 15000) * 100));
-
-const gaugeFeeds = [
-  { name: 'strava', active: Array.isArray(stravaActivities) && stravaActivities.length > 0 },
-  { name: 'lastfm', active: ((feedCache as any)?.items?.lastfm?.length ?? 0) > 0 },
-  { name: 'letterboxd', active: ((feedCache as any)?.items?.letterboxd?.length ?? 0) > 0 },
-  { name: 'oura', active: Array.isArray(ouraReadiness) && ouraReadiness.length > 0 },
-  { name: 'goodreads', active: ((feedCache as any)?.items?.goodreads?.length ?? 0) > 0 },
-  { name: 'github', active: ((feedCache as any)?.items?.x?.length ?? 0) > 0 }
-];
-const activeFeedCount = gaugeFeeds.filter((feed) => feed.active).length;
-
-const approximateWeightKb = Math.round((buildStatsRaw.lines * 44) / 1024);
-const weightGaugeValue = Number.isFinite(approximateWeightKb) ? approximateWeightKb : 0;
-const weightPct = Math.min(100, Math.round((weightGaugeValue / 1500) * 100));
-const weightClass = weightGaugeValue < 500 ? 'lean' : weightGaugeValue < 1000 ? 'moderate' : 'heavy';
-
-const cacheUpdatedAt = (feedCache as any)?.updatedAt ? new Date((feedCache as any).updatedAt) : new Date();
-const cacheHoursAgo = Math.max(0, Math.floor((Date.now() - cacheUpdatedAt.getTime()) / (1000 * 60 * 60)));
-const cacheState = cacheHoursAgo < 4 ? 'fresh' : cacheHoursAgo <= 12 ? 'aging' : 'stale';
-const cacheLabel = `${cacheState.toUpperCase()} · ${cacheHoursAgo}H`;
-
-const packageJson = JSON.parse(readFileSync(path.resolve(process.cwd(), 'package.json'), 'utf8'));
-const astroVersion = String(packageJson?.dependencies?.astro ?? packageJson?.devDependencies?.astro ?? '5').replace(/^[^\d]*/, '').split('.')[0] || '5';
-const tsVersion = String(packageJson?.devDependencies?.typescript ?? packageJson?.dependencies?.typescript ?? '5').replace(/^[^\d]*/, '').split('.')[0] || '5';
-const nodeVersion = process.versions.node.split('.')[0] || '20';
+const siteValue = `${siteStats.components} components · ${(siteStats.lines / 1000).toFixed(1)}K lines`;
+const footprintValue = `${Number(buildWeight.kb || 0).toLocaleString()} KB`;
 ---
 
 <a href="#content" class="skip-link">Skip to content</a>
@@ -130,82 +82,87 @@ const nodeVersion = process.versions.node.split('.')[0] || '20';
 
     <div class="header__instruments">
       <div class="header__gauge-slot" id="gauge-slot" aria-label="Site vitals">
-        <div class="header__gauge header__gauge--deploy" data-gauge="deploy" data-deploy-ts={DEPLOY_DATE.toISOString()}>
-          <span class="header__gauge-label">DEPLOY</span>
-          <span class="gauge-icon gauge-icon--deploy" aria-hidden="true">◉</span>
-          <span class="header__gauge-value" id="gauge-deploy">{DEPLOY_TIMESTAMP}</span>
+        <div class="header__gauge" data-gauge="updated" data-deploy-ts={DEPLOY_DATE.toISOString()}>
+          <div class="header__gauge-viz" aria-hidden="true">
+            <svg class="gauge-viz gauge-viz--ping" width="24" height="24" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="2.5" fill="var(--accent-primary)" />
+              <circle cx="12" cy="12" r="2.5" fill="none" stroke="var(--accent-primary)" stroke-width="1" opacity="0">
+                <animate attributeName="r" values="2.5;11" dur="2s" begin="0s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.6;0" dur="2s" begin="0s" repeatCount="indefinite" />
+              </circle>
+            </svg>
+          </div>
+          <div class="header__gauge-text"><span class="header__gauge-label">UPDATED</span><span class="header__gauge-value" id="gauge-updated">just now</span></div>
         </div>
 
-        <div class="header__gauge header__gauge--live" data-gauge="live">
-          <span class="header__gauge-label">LIVE</span>
-          <span class="gauge-icon gauge-icon--live" aria-hidden="true"></span>
-          <span class="header__gauge-value header__gauge-value--live" id="gauge-live">0</span>
-          <span class="header__gauge-unit">SEC</span>
+        <div class="header__gauge" data-gauge="alive" data-launch-epoch={LAUNCH_EPOCH}>
+          <div class="header__gauge-viz gauge-viz--odometer" aria-hidden="true">
+            <span class="odometer-digit" data-odometer-yr>0</span><span class="odometer-unit">y</span>
+            <span class="odometer-digit" data-odometer-d>000</span><span class="odometer-unit">d</span>
+            <span class="odometer-digit odometer-digit--ticking" data-odometer-h>00</span><span class="odometer-unit">h</span>
+          </div>
+          <div class="header__gauge-text"><span class="header__gauge-label">ALIVE</span></div>
         </div>
 
-        <div class="header__gauge header__gauge--signal" data-gauge="signal">
-          <span class="header__gauge-label">SIGNAL</span>
-          <span class="gauge-icon gauge-icon--signal" aria-hidden="true">📍</span>
-          <span class="header__gauge-signal-geo" id="gauge-signal-geo">US</span>
-          <span class="header__gauge-value" id="gauge-signal-text">--</span>
+        <div class="header__gauge" data-gauge="visitor">
+          <div class="header__gauge-viz gauge-viz--visitor" aria-hidden="true">
+            <svg width="36" height="28" viewBox="0 0 36 28" id="visitor-geo-svg">
+              <g id="visitor-geo-outline"></g>
+              <line id="visitor-radar-sweep" x1="18" y1="14" x2="18" y2="1" stroke="var(--accent-primary)" stroke-width="0.75" opacity="0" transform-origin="18 14" />
+              <circle id="visitor-pin" cx="18" cy="14" r="2" fill="var(--accent-primary)" opacity="0" />
+            </svg>
+          </div>
+          <div class="header__gauge-text"><span class="header__gauge-label">VISITOR</span><span class="header__gauge-value" id="gauge-visitor">Welcome</span></div>
         </div>
 
-        <div class="header__gauge header__gauge--weather" data-gauge="weather">
-          <span class="header__gauge-label">WEATHER</span>
-          <span class="header__gauge-weather-icon" id="gauge-weather-icon" aria-hidden="true">☀</span>
-          <span class="header__gauge-value" id="gauge-weather-temp">--°</span>
-          <span class="header__gauge-weather-cond" id="gauge-weather-cond">LOADING</span>
+        <div class="header__gauge" data-gauge="site">
+          <div class="header__gauge-viz" aria-hidden="true"><canvas class="gauge-viz gauge-viz--site" width="32" height="32" id="site-cube-canvas"></canvas></div>
+          <div class="header__gauge-text"><span class="header__gauge-label">SITE</span><span class="header__gauge-value">{siteValue}</span></div>
         </div>
 
-        <div class="header__gauge header__gauge--build" data-gauge="build">
-          <span class="header__gauge-label">BUILD</span>
-          <span class="gauge-icon gauge-icon--build" aria-hidden="true">&lt;/&gt;</span>
-          <span class="header__gauge-value" id="gauge-build">{buildStatLabel}</span>
-          <span class="header__gauge-bar" id="gauge-build-bar"><span class="header__gauge-bar-fill" style={`--bar-target:${buildDensityPct}%`}></span></span>
+        <div class="header__gauge" data-gauge="feeds" data-active-feeds={activeFeeds.join(',')}>
+          <div class="header__gauge-viz" aria-hidden="true">
+            <svg class="gauge-viz gauge-viz--feeds" width="32" height="24" viewBox="0 0 32 24">
+              <g id="feeds-connections"></g>
+              <circle data-feed="letterboxd" cx="8" cy="4" r="2" class="feed-dot" />
+              <circle data-feed="lastfm" cx="24" cy="4" r="2" class="feed-dot" />
+              <circle data-feed="strava" cx="4" cy="12" r="2" class="feed-dot" />
+              <circle data-feed="oura" cx="28" cy="12" r="2" class="feed-dot" />
+              <circle data-feed="goodreads" cx="8" cy="20" r="2" class="feed-dot" />
+              <circle data-feed="github" cx="24" cy="20" r="2" class="feed-dot" />
+            </svg>
+          </div>
+          <div class="header__gauge-text"><span class="header__gauge-label">FEEDS</span><span class="header__gauge-value" id="gauge-feeds-value">0 of {totalFeeds} connected</span></div>
         </div>
 
-        <div class="header__gauge header__gauge--feeds" data-gauge="feeds">
-          <span class="header__gauge-label">FEEDS</span>
-          <span class="header__gauge-dots" id="gauge-feed-dots">
-            {gaugeFeeds.map((feed) => (
-              <span class={`header__gauge-dot header__gauge-dot--${feed.active ? 'active' : 'inactive'}`} title={feed.name}></span>
-            ))}
-          </span>
-          <span class="header__gauge-value" id="gauge-feed-count">{activeFeedCount}/{gaugeFeeds.length}</span>
+        <div class="header__gauge" data-gauge="footprint">
+          <div class="header__gauge-viz gauge-viz--footprint" aria-hidden="true">
+            <svg width="32" height="20" viewBox="0 0 32 20">
+              <rect id="footprint-block" x="2" y="2" width="28" height="16" rx="1" fill="var(--accent-primary)" opacity="0.15" stroke="var(--accent-primary)" stroke-width="0.5"/>
+              <rect id="footprint-compressed" x="2" y="2" width="3" height="16" rx="1" fill="var(--accent-primary)" opacity="0"/>
+            </svg>
+          </div>
+          <div class="header__gauge-text"><span class="header__gauge-label">FOOTPRINT</span><span class="header__gauge-value">{footprintValue}</span></div>
         </div>
 
-        <div class={`header__gauge header__gauge--weight ${weightClass}`} data-gauge="weight">
-          <span class="header__gauge-label">WEIGHT</span>
-          <span class="header__gauge-value"><span id="gauge-weight-number">{formatNumber(weightGaugeValue)}</span><span class="header__gauge-unit">KB</span></span>
-          <span class="header__gauge-meter" id="gauge-weight-meter"><span class="header__gauge-meter-fill" id="gauge-weight-fill" style={`--weight-target:${weightPct}%`}></span></span>
+        <div class="header__gauge" data-gauge="activity" data-commits={String(commitStats.weeklyCommits || 0)}>
+          <div class="header__gauge-viz gauge-viz--activity" aria-hidden="true">
+            <svg width="40" height="12" viewBox="0 0 40 12"><line x1="2" y1="10" x2="38" y2="10" stroke="var(--text-tertiary)" stroke-width="0.5" opacity="0.2"/><g id="activity-dots"></g></svg>
+          </div>
+          <div class="header__gauge-text"><span class="header__gauge-label">ACTIVITY</span><span class="header__gauge-value" id="gauge-activity-value">quiet this week</span></div>
         </div>
 
-        <div class={`header__gauge header__gauge--cache ${cacheState}`} data-gauge="cache" data-cache-updated={cacheUpdatedAt.toISOString()}>
-          <span class="header__gauge-label">CACHE</span>
-          <span class="header__gauge-cache-indicator" id="gauge-cache-indicator" aria-hidden="true"></span>
-          <span class="header__gauge-value" id="gauge-cache-value">{cacheLabel}</span>
-        </div>
-
-        <div class="header__gauge header__gauge--commits" data-gauge="commits">
-          <span class="header__gauge-label">COMMITS</span>
-          <span class="header__gauge-value" id="gauge-commits-count">-- THIS WEEK</span>
-          <span class="header__gauge-sparkline" id="gauge-commits-sparkline"></span>
-        </div>
-
-        <div class="header__gauge header__gauge--stack" data-gauge="stack">
-          <span class="header__gauge-label">STACK</span>
-          <span class="header__gauge-pills">
-            <span class="header__gauge-pill" id="gauge-stack-astro">ASTRO {astroVersion}</span>
-            <span class="header__gauge-pill" id="gauge-stack-node">NODE {nodeVersion}</span>
-            <span class="header__gauge-pill" id="gauge-stack-ts">TS {tsVersion}</span>
-          </span>
+        <div class="header__gauge" data-gauge="stack">
+          <div class="header__gauge-viz gauge-viz--stack" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="var(--text-secondary)" opacity="0.6"><path d="M7 1L2 11h3l2-5 2 5h3L7 1z" /></svg>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="var(--text-secondary)" stroke-width="0.8" opacity="0.6"><polygon points="7,1 12.5,4 12.5,10 7,13 1.5,10 1.5,4" /></svg>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="var(--text-secondary)" opacity="0.6"><rect x="1" y="1" width="12" height="12" rx="2" fill="none" stroke="var(--text-secondary)" stroke-width="0.8"/><text x="7" y="10" font-size="7" font-family="IBM Plex Mono" text-anchor="middle" fill="var(--text-secondary)">TS</text></svg>
+          </div>
+          <div class="header__gauge-text"><span class="header__gauge-label">BUILT WITH</span><span class="header__gauge-value">Astro · Node · TypeScript</span></div>
         </div>
       </div>
 
-      <div class="header__clock">
-        <AnalogClock />
-      </div>
-
+      <div class="header__clock"><AnalogClock /></div>
       <div class="header__utilities">
         <ThemeToggle />
         <button class="cmd-trigger" type="button" aria-label="Open command palette"><span>⌘K</span></button>
@@ -216,16 +173,11 @@ const nodeVersion = process.versions.node.split('.')[0] || '20';
 
   <div class="mobile-overlay" data-mobile-menu hidden>
     <nav aria-label="Mobile Primary" class="mobile-nav">
-      <ul>
-        {mobileLinks.map((link) => (
-          <li><a href={link.href} aria-current={isActive(link.href) ? 'page' : undefined}>{link.label}</a></li>
-        ))}
-      </ul>
+      <ul>{mobileLinks.map((link) => (<li><a href={link.href} aria-current={isActive(link.href) ? 'page' : undefined}>{link.label}</a></li>))}</ul>
     </nav>
     <p class="mobile-kbd-hint">Tip: press <kbd>⌘K</kbd> for command palette</p>
     <p class="mobile-time" data-mobile-time>--:--:--</p>
   </div>
-
 </header>
 
 <script>
@@ -237,14 +189,7 @@ const nodeVersion = process.versions.node.split('.')[0] || '20';
   const toggle = document.querySelector('[data-menu-toggle]');
   const menu = document.querySelector('[data-mobile-menu]');
   const timeEl = document.querySelector('[data-mobile-time]');
-
-  const updateScrolled = () => {
-    if (!(header instanceof HTMLElement)) return;
-    header.classList.toggle('scrolled', window.scrollY > 8);
-  };
-
-  updateScrolled();
-  window.addEventListener('scroll', updateScrolled, { passive: true });
+  const gaugeSlot = document.getElementById('gauge-slot');
 
   if (toggle instanceof HTMLButtonElement && menu instanceof HTMLElement) {
     const closeMenu = () => {
@@ -252,7 +197,6 @@ const nodeVersion = process.versions.node.split('.')[0] || '20';
       toggle.setAttribute('aria-expanded', 'false');
       document.body.classList.remove('menu-open');
     };
-
     toggle.addEventListener('click', () => {
       const open = toggle.getAttribute('aria-expanded') === 'true';
       if (open) return closeMenu();
@@ -260,538 +204,251 @@ const nodeVersion = process.versions.node.split('.')[0] || '20';
       toggle.setAttribute('aria-expanded', 'true');
       document.body.classList.add('menu-open');
     });
-
     menu.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu));
   }
 
   if (timeEl instanceof HTMLElement) {
-    const updateTime = () => {
-      timeEl.textContent = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date());
-    };
+    const updateTime = () => { timeEl.textContent = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date()); };
     updateTime();
     setInterval(updateTime, 1000);
   }
 
-  const liveEl = document.getElementById('gauge-live');
-  const signalTextEl = document.getElementById('gauge-signal-text');
-  const signalGeoEl = document.getElementById('gauge-signal-geo');
-  const deployGauge = document.querySelector('[data-gauge="deploy"]');
-  const weatherGauge = document.querySelector('[data-gauge="weather"]');
-  const weatherIconEl = document.getElementById('gauge-weather-icon');
-  const weatherTempEl = document.getElementById('gauge-weather-temp');
-  const weatherCondEl = document.getElementById('gauge-weather-cond');
-  const commitsCountEl = document.getElementById('gauge-commits-count');
-  const commitsSparklineEl = document.getElementById('gauge-commits-sparkline');
-  const cacheGauge = document.querySelector('[data-gauge="cache"]');
-  const cacheValueEl = document.getElementById('gauge-cache-value');
-  const gaugeSlot = document.getElementById('gauge-slot');
-  const LAUNCH_DATE = new Date('2025-02-19T00:00:00Z');
-  const GAUGE_ORDER = ['deploy', 'live', 'signal', 'weather', 'build', 'feeds', 'weight', 'cache', 'commits', 'stack'];
-  const ROTATION_INTERVAL = 5500;
+  if (header instanceof HTMLElement) {
+    const updateScrolled = () => header.classList.toggle('scrolled', window.scrollY > 8);
+    updateScrolled();
+    window.addEventListener('scroll', updateScrolled, { passive: true });
+  }
+
+  const gaugeNames = ['updated', 'alive', 'visitor', 'site', 'feeds', 'footprint', 'activity', 'stack'];
   let currentGaugeIndex = 0;
+  let gaugeRotationPaused = false;
   let rotationTimer = null;
 
-  const updateLive = () => {
-    if (!liveEl) return;
-    const seconds = Math.floor((Date.now() - LAUNCH_DATE.getTime()) / 1000);
-    liveEl.textContent = seconds.toLocaleString();
-  };
-
-  const detectBrowser = () => {
-    const ua = navigator.userAgent;
-    if (/Edg\//.test(ua)) return 'EDGE';
-    if (/Firefox\//.test(ua)) return 'FIREFOX';
-    if (/Chrome\//.test(ua) && !/Edg\//.test(ua)) return 'CHROME';
-    if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) return 'SAFARI';
-    return 'UNKNOWN';
-  };
-
   const showGauge = (index) => {
-    const gauges = document.querySelectorAll('.header__gauge');
-    gauges.forEach((g, i) => g.classList.toggle('active', i === index));
+    document.querySelectorAll('.header__gauge').forEach((g, i) => g.classList.toggle('active', i === index));
     currentGaugeIndex = index;
   };
 
-  const advanceGauge = () => showGauge((currentGaugeIndex + 1) % GAUGE_ORDER.length);
   const startRotation = () => {
     if (rotationTimer) clearInterval(rotationTimer);
-    rotationTimer = window.setInterval(advanceGauge, ROTATION_INTERVAL);
-  };
-  const stopRotation = () => {
-    if (!rotationTimer) return;
-    clearInterval(rotationTimer);
-    rotationTimer = null;
+    rotationTimer = window.setInterval(() => {
+      if (gaugeRotationPaused) return;
+      showGauge((currentGaugeIndex + 1) % gaugeNames.length);
+    }, 5500);
   };
 
-  const renderStateOutline = (abbr) => {
-    const states = {
-      CA: 'M2,10 L4,2 L8,1 L10,4 L9,8 L11,13 L8,15 L3,14 L1,11 Z',
-      NY: 'M2,6 L5,3 L11,4 L13,7 L10,8 L7,11 L3,10 Z',
-      TX: 'M3,2 L8,2 L10,5 L14,6 L12,10 L8,12 L6,15 L2,12 L1,7 Z',
-      FL: 'M2,3 L9,3 L12,6 L10,8 L11,11 L8,13 L6,10 L4,9 L3,6 Z'
-    };
-    const d = states[abbr];
-    if (!d) return null;
-    return `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="${d}"/></svg>`;
-  };
-
-  const updateSignalFromGeo = (geo = {}) => {
-    if (signalTextEl) {
-      const city = String(geo.city || 'UNKNOWN').toUpperCase();
-      signalTextEl.textContent = `${city} · ${detectBrowser()}`;
-    }
-    if (signalGeoEl) {
-      const country = String(geo.country_code || 'US').toUpperCase();
-      const region = String(geo.region_code || '').toUpperCase();
-      if (country === 'US') {
-        const svg = renderStateOutline(region);
-        signalGeoEl.innerHTML = svg || region || 'US';
-      } else {
-        signalGeoEl.textContent = country;
-      }
-    }
-  };
-
-  const updateCacheAge = () => {
-    if (!(cacheGauge instanceof HTMLElement) || !(cacheValueEl instanceof HTMLElement)) return;
-    const raw = cacheGauge.dataset.cacheUpdated;
-    if (!raw) return;
-    const hours = Math.max(0, Math.floor((Date.now() - new Date(raw).getTime()) / (1000 * 60 * 60)));
-    const state = hours < 4 ? 'fresh' : hours <= 12 ? 'aging' : 'stale';
-    cacheGauge.classList.remove('fresh', 'aging', 'stale');
-    cacheGauge.classList.add(state);
-    cacheValueEl.textContent = `${state.toUpperCase()} · ${hours}H`;
-  };
-
-  const WEATHER_CODE_MAP = {
-    clear: { icon: '☀', cond: 'CLEAR', className: 'sunny' },
-    cloudy: { icon: '☁', cond: 'CLOUDY', className: 'cloudy' },
-    rainy: { icon: '☂', cond: 'RAIN', className: 'rainy' },
-    snowy: { icon: '❄', cond: 'SNOW', className: 'snowy' }
-  };
-
-  const classifyWeather = (code) => {
-    if (code === 0) return WEATHER_CODE_MAP.clear;
-    if ([1, 2, 3, 45, 48].includes(code)) return WEATHER_CODE_MAP.cloudy;
-    if ([61, 63, 65, 80, 81, 82, 51, 53, 55].includes(code)) return WEATHER_CODE_MAP.rainy;
-    if ([71, 73, 75, 77, 85, 86].includes(code)) return WEATHER_CODE_MAP.snowy;
-    return WEATHER_CODE_MAP.cloudy;
-  };
-
-  const renderCommits = (days) => {
-    if (!(commitsSparklineEl instanceof HTMLElement)) return;
-    commitsSparklineEl.innerHTML = '';
-    const max = Math.max(...days, 1);
-    days.forEach((count, idx) => {
-      const col = document.createElement('span');
-      col.className = `header__gauge-spark-col ${idx === days.length - 1 ? 'today' : ''}`;
-      col.style.setProperty('--spark-height', `${Math.max(1, Math.round((count / max) * 12))}px`);
-      commitsSparklineEl.append(col);
+  if (gaugeSlot) {
+    gaugeSlot.addEventListener('mouseenter', () => {
+      gaugeRotationPaused = true;
     });
-  };
-
-  const loadCommits = async () => {
-    const cached = sessionStorage.getItem('header-commit-activity');
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      commitsCountEl && (commitsCountEl.textContent = `${parsed.total} THIS WEEK`);
-      renderCommits(parsed.days);
-      return;
-    }
-    try {
-      const res = await fetch('https://api.github.com/repos/ashtonhawkins/ashtonhawkins.github.io/stats/commit_activity');
-      const data = await res.json();
-      const lastWeek = Array.isArray(data) ? data.at(-1) : null;
-      const days = Array.isArray(lastWeek?.days) ? lastWeek.days : [0, 0, 0, 0, 0, 0, 0];
-      const total = days.reduce((sum, n) => sum + n, 0);
-      commitsCountEl && (commitsCountEl.textContent = `${total} THIS WEEK`);
-      renderCommits(days);
-      sessionStorage.setItem('header-commit-activity', JSON.stringify({ days, total }));
-    } catch {
-      commitsCountEl && (commitsCountEl.textContent = 'N/A THIS WEEK');
-      renderCommits([1, 1, 1, 1, 1, 1, 1]);
-    }
-  };
-
-  const loadGeoAndWeather = async () => {
-    const cached = sessionStorage.getItem('header-geo-weather');
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      updateSignalFromGeo(parsed.geo);
-      if (weatherTempEl) weatherTempEl.textContent = parsed.temp;
-      if (weatherCondEl) weatherCondEl.textContent = parsed.cond;
-      if (weatherIconEl) {
-        weatherIconEl.textContent = parsed.icon;
-        weatherIconEl.className = `header__gauge-weather-icon gauge-icon--${parsed.className}`;
-      }
-      weatherGauge?.classList.remove('sunny', 'cloudy', 'rainy', 'snowy');
-      weatherGauge?.classList.add(parsed.className);
-      return;
-    }
-    try {
-      const geoRes = await fetch('https://ipapi.co/json/');
-      const geo = await geoRes.json();
-      updateSignalFromGeo(geo);
-      const units = String(geo.country_code || '').toUpperCase() === 'US' ? 'fahrenheit' : 'celsius';
-      const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${geo.latitude}&longitude=${geo.longitude}&current=temperature_2m,weather_code&temperature_unit=${units}`);
-      const weather = await wRes.json();
-      const tempNum = Math.round(weather?.current?.temperature_2m ?? 0);
-      const weatherInfo = classifyWeather(Number(weather?.current?.weather_code));
-      const temp = `${tempNum}°${units === 'fahrenheit' ? 'F' : 'C'}`;
-      if (weatherTempEl) weatherTempEl.textContent = temp;
-      if (weatherCondEl) weatherCondEl.textContent = weatherInfo.cond;
-      if (weatherIconEl) {
-        weatherIconEl.textContent = weatherInfo.icon;
-        weatherIconEl.className = `header__gauge-weather-icon gauge-icon--${weatherInfo.className}`;
-      }
-      weatherGauge?.classList.remove('sunny', 'cloudy', 'rainy', 'snowy');
-      weatherGauge?.classList.add(weatherInfo.className);
-      sessionStorage.setItem('header-geo-weather', JSON.stringify({ geo, temp, cond: weatherInfo.cond, icon: weatherInfo.icon, className: weatherInfo.className }));
-    } catch {
-      updateSignalFromGeo({ city: 'UNKNOWN', country_code: 'US' });
-      if (weatherTempEl) weatherTempEl.textContent = '--°';
-      if (weatherCondEl) weatherCondEl.textContent = 'OFFLINE';
-    }
-  };
-
-  const deployTs = deployGauge instanceof HTMLElement ? deployGauge.dataset.deployTs : null;
-  if (deployGauge instanceof HTMLElement && deployTs) {
-    const deployTime = new Date(deployTs).getTime();
-    if (Number.isFinite(deployTime) && (Date.now() - deployTime) <= 60 * 60 * 1000) {
-      deployGauge.classList.add('fresh');
-    }
+    gaugeSlot.addEventListener('mouseleave', () => {
+      gaugeRotationPaused = false;
+      startRotation();
+    });
   }
+
+  const updateUpdatedGauge = () => {
+    const el = document.getElementById('gauge-updated');
+    const deploy = document.querySelector('[data-gauge="updated"]');
+    if (!el || !(deploy instanceof HTMLElement)) return;
+    const ts = deploy.dataset.deployTs;
+    if (!ts) return;
+    const diffSec = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+    if (diffSec < 60) el.textContent = 'just now';
+    else if (diffSec < 3600) el.textContent = `${Math.floor(diffSec / 60)}m ago`;
+    else if (diffSec < 86400) el.textContent = `${Math.floor(diffSec / 3600)}h ago`;
+    else if (diffSec < 604800) el.textContent = `${Math.floor(diffSec / 86400)}d ago`;
+    else el.textContent = new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const updateAliveGauge = () => {
+    const gauge = document.querySelector('[data-gauge="alive"]');
+    if (!(gauge instanceof HTMLElement)) return;
+    const launch = new Date(gauge.dataset.launchEpoch || '').getTime();
+    const elapsed = Date.now() - launch;
+    const years = Math.floor(elapsed / (365.25 * 24 * 3600 * 1000));
+    const days = Math.floor((elapsed % (365.25 * 24 * 3600 * 1000)) / (24 * 3600 * 1000));
+    const hours = Math.floor((elapsed % (24 * 3600 * 1000)) / (3600 * 1000));
+    const yrEl = document.querySelector('[data-odometer-yr]');
+    const dEl = document.querySelector('[data-odometer-d]');
+    const hEl = document.querySelector('[data-odometer-h]');
+    if (yrEl) yrEl.textContent = String(years);
+    if (dEl) dEl.textContent = String(days).padStart(3, '0');
+    if (hEl) {
+      const next = String(hours).padStart(2, '0');
+      if (hEl.textContent !== next) {
+        hEl.classList.add('rolling');
+        setTimeout(() => {
+          hEl.textContent = next;
+          hEl.classList.remove('rolling');
+        }, 180);
+      }
+    }
+  };
+
+  const initVisitorGauge = async () => {
+    const valueEl = document.getElementById('gauge-visitor');
+    const outlineEl = document.getElementById('visitor-geo-outline');
+    const sweepEl = document.getElementById('visitor-radar-sweep');
+    const pinEl = document.getElementById('visitor-pin');
+    try {
+      const geo = await fetch('https://ipapi.co/json/').then((r) => r.json());
+      const city = geo.city || 'Welcome';
+      const region = geo.region_code || '';
+      valueEl && (valueEl.textContent = region ? `${city}, ${region}` : city);
+      if (outlineEl) {
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', 'M4,14 L8,6 L18,4 L30,7 L32,14 L28,21 L16,24 L7,22 Z');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', 'var(--text-tertiary)');
+        path.setAttribute('stroke-width', '0.75');
+        path.setAttribute('opacity', '0.5');
+        outlineEl.appendChild(path);
+      }
+      sweepEl?.animate([{ transform: 'rotate(0deg)', opacity: 0.6 }, { transform: 'rotate(360deg)', opacity: 0 }], { duration: 1500, easing: 'ease-out', fill: 'forwards' });
+      if (pinEl && geo.latitude && geo.longitude) {
+        setTimeout(() => {
+          pinEl.setAttribute('cx', String(18 + (geo.longitude % 8)));
+          pinEl.setAttribute('cy', String(14 - (geo.latitude % 6)));
+          pinEl.setAttribute('opacity', '1');
+        }, 1500);
+      }
+    } catch {
+      valueEl && (valueEl.textContent = 'Welcome');
+    }
+  };
+
+  const initFeedsConstellation = () => {
+    const gaugeEl = document.querySelector('[data-gauge="feeds"]');
+    const valueEl = document.getElementById('gauge-feeds-value');
+    const connectionsEl = document.getElementById('feeds-connections');
+    if (!(gaugeEl instanceof HTMLElement) || !(connectionsEl instanceof SVGGElement)) return;
+    const activeFeeds = (gaugeEl.dataset.activeFeeds || '').split(',').filter(Boolean);
+    const dots = document.querySelectorAll('.feed-dot');
+    const positions = {};
+    dots.forEach((dot) => {
+      const feedName = dot.dataset.feed;
+      positions[feedName] = { x: Number(dot.getAttribute('cx')), y: Number(dot.getAttribute('cy')) };
+      if (activeFeeds.includes(feedName)) dot.classList.add('feed-dot--active');
+    });
+    for (let i = 0; i < activeFeeds.length; i++) {
+      for (let j = i + 1; j < activeFeeds.length; j++) {
+        const a = positions[activeFeeds[i]];
+        const b = positions[activeFeeds[j]];
+        if (!a || !b) continue;
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', a.x); line.setAttribute('y1', a.y); line.setAttribute('x2', b.x); line.setAttribute('y2', b.y);
+        connectionsEl.appendChild(line);
+      }
+    }
+    if (valueEl) valueEl.textContent = `${activeFeeds.length} of 6 connected`;
+  };
+
+  const initFootprintViz = () => {
+    const block = document.getElementById('footprint-block');
+    const compressed = document.getElementById('footprint-compressed');
+    if (!block || !compressed) return;
+    block.animate([{ width: 28, opacity: 0.15 }, { width: 3, opacity: 0.08 }], { duration: 1000, easing: 'ease-in-out', fill: 'forwards', delay: 500 });
+    setTimeout(() => compressed.setAttribute('opacity', '0.6'), 1500);
+  };
+
+  const initActivityViz = () => {
+    const dotsEl = document.getElementById('activity-dots');
+    const gaugeEl = document.querySelector('[data-gauge="activity"]');
+    const valueEl = document.getElementById('gauge-activity-value');
+    if (!(dotsEl instanceof SVGGElement) || !(gaugeEl instanceof HTMLElement)) return;
+    const commitCount = parseInt(gaugeEl.dataset.commits || '0', 10);
+    for (let i = 0; i < Math.min(commitCount, 7); i++) {
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', String(4 + i * 5));
+      circle.setAttribute('cy', '6');
+      circle.setAttribute('r', '2');
+      circle.setAttribute('fill', 'var(--accent-primary)');
+      dotsEl.appendChild(circle);
+    }
+    if (valueEl) valueEl.textContent = commitCount > 0 ? `${commitCount} commits this week` : 'quiet this week';
+  };
+
+  const initSiteCubeViz = () => {
+    const canvas = document.getElementById('site-cube-canvas');
+    if (!(canvas instanceof HTMLCanvasElement)) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let raf = null;
+    let angle = 0;
+    const draw = () => {
+      ctx.clearRect(0, 0, 32, 32);
+      ctx.strokeStyle = 'rgba(140,150,170,.5)';
+      ctx.strokeRect(8 + Math.sin(angle) * 2, 8, 14, 14);
+      ctx.strokeRect(10, 10 + Math.cos(angle) * 2, 14, 14);
+      ctx.fillStyle = 'var(--accent-primary)';
+      ctx.beginPath(); ctx.arc(16 + Math.sin(angle) * 6, 16 + Math.cos(angle) * 4, 1.5, 0, Math.PI * 2); ctx.fill();
+      angle += 0.02;
+      raf = requestAnimationFrame(draw);
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) draw();
+      else if (raf) cancelAnimationFrame(raf);
+    });
+    observer.observe(canvas);
+  };
 
   showGauge(0);
   startRotation();
-  if (gaugeSlot) {
-    gaugeSlot.addEventListener('mouseenter', stopRotation);
-    gaugeSlot.addEventListener('mouseleave', startRotation);
-  }
-
-  updateLive();
-  updateCacheAge();
-  loadGeoAndWeather();
-  loadCommits();
-  setInterval(updateLive, 1000);
-  setInterval(updateCacheAge, 60 * 1000);
+  updateUpdatedGauge();
+  updateAliveGauge();
+  initVisitorGauge();
+  initFeedsConstellation();
+  initFootprintViz();
+  initActivityViz();
+  initSiteCubeViz();
+  setInterval(updateUpdatedGauge, 60000);
+  setInterval(updateAliveGauge, 60 * 1000);
 </script>
 
 <style>
   .skip-link { position:absolute; left:-999px; top:0; }
   .skip-link:focus-visible { left:1rem; top:1rem; background:var(--surface-primary); padding:.5rem .75rem; z-index:60; }
   .site-header { position: sticky; top:0; z-index:50; backdrop-filter: blur(8px); background: color-mix(in srgb, var(--surface-primary) 90%, transparent); isolation:isolate; border-bottom:1px solid var(--border); }
-  .site-header.scrolled { border-bottom-color: var(--border); }
   .header-inner { position:relative; z-index:2; display:flex; align-items:center; width:100%; min-height:56px; padding-inline:var(--content-padding); gap:1.5rem; }
   .logotype { flex-shrink:0; font-family:'IBM Plex Mono',monospace; font-weight:700; color:var(--text-primary); text-decoration:none; display:inline-flex; align-items:center; font-size:1.25rem; letter-spacing:.15em; text-transform:uppercase; }
-  .logotype__cursor { margin-left:.15rem; }
   .desktop-nav{display:none;flex-shrink:0;} .desktop-nav ul{list-style:none;display:flex;gap:1.1rem;padding:0;margin:0;align-items:center;}
   .desktop-nav a, .nav__link{font-family:'IBM Plex Mono',monospace;font-size:.75rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);text-decoration:none;padding:.35rem 0;border-bottom:2px solid transparent;display:inline-flex;align-items:center;height:100%;}
-  .desktop-nav a.active,.desktop-nav a:hover,.nav__link.active,.nav__link:hover{color:var(--text-primary);} .desktop-nav a.active,.nav__link.active{border-bottom-color:var(--accent-primary);} 
+  .desktop-nav a.active,.desktop-nav a:hover,.nav__link.active,.nav__link:hover{color:var(--text-primary);} .desktop-nav a.active,.nav__link.active{border-bottom-color:var(--accent-primary);}
   .nav__item--dropdown { position: relative; display:flex; align-items:center; }
-  .nav__flyout {
-    position: absolute;
-    top: calc(100% + 2px);
-    left: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    min-width: max-content;
-    background: var(--surface-primary);
-    border: 1px solid var(--border);
-    padding: 2px 0;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-2px);
-    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
-    z-index: 100;
-  }
-  .nav__item--dropdown:hover .nav__flyout,
-  .nav__item--dropdown:focus-within .nav__flyout {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-  }
-  .nav__flyout-link {
-    display: block;
-    padding: 4px 8px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    text-decoration: none;
-    transition: color 0.1s ease, background 0.1s ease;
-    white-space: nowrap;
-  }
-  .nav__flyout-link:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.03); }
-  [data-theme="light"] .nav__flyout-link:hover,
-  .light .nav__flyout-link:hover { background: rgba(0, 0, 0, 0.03); }
+  .nav__flyout { position:absolute; top:calc(100% + 2px); left:0; display:flex; flex-direction:column; background:var(--surface-primary); border:1px solid var(--border); opacity:0; visibility:hidden; }
+  .nav__item--dropdown:hover .nav__flyout,.nav__item--dropdown:focus-within .nav__flyout{opacity:1;visibility:visible;}
+  .nav__flyout-link { padding:4px 8px; font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; color:var(--text-secondary); text-decoration:none; }
 
   .header__instruments {display:flex;align-items:center;gap:12px;margin-left:auto;min-width:0;}
-  .header__gauge-slot {
-    position: relative;
-    min-width: 240px;
-    width: auto;
-    height: 38px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    margin-left: auto;
-    margin-right: 12px;
-    overflow: visible;
-    flex-shrink: 0;
-  }
-  .header__gauge {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 4px 12px;
-    border-radius: 3px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    opacity: 0;
-    transition: opacity 0.5s ease;
-    pointer-events: none;
-    max-width: none;
-    white-space: nowrap;
-    overflow: visible;
-  }
-  .header__gauge.active {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .header__gauge-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 8px;
-    font-weight: 400;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--text-tertiary);
-    line-height: 1;
-    opacity: 0.6;
-  }
-  .header__gauge-value {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.03em;
-    color: var(--text-secondary);
-    line-height: 1;
-    white-space: nowrap;
-  }
-  .header__gauge-value--live {
-    color: var(--text-secondary);
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-  }
-  .header__gauge-unit {
-    font-size: 7px;
-    color: var(--text-tertiary);
-    opacity: 0.5;
-    margin-left: 2px;
-  }
-  .gauge-icon--deploy {
-    display:inline-block;
-    width:12px;
-    height:12px;
-    margin-right:4px;
-    opacity:.65;
-    font-size:11px;
-    line-height:1;
-  }
-  .header__gauge--deploy.active .gauge-icon--deploy { animation: icon-spin 1s ease-out 1; }
-  .header__gauge--deploy.fresh.active .gauge-icon--deploy,
-  .header__gauge--deploy.fresh.active .header__gauge-value {
-    color: rgba(255, 255, 255, 0.95);
-    text-shadow: 0 0 8px rgba(255, 255, 255, 0.25);
-    animation: deploy-fresh-glow 0.9s ease-out 1;
-  }
-  @keyframes icon-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-  @keyframes deploy-fresh-glow { 0% { opacity: .7; } 100% { opacity: 1; } }
-  .gauge-icon--live {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #ef4444;
-    box-shadow: 0 0 4px rgba(239, 68, 68, 0.6);
-    animation: live-pulse 1.5s ease-in-out infinite;
-    margin-right: 6px;
-    flex-shrink: 0;
-  }
-  @keyframes live-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.85); }
-  }
+  .header__gauge-slot { position:relative; min-width:360px; height:38px; display:flex; align-items:center; justify-content:flex-end; margin-right:12px; overflow:visible; border:none; background:none; box-shadow:none; padding:0; border-radius:0; }
+  .header__gauge { position:absolute; inset:0; display:flex; align-items:center; gap:8px; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .4s ease; }
+  .header__gauge.active { opacity:1; pointer-events:auto; }
+  .header__gauge-viz{flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .header__gauge-text{display:flex;align-items:baseline;gap:6px;}
+  .header__gauge-label{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:400;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.1em;}
+  .header__gauge-value{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;color:var(--text-primary);text-transform:none;letter-spacing:.02em;}
 
-  .header__gauge-signal-geo {
-    width: 18px;
-    height: 14px;
-    flex-shrink: 0;
-    opacity: 0.6;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 8px;
-    color: var(--text-tertiary);
-  }
-  .header__gauge-signal-geo svg { width: 100%; height: 100%; fill: none; stroke: var(--text-tertiary); stroke-width: 1; }
-  .gauge-icon--signal { font-size: 12px; opacity: .75; margin-right: 2px; }
-  .header__gauge--signal.active .header__gauge-value {
-    animation: signal-type 0.8s steps(20) 1;
-    overflow: hidden;
-    white-space: nowrap;
-  }
-  @keyframes signal-type {
-    from { max-width: 0; }
-    to { max-width: 300px; }
-  }
+  .gauge-viz--odometer{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums;}
+  .odometer-unit{font-size:9px;color:var(--text-tertiary);margin:0 2px;}
+  .odometer-digit--ticking.rolling{transform:translateY(-2px);opacity:.5;transition:all .2s ease;}
+  .feed-dot{fill:none;stroke:var(--text-tertiary);stroke-width:.75;opacity:.3}
+  .feed-dot--active{fill:var(--accent-primary);stroke:var(--accent-primary);opacity:1}
+  #feeds-connections line{stroke:var(--accent-primary);stroke-width:.5;opacity:.3}
+  .gauge-viz--stack{display:flex;align-items:center;gap:6px}
 
-  .header__gauge-weather-icon { font-size: 16px; line-height: 1; display:inline-block; }
-  .header__gauge--weather .gauge-icon--sunny { animation: sun-rotate 8s linear infinite; }
-  .header__gauge--weather .gauge-icon--cloudy { animation: cloud-drift 4s ease-in-out infinite; }
-  .header__gauge--weather .gauge-icon--rainy { animation: rain-bounce 1.8s ease-in-out infinite; }
-  .header__gauge--weather .gauge-icon--snowy { animation: cloud-drift 5s ease-in-out infinite; }
-  @keyframes sun-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-  @keyframes cloud-drift { 0%,100% { transform: translateX(0); } 50% { transform: translateX(3px); } }
-  @keyframes rain-bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(1px); } }
-  .header__gauge-weather-cond { font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 0.08em; color: var(--text-tertiary); text-transform: uppercase; }
-  .header__gauge--weather.sunny .header__gauge-weather-icon,
-  .header__gauge--weather.cloudy .header__gauge-weather-icon,
-  .header__gauge--weather.rainy .header__gauge-weather-icon,
-  .header__gauge--weather.snowy .header__gauge-weather-icon { color: rgba(255, 255, 255, 0.75); }
+  .header__clock { display:none; }
+  .header__utilities { display:flex; align-items:center; gap:8px; }
+  .cmd-trigger{display:none;} .menu-trigger{display:inline-flex;flex-direction:column;gap:3px;background:none;border:0;color:inherit;padding:4px;}
+  .menu-trigger span{display:block;width:16px;height:1px;background:currentColor;}
+  .mobile-overlay{display:none;}
 
-  .header__gauge-bar { width: 24px; height: 3px; border-radius: 1.5px; background: rgba(255,255,255,.08); overflow: hidden; }
-  .gauge-icon--build { font-size: 10px; opacity: .7; }
-  .header__gauge-bar-fill { display:block; height:100%; border-radius:1.5px; background:rgba(255, 255, 255, 0.3); opacity:1; width:0; }
-  .header__gauge--build.active .header__gauge-bar-fill { animation: bar-fill .5s ease-out .2s forwards; }
-  @keyframes bar-fill { to { width: var(--bar-target, 65%); } }
-  .header__gauge-dots {
-    display: flex;
-    gap: 3px;
-    align-items: center;
-  }
-  .header__gauge-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .header__gauge-dot--active {
-    background: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
-  }
-  .header__gauge-dot--active:nth-child(1) { animation: dot-pulse 3s ease-in-out 0s infinite; }
-  .header__gauge-dot--active:nth-child(2) { animation: dot-pulse 3s ease-in-out .3s infinite; }
-  .header__gauge-dot--active:nth-child(3) { animation: dot-pulse 3s ease-in-out .6s infinite; }
-  .header__gauge-dot--active:nth-child(4) { animation: dot-pulse 3s ease-in-out .9s infinite; }
-  .header__gauge-dot--active:nth-child(5) { animation: dot-pulse 3s ease-in-out 1.2s infinite; }
-  .header__gauge-dot--active:nth-child(6) { animation: dot-pulse 3s ease-in-out 1.5s infinite; }
-  .header__gauge-dot--inactive {
-    background: rgba(255, 255, 255, 0.12);
-  }
-  @keyframes dot-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
+  @media (min-width: 880px){ .desktop-nav{display:block;} .header__clock{display:block;} .menu-trigger{display:none;} .cmd-trigger{display:inline-flex;background:none;border:1px solid var(--border);padding:2px 6px;color:var(--text-secondary);} }
+  @media (max-width: 879px){ .header__gauge-slot{display:none;} }
 
-  .header__gauge-meter { width: 32px; height:4px; border-radius:2px; background:rgba(255,255,255,.08); overflow:hidden; }
-  .header__gauge-meter-fill { display:block; height:100%; border-radius:2px; width:0; background: rgba(255, 255, 255, 0.3); }
-  .header__gauge--weight.active .header__gauge-meter-fill { animation: weight-fill .5s ease-out forwards; }
-  @keyframes weight-fill { to { width: var(--weight-target, 50%); } }
-  .header__gauge--weight.lean .header__gauge-meter-fill { background:rgba(255, 255, 255, 0.3); }
-  .header__gauge--weight.moderate .header__gauge-meter-fill { background:rgba(251, 191, 36, 0.7); }
-  .header__gauge--weight.heavy .header__gauge-meter-fill { background:rgba(239, 68, 68, 0.65); }
-
-  .header__gauge-cache-indicator { width:7px;height:7px;border-radius:50%;display:inline-block;opacity:.2; }
-  .header__gauge--cache.fresh .header__gauge-cache-indicator { background:rgba(255, 255, 255, 0.85); box-shadow: 0 0 3px rgba(255, 255, 255, 0.3); }
-  .header__gauge--cache.aging .header__gauge-cache-indicator { background:rgba(251, 191, 36, 0.7); }
-  .header__gauge--cache.stale .header__gauge-cache-indicator { background:rgba(239, 68, 68, 0.6); }
-  .header__gauge--cache.active .header__gauge-cache-indicator { animation: cache-dot-in .35s ease-out 1; opacity:1; }
-  @keyframes cache-dot-in { from { transform: scale(.6); opacity:0; } to { transform: scale(1); opacity:1; } }
-  .header__gauge--cache.stale .header__gauge-value { opacity:.6; }
-
-  .header__gauge-sparkline { display:flex; align-items:flex-end; gap:1px; height:12px; }
-  .header__gauge-spark-col { width:3px; border-radius:1px 1px 0 0; background:rgba(255, 255, 255, 0.25); opacity:1; min-height:1px; height:0; }
-  .header__gauge--commits.active .header__gauge-spark-col { animation: spark-grow .4s ease-out forwards; }
-  .header__gauge--commits.active .header__gauge-spark-col:nth-child(1) { animation-delay: 0s; }
-  .header__gauge--commits.active .header__gauge-spark-col:nth-child(2) { animation-delay: .05s; }
-  .header__gauge--commits.active .header__gauge-spark-col:nth-child(3) { animation-delay: .1s; }
-  .header__gauge--commits.active .header__gauge-spark-col:nth-child(4) { animation-delay: .15s; }
-  .header__gauge--commits.active .header__gauge-spark-col:nth-child(5) { animation-delay: .2s; }
-  .header__gauge--commits.active .header__gauge-spark-col:nth-child(6) { animation-delay: .25s; }
-  .header__gauge--commits.active .header__gauge-spark-col:nth-child(7) { animation-delay: .3s; }
-  @keyframes spark-grow { to { height: var(--spark-height); } }
-  .header__gauge-spark-col.today { background: rgba(255, 255, 255, 0.6); }
-
-  .header__gauge-pills { display:flex; gap:3px; align-items:center; }
-  .header__gauge-pill {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:7px;
-    letter-spacing:.06em;
-    color:rgba(255, 255, 255, 0.9);
-    background:rgba(255,255,255,.06);
-    border:1px solid rgba(255,255,255,.12);
-    border-radius:2px;
-    padding:1px 4px;
-    line-height:1.2;
-  }
-  .header__gauge-pill:nth-child(1),
-  .header__gauge-pill:nth-child(2),
-  .header__gauge-pill:nth-child(3) { background: rgba(255,255,255,.06); }
-  .header__gauge--stack.active .header__gauge-pill { animation: stack-pill-in .4s ease-out both; }
-  .header__gauge--stack.active .header__gauge-pill:nth-child(2) { animation-delay: .06s; }
-  .header__gauge--stack.active .header__gauge-pill:nth-child(3) { animation-delay: .12s; }
-  @keyframes stack-pill-in { from { transform: translateX(6px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-  .header__clock{display:flex;justify-content:center;align-items:center;}
-  .header__utilities{flex-shrink:0;display:flex;align-items:center;gap:.5rem;}
-  .cmd-trigger,.menu-trigger{border:1px solid var(--border);background:var(--surface-primary);color:var(--text-secondary);border-radius:999px;padding:.4rem .6rem;}
-  .cmd-trigger{display:none;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;}
-  .menu-trigger{border-radius:.5rem;} .menu-trigger span{display:block;width:1rem;height:2px;margin:2px 0;background:var(--text-secondary);} 
-  .mobile-overlay{position:fixed;inset:4.25rem 0 0 0;background:var(--surface-primary);padding:2rem 1.5rem 1.25rem;display:flex;flex-direction:column;justify-content:space-between;border-top:1px solid var(--border);} 
-  .mobile-nav ul{list-style:none;margin:0;padding:0;display:grid;gap:1rem;} .mobile-nav a{font-family:'IBM Plex Mono',monospace;font-size:1rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-primary);text-decoration:none;}
-  .mobile-kbd-hint{color:var(--text-secondary);} .mobile-time{font-family:'IBM Plex Mono',monospace;color:var(--text-tertiary);font-size:.85rem;}
-
-  [data-theme="light"] .header__gauge,
-  .light .header__gauge {
-    background: rgba(0, 0, 0, 0.02);
-    border-color: rgba(0, 0, 0, 0.05);
-  }
-  [data-theme="light"] .header__gauge-bar,
-  [data-theme="light"] .header__gauge-meter,
-  .light .header__gauge-bar,
-  .light .header__gauge-meter { background: rgba(0,0,0,.08); }
-  [data-theme="light"] .header__gauge-dot--inactive,
-  .light .header__gauge-dot--inactive {
-    background: rgba(0, 0, 0, 0.15);
-  }
-    [data-theme="light"] .header__gauge-pill,
-  .light .header__gauge-pill { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.06); }
-
-  @media (width >= 52rem) {
-    .desktop-nav, .cmd-trigger { display:flex; }
-    .menu-trigger, .mobile-overlay { display:none; }
-    .logotype { font-size:1.5rem; }
-  }
-  @media (max-width: 768px) {
-    .header__gauge-slot { display:none; }
-  }
   @media (prefers-reduced-motion: reduce) {
-    .header__gauge { transition: none; }
-    .gauge-icon--live,
-    .header__gauge-weather-icon,
-    .header__gauge--signal.active .header__gauge-value,
-    .header__gauge--build.active .header__gauge-bar-fill,
-    .header__gauge--weight.active .header__gauge-meter-fill,
-    .header__gauge--cache.active .header__gauge-cache-indicator,
-    .header__gauge--commits.active .header__gauge-spark-col,
-    .header__gauge--stack.active .header__gauge-pill,
-    .header__gauge-dot--active,
-    .header__gauge--deploy.active .gauge-icon--deploy { animation: none; }
+    .gauge-viz canvas, .gauge-viz svg animate, .gauge-viz svg [style*='animation'] { animation: none !important; transition: none !important; }
+    #visitor-pin { opacity: 1; }
+    #footprint-block { width: 3; }
   }
 </style>
