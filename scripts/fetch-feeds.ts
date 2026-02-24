@@ -23,6 +23,10 @@ interface LetterboxdCacheEntry {
   title: string;
   year: number | null;
   rating: number | null;
+  watchedAt: string;
+  source: 'letterboxd';
+  type: 'film';
+  url: string;
 }
 
 function textBetween(xml: string, tagName: string): string | null {
@@ -50,22 +54,138 @@ async function fetchLetterboxd(): Promise<LetterboxdCacheEntry[]> {
     }
 
     const xml = await response.text();
-    const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/i);
-    if (!itemMatch) return [];
+    const itemMatches = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)].slice(0, 12);
+    if (!itemMatches.length) return [];
 
-    const itemXml = itemMatch[1];
-    const filmTitle = textBetween(itemXml, 'letterboxd:filmTitle');
-    const filmYear = textBetween(itemXml, 'letterboxd:filmYear');
-    const ratingRaw = textBetween(itemXml, 'letterboxd:memberRating');
-    const fallbackTitle = textBetween(itemXml, 'title');
+    return itemMatches.map((match) => {
+      const itemXml = match[1];
+      const filmTitle = textBetween(itemXml, 'letterboxd:filmTitle');
+      const filmYear = textBetween(itemXml, 'letterboxd:filmYear');
+      const ratingRaw = textBetween(itemXml, 'letterboxd:memberRating');
+      const fallbackTitle = textBetween(itemXml, 'title');
+      const pubDate = textBetween(itemXml, 'pubDate');
+      const url = textBetween(itemXml, 'link') ?? `https://letterboxd.com/${username}/films/`;
 
-    const title = filmTitle ?? fallbackTitle?.replace(/,\s*\d{4}$/, '').trim() ?? 'Unknown';
-    const year = filmYear ? parseInt(filmYear, 10) : null;
-    const rating = ratingRaw ? parseFloat(ratingRaw) : null;
+      const title = filmTitle ?? fallbackTitle?.replace(/,\s*\d{4}$/, '').trim() ?? 'Unknown';
+      const year = filmYear ? parseInt(filmYear, 10) : null;
+      const rating = ratingRaw ? parseFloat(ratingRaw) : null;
 
-    return [{ title, year: Number.isFinite(year) ? year : null, rating: Number.isFinite(rating) ? rating : null }];
+      return {
+        title,
+        year: Number.isFinite(year) ? year : null,
+        rating: Number.isFinite(rating) ? rating : null,
+        watchedAt: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
+        source: 'letterboxd' as const,
+        type: 'film' as const,
+        url,
+      };
+    });
   } catch (error) {
     console.error('[feeds] Letterboxd fetch failed:', error instanceof Error ? error.message : error);
+    return [];
+  }
+}
+
+// ── Trakt (API) ───────────────────────────────────────────────────
+
+interface TraktMovieHistoryItem {
+  watched_at: string;
+  movie?: {
+    title?: string;
+    year?: number | null;
+    ids?: { slug?: string };
+  };
+}
+
+interface TraktEpisodeHistoryItem {
+  watched_at: string;
+  show?: {
+    title?: string;
+    year?: number | null;
+    ids?: { slug?: string };
+  };
+  episode?: {
+    season?: number;
+    number?: number;
+    title?: string;
+  };
+}
+
+interface TraktCacheEntry {
+  title: string;
+  year: number | null;
+  watchedAt: string;
+  source: 'trakt';
+  type: 'film' | 'tv';
+  season?: number;
+  episode?: number;
+  episodeTitle?: string;
+  url: string;
+}
+
+async function fetchTraktHistory<T>(path: string, clientId: string): Promise<T[]> {
+  const response = await fetch(`https://api.trakt.tv${path}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'trakt-api-version': '2',
+      'trakt-api-key': clientId,
+    },
+    signal: withTimeout(TIMEOUT_MS),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Trakt ${path} returned ${response.status}`);
+  }
+
+  const json = (await response.json()) as T[];
+  return Array.isArray(json) ? json : [];
+}
+
+async function fetchTrakt(): Promise<TraktCacheEntry[]> {
+  const username = process.env.TRAKT_USERNAME ?? process.env.PUBLIC_TRAKT_USERNAME;
+  const clientId = process.env.TRAKT_CLIENT_ID ?? process.env.PUBLIC_TRAKT_CLIENT_ID;
+
+  if (!username || !clientId) {
+    console.log('[feeds] Skipping Trakt: TRAKT_USERNAME/PUBLIC_TRAKT_USERNAME or TRAKT_CLIENT_ID/PUBLIC_TRAKT_CLIENT_ID not set');
+    return [];
+  }
+
+  try {
+    const [movies, episodes] = await Promise.all([
+      fetchTraktHistory<TraktMovieHistoryItem>(`/users/${username}/history/movies?limit=8`, clientId),
+      fetchTraktHistory<TraktEpisodeHistoryItem>(`/users/${username}/history/episodes?limit=8`, clientId),
+    ]);
+
+    const movieItems: TraktCacheEntry[] = movies
+      .filter((item) => item.movie?.title)
+      .map((item) => ({
+        title: item.movie?.title ?? 'Unknown Movie',
+        year: item.movie?.year ?? null,
+        watchedAt: new Date(item.watched_at).toISOString(),
+        source: 'trakt' as const,
+        type: 'film' as const,
+        url: item.movie?.ids?.slug ? `https://trakt.tv/movies/${item.movie.ids.slug}` : 'https://trakt.tv/',
+      }));
+
+    const episodeItems: TraktCacheEntry[] = episodes
+      .filter((item) => item.show?.title)
+      .map((item) => ({
+        title: item.show?.title ?? 'Unknown Show',
+        year: item.show?.year ?? null,
+        watchedAt: new Date(item.watched_at).toISOString(),
+        source: 'trakt' as const,
+        type: 'tv' as const,
+        season: item.episode?.season,
+        episode: item.episode?.number,
+        episodeTitle: item.episode?.title,
+        url: item.show?.ids?.slug ? `https://trakt.tv/shows/${item.show.ids.slug}` : 'https://trakt.tv/',
+      }));
+
+    return [...movieItems, ...episodeItems]
+      .sort((a, b) => new Date(b.watchedAt).getTime() - new Date(a.watchedAt).getTime())
+      .slice(0, 12);
+  } catch (error) {
+    console.error('[feeds] Trakt fetch failed:', error instanceof Error ? error.message : error);
     return [];
   }
 }
@@ -201,18 +321,48 @@ export async function main() {
 
   console.log('[feeds] Fetching external feeds...');
 
-  const [letterboxd, goodreads, lastfm] = await Promise.allSettled([
+  const [letterboxd, trakt, goodreads, lastfm] = await Promise.allSettled([
     fetchLetterboxd(),
+    fetchTrakt(),
     fetchGoodreads(),
     fetchLastfm(),
   ]);
 
+  const letterboxdItems = letterboxd.status === 'fulfilled' ? letterboxd.value : [];
+  const traktItems = trakt.status === 'fulfilled' ? trakt.value : [];
   const lastfmItems = lastfm.status === 'fulfilled' ? lastfm.value : [];
+  const watchingItems = [...letterboxdItems, ...traktItems]
+    .sort((a, b) => new Date(b.watchedAt).getTime() - new Date(a.watchedAt).getTime())
+    .map((item) => ({
+      ...item,
+      watchedDate: item.watchedAt,
+      ...(item.type === 'tv' && item.season != null && item.episode != null
+        ? { displayTitle: `${item.title} · S${String(item.season).padStart(2, '0')}E${String(item.episode).padStart(2, '0')}` }
+        : {}),
+    }))
+    .slice(0, 20);
+
+  const currentYear = new Date().getUTCFullYear();
+  const thisYearItems = watchingItems.filter((item) => new Date(item.watchedAt).getUTCFullYear() === currentYear);
+  const letterboxdRatings = letterboxdItems.map((item) => item.rating).filter((rating): rating is number => typeof rating === 'number');
+  const avgRating = letterboxdRatings.length
+    ? Number((letterboxdRatings.reduce((sum, rating) => sum + rating, 0) / letterboxdRatings.length).toFixed(2))
+    : null;
 
   const payload = {
     updatedAt: new Date().toISOString(),
+    watching: {
+      lastUpdated: new Date().toISOString(),
+      recentItems: watchingItems,
+      stats: {
+        totalFilms: thisYearItems.filter((item) => item.type === 'film').length,
+        totalEpisodes: thisYearItems.filter((item) => item.type === 'tv').length,
+        avgRating,
+      },
+    },
     items: {
-      letterboxd: letterboxd.status === 'fulfilled' ? letterboxd.value : [],
+      letterboxd: letterboxdItems,
+      trakt: traktItems,
       goodreads: goodreads.status === 'fulfilled' ? goodreads.value : [],
       lastfm: lastfmItems,
       spotify: lastfmItems,
@@ -222,8 +372,10 @@ export async function main() {
 
   const counts = [
     `letterboxd: ${payload.items.letterboxd.length}`,
+    `trakt: ${payload.items.trakt.length}`,
     `goodreads: ${payload.items.goodreads.length}`,
     `lastfm/spotify: ${payload.items.spotify.length}`,
+    `watching(combined): ${payload.watching.recentItems.length}`,
   ].join(', ');
   console.log(`[feeds] Done (${counts})`);
 

@@ -27,6 +27,13 @@ jobs:
         run: npm ci
       - name: Fetch external feeds
         run: npm run feeds:fetch
+        env:
+          PUBLIC_LASTFM_API_KEY: ${{ secrets.PUBLIC_LASTFM_API_KEY }}
+          PUBLIC_LASTFM_USERNAME: ${{ secrets.PUBLIC_LASTFM_USERNAME }}
+          PUBLIC_LETTERBOXD_USERNAME: ${{ secrets.PUBLIC_LETTERBOXD_USERNAME }}
+          PUBLIC_GOODREADS_USER_ID: ${{ secrets.PUBLIC_GOODREADS_USER_ID }}
+          TRAKT_USERNAME: ${{ secrets.TRAKT_USERNAME }}
+          TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
       - name: Fetch Oura Ring data
         continue-on-error: true
         run: npm run oura:fetch

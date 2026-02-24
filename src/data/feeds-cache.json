@@ -1,7 +1,17 @@
 {
-  "updatedAt": "2026-02-23T18:53:37.418Z",
+  "updatedAt": "2026-02-23T23:23:45.780Z",
+  "watching": {
+    "lastUpdated": "2026-02-23T23:23:45.781Z",
+    "recentItems": [],
+    "stats": {
+      "totalFilms": 0,
+      "totalEpisodes": 0,
+      "avgRating": null
+    }
+  },
   "items": {
     "letterboxd": [],
+    "trakt": [],
     "goodreads": [],
     "lastfm": [],
     "spotify": [],

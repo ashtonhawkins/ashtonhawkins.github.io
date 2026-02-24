@@ -3,7 +3,39 @@ import SectionHeader from '@components/ui/SectionHeader.astro';
 import StatusChip from '@components/ui/StatusChip.astro';
 import feeds from '@data/feeds-cache.json';
 
-const watching = (feeds as any)?.items?.letterboxd?.[0] ?? null;
+type WatchItem = {
+  title?: string;
+  displayTitle?: string;
+  year?: number | null;
+  rating?: number | null;
+  source?: 'letterboxd' | 'trakt';
+  watchedAt?: string;
+  watchedDate?: string;
+  type?: 'film' | 'tv';
+  season?: number;
+  episode?: number;
+};
+
+const recentWatchItems: WatchItem[] = [
+  ...(((feeds as any)?.watching?.recentItems ?? []) as WatchItem[]),
+  ...(((feeds as any)?.items?.letterboxd ?? []) as WatchItem[]),
+  ...(((feeds as any)?.items?.trakt ?? []) as WatchItem[])
+];
+
+const watching = recentWatchItems
+  .filter((item) => item?.title)
+  .sort((a, b) => {
+    const aTime = new Date(a.watchedAt ?? a.watchedDate ?? 0).getTime();
+    const bTime = new Date(b.watchedAt ?? b.watchedDate ?? 0).getTime();
+    return bTime - aTime;
+  })[0] ?? null;
+
+const watchingTitle = watching?.displayTitle
+  ?? (watching?.type === 'tv' && watching?.season != null && watching?.episode != null
+    ? `${watching.title} · S${String(watching.season).padStart(2, '0')}E${String(watching.episode).padStart(2, '0')}`
+    : watching?.title);
+
+const sourceLabel = watching?.source === 'trakt' ? 'VIA TRAKT' : watching?.source === 'letterboxd' ? 'VIA LETTERBOXD' : null;
 const reading = (feeds as any)?.items?.goodreads?.[0] ?? null;
 const listening = (feeds as any)?.items?.lastfm?.[0] ?? (feeds as any)?.items?.spotify?.[0] ?? null;
 ---
@@ -12,9 +44,10 @@ const listening = (feeds as any)?.items?.lastfm?.[0] ?? (feeds as any)?.items?.s
   <div class="media-feeds__grid">
     <article class="consumption-card">
       <StatusChip label="RECENTLY WATCHED" />
-      <h3 class="consumption-card__title">{watching?.title ?? 'No recent film cached'}</h3>
+      <h3 class="consumption-card__title">{watchingTitle ?? 'No recent watch cached'}</h3>
       <p class="consumption-card__subtitle">{watching?.year ?? '----'}</p>
       {watching?.rating && <small>★ {watching.rating}</small>}
+      {sourceLabel && <p class="consumption-card__source">{sourceLabel}</p>}
     </article>
     <article class="consumption-card">
       <StatusChip label={reading?.status === 'reading' ? 'CURRENTLY READING' : 'RECENTLY FINISHED'} />
@@ -35,4 +68,5 @@ const listening = (feeds as any)?.items?.lastfm?.[0] ?? (feeds as any)?.items?.s
 .consumption-card__title { font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; font-weight: 600; color: var(--text-primary); text-transform: none; margin:0; }
 .consumption-card__subtitle { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; margin:0; letter-spacing:.05em; }
 .consumption-card small{font:.75rem 'IBM Plex Mono',monospace;color:var(--accent-primary)}
+.consumption-card__source{margin:0;font:.62rem 'IBM Plex Mono',monospace;color:var(--text-tertiary);letter-spacing:.08em;text-transform:uppercase}
 </style>
