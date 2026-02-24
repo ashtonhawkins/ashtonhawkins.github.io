@@ -38,6 +38,7 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
     position: relative;
     overflow: hidden;
     border: 1px solid var(--border);
+    border-bottom: none;
     margin-top: 0;
     margin-bottom: 0;
     background: var(--surface-primary);
@@ -52,13 +53,13 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
 
   .nucleus-ticker {
     width: 100%;
-    height: 30px;
+    height: 36px;
     display: flex;
     align-items: center;
     gap: 0;
-    border-top: 1px solid var(--border);
-    margin-top: 4px;
-    padding-top: 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin-top: 6px;
+    padding: 0 16px;
     background: var(--surface-primary);
     overflow: hidden;
   }
@@ -102,10 +103,20 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
     align-items: center;
     gap: 0;
     white-space: nowrap;
-    animation: ticker-scroll 30s linear infinite;
   }
 
-  .nucleus-ticker:hover .nucleus-ticker__scroll-content { animation-play-state: paused; }
+  .nucleus-ticker__scroll-content.is-animated {
+    animation: ticker-scroll var(--scroll-duration, 34s) linear infinite;
+    width: max-content;
+  }
+
+  .nucleus-ticker__scroll-content .ticker-copy {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .nucleus-ticker:hover .nucleus-ticker__scroll-content,
+  .nucleus:hover + .nucleus-ticker .nucleus-ticker__scroll-content { animation-play-state: paused; }
 
   @keyframes ticker-scroll {
     0% { transform: translateX(0); }
@@ -121,57 +132,66 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
     font-size: 11px;
   }
 
-  .ticker-item--numeric .ticker-val {
+  .ticker-val {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 700;
     color: var(--text-primary);
+    letter-spacing: -0.01em;
   }
 
-  .ticker-item--numeric .ticker-unit {
+  .ticker-unit {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
+    font-size: 8px;
     font-weight: 400;
     color: var(--text-tertiary);
-    margin-left: 2px;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.1em;
+    margin-left: 2px;
+    opacity: 0.5;
+    vertical-align: baseline;
   }
 
+  .ticker-text,
   .ticker-item--text {
     font-family: 'IBM Plex Sans', sans-serif;
     font-style: italic;
+    font-size: 12px;
+    font-weight: 400;
     color: var(--text-secondary);
-    font-size: 11px;
-    text-transform: none;
   }
 
+  .ticker-label,
+  .ticker-item--label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 7px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    opacity: 0.45;
+    margin-right: 4px;
+  }
+
+  .ticker-chip,
   .ticker-item--chip {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 9px;
-    letter-spacing: 0.06em;
+    font-weight: 600;
+    letter-spacing: 0.04em;
     color: var(--text-secondary);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 3px;
-    padding: 2px 6px;
+    padding: 2px 7px;
     white-space: nowrap;
-    line-height: 1.2;
-  }
-
-  .ticker-item--label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 8px;
-    letter-spacing: 0.1em;
-    color: var(--text-tertiary);
-    text-transform: uppercase;
-    opacity: 0.6;
   }
 
   .ticker-sep {
     color: var(--text-tertiary);
-    opacity: 0.25;
-    margin: 0 10px;
-    font-size: 8px;
+    opacity: 0.15;
+    margin: 0 12px;
+    font-size: 6px;
+    vertical-align: middle;
   }
 
   .nucleus-ticker__scroll-content.entering .ticker-item {
@@ -229,17 +249,16 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
   .light .nucleus-ticker__arrow:hover { background: rgba(0, 0, 0, 0.03); }
 
   @media (max-width: 640px) {
-    .nucleus-ticker { height: 26px; }
+    .nucleus-ticker { height: 32px; }
     .nucleus-ticker__mode-label { padding: 0 8px; }
     .ticker-item { font-size: 10px; }
     .nucleus-ticker__arrow { padding: 0 6px; font-size: 12px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .nucleus-ticker__scroll-content {
+    .nucleus-ticker__scroll-content,
+    .nucleus-ticker__scroll-content.is-animated {
       animation: none;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
     }
 
     .nucleus-ticker__scroll-content.entering .ticker-item {
