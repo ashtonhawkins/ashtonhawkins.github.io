@@ -1,20 +1,53 @@
 {
-  "updatedAt": "2026-02-23T23:23:45.780Z",
+  "updatedAt": "2026-02-24T01:21:15.727Z",
   "watching": {
-    "lastUpdated": "2026-02-23T23:23:45.781Z",
-    "recentItems": [],
+    "lastUpdated": "2026-02-24T01:21:15.727Z",
+    "recentItems": [
+      {
+        "title": "The Omega Man",
+        "year": 1971,
+        "rating": 5,
+        "watchedAt": "2026-02-21T22:13:37.000Z",
+        "source": "letterboxd",
+        "type": "film",
+        "url": "https://letterboxd.com/drrobertneville/film/the-omega-man/",
+        "watchedDate": "2026-02-21T22:13:37.000Z"
+      }
+    ],
     "stats": {
-      "totalFilms": 0,
+      "totalFilms": 1,
       "totalEpisodes": 0,
-      "avgRating": null
+      "avgRating": 5
     }
   },
   "items": {
-    "letterboxd": [],
+    "letterboxd": [
+      {
+        "title": "The Omega Man",
+        "year": 1971,
+        "rating": 5,
+        "watchedAt": "2026-02-21T22:13:37.000Z",
+        "source": "letterboxd",
+        "type": "film",
+        "url": "https://letterboxd.com/drrobertneville/film/the-omega-man/"
+      }
+    ],
     "trakt": [],
     "goodreads": [],
-    "lastfm": [],
-    "spotify": [],
+    "lastfm": [
+      {
+        "name": "Heaven or Las Vegas",
+        "title": "Heaven or Las Vegas",
+        "artist": "Cocteau Twins"
+      }
+    ],
+    "spotify": [
+      {
+        "name": "Heaven or Las Vegas",
+        "title": "Heaven or Las Vegas",
+        "artist": "Cocteau Twins"
+      }
+    ],
     "x": []
   }
 }
