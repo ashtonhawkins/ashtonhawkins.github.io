@@ -53,13 +53,14 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
 
   .nucleus-ticker {
     width: 100%;
-    height: 36px;
+    min-height: 40px !important;
+    height: auto;
     display: flex;
     align-items: center;
     gap: 0;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     margin-top: 6px;
-    padding: 0 16px;
+    padding: 6px 16px !important;
     background: var(--surface-primary);
     overflow: hidden;
   }
@@ -132,66 +133,43 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
     font-size: 11px;
   }
 
-  .ticker-val {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text-primary);
-    letter-spacing: -0.01em;
+  .nucleus-ticker .ticker-val,
+  .nucleus-ticker .ticker-text {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: rgba(255, 255, 255, 0.95) !important;
+    font-family: 'IBM Plex Mono', monospace !important;
   }
 
-  .ticker-unit {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 8px;
-    font-weight: 400;
-    color: var(--text-tertiary);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-left: 2px;
-    opacity: 0.5;
-    vertical-align: baseline;
+  .nucleus-ticker .ticker-text {
+    font-family: 'IBM Plex Sans', sans-serif !important;
+    font-style: italic !important;
+    font-weight: 400 !important;
   }
 
-  .ticker-text,
-  .ticker-item--text {
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-style: italic;
-    font-size: 12px;
-    font-weight: 400;
-    color: var(--text-secondary);
+  .nucleus-ticker .ticker-label,
+  .nucleus-ticker .ticker-unit,
+  .nucleus-ticker .ticker-item--label {
+    font-size: 8px !important;
+    font-weight: 400 !important;
+    color: rgba(255, 255, 255, 0.3) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.12em !important;
   }
 
-  .ticker-label,
-  .ticker-item--label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 7px;
-    font-weight: 500;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--text-tertiary);
-    opacity: 0.45;
-    margin-right: 4px;
+  .nucleus-ticker .ticker-chip,
+  .nucleus-ticker .ticker-item--chip {
+    font-size: 9px !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 3px !important;
+    padding: 2px 6px !important;
+    color: rgba(255, 255, 255, 0.7) !important;
   }
 
-  .ticker-chip,
-  .ticker-item--chip {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    color: var(--text-secondary);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 3px;
-    padding: 2px 7px;
-    white-space: nowrap;
-  }
-
-  .ticker-sep {
-    color: var(--text-tertiary);
-    opacity: 0.15;
-    margin: 0 12px;
-    font-size: 6px;
-    vertical-align: middle;
+  .nucleus-ticker .ticker-sep {
+    opacity: 0.12 !important;
+    margin: 0 14px !important;
+    font-size: 6px !important;
   }
 
   .nucleus-ticker__scroll-content.entering .ticker-item {

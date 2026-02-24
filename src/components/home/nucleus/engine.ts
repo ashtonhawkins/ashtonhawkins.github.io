@@ -86,10 +86,10 @@ const escapeHtml = (value: unknown): string => String(value ?? '')
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#39;');
 
-const tickerLabelPrefix = (value: unknown): string => `<span class="ticker-item ticker-item--label">${escapeHtml(value)}</span>`;
-const tickerText = (value: unknown): string => `<span class="ticker-item ticker-item--text">${escapeHtml(value)}</span>`;
+const tickerLabelPrefix = (value: unknown): string => `<span class="ticker-item ticker-item--label ticker-label">${escapeHtml(value)}</span>`;
+const tickerText = (value: unknown): string => `<span class="ticker-item ticker-item--text ticker-text">${escapeHtml(value)}</span>`;
 const tickerNumber = (value: unknown, unit?: string): string => `<span class="ticker-item ticker-item--numeric"><span class="ticker-val">${escapeHtml(value)}</span>${unit ? `<span class="ticker-unit">${escapeHtml(unit)}</span>` : ''}</span>`;
-const tickerChip = (value: unknown): string => `<span class="ticker-item ticker-item--chip">${escapeHtml(value)}</span>`;
+const tickerChip = (value: unknown): string => `<span class="ticker-item ticker-item--chip ticker-chip">${escapeHtml(value)}</span>`;
 
 const subTickerItems = (slide: ActiveSlide): string[] => {
   const { module } = slide;
