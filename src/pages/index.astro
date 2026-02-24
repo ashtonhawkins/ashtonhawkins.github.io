@@ -8,56 +8,599 @@ import '@styles/coming-soon.css';
   description="Connection logged. Ashton Hawkins — digital infrastructure, growth systems, and platform operations."
   robots="noindex"
 >
-  <main class="cs-root" aria-label="Personal operating system">
-    <canvas id="noise-canvas" class="noise-canvas" aria-hidden="true"></canvas>
-
-    <section class="cs-viewport">
-      <div id="boot-sequence" class="cs-terminal" aria-live="polite"></div>
+  <main class="os-root">
+    <section class="os-viewport">
+      <div id="boot" class="os-terminal"></div>
     </section>
 
-    <section class="cs-query-wrap" id="query-shell">
-      <div id="query-output" class="cs-query-output" aria-live="polite"></div>
-      <label class="cs-query">
-        <span class="cs-query-label">QUERY //</span>
+    <footer class="os-query-bar">
+      <div id="query-log" class="os-query-log"></div>
+      <div class="os-query-prompt">
+        <span class="os-prompt-label">QUERY //</span>
         <input
           id="query-input"
-          class="cs-query-input"
           type="text"
           autocapitalize="off"
           autocomplete="off"
+          autocorrect="off"
           spellcheck="false"
           placeholder="ENTER COMMAND OR TYPE 'CATALOG' FOR DIRECTORY"
         />
-      </label>
-    </section>
+      </div>
+    </footer>
   </main>
 </Base>
 
-<script>
-  import { initNoiseShader } from '@components/animations/NoiseShader';
-  import { initBootSequence } from '@components/coming-soon/BootSequence';
-  import { initQueryInterface } from '@components/coming-soon/QueryInterface';
+<script is:inline>
+  (() => {
+    const bootEl = document.getElementById('boot');
+    const queryLogEl = document.getElementById('query-log');
+    const queryInput = document.getElementById('query-input');
+    if (!bootEl || !queryLogEl || !queryInput) return;
 
-  const canvas = document.querySelector<HTMLCanvasElement>('#noise-canvas');
-  const bootEl = document.querySelector<HTMLElement>('#boot-sequence');
-  const outputEl = document.querySelector<HTMLElement>('#query-output');
-  const shellEl = document.querySelector<HTMLElement>('#query-shell');
-  const inputEl = document.querySelector<HTMLInputElement>('#query-input');
+    const EPOCH_MS = Date.parse('2025-01-15T00:00:00Z');
+    const DIVIDER = '————————————————————————————————';
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const booted = sessionStorage.getItem('ah-booted') === '1';
 
-  if (canvas && bootEl && outputEl && shellEl && inputEl) {
-    initNoiseShader(canvas);
-    const isMobile = window.matchMedia('(max-width: 640px)').matches;
-    if (isMobile) inputEl.placeholder = "ENTER COMMAND OR 'CATALOG'";
+    if (window.matchMedia('(max-width: 640px)').matches) {
+      queryInput.placeholder = "ENTER COMMAND OR 'CATALOG'";
+    }
 
-    initBootSequence(bootEl).then((boot) => {
-      initQueryInterface({ output: outputEl, form: shellEl, input: inputEl }, boot);
+    const history = [];
+    let historyIndex = -1;
+    let subjectId = '';
+    let uptimeValueEl = null;
+    let uptimeInterval = null;
+    let detected = null;
 
-      document.querySelectorAll<HTMLElement>('[data-glitchable="1"]').forEach((line) => {
-        line.addEventListener('mouseenter', () => {
-          line.classList.add('glitch-hover');
-          window.setTimeout(() => line.classList.remove('glitch-hover'), 160);
+    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const rand = (min, max) => Math.floor(min + Math.random() * (max - min + 1));
+
+    const makeLine = (target, className = 'os-line') => {
+      const line = document.createElement('div');
+      line.className = className;
+      target.appendChild(line);
+      return line;
+    };
+
+    const appendTextLine = (target, text, className = 'os-line', colorClass = '') => {
+      const line = makeLine(target, className);
+      if (colorClass) line.classList.add(colorClass);
+      line.textContent = text;
+      return line;
+    };
+
+    const createKeyValLine = (target, key, value, valueClass = 'c-val') => {
+      const line = makeLine(target);
+      const keySpan = document.createElement('span');
+      keySpan.className = 'c-dim';
+      keySpan.textContent = key.padEnd(18, ' ');
+
+      const valueSpan = document.createElement('span');
+      valueSpan.className = valueClass;
+      valueSpan.textContent = value;
+
+      line.append(keySpan, valueSpan);
+      return { line, keySpan, valueSpan };
+    };
+
+    const appendPromptLine = (value) => {
+      const line = makeLine(queryLogEl);
+      const span = document.createElement('span');
+      span.className = 'c-dim';
+      span.textContent = `> ${value}`;
+      line.appendChild(span);
+      queryLogEl.scrollTop = queryLogEl.scrollHeight;
+    };
+
+    const appendResponseLine = (text, className = 'c-val') => {
+      const line = makeLine(queryLogEl);
+      const span = document.createElement('span');
+      span.className = className;
+      span.textContent = text;
+      line.appendChild(span);
+      queryLogEl.scrollTop = queryLogEl.scrollHeight;
+      return span;
+    };
+
+    const typeToSpan = async (span, text, min = 35, max = 50) => {
+      for (const ch of text) {
+        span.textContent += ch;
+        await delay(rand(min, max) + rand(-10, 10));
+      }
+    };
+
+    const parseUA = (ua) => {
+      const source = ua.toUpperCase();
+      const versionFrom = (token) => {
+        const m = ua.match(token);
+        return m ? m[1] : '';
+      };
+
+      let browser = 'UNKNOWN';
+      let engine = 'UNKNOWN';
+
+      if (source.includes('FIREFOX')) {
+        browser = `FIREFOX ${versionFrom(/FIREFOX\/(\d+)/i) || ''}`.trim();
+        engine = 'GECKO';
+      } else if (source.includes('EDG/')) {
+        browser = `EDGE ${versionFrom(/EDG\/(\d+)/i) || ''}`.trim();
+        engine = 'BLINK';
+      } else if (source.includes('CHROME') && !source.includes('EDG/')) {
+        browser = `CHROME ${versionFrom(/CHROME\/(\d+)/i) || ''}`.trim();
+        engine = 'BLINK';
+      } else if (source.includes('SAFARI') && !source.includes('CHROME')) {
+        browser = `SAFARI ${versionFrom(/VERSION\/(\d+)/i) || ''}`.trim();
+        engine = 'WEBKIT';
+      }
+
+      let os = 'UNKNOWN';
+      if (source.includes('WINDOWS')) os = 'WINDOWS';
+      else if (source.includes('ANDROID')) os = 'ANDROID';
+      else if (source.includes('IPHONE') || source.includes('IPAD') || source.includes('IOS')) os = 'IOS';
+      else if (source.includes('MAC OS X') || source.includes('MACINTOSH')) os = 'MACOS';
+      else if (source.includes('LINUX')) os = 'LINUX';
+
+      return {
+        browserOs: `${browser} / ${os}`,
+        engine
+      };
+    };
+
+    const parseRenderer = (renderer) => {
+      if (!renderer) return 'UNAVAILABLE';
+      const upper = renderer.toUpperCase();
+      const paren = upper.match(/\((.*?)\)/);
+      const bucket = [upper, paren ? paren[1] : ''].join(' ');
+      const patterns = [
+        /APPLE\s+M\d+/,
+        /NVIDIA\s+[A-Z0-9\s-]+/,
+        /AMD\s+[A-Z0-9\s-]+/,
+        /INTEL\(R\)\s+[A-Z0-9\s-]+/,
+        /ADRENO\s*\(?(?:TM)?\)?\s*\d+/,
+        /MALI-[A-Z0-9]+/
+      ];
+      for (const p of patterns) {
+        const m = bucket.match(p);
+        if (m) return m[0].replace('INTEL(R)', 'INTEL').replace(/\s+/g, ' ').trim();
+      }
+      return upper.replace(/^ANGLE\s*\(/, '').replace(/\)$/, '').split(',')[0].trim();
+    };
+
+    const detectEnvironment = async () => {
+      const uaInfo = parseUA(navigator.userAgent || '');
+      const pixelRatio = Number(window.devicePixelRatio || 1).toFixed(2).replace(/\.00$/, '');
+      const display = `${window.innerWidth} × ${window.innerHeight} @ ${pixelRatio}X / ${screen.colorDepth}-BIT`;
+
+      let glVersion = 'NONE';
+      let maxTexture = 'N/A';
+      let gpu = 'UNAVAILABLE';
+
+      try {
+        const canvas = document.createElement('canvas');
+        let gl = canvas.getContext('webgl2');
+        if (gl) {
+          glVersion = '2.0';
+        } else {
+          gl = canvas.getContext('webgl');
+          if (gl) glVersion = '1.0';
+        }
+        if (gl) {
+          const ext = gl.getExtension('WEBGL_debug_renderer_info');
+          const renderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+          gpu = `${parseRenderer(String(renderer || 'UNAVAILABLE'))} [WEBGL ${glVersion}]`;
+          maxTexture = String(gl.getParameter(gl.MAX_TEXTURE_SIZE));
+        }
+      } catch {
+        gpu = 'UNAVAILABLE';
+      }
+
+      const processing = Number.isFinite(navigator.hardwareConcurrency)
+        ? `${navigator.hardwareConcurrency} LOGICAL CORES`
+        : 'UNKNOWN';
+
+      const conn = navigator.connection;
+      const network = conn?.effectiveType
+        ? `${String(conn.effectiveType).toUpperCase()} / ~${conn.rtt || '?'}MS RTT`
+        : 'UNRESOLVED';
+
+      let power = null;
+      if (typeof navigator.getBattery === 'function') {
+        try {
+          const battery = await navigator.getBattery();
+          const pct = Math.round((battery.level || 0) * 100);
+          power = `${pct}% [${battery.charging ? 'CHARGING' : 'DISCHARGING'}]`;
+        } catch {
+          power = null;
+        }
+      }
+
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const colorPref = isDark ? 'DARK MODE ENABLED' : 'LIGHT MODE ENABLED';
+
+      const touchPoints = navigator.maxTouchPoints || 0;
+      const inputMethod = touchPoints > 0 ? `TOUCH / ${touchPoints} CONTACT POINTS` : 'POINTER / NO TOUCH DETECTED';
+
+      return {
+        ...uaInfo,
+        display,
+        gpu,
+        processing,
+        network,
+        power,
+        colorPref,
+        inputMethod,
+        locale: (navigator.language || 'UNSET').toUpperCase(),
+        languages: (navigator.languages || []).map((v) => v.toUpperCase()).join(' / ') || 'UNSET',
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UNSET',
+        platform: navigator.platform || 'UNSET',
+        cookies: navigator.cookieEnabled ? 'ENABLED' : 'DISABLED',
+        dnt: navigator.doNotTrack || 'UNSET',
+        screenNative: `${screen.width} × ${screen.height}`,
+        colorDepth: `${screen.colorDepth}-BIT`,
+        glVersion,
+        maxTexture
+      };
+    };
+
+    const newSubjectId = () => `AH-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
+
+    const bootRows = () => {
+      const today = new Date();
+      const buildDate = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
+      const rows = [
+        { type: 'text', cls: 'c-head', text: 'ASHTON HAWKINS — PERSONAL OPERATING SYSTEM', hover: true },
+        { type: 'text', cls: 'c-sub', text: `BUILD [${buildDate}] — REV 847` },
+        { type: 'text', cls: 'c-dim', text: 'CLASSIFICATION: UNRESTRICTED' },
+        { type: 'divider' },
+        { type: 'text', cls: 'c-head', text: 'INCOMING CONNECTION LOGGED', hover: true },
+        { type: 'text', cls: 'c-sub', text: `SUBJECT ID: ${subjectId}` },
+        { type: 'blank' },
+        { type: 'kv', key: 'BROWSER IDENT', value: detected.browserOs },
+        { type: 'kv', key: 'DISPLAY CONFIG', value: detected.display },
+        { type: 'kv', key: 'GPU SUBSYSTEM', value: detected.gpu },
+        { type: 'kv', key: 'PROCESSING', value: detected.processing },
+        { type: 'kv', key: 'NETWORK CLASS', value: detected.network },
+        ...(detected.power ? [{ type: 'kv', key: 'POWER STATUS', value: detected.power }] : []),
+        { type: 'kv', key: 'COLOR PREF', value: detected.colorPref },
+        { type: 'kv', key: 'INPUT METHOD', value: detected.inputMethod },
+        { type: 'kv', key: 'LOCALE', value: detected.locale },
+        { type: 'divider' },
+        { type: 'text', cls: 'c-status', text: 'CONNECTION PERMITTED — READ-ONLY ACCESS GRANTED', hover: true },
+        { type: 'uptime' },
+        { type: 'kvh', key: 'STATUS', value: 'SITE RECONSTRUCTION IN PROGRESS', vcls: 'c-head' },
+        { type: 'cursor' }
+      ];
+      return rows;
+    };
+
+    const renderBootRows = async (target, animate) => {
+      const rows = bootRows();
+      for (const row of rows) {
+        if (row.type === 'divider') {
+          appendTextLine(target, DIVIDER, 'os-divider');
+          continue;
+        }
+        if (row.type === 'blank') {
+          appendTextLine(target, '', 'os-line');
+          continue;
+        }
+        if (row.type === 'kv') {
+          const { keySpan, valueSpan } = createKeyValLine(target, row.key, '');
+          valueSpan.className = 'c-val';
+          if (animate) {
+            await typeToSpan(keySpan, row.key.padEnd(18, ' '), 20, 35);
+            await typeToSpan(valueSpan, row.value, 20, 35);
+          } else {
+            keySpan.textContent = row.key.padEnd(18, ' ');
+            valueSpan.textContent = row.value;
+          }
+        } else if (row.type === 'kvh') {
+          createKeyValLine(target, row.key, row.value, row.vcls);
+        } else if (row.type === 'uptime') {
+          const { valueSpan } = createKeyValLine(target, 'SYS UPTIME', '0S', 'c-accent');
+          uptimeValueEl = valueSpan;
+        } else if (row.type === 'cursor') {
+          const line = makeLine(target);
+          const span = document.createElement('span');
+          span.className = 'os-cursor';
+          span.textContent = '▮';
+          line.appendChild(span);
+        } else if (row.type === 'text') {
+          if (animate) {
+            const line = makeLine(target);
+            if (row.hover) line.dataset.hover = '1';
+            const span = document.createElement('span');
+            span.className = row.cls;
+            line.appendChild(span);
+            const speed = row.cls === 'c-head' ? [42, 56] : [34, 48];
+            await typeToSpan(span, row.text, speed[0], speed[1]);
+          } else {
+            const line = appendTextLine(target, row.text, 'os-line', row.cls);
+            if (row.hover) line.dataset.hover = '1';
+          }
+        }
+        if (animate) await delay(rand(150, 250));
+      }
+    };
+
+    const startUptime = () => {
+      if (!uptimeValueEl) return;
+      if (uptimeInterval) clearInterval(uptimeInterval);
+      const update = () => {
+        const seconds = Math.max(0, Math.floor((Date.now() - EPOCH_MS) / 1000));
+        uptimeValueEl.textContent = `${seconds.toLocaleString()}S`;
+      };
+      update();
+      uptimeInterval = setInterval(update, 1000);
+    };
+
+    const typeResponse = async (text, className = 'c-val', speed = 20) => {
+      const span = appendResponseLine('', className);
+      for (const ch of text) {
+        span.textContent += ch;
+        queryLogEl.scrollTop = queryLogEl.scrollHeight;
+        await delay(speed);
+      }
+    };
+
+    const appendDividerToLog = () => appendResponseLine(DIVIDER, 'c-border');
+
+    const runRescan = async () => {
+      subjectId = newSubjectId();
+      appendDividerToLog();
+      await typeResponse('INCOMING CONNECTION LOGGED', 'c-head', 18);
+      await typeResponse(`SUBJECT ID: ${subjectId}`, 'c-sub', 18);
+      appendResponseLine('', 'c-val');
+      const pairs = [
+        ['BROWSER IDENT', detected.browserOs],
+        ['DISPLAY CONFIG', detected.display],
+        ['GPU SUBSYSTEM', detected.gpu],
+        ['PROCESSING', detected.processing],
+        ['NETWORK CLASS', detected.network],
+        ...(detected.power ? [['POWER STATUS', detected.power]] : []),
+        ['COLOR PREF', detected.colorPref],
+        ['INPUT METHOD', detected.inputMethod],
+        ['LOCALE', detected.locale]
+      ];
+      for (const [k, v] of pairs) {
+        await typeResponse(`${k.padEnd(18, ' ')}${v}`, 'c-dim', 12);
+      }
+      appendDividerToLog();
+      await typeResponse('CONNECTION PERMITTED — READ-ONLY ACCESS GRANTED', 'c-status', 18);
+      queryLogEl.scrollTop = queryLogEl.scrollHeight;
+    };
+
+    const commandHandlers = {
+      async catalog() {
+        appendDividerToLog();
+        appendResponseLine('AVAILABLE QUERIES', 'c-head');
+        appendDividerToLog();
+        ['CATALOG      THIS DIRECTORY', 'SUBJECT      CONNECTION INTAKE REPORT', 'DOSSIER      PERSONNEL FILE: HAWKINS, A.', 'MANIFEST     PROJECT FILE INDEX', 'SYSREPORT    SYSTEM DIAGNOSTIC', 'NETCHECK     NETWORK SUBSYSTEM AUDIT', 'RESCAN       RE-EXECUTE CONNECTION INTAKE', 'CLEAR        PURGE TERMINAL OUTPUT'].forEach((line) => appendResponseLine(line, 'c-dim'));
+        appendDividerToLog();
+      },
+      async subject() {
+        appendDividerToLog();
+        appendResponseLine('SUBJECT INTAKE REPORT', 'c-head');
+        appendResponseLine(`ID: ${subjectId}`, 'c-sub');
+        appendDividerToLog();
+        const lines = [
+          ['BROWSER IDENT', detected.browserOs],
+          ['ENGINE', detected.engine],
+          ['DISPLAY CONFIG', detected.display],
+          ['SCREEN NATIVE', detected.screenNative],
+          ['COLOR DEPTH', detected.colorDepth],
+          ['GPU SUBSYSTEM', detected.gpu],
+          ['PROCESSING', detected.processing],
+          ['NETWORK CLASS', detected.network],
+          ['POWER STATUS', detected.power || 'UNAVAILABLE'],
+          ['COLOR PREF', detected.colorPref],
+          ['INPUT METHOD', detected.inputMethod],
+          ['LOCALE', detected.locale],
+          ['LANGUAGES', detected.languages],
+          ['TIMEZONE', detected.timezone],
+          ['PLATFORM', detected.platform],
+          ['COOKIES', detected.cookies],
+          ['DO NOT TRACK', detected.dnt],
+          ['WEBGL VERSION', detected.glVersion],
+          ['MAX TEXTURE', detected.maxTexture]
+        ];
+        lines.forEach(([k, v]) => appendResponseLine(`${k.padEnd(18, ' ')}${v}`, 'c-dim'));
+        appendDividerToLog();
+      },
+      async dossier() {
+        appendDividerToLog();
+        appendResponseLine('PERSONNEL FILE — RESTRICTED', 'c-head');
+        appendDividerToLog();
+        const rows = [
+          'SURNAME          HAWKINS',
+          'GIVEN            ASHTON',
+          'CLASSIFICATION   LEVEL 4 — SYSTEMS OPERATOR',
+          'DOMAIN           DIGITAL INFRASTRUCTURE &',
+          '                 GROWTH SYSTEMS',
+          '',
+          'CORE FUNCTIONS   CONVERSION ARCHITECTURE',
+          '                 ORGANIC ACQUISITION SYSTEMS',
+          '                 INFORMATION TOPOLOGY',
+          '                 BEHAVIORAL ANALYTICS',
+          '                 PLATFORM OPERATIONS',
+          '',
+          'DEPLOYMENT       ENTERPRISE ECOMMERCE — FORTUNE 1',
+          'HISTORY          HEALTHCARE SYSTEMS',
+          '                 CONSULTING OPERATIONS',
+          '                 INDEPENDENT CONTRACTS',
+          '',
+          'METHODOLOGY      COMPOUND GROWTH THROUGH',
+          '                 SYSTEMATIC OPTIMIZATION'
+        ];
+        rows.forEach((row) => appendResponseLine(row, 'c-dim'));
+        const statusLine = makeLine(queryLogEl);
+        const lead = document.createElement('span');
+        lead.className = 'c-dim';
+        lead.textContent = 'STATUS           ';
+        const accentLeft = document.createElement('span');
+        accentLeft.className = 'c-accent';
+        accentLeft.textContent = '████████';
+        const middle = document.createElement('span');
+        middle.className = 'c-dim';
+        middle.textContent = ' ACCEPTING ENGAGEMENTS ';
+        const accentRight = document.createElement('span');
+        accentRight.className = 'c-accent';
+        accentRight.textContent = '████████';
+        statusLine.append(lead, accentLeft, middle, accentRight);
+        appendDividerToLog();
+      },
+      async manifest() {
+        appendDividerToLog();
+        appendResponseLine('PROJECT MANIFEST — ashtonhawkins.com', 'c-head');
+        appendDividerToLog();
+        appendResponseLine('FILE                  STATUS      PRIORITY', 'c-dim');
+        const files = [
+          ['index.astro', '[LIVE]', '—', true],
+          ['about.astro', '[WIP]', 'HIGH'],
+          ['writing.astro', '[WIP]', 'HIGH'],
+          ['work.astro', '[WIP]', 'MEDIUM'],
+          ['cycling.astro', '[WIP]', 'MEDIUM'],
+          ['now.astro', '[WIP]', 'LOW'],
+          ['travel.astro', '[WIP]', 'LOW']
+        ];
+        files.forEach(([file, status, priority, live]) => {
+          const line = makeLine(queryLogEl);
+          const fileSpan = document.createElement('span');
+          fileSpan.className = 'c-dim';
+          fileSpan.textContent = String(file).padEnd(22, ' ');
+          const statusSpan = document.createElement('span');
+          statusSpan.className = live ? 'c-accent' : 'c-dim';
+          statusSpan.textContent = String(status).padEnd(12, ' ');
+          const pSpan = document.createElement('span');
+          pSpan.className = 'c-dim';
+          pSpan.textContent = String(priority);
+          line.append(fileSpan, statusSpan, pSpan);
         });
-      });
+        appendDividerToLog();
+        appendResponseLine('TOTAL: 7 FILES — 1 LIVE / 6 IN PROGRESS', 'c-sub');
+        appendDividerToLog();
+      },
+      async sysreport() {
+        appendDividerToLog();
+        appendResponseLine('SYSTEM DIAGNOSTIC', 'c-head');
+        appendDividerToLog();
+        const lines = [
+          ['UPTIME', `${Math.floor((Date.now() - EPOCH_MS) / 1000).toLocaleString()}S`],
+          ['FRAMEWORK', 'ASTRO 5 + TYPESCRIPT'],
+          ['HOST', 'GITHUB PAGES'],
+          ['BUILD SYSTEM', 'GITHUB ACTIONS'],
+          ['DATA PIPELINE', 'CRON — 6H INTERVAL'],
+          ['INTEGRATIONS', 'STRAVA · LAST.FM · OURA · LETTERBOXD'],
+          ['API STATUS', '4/4 NOMINAL'],
+          ['LAST DEPLOY', '2026-02-23'],
+          ['REVISION', '847']
+        ];
+        lines.forEach(([k, v]) => appendResponseLine(`${k.padEnd(16, ' ')}${v}`, 'c-dim'));
+        appendDividerToLog();
+      },
+      async netcheck() {
+        appendDividerToLog();
+        appendResponseLine('NETWORK SUBSYSTEM AUDIT', 'c-head');
+        appendDividerToLog();
+        const services = ['STRAVA', 'LAST.FM', 'OURA', 'LETTERBOXD'];
+        let timedOut = false;
+        for (const service of services) {
+          await delay(rand(400, 700));
+          const timeout = Math.random() < 0.1;
+          if (timeout) timedOut = true;
+          const line = makeLine(queryLogEl);
+          const left = document.createElement('span');
+          left.className = 'c-dim';
+          left.textContent = `PINGING ${service}`.padEnd(25, '.') + ' ';
+          const ms = document.createElement('span');
+          ms.className = 'c-val';
+          ms.textContent = `${rand(15, 120)}MS `;
+          const state = document.createElement('span');
+          state.className = timeout ? 'c-warn' : 'c-accent';
+          state.textContent = timeout ? '[TIMEOUT]' : '[OK]';
+          line.append(left, ms, state);
+          queryLogEl.scrollTop = queryLogEl.scrollHeight;
+        }
+        appendResponseLine('', 'c-dim');
+        appendResponseLine(timedOut ? 'PARTIAL DEGRADATION DETECTED' : 'ALL SUBSYSTEMS NOMINAL', timedOut ? 'c-warn' : 'c-status');
+        appendDividerToLog();
+      },
+      async rescan() {
+        await runRescan();
+      },
+      async clear() {
+        queryLogEl.innerHTML = '';
+      },
+      async sudo() {
+        await typeResponse('ACCESS DENIED — CLEARANCE INSUFFICIENT. THIS INCIDENT HAS BEEN LOGGED.', 'c-warn');
+      },
+      async exit() {
+        await typeResponse('SESSION TERMINATED.', 'c-warn');
+        await delay(2000);
+        await typeResponse('SESSION CANNOT BE TERMINATED FROM THIS INTERFACE.', 'c-dim');
+      },
+      async greet() {
+        await typeResponse("THIS IS NOT A CONVERSATIONAL INTERFACE. TYPE 'CATALOG' FOR AVAILABLE QUERIES.", 'c-dim');
+      }
+    };
+
+    const executeCommand = async (rawInput) => {
+      const value = rawInput.trim();
+      if (!value) return;
+      appendPromptLine(value);
+
+      const normalized = value.toLowerCase();
+      if (normalized.startsWith('sudo')) {
+        await commandHandlers.sudo();
+        return;
+      }
+      if (normalized === 'hello' || normalized === 'hi' || normalized === 'hey') {
+        await commandHandlers.greet();
+        return;
+      }
+      if (commandHandlers[normalized]) {
+        await commandHandlers[normalized]();
+      } else {
+        await typeResponse(`UNRECOGNIZED QUERY: ${value.toUpperCase()}. TYPE 'CATALOG' FOR DIRECTORY.`, 'c-dim');
+      }
+      queryLogEl.scrollTop = queryLogEl.scrollHeight;
+    };
+
+    queryInput.addEventListener('keydown', async (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        const value = queryInput.value;
+        queryInput.value = '';
+        history.push(value);
+        if (history.length > 20) history.shift();
+        historyIndex = history.length;
+        await executeCommand(value);
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        if (!history.length) return;
+        historyIndex = Math.max(0, historyIndex - 1);
+        queryInput.value = history[historyIndex] || '';
+      } else if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        if (!history.length) return;
+        historyIndex = Math.min(history.length, historyIndex + 1);
+        queryInput.value = history[historyIndex] || '';
+      }
     });
-  }
+
+    const init = async () => {
+      detected = await detectEnvironment();
+      subjectId = newSubjectId();
+      bootEl.innerHTML = '';
+      const animateBoot = !booted && !reducedMotion;
+      await renderBootRows(bootEl, animateBoot);
+      startUptime();
+      sessionStorage.setItem('ah-booted', '1');
+      queryInput.focus();
+    };
+
+    init();
+  })();
 </script>
