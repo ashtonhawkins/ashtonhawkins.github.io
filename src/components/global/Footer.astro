@@ -3,15 +3,266 @@ const year = new Date().getFullYear();
 ---
 
 <footer class="site-footer">
-  <div class="container-shell max-wide footer-inner">
-    <p>© {year} Ashton Hawkins</p>
-    <p>Built with Astro · <a href="/colophon">Colophon</a></p>
+  <div class="container-shell max-wide footer__data">
+    <div class="footer__cell">
+      <span class="footer__label">VISITOR</span>
+      <span class="footer__value" id="footer-visitor">—</span>
+    </div>
+
+    <span class="footer__divider" aria-hidden="true">│</span>
+
+    <div class="footer__cell">
+      <span class="footer__label">STACK</span>
+      <span class="footer__value">Astro · Node · TypeScript</span>
+    </div>
+
+    <span class="footer__divider" aria-hidden="true">│</span>
+
+    <div class="footer__cell footer__cell--quote">
+      <span class="footer__quote" id="footer-quote">"Design is intelligence made visible."</span>
+    </div>
+  </div>
+
+  <div class="container-shell max-wide footer__meta">
+    <span class="footer__copyright">© {year} Ashton Hawkins</span>
+
+    <span class="footer__divider" aria-hidden="true">·</span>
+
+    <span class="footer__built-with">
+      Built with
+      <img src="/icons/claude-mono.svg" alt="Claude" class="footer__ai-logo" width="14" height="14" />
+      Claude Code + Codex
+    </span>
+
+    <span class="footer__divider" aria-hidden="true">·</span>
+
+    <a href="/colophon" class="footer__link">Colophon</a>
+
+    <span class="footer__divider" aria-hidden="true">·</span>
+
+    <a href="#top" class="footer__link">↑ Top</a>
   </div>
 </footer>
 
+<script>
+  const FOOTER_QUOTES = [
+    { text: 'Design is intelligence made visible.', author: 'Alina Wheeler' },
+    { text: 'The details are not the details. They make the design.', author: 'Charles Eames' },
+    { text: 'Data is the new oil.', author: 'Clive Humby' },
+    { text: 'Simplicity is the ultimate sophistication.', author: 'Leonardo da Vinci' },
+    { text: 'Good design is as little design as possible.', author: 'Dieter Rams' },
+    { text: 'Make it work, make it right, make it fast.', author: 'Kent Beck' },
+    { text: 'The best way to predict the future is to invent it.', author: 'Alan Kay' },
+    {
+      text: 'Measuring programming progress by lines of code is like measuring aircraft building progress by weight.',
+      author: 'Bill Gates'
+    },
+    { text: 'Any sufficiently advanced technology is indistinguishable from magic.', author: 'Arthur C. Clarke' },
+    { text: 'The only way to do great work is to love what you do.', author: 'Steve Jobs' },
+    { text: "Code is like humor. When you have to explain it, it's bad.", author: 'Cory House' },
+    { text: 'First, solve the problem. Then, write the code.', author: 'John Johnson' }
+  ];
+
+  const initVisitorLocation = async () => {
+    const el = document.getElementById('footer-visitor');
+    if (!el) return;
+
+    try {
+      const res = await fetch('https://ipapi.co/json/', {
+        signal: AbortSignal.timeout(5000)
+      });
+
+      if (!res.ok) throw new Error('Geo lookup failed');
+
+      const data = await res.json();
+      const region = data.region || data.city || '';
+      const country = data.country_code || data.country || '';
+
+      if (region && country) {
+        el.textContent = `${region}, ${country}`;
+      } else if (country) {
+        el.textContent = country;
+      } else {
+        el.textContent = 'Unknown';
+      }
+    } catch {
+      el.textContent = '—';
+    }
+  };
+
+  const initFooterQuote = () => {
+    const el = document.getElementById('footer-quote');
+    if (!el) return;
+
+    const quote = FOOTER_QUOTES[Math.floor(Math.random() * FOOTER_QUOTES.length)];
+    el.textContent = `"${quote.text}" — ${quote.author}`;
+  };
+
+  const initBackToTop = () => {
+    const topLink = document.querySelector('a[href="#top"]');
+    if (!(topLink instanceof HTMLAnchorElement) || topLink.dataset.bound === 'true') return;
+
+    topLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    topLink.dataset.bound = 'true';
+  };
+
+  const initFooter = () => {
+    initFooterQuote();
+    initVisitorLocation();
+    initBackToTop();
+  };
+
+  document.addEventListener('DOMContentLoaded', initFooter);
+  document.addEventListener('astro:page-load', initFooter);
+</script>
+
 <style>
-  .site-footer { border-top:1px solid color-mix(in srgb,var(--border) 60%, transparent); margin-top:4rem; }
-  .footer-inner { min-height:4rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; color:var(--text-secondary); font-size:.9rem; }
-  .footer-inner p { margin:0; }
-  .footer-inner a { color:inherit; }
+  .site-footer {
+    font-family: 'IBM Plex Mono', monospace;
+    border-top: 1px solid rgb(255 255 255 / 10%);
+    margin-top: 64px;
+  }
+
+  .footer__data {
+    display: flex;
+    align-items: center;
+    padding: 10px 24px;
+    gap: 0;
+    border-bottom: 1px solid rgb(255 255 255 / 6%);
+    background: rgb(255 255 255 / 2%);
+    overflow: hidden;
+  }
+
+  .footer__cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .footer__cell--quote {
+    flex: 1;
+    min-width: 0;
+    justify-content: flex-end;
+  }
+
+  .footer__label {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.6;
+  }
+
+  .footer__value {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  .footer__quote {
+    font-size: 10px;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--text-tertiary);
+    opacity: 0.7;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: opacity 0.4s ease;
+  }
+
+  .footer__divider {
+    color: var(--text-tertiary);
+    opacity: 0.25;
+    padding: 0 12px;
+    font-size: 11px;
+    flex-shrink: 0;
+    user-select: none;
+  }
+
+  .footer__meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 24px;
+    gap: 0;
+    flex-wrap: wrap;
+  }
+
+  .footer__copyright {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    opacity: 0.5;
+  }
+
+  .footer__built-with {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    opacity: 0.5;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .footer__ai-logo {
+    width: 14px;
+    height: 14px;
+    opacity: 0.6;
+    filter: grayscale(100%) brightness(2);
+    vertical-align: middle;
+  }
+
+  .footer__meta .footer__divider {
+    padding: 0 8px;
+    font-size: 10px;
+  }
+
+  .footer__link {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    opacity: 0.5;
+    text-decoration: none;
+    transition: color 0.2s ease, opacity 0.2s ease;
+  }
+
+  .footer__link:hover {
+    color: var(--accent-primary);
+    opacity: 1;
+  }
+
+  :root[data-theme='light'] .footer__data {
+    background: rgb(0 0 0 / 2%);
+    border-bottom-color: rgb(0 0 0 / 6%);
+  }
+
+  :root[data-theme='light'] .site-footer {
+    border-top-color: rgb(0 0 0 / 10%);
+  }
+
+  :root[data-theme='light'] .footer__ai-logo {
+    filter: grayscale(100%) brightness(0.4);
+  }
+
+  @media (max-width: 960px) {
+    .footer__data {
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .footer__divider {
+      padding: 0 4px;
+    }
+
+    .footer__cell--quote {
+      width: 100%;
+      justify-content: flex-start;
+    }
+  }
 </style>
