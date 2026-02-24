@@ -1,10 +1,6 @@
 ---
 import SectionHeader from '@components/ui/SectionHeader.astro';
 import WritingDrift from '@components/home/WritingDrift.astro';
-import StatusChip from '@components/ui/StatusChip.astro';
-import feeds from '@data/feeds-cache.json';
-
-const posts = ((feeds as any)?.items?.x ?? []).slice(0, 5);
 ---
 <section id="words" class="words-section">
   <SectionHeader label="Words" />
@@ -13,30 +9,126 @@ const posts = ((feeds as any)?.items?.x ?? []).slice(0, 5);
       <WritingDrift />
     </div>
     <aside class="words-section__x-feed">
-      <h3 class="x-feed__header"><span class="section-prefix">//</span><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="x-feed__logo" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></h3>
-      <ul>
-        {posts.length ? posts.map((post: any) => (
-          <li>
-            <p>{String(post.text ?? post.title ?? 'No text').slice(0, 180)}</p>
-            <span>{post.relativeTime ?? post.timeAgo ?? '—'}</span>
-          </li>
-        )) : <li><p>No recent posts cached.</p><StatusChip label="OFFLINE" /></li>}
-      </ul>
-      <a href="https://x.com/" target="_blank" rel="noreferrer">@handle →</a>
+      <h3 class="x-feed__header">
+        <span class="section-prefix">//</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="x-feed__logo" aria-hidden="true">
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+        </svg>
+      </h3>
+
+      <div class="x-feed__embed" id="x-feed-embed">
+        <a
+          class="twitter-timeline"
+          data-theme="dark"
+          data-chrome="noheader nofooter noborders transparent"
+          data-height="280"
+          data-tweet-limit="3"
+          href="https://x.com/ashtin"
+        >
+          Loading @ashtin...
+        </a>
+      </div>
+
+      <div class="x-feed__fallback" id="x-feed-fallback">
+        <a href="https://x.com/ashtin" target="_blank" rel="noreferrer">@ashtin →</a>
+      </div>
     </aside>
   </div>
   <p class="writing__footer"><a href="/writing">VIEW ALL POSTS →</a></p>
 </section>
+<script>
+  const twttrScript = document.createElement('script');
+  twttrScript.src = 'https://platform.twitter.com/widgets.js';
+  twttrScript.async = true;
+  twttrScript.charset = 'utf-8';
+  document.head.appendChild(twttrScript);
+
+  setTimeout(() => {
+    const embed = document.getElementById('x-feed-embed');
+    const fallback = document.getElementById('x-feed-fallback');
+    if (embed && fallback && !embed.querySelector('iframe')) {
+      embed.style.display = 'none';
+      fallback.style.display = 'block';
+    }
+  }, 6000);
+
+  const observer = new MutationObserver(() => {
+    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+    const embed = document.getElementById('x-feed-embed');
+    const twttr = (window as any).twttr;
+    if (embed && twttr?.widgets) {
+      embed.innerHTML = '';
+      twttr.widgets.createTimeline(
+        { sourceType: 'profile', screenName: 'ashtin' },
+        embed,
+        {
+          theme: isDark ? 'dark' : 'light',
+          chrome: 'noheader nofooter noborders transparent',
+          height: 280,
+          tweetLimit: 3,
+        }
+      );
+    }
+  });
+
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme'],
+  });
+</script>
 <style>
 .words-section__grid { display:grid; grid-template-columns:1fr 1fr; gap:0; }
 .words-section__drift { border:1px solid var(--border); border-right:none; position:relative; overflow:hidden; min-height:200px; }
-.words-section__x-feed{border:1px solid var(--border);padding:1rem;background:var(--surface-primary)}
-.x-feed__header{margin:0 0 .6rem;display:flex;align-items:center;gap:.4rem;font:700 .76rem 'IBM Plex Mono',monospace;letter-spacing:.08em}
-.section-prefix{color:var(--text-tertiary)}
-.x-feed__logo{display:block}
-.words-section__x-feed ul{list-style:none;margin:0;padding:0}.words-section__x-feed li{padding:.55rem 0;border-bottom:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
-.words-section__x-feed p{margin:0;font:.85rem/1.35 'IBM Plex Sans',sans-serif;color:var(--text-primary);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.words-section__x-feed span{font:.68rem 'IBM Plex Mono',monospace;color:var(--text-tertiary);text-transform:uppercase}
-.words-section__x-feed a,.writing__footer a{text-decoration:none;font:.72rem 'IBM Plex Mono',monospace;color:var(--text-secondary);letter-spacing:.08em}
+.words-section__x-feed {
+  border: 1px solid var(--border);
+  padding: 1rem;
+  background: var(--surface-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.x-feed__header {
+  margin: 0 0 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font: 700 0.76rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.section-prefix { color: var(--text-tertiary); }
+.x-feed__logo { display: block; }
+
+.x-feed__embed {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+  min-height: 100px;
+}
+
+.x-feed__embed iframe {
+  border: none !important;
+  border-radius: 4px;
+}
+
+.x-feed__fallback {
+  display: none;
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.x-feed__fallback a {
+  text-decoration: none;
+  font: 0.72rem 'IBM Plex Mono', monospace;
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
+}
+
+.x-feed__fallback a:hover {
+  color: var(--accent-primary);
+}
+
+.writing__footer a{text-decoration:none;font:.72rem 'IBM Plex Mono',monospace;color:var(--text-secondary);letter-spacing:.08em}
 @media (max-width: 768px) { .words-section__grid { grid-template-columns:1fr; } .words-section__drift { border-right:1px solid var(--border); } }
 </style>
