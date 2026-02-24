@@ -89,28 +89,36 @@ const drawRuntimeBar = (
 const buildCreditLines = (renderData: WatchingRenderData): Array<{ text: string; header?: boolean; sectionBreak?: boolean }> => {
   const lines: Array<{ text: string; header?: boolean; sectionBreak?: boolean }> = [];
 
+  const director = renderData.director?.trim();
+  const cast = (renderData.cast || []).filter((name) => name && name.toUpperCase() !== 'CAST UNAVAILABLE');
+  const genres = (renderData.genres || []).filter((name) => name && name.toUpperCase() !== 'UNCLASSIFIED');
+
   if (renderData.type === 'tv') {
     lines.push({ text: `SEASON ${renderData.season ?? '—'}`, header: true });
     lines.push({ text: `EPISODE ${renderData.episode ?? '—'}`, header: true });
-    lines.push({ text: `"${renderData.episodeTitle ?? 'UNTITLED'}"` });
+    if (renderData.episodeTitle && renderData.episodeTitle.toUpperCase() !== 'UNKNOWN') {
+      lines.push({ text: `"${renderData.episodeTitle}"` });
+    }
     lines.push({ text: '', sectionBreak: true });
-  } else {
+  } else if (director && director.toUpperCase() !== 'UNKNOWN') {
     lines.push({ text: 'DIRECTED BY', header: true });
-    lines.push({ text: renderData.director ?? 'UNKNOWN' });
+    lines.push({ text: director });
     lines.push({ text: '', sectionBreak: true });
   }
 
-  lines.push({ text: 'STARRING', header: true });
-
-  if (renderData.cast.length === 0) {
-    lines.push({ text: 'CAST UNAVAILABLE' });
-  } else {
-    renderData.cast.forEach((person) => lines.push({ text: person }));
+  if (cast.length) {
+    lines.push({ text: 'STARRING', header: true });
+    cast.forEach((person) => lines.push({ text: person }));
+    lines.push({ text: '', sectionBreak: true });
   }
 
-  lines.push({ text: '', sectionBreak: true });
-  lines.push({ text: renderData.genres.slice(0, 3).join(' · ') || 'UNCLASSIFIED' });
-  lines.push({ text: `${renderData.runtime} MIN` });
+  if (genres.length) {
+    lines.push({ text: genres.slice(0, 3).join(' · ') });
+  }
+
+  if (renderData.runtime > 0) {
+    lines.push({ text: `${renderData.runtime} MIN` });
+  }
 
   return lines;
 };

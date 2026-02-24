@@ -1,5 +1,8 @@
 import { slideModules } from './slides';
 import type { SlideData, SlideModule } from './types';
+import cyclingData from '@data/cycling.json';
+import travelStats from '@data/travel-stats.json';
+import ouraData from '@data/oura-cache.json';
 
 const grad3 = [
   [1, 1], [-1, 1], [1, -1], [-1, -1],
@@ -69,14 +72,28 @@ const AUTO_ADVANCE_INTERVAL = 30000;
 const IDLE_TIMEOUT = 5000;
 
 type ActiveSlide = { module: SlideModule; data: SlideData };
+const formatDate = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
+
 const modeDisplay: Record<string, { icon: string; name: string; href: string }> = {
   listening: { icon: '♫', name: 'LISTENING', href: '/music' },
   watching: { icon: '▶', name: 'WATCHING', href: '/watching' },
-  reading: { icon: '◉', name: 'READING', href: '/writing' },
   travel: { icon: '✈', name: 'TRAVEL', href: '/travel' },
   cycling: { icon: '◎', name: 'CYCLING', href: '/cycling' },
-  writing: { icon: '✎', name: 'WRITING', href: '/writing' },
-  biometrics: { icon: '♡', name: 'BIOMETRICS', href: '/biometrics' }
+  writing: { icon: '✏', name: 'WRITING', href: '/writing' },
+  biometrics: { icon: '◉', name: 'BIOMETRICS', href: '/biometrics' }
+};
+
+const emptyValues = new Set(['', 'TBD', 'UNKNOWN', 'UNAVAILABLE', 'N/A', 'CAST UNAVAILABLE', 'UNCLASSIFIED', '0 MIN']);
+const skipValue = (value: unknown): boolean => {
+  if (value == null) return true;
+  const normalized = String(value).trim();
+  if (!normalized) return true;
+  return emptyValues.has(normalized.toUpperCase());
 };
 
 const escapeHtml = (value: unknown): string => String(value ?? '')
@@ -86,102 +103,99 @@ const escapeHtml = (value: unknown): string => String(value ?? '')
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#39;');
 
-const tickerLabelPrefix = (value: unknown): string => `<span class="ticker-item ticker-item--label ticker-label">${escapeHtml(value)}</span>`;
-const tickerText = (value: unknown): string => `<span class="ticker-item ticker-item--text ticker-text">${escapeHtml(value)}</span>`;
-const tickerNumber = (value: unknown, unit?: string): string => `<span class="ticker-item ticker-item--numeric"><span class="ticker-val">${escapeHtml(value)}</span>${unit ? `<span class="ticker-unit">${escapeHtml(unit)}</span>` : ''}</span>`;
-const tickerChip = (value: unknown): string => `<span class="ticker-item ticker-item--chip ticker-chip">${escapeHtml(value)}</span>`;
+type HeroDisplay = { value: string; unit: string; empty?: boolean };
 
-const subTickerItems = (slide: ActiveSlide): string[] => {
-  const { module } = slide;
+const heroDisplay = (value: number | null | undefined, unit: string): HeroDisplay => {
+  if (value == null || Number.isNaN(Number(value))) return { value: '—', unit: '', empty: true };
+  return { value: Number(value).toLocaleString(), unit };
+};
 
-  if (module.id === 'biometrics') {
-    return [
-      tickerLabelPrefix('LAST NIGHT'),
-      tickerText('FEB 22'),
-      tickerLabelPrefix('DEEP'),
-      tickerNumber('1h 42m'),
-      tickerLabelPrefix('REM'),
-      tickerNumber('2h 15m'),
-      tickerLabelPrefix('STEPS'),
-      tickerNumber('8,423'),
-      tickerLabelPrefix('7D AVG HRV'),
-      tickerNumber('47', 'ms')
-    ];
+const labelItem = (label: string): string => `<span class="ticker-label">${escapeHtml(label)}</span>`;
+const textItem = (value: string): string => `<span class="ticker-text">${escapeHtml(value)}</span>`;
+const chipItem = (value: string): string => `<span class="ticker-chip">${escapeHtml(value)}</span>`;
+
+const pairItem = (label: string, value: unknown): string[] => {
+  if (skipValue(value)) return [];
+  return [labelItem(label), textItem(String(value))];
+};
+
+const getTickerContent = (slide: ActiveSlide): { hero: HeroDisplay; details: string[] } => {
+  if (slide.module.id === 'listening') {
+    return {
+      hero: heroDisplay(847, 'plays'),
+      details: [labelItem('THIS WEEK'), ...pairItem('TOP ARTIST', 'Cocteau Twins'), ...pairItem('TOP GENRE', 'Dream Pop'), chipItem('12 DAY STREAK')]
+    };
   }
 
-  if (module.id === 'cycling') {
-    return [
-      tickerLabelPrefix('LAST RIDE'),
-      tickerText('FEB 20'),
-      tickerLabelPrefix('THIS MONTH'),
-      tickerNumber('127', 'mi'),
-      tickerLabelPrefix('LONGEST'),
-      tickerNumber('34', 'mi'),
-      tickerLabelPrefix('YTD ELEV'),
-      tickerNumber('2,400', 'ft'),
-      tickerLabelPrefix('AVG SPEED'),
-      tickerNumber('9.7', 'mph')
-    ];
+  if (slide.module.id === 'watching') {
+    return {
+      hero: heroDisplay(23, 'films'),
+      details: [
+        labelItem(String(new Date().getFullYear())),
+        ...pairItem('LIFETIME', '1,026'),
+        chipItem('★ 3.8'),
+        ...pairItem('LAST LOGGED', 'Feb 21'),
+        ...pairItem('TOP DECADE', '1970s')
+      ]
+    };
   }
 
-  if (module.id === 'listening') {
-    return [
-      tickerLabelPrefix('THIS WEEK'),
-      tickerNumber('847', 'scrobbles'),
-      tickerLabelPrefix('TOP ARTIST'),
-      tickerText('Cocteau Twins'),
-      tickerLabelPrefix('TOP GENRE'),
-      tickerText('Dream Pop'),
-      tickerChip('12 DAY STREAK')
-    ];
+  if (slide.module.id === 'writing') {
+    return {
+      hero: heroDisplay(12, 'posts'),
+      details: [
+        labelItem(String(new Date().getFullYear())),
+        ...pairItem('WORDS', '14,200'),
+        ...pairItem('TOP TAG', 'CRO'),
+        ...pairItem('LAST PUBLISHED', 'Feb 18')
+      ]
+    };
   }
 
-  if (module.id === 'watching') {
-    return [
-      tickerLabelPrefix('2026 TOTAL'),
-      tickerNumber('23', 'films'),
-      tickerChip('AVG ★ 3.8'),
-      tickerLabelPrefix('LAST LOGGED'),
-      tickerText('FEB 21'),
-      tickerLabelPrefix('TOP DECADE'),
-      tickerText('1970s')
-    ];
+  if (slide.module.id === 'travel') {
+    return {
+      hero: heroDisplay(travelStats.countries, 'countries'),
+      details: [
+        ...pairItem('CONTINENTS', '6'),
+        textItem(`${Math.round((travelStats.totalDistance || 0) / 1000)}K mi flown`),
+        ...pairItem('LAST TRIP', 'London'),
+        textItem(`${travelStats.airports} airports`)
+      ]
+    };
   }
 
-  if (module.id === 'writing') {
-    return [
-      tickerNumber('12', 'posts in 2026'),
-      tickerNumber('14,200', 'total words'),
-      tickerLabelPrefix('MOST TAGGED'),
-      tickerText('CRO'),
-      tickerLabelPrefix('LAST PUBLISHED'),
-      tickerText('FEB 18')
-    ];
+  if (slide.module.id === 'cycling') {
+    const monthMiles = cyclingData.thisMonth?.miles ?? 0;
+    const restMonth = monthMiles === 0;
+    return {
+      hero: heroDisplay(monthMiles, 'mi'),
+      details: [
+        labelItem(restMonth ? 'REST MONTH' : 'THIS MONTH'),
+        ...pairItem('LAST RIDE', 'Feb 20'),
+        ...pairItem('LONGEST', '34 mi'),
+        ...pairItem('YTD ELEV', '2,400 ft'),
+        ...pairItem('AVG', '9.7 mph')
+      ]
+    };
   }
 
-  if (module.id === 'travel') {
-    return [
-      tickerNumber('23', 'countries'),
-      tickerNumber('6', 'continents'),
-      tickerNumber('142,000', 'mi flown'),
-      tickerLabelPrefix('LAST TRIP'),
-      tickerText('London'),
-      tickerLabelPrefix('AIRPORTS'),
-      tickerNumber('47')
-    ];
+  if (slide.module.id === 'biometrics') {
+    const ln = ouraData.lastNight;
+    const totalHours = Math.floor((ln?.totalSleepMinutes ?? 0) / 60);
+    const totalMinutes = (ln?.totalSleepMinutes ?? 0) % 60;
+    return {
+      hero: heroDisplay(ln?.readinessScore ?? null, 'recovery'),
+      details: [
+        ...pairItem('LAST NIGHT', formatDate((ouraData as any).lastNightDate) ?? null),
+        ...pairItem('SLEEP', `${totalHours}h ${String(totalMinutes).padStart(2, '0')}m`),
+        ...pairItem('DEEP', '1h 42m'),
+        ...pairItem('REM', '2h 15m'),
+        ...pairItem('STEPS', '8,423')
+      ]
+    };
   }
 
-  if (module.id === 'reading') {
-    return [
-      tickerLabelPrefix('CURRENT'),
-      tickerText('Systems Thinking'),
-      tickerLabelPrefix('PAGES THIS WEEK'),
-      tickerNumber('214'),
-      tickerChip('6 DAY STREAK')
-    ];
-  }
-
-  return [tickerText('NO DATA CACHED')];
+  return { hero: { value: '—', unit: '', empty: true }, details: [textItem('Waiting for data')] };
 };
 
 const renderSlide = (slide: ActiveSlide, ctx: CanvasRenderingContext2D, width: number, height: number, frame: number) => {
@@ -210,11 +224,15 @@ export const initNucleus = async () => {
   if (!(canvas instanceof HTMLCanvasElement) || !(ctx instanceof CanvasRenderingContext2D)) return;
 
   const nucleus = document.getElementById('nucleus');
-  const tickerLabel = document.querySelector<HTMLAnchorElement>('.nucleus-ticker__mode-label');
+  const tickerLabel = document.querySelector<HTMLAnchorElement>('.nucleus-ticker__mode');
   const tickerIcon = document.querySelector<HTMLElement>('.nucleus-ticker__mode-icon');
   const tickerName = document.querySelector<HTMLElement>('.nucleus-ticker__mode-name');
   const tickerRoot = document.getElementById('nucleus-ticker');
   const tickerScroll = document.getElementById('nucleus-ticker-scroll');
+  const tickerHero = document.getElementById('nucleus-ticker-hero');
+  const tickerHeroValue = document.getElementById('nucleus-ticker-hero-value');
+  const tickerHeroUnit = document.getElementById('nucleus-ticker-hero-unit');
+  const tickerCounter = document.getElementById('nucleus-mode-counter');
   const prevBtn = document.getElementById('nucleus-prev');
   const nextBtn = document.getElementById('nucleus-next');
 
@@ -252,14 +270,21 @@ export const initNucleus = async () => {
   const setState = (newState: 'ambient' | 'scanning' | 'exploring') => { nucleus.setAttribute('data-state', newState); };
 
   const updateSubTicker = (slide: ActiveSlide) => {
-    if (!tickerScroll || !tickerLabel || !tickerIcon || !tickerName) return;
+    if (!tickerScroll || !tickerLabel || !tickerIcon || !tickerName || !tickerHero || !tickerHeroValue || !tickerHeroUnit) return;
     const mode = modeDisplay[slide.module.id] ?? { icon: '◌', name: slide.data.label, href: slide.data.link };
     tickerIcon.textContent = mode.icon;
     tickerName.textContent = mode.name;
     tickerLabel.href = mode.href;
 
-    const items = subTickerItems(slide);
-    const source = items.length ? items : [tickerText('NO DATA CACHED')];
+    const modeIndex = slides.findIndex((item) => item.module.id === slide.module.id);
+    if (tickerCounter) tickerCounter.textContent = `${Math.max(1, modeIndex + 1)}/${slides.length}`;
+
+    const ticker = getTickerContent(slide);
+    tickerHeroValue.textContent = ticker.hero.value;
+    tickerHeroUnit.textContent = ticker.hero.unit;
+    tickerHero.classList.toggle('hero--empty', Boolean(ticker.hero.empty));
+
+    const source = ticker.details.length ? ticker.details : [textItem('Waiting for data')];
     const segment = source.map((item, i) => {
       const sep = i < source.length - 1 ? '<span class="ticker-sep" aria-hidden="true">·</span>' : '';
       return `${item}${sep}`;
@@ -276,20 +301,10 @@ export const initNucleus = async () => {
         const copy = `<span class="ticker-copy">${segment}<span class="ticker-sep" aria-hidden="true">·</span></span>`;
         tickerScroll.innerHTML = `${copy}${copy}`;
         tickerScroll.classList.add('is-animated');
-        const duration = Math.max(30, Math.min(40, contentWidth / 22));
+        const duration = Math.max(30, Math.min(45, contentWidth / 22));
         tickerScroll.style.setProperty('--scroll-duration', `${duration}s`);
       }
     }
-
-    if (reducedMotion) {
-      tickerScroll.classList.remove('entering');
-      return;
-    }
-
-    tickerScroll.classList.remove('entering');
-    void tickerScroll.offsetWidth;
-    tickerScroll.classList.add('entering');
-    window.setTimeout(() => tickerScroll.classList.remove('entering'), 400);
   };
 
   const applySlideState = (index: number) => {

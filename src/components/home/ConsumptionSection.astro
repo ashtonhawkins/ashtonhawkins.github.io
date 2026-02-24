@@ -51,8 +51,8 @@ const listening = (feeds as any)?.items?.lastfm?.[0] ?? (feeds as any)?.items?.s
     </article>
     <article class="consumption-card">
       <StatusChip label={reading?.status === 'reading' ? 'CURRENTLY READING' : 'RECENTLY FINISHED'} />
-      <h3 class="consumption-card__title">{reading?.title ?? 'No recent book cached'}</h3>
-      <p class="consumption-card__subtitle">{reading?.author ?? 'Awaiting Goodreads feed sync'}</p>
+      <h3 class="consumption-card__title">{reading?.title ?? 'Between books'}</h3>
+      <p class="consumption-card__subtitle">{reading?.author ?? 'Goodreads sync pending'}</p>
     </article>
     <article class="consumption-card">
       <StatusChip label="LAST PLAYED" />

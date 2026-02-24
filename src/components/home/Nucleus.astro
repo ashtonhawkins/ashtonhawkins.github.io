@@ -10,21 +10,28 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
   </section>
 
   <div class="nucleus-ticker" id="nucleus-ticker">
-    <a class="nucleus-ticker__mode-label" href="/music">
+    <a class="nucleus-ticker__mode" href="/music">
       <span class="nucleus-ticker__mode-icon" aria-hidden="true">♫</span>
       <span class="nucleus-ticker__mode-name">LISTENING</span>
+      <span class="nucleus-ticker__mode-counter" id="nucleus-mode-counter">1/6</span>
     </a>
+
+    <span class="nucleus-ticker__divider" aria-hidden="true"></span>
+
+    <div class="nucleus-ticker__hero" id="nucleus-ticker-hero">
+      <span class="nucleus-ticker__hero-value" id="nucleus-ticker-hero-value">—</span>
+      <span class="nucleus-ticker__hero-unit" id="nucleus-ticker-hero-unit"></span>
+    </div>
+
+    <span class="nucleus-ticker__divider" aria-hidden="true"></span>
 
     <div class="nucleus-ticker__stream">
       <div class="nucleus-ticker__scroll-content" id="nucleus-ticker-scroll">
-        <span class="ticker-item ticker-item--text">NO DATA CACHED</span>
-        <span class="ticker-sep" aria-hidden="true">·</span>
-        <span class="ticker-item ticker-item--text">NO DATA CACHED</span>
-        <span class="ticker-sep" aria-hidden="true">·</span>
+        <span class="ticker-text">Waiting for data</span>
       </div>
     </div>
 
-    <div class="nucleus-ticker__controls">
+    <div class="nucleus-ticker__nav">
       <button class="nucleus-ticker__arrow" id="nucleus-prev" aria-label="Previous mode">‹</button>
       <button class="nucleus-ticker__arrow" id="nucleus-next" aria-label="Next mode">›</button>
     </div>
@@ -32,216 +39,36 @@ import NucleusCanvas from '@components/home/NucleusCanvas.astro';
 </div>
 
 <style is:global>
-  .nucleus {
-    height: clamp(180px, 22vh, 320px);
-    width: 100%;
-    position: relative;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    border-bottom: none;
-    margin-top: 0;
-    margin-bottom: 0;
-    background: var(--surface-primary);
-  }
+  .nucleus { height: clamp(180px, 22vh, 320px); width: 100%; position: relative; overflow: hidden; border: 1px solid var(--border); border-bottom: none; margin: 0; background: var(--surface-primary); }
+  .nucleus__frame { position: relative; height: 100%; width: 100%; background: var(--surface-primary); }
 
-  .nucleus__frame {
-    position: relative;
-    height: 100%;
-    width: 100%;
-    background: var(--surface-primary);
-  }
+  .nucleus-ticker { display:flex; align-items:center; width:100%; height:48px; border-top:1px solid rgba(255,255,255,.08); margin-top:6px; padding:0 12px; background:var(--surface-primary); overflow:hidden; font-family:'IBM Plex Mono',monospace; }
+  .nucleus-ticker__mode { display:flex; align-items:center; gap:6px; flex-shrink:0; min-width:140px; padding-right:8px; text-decoration:none; color:inherit; }
+  .nucleus-ticker__mode-icon { font-size:12px; color:var(--accent-primary); }
+  .nucleus-ticker__mode-name { font-size:11px; font-weight:600; color:var(--text-primary); text-transform:uppercase; letter-spacing:.08em; }
+  .nucleus-ticker__mode-counter { font-size:9px; color:var(--text-tertiary); opacity:.6; margin-left:2px; }
+  .nucleus-ticker__divider { width:1px; height:20px; background:var(--text-tertiary); opacity:.2; flex-shrink:0; margin:0 12px; }
 
-  .nucleus-ticker {
-    width: 100%;
-    min-height: 40px !important;
-    height: auto;
-    display: flex;
-    align-items: center;
-    gap: 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    margin-top: 6px;
-    padding: 6px 16px !important;
-    background: var(--surface-primary);
-    overflow: hidden;
-  }
+  .nucleus-ticker__hero { display:flex; align-items:baseline; gap:4px; flex-shrink:0; min-width:120px; }
+  .nucleus-ticker__hero-value { font-size:18px; font-weight:700; color:var(--text-primary); letter-spacing:-.02em; font-variant-numeric:tabular-nums; line-height:1; }
+  .nucleus-ticker__hero-unit { font-size:9px; font-weight:400; color:var(--text-tertiary); text-transform:lowercase; letter-spacing:.06em; }
+  .nucleus-ticker__hero.hero--empty .nucleus-ticker__hero-value { color: var(--text-tertiary); }
 
-  .nucleus-ticker__mode-label {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 0 12px;
-    height: 100%;
-    flex-shrink: 0;
-    text-decoration: none;
-    white-space: nowrap;
-    border-right: 1px solid var(--border);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--text-primary);
-    transition: color 0.15s ease;
-  }
+  .nucleus-ticker__stream { flex:1; overflow:hidden; min-width:0; mask-image:linear-gradient(to right, transparent 0%, black 2%, black 95%, transparent 100%); -webkit-mask-image:linear-gradient(to right, transparent 0%, black 2%, black 95%, transparent 100%); }
+  .nucleus-ticker__scroll-content { display:flex; align-items:center; gap:8px; white-space:nowrap; }
+  .nucleus-ticker__scroll-content.is-animated { animation:ticker-scroll var(--scroll-duration, 34s) linear infinite; width:max-content; }
+  .nucleus-ticker__scroll-content .ticker-copy { display:inline-flex; align-items:center; gap:8px; }
+  .ticker-label { font-size:9px; font-weight:400; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.08em; }
+  .ticker-text { font-size:11px; font-weight:500; color:var(--text-primary); text-transform:none; }
+  .ticker-numeric { font-size:12px; font-weight:600; color:var(--text-primary); font-variant-numeric:tabular-nums; }
+  .ticker-sep { font-size:8px; color:var(--text-tertiary); opacity:.3; user-select:none; }
+  .ticker-chip { font-size:9px; font-weight:600; color:var(--accent-primary); border:1px solid var(--accent-primary); border-radius:9999px; padding:2px 8px; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; opacity:.8; }
 
-  .nucleus-ticker__mode-label:hover { color: var(--accent-primary); }
-  .nucleus-ticker__mode-icon { margin-right: 4px; font-size: 10px; line-height: 1; }
+  .nucleus-ticker__nav { display:flex; align-items:center; gap:2px; flex-shrink:0; padding-left:8px; }
+  .nucleus-ticker__arrow { appearance:none; border:none; background:none; cursor:pointer; padding:0 8px; font-family:'IBM Plex Mono',monospace; font-size:14px; color:var(--text-tertiary); transition:color .1s ease, background .1s ease; }
+  .nucleus-ticker__arrow:hover { color:var(--text-primary); background:rgba(255,255,255,.03); }
+  .nucleus-ticker__arrow:focus-visible { outline:1.5px solid var(--accent-primary); outline-offset:-1.5px; }
 
-  .nucleus-ticker__mode-name { line-height: 1; }
-
-  .nucleus-ticker__stream {
-    flex: 1;
-    overflow: hidden;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    mask-image: linear-gradient(to right, transparent 0%, black 24px, black calc(100% - 24px), transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 24px, black calc(100% - 24px), transparent 100%);
-  }
-
-  .nucleus-ticker__scroll-content {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    white-space: nowrap;
-  }
-
-  .nucleus-ticker__scroll-content.is-animated {
-    animation: ticker-scroll var(--scroll-duration, 34s) linear infinite;
-    width: max-content;
-  }
-
-  .nucleus-ticker__scroll-content .ticker-copy {
-    display: inline-flex;
-    align-items: center;
-  }
-
-  .nucleus-ticker:hover .nucleus-ticker__scroll-content,
-  .nucleus:hover + .nucleus-ticker .nucleus-ticker__scroll-content { animation-play-state: paused; }
-
-  @keyframes ticker-scroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-
-  .ticker-item {
-    white-space: nowrap;
-    padding: 0 2px;
-    display: inline-flex;
-    align-items: baseline;
-    gap: 0;
-    font-size: 11px;
-  }
-
-  .nucleus-ticker .ticker-val,
-  .nucleus-ticker .ticker-text {
-    font-size: 14px !important;
-    font-weight: 700 !important;
-    color: rgba(255, 255, 255, 0.95) !important;
-    font-family: 'IBM Plex Mono', monospace !important;
-  }
-
-  .nucleus-ticker .ticker-text {
-    font-family: 'IBM Plex Sans', sans-serif !important;
-    font-style: italic !important;
-    font-weight: 400 !important;
-  }
-
-  .nucleus-ticker .ticker-label,
-  .nucleus-ticker .ticker-unit,
-  .nucleus-ticker .ticker-item--label {
-    font-size: 8px !important;
-    font-weight: 400 !important;
-    color: rgba(255, 255, 255, 0.3) !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.12em !important;
-  }
-
-  .nucleus-ticker .ticker-chip,
-  .nucleus-ticker .ticker-item--chip {
-    font-size: 9px !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-radius: 3px !important;
-    padding: 2px 6px !important;
-    color: rgba(255, 255, 255, 0.7) !important;
-  }
-
-  .nucleus-ticker .ticker-sep {
-    opacity: 0.12 !important;
-    margin: 0 14px !important;
-    font-size: 6px !important;
-  }
-
-  .nucleus-ticker__scroll-content.entering .ticker-item {
-    animation: ticker-item-enter 0.3s ease-out forwards;
-    opacity: 0;
-  }
-
-  .nucleus-ticker__scroll-content.entering .ticker-item:nth-child(1) { animation-delay: 0s; }
-  .nucleus-ticker__scroll-content.entering .ticker-item:nth-child(2) { animation-delay: 0.05s; }
-  .nucleus-ticker__scroll-content.entering .ticker-item:nth-child(3) { animation-delay: 0.1s; }
-  .nucleus-ticker__scroll-content.entering .ticker-item:nth-child(4) { animation-delay: 0.15s; }
-  .nucleus-ticker__scroll-content.entering .ticker-item:nth-child(5) { animation-delay: 0.2s; }
-
-  @keyframes ticker-item-enter {
-    from { opacity: 0; transform: translateX(8px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-
-  .nucleus-ticker__controls {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    height: 100%;
-    flex-shrink: 0;
-    border-left: 1px solid var(--border);
-  }
-
-  .nucleus-ticker__arrow {
-    appearance: none;
-    -webkit-appearance: none;
-    border: none;
-    background: none;
-    cursor: pointer;
-    padding: 0 8px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 14px;
-    color: var(--text-tertiary);
-    transition: color 0.1s ease, background 0.1s ease;
-  }
-
-  .nucleus-ticker__arrow:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.03); }
-
-  .nucleus-ticker__arrow:focus-visible {
-    outline: 1.5px solid var(--accent-primary);
-    outline-offset: -1.5px;
-  }
-
-  .nucleus-ticker__arrow + .nucleus-ticker__arrow { border-left: 1px solid var(--border); }
-
-  [data-theme="light"] .nucleus-ticker__arrow:hover,
-  .light .nucleus-ticker__arrow:hover { background: rgba(0, 0, 0, 0.03); }
-
-  @media (max-width: 640px) {
-    .nucleus-ticker { height: 32px; }
-    .nucleus-ticker__mode-label { padding: 0 8px; }
-    .ticker-item { font-size: 10px; }
-    .nucleus-ticker__arrow { padding: 0 6px; font-size: 12px; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .nucleus-ticker__scroll-content,
-    .nucleus-ticker__scroll-content.is-animated {
-      animation: none;
-    }
-
-    .nucleus-ticker__scroll-content.entering .ticker-item {
-      animation: none;
-      opacity: 1;
-    }
-  }
+  @keyframes ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .nucleus-ticker__scroll-content,.nucleus-ticker__scroll-content.is-animated { animation:none; } }
 </style>
