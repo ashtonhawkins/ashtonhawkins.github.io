@@ -3,6 +3,7 @@ import type { SlideData, SlideModule } from './types';
 import cyclingData from '@data/cycling.json';
 import travelStats from '@data/travel-stats.json';
 import ouraData from '@data/oura-cache.json';
+import ouraActivity from '@data/oura/activity.json';
 
 const grad3 = [
   [1, 1], [-1, 1], [1, -1], [-1, -1],
@@ -72,130 +73,103 @@ const AUTO_ADVANCE_INTERVAL = 30000;
 const IDLE_TIMEOUT = 5000;
 
 type ActiveSlide = { module: SlideModule; data: SlideData };
-const formatDate = (value: string | null | undefined): string | null => {
+const modeDisplay: Record<string, { service: string; logo: string; icon: string; name: string; href: string }> = {
+  listening: { service: 'Last.fm', logo: '/icons/lastfm-mono.svg', icon: '♫', name: 'LISTENING', href: '/music' },
+  watching: { service: 'Letterboxd', logo: '/icons/letterboxd-mono.svg', icon: '▶', name: 'WATCHING', href: '/watching' },
+  travel: { service: 'Travel', logo: '/icons/globe-mono.svg', icon: '✈', name: 'TRAVEL', href: '/travel' },
+  cycling: { service: 'Strava', logo: '/icons/strava-mono.svg', icon: '◎', name: 'CYCLING', href: '/cycling' },
+  writing: { service: 'Blog', logo: '/icons/pen-mono.svg', icon: '✏', name: 'WRITING', href: '/writing' },
+  biometrics: { service: 'Oura', logo: '/icons/oura-mono.svg', icon: '◉', name: 'BIOMETRICS', href: '/biometrics' }
+};
+
+type TransmissionStat = { value: string; unit: string };
+type TransmissionMode = { service: string; logo: string; icon: string; name: string; link: string; stats: TransmissionStat[] };
+
+const fmtNumber = (value: number | null | undefined): string => value == null ? '0' : Number(value).toLocaleString();
+const fmtDateShort = (value: string | null | undefined): string | null => {
   if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
-
-const modeDisplay: Record<string, { icon: string; name: string; href: string }> = {
-  listening: { icon: '♫', name: 'LISTENING', href: '/music' },
-  watching: { icon: '▶', name: 'WATCHING', href: '/watching' },
-  travel: { icon: '✈', name: 'TRAVEL', href: '/travel' },
-  cycling: { icon: '◎', name: 'CYCLING', href: '/cycling' },
-  writing: { icon: '✏', name: 'WRITING', href: '/writing' },
-  biometrics: { icon: '◉', name: 'BIOMETRICS', href: '/biometrics' }
+const fmtDuration = (minutes: number | null | undefined): string | null => {
+  if (minutes == null) return null;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${h}h ${String(m).padStart(2, '0')}m`;
 };
+const numericValue = (val: string): boolean => /^[\d,.★hmsK]+$/i.test(val.replace(/\s/g, ''));
+const isPresent = (value: unknown): boolean => value != null && String(value).trim() !== '' && String(value).trim().toUpperCase() !== 'N/A';
 
-const emptyValues = new Set(['', 'TBD', 'UNKNOWN', 'UNAVAILABLE', 'N/A', 'CAST UNAVAILABLE', 'UNCLASSIFIED', '0 MIN']);
-const skipValue = (value: unknown): boolean => {
-  if (value == null) return true;
-  const normalized = String(value).trim();
-  if (!normalized) return true;
-  return emptyValues.has(normalized.toUpperCase());
-};
+const buildModeStats = (slide: ActiveSlide): TransmissionMode => {
+  const display = modeDisplay[slide.module.id] ?? { service: slide.module.id, logo: '', icon: '◌', name: slide.data.label, href: slide.data.link };
+  const renderData = (slide.data?.renderData ?? {}) as Record<string, any>;
+  const feedsWatching = (window as any).__nucleusWatchingData ?? {};
+  const feedsListening = (window as any).__nucleusListeningData ?? {};
+  const writingStats = (window as any).__nucleusWritingStats ?? {};
 
-const escapeHtml = (value: unknown): string => String(value ?? '')
-  .replace(/&/g, '&amp;')
-  .replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;')
-  .replace(/'/g, '&#39;');
+  const stats: TransmissionStat[] = [];
 
-type HeroDisplay = { value: string; unit: string; empty?: boolean };
-
-const heroDisplay = (value: number | null | undefined, unit: string): HeroDisplay => {
-  if (value == null || Number.isNaN(Number(value))) return { value: '—', unit: '', empty: true };
-  return { value: Number(value).toLocaleString(), unit };
-};
-
-const labelItem = (label: string): string => `<span class="ticker-label">${escapeHtml(label)}</span>`;
-const textItem = (value: string): string => `<span class="ticker-text">${escapeHtml(value)}</span>`;
-const chipItem = (value: string): string => `<span class="ticker-chip">${escapeHtml(value)}</span>`;
-
-const pairItem = (label: string, value: unknown): string[] => {
-  if (skipValue(value)) return [];
-  return [labelItem(label), textItem(String(value))];
-};
-
-const getTickerContent = (slide: ActiveSlide): { hero: HeroDisplay; details: string[] } => {
   if (slide.module.id === 'listening') {
-    return {
-      hero: heroDisplay(847, 'plays'),
-      details: [labelItem('THIS WEEK'), ...pairItem('TOP ARTIST', 'Cocteau Twins'), ...pairItem('TOP GENRE', 'Dream Pop'), chipItem('12 DAY STREAK')]
-    };
+    if (feedsListening?.weeklyPlays != null) stats.push({ value: fmtNumber(feedsListening.weeklyPlays), unit: 'plays this week' });
+    if (renderData.artist) stats.push({ value: renderData.artist, unit: 'top artist' });
+    if (renderData.genre && isPresent(renderData.genre)) stats.push({ value: String(renderData.genre).replace(/\b\w/g, (c: string) => c.toUpperCase()), unit: 'top genre' });
+    if (feedsListening?.streakDays != null) stats.push({ value: String(feedsListening.streakDays), unit: 'day streak' });
   }
 
   if (slide.module.id === 'watching') {
-    return {
-      hero: heroDisplay(23, 'films'),
-      details: [
-        labelItem(String(new Date().getFullYear())),
-        ...pairItem('LIFETIME', '1,026'),
-        chipItem('★ 3.8'),
-        ...pairItem('LAST LOGGED', 'Feb 21'),
-        ...pairItem('TOP DECADE', '1970s')
-      ]
-    };
+    const thisYear = new Date().getFullYear();
+    if (feedsWatching?.thisYearCount != null) stats.push({ value: fmtNumber(feedsWatching.thisYearCount), unit: `films in ${thisYear}` });
+    if (feedsWatching?.totalFilms != null) stats.push({ value: fmtNumber(feedsWatching.totalFilms), unit: 'lifetime films' });
+    if (feedsWatching?.avgRating != null) stats.push({ value: `★ ${feedsWatching.avgRating}`, unit: 'average rating' });
+    if (feedsWatching?.topDecade) stats.push({ value: feedsWatching.topDecade, unit: 'top decade' });
   }
 
   if (slide.module.id === 'writing') {
-    return {
-      hero: heroDisplay(12, 'posts'),
-      details: [
-        labelItem(String(new Date().getFullYear())),
-        ...pairItem('WORDS', '14,200'),
-        ...pairItem('TOP TAG', 'CRO'),
-        ...pairItem('LAST PUBLISHED', 'Feb 18')
-      ]
-    };
+    const thisYear = new Date().getFullYear();
+    if (writingStats?.thisYearPosts != null) stats.push({ value: String(writingStats.thisYearPosts), unit: `posts in ${thisYear}` });
+    if (writingStats?.totalWords != null) stats.push({ value: fmtNumber(writingStats.totalWords), unit: 'words written' });
+    if (writingStats?.topTag) stats.push({ value: writingStats.topTag, unit: 'top tag' });
+    const lastPublished = fmtDateShort(writingStats?.lastPublished);
+    if (lastPublished) stats.push({ value: lastPublished, unit: 'last published' });
   }
 
   if (slide.module.id === 'travel') {
-    return {
-      hero: heroDisplay(travelStats.countries, 'countries'),
-      details: [
-        ...pairItem('CONTINENTS', '6'),
-        textItem(`${Math.round((travelStats.totalDistance || 0) / 1000)}K mi flown`),
-        ...pairItem('LAST TRIP', 'London'),
-        textItem(`${travelStats.airports} airports`)
-      ]
-    };
+    const lastTrip = (window as any).__nucleusTravelData?.lastTrip?.destination?.city;
+    if (travelStats.countries != null) stats.push({ value: String(travelStats.countries), unit: 'countries visited' });
+    stats.push({ value: '6', unit: 'continents' });
+    if (travelStats.totalDistance != null) stats.push({ value: `${Math.round(travelStats.totalDistance / 1000)}K`, unit: 'miles flown' });
+    if (lastTrip) stats.push({ value: lastTrip, unit: 'last trip' });
+    if (travelStats.airports != null) stats.push({ value: String(travelStats.airports), unit: 'airports' });
   }
 
   if (slide.module.id === 'cycling') {
-    const monthMiles = cyclingData.thisMonth?.miles ?? 0;
-    const restMonth = monthMiles === 0;
-    return {
-      hero: heroDisplay(monthMiles, 'mi'),
-      details: [
-        labelItem(restMonth ? 'REST MONTH' : 'THIS MONTH'),
-        ...pairItem('LAST RIDE', 'Feb 20'),
-        ...pairItem('LONGEST', '34 mi'),
-        ...pairItem('YTD ELEV', '2,400 ft'),
-        ...pairItem('AVG', '9.7 mph')
-      ]
-    };
+    const activities = (window as any).__nucleusCyclingActivities ?? [];
+    const lastRideDate = activities[0]?.start_date;
+    const avgMph = activities.length ? (activities.reduce((sum: number, a: any) => sum + ((a.average_speed || 0) * 2.23694), 0) / activities.length).toFixed(1) : null;
+    const longestMi = activities.length ? Math.max(...activities.map((a: any) => (a.distance || 0) / 1609.34)).toFixed(0) : null;
+    stats.push({ value: String(cyclingData.thisMonth?.miles ?? 0), unit: 'mi this month' });
+    const formattedLastRide = fmtDateShort(lastRideDate);
+    if (formattedLastRide) stats.push({ value: formattedLastRide, unit: 'last ride' });
+    if (longestMi) stats.push({ value: longestMi, unit: 'mi longest ride' });
+    if (cyclingData.thisMonth?.elevation != null) stats.push({ value: fmtNumber(cyclingData.thisMonth.elevation), unit: 'ft climbed YTD' });
+    if (avgMph) stats.push({ value: avgMph, unit: 'mph average' });
   }
 
   if (slide.module.id === 'biometrics') {
     const ln = ouraData.lastNight;
-    const totalHours = Math.floor((ln?.totalSleepMinutes ?? 0) / 60);
-    const totalMinutes = (ln?.totalSleepMinutes ?? 0) % 60;
-    return {
-      hero: heroDisplay(ln?.readinessScore ?? null, 'recovery'),
-      details: [
-        ...pairItem('LAST NIGHT', formatDate((ouraData as any).lastNightDate) ?? null),
-        ...pairItem('SLEEP', `${totalHours}h ${String(totalMinutes).padStart(2, '0')}m`),
-        ...pairItem('DEEP', '1h 42m'),
-        ...pairItem('REM', '2h 15m'),
-        ...pairItem('STEPS', '8,423')
-      ]
-    };
+    stats.push({ value: String(ln?.readinessScore ?? ''), unit: 'readiness score' });
+    const total = fmtDuration(ln?.totalSleepMinutes);
+    const deep = fmtDuration(ln?.deepMinutes);
+    const rem = fmtDuration(ln?.remMinutes);
+    if (total) stats.push({ value: total, unit: 'total sleep' });
+    if (deep) stats.push({ value: deep, unit: 'deep sleep' });
+    if (rem) stats.push({ value: rem, unit: 'REM sleep' });
+    const steps = (ouraActivity as any)?.data?.[0]?.steps ?? null;
+    if (steps != null) stats.push({ value: fmtNumber(steps), unit: 'steps' });
   }
 
-  return { hero: { value: '—', unit: '', empty: true }, details: [textItem('Waiting for data')] };
+  return { service: display.service, logo: display.logo, icon: display.icon, name: display.name, link: display.href, stats: stats.filter((s) => isPresent(s.value)) };
 };
 
 const renderSlide = (slide: ActiveSlide, ctx: CanvasRenderingContext2D, width: number, height: number, frame: number) => {
@@ -224,15 +198,15 @@ export const initNucleus = async () => {
   if (!(canvas instanceof HTMLCanvasElement) || !(ctx instanceof CanvasRenderingContext2D)) return;
 
   const nucleus = document.getElementById('nucleus');
-  const tickerLabel = document.querySelector<HTMLAnchorElement>('.nucleus-ticker__mode');
-  const tickerIcon = document.querySelector<HTMLElement>('.nucleus-ticker__mode-icon');
-  const tickerName = document.querySelector<HTMLElement>('.nucleus-ticker__mode-name');
   const tickerRoot = document.getElementById('nucleus-ticker');
-  const tickerScroll = document.getElementById('nucleus-ticker-scroll');
-  const tickerHero = document.getElementById('nucleus-ticker-hero');
-  const tickerHeroValue = document.getElementById('nucleus-ticker-hero-value');
-  const tickerHeroUnit = document.getElementById('nucleus-ticker-hero-unit');
-  const tickerCounter = document.getElementById('nucleus-mode-counter');
+  const tickerLogo = document.getElementById('ticker-service-logo') as HTMLImageElement | null;
+  const tickerName = document.getElementById('ticker-mode-name') as HTMLAnchorElement | null;
+  const tickerCounter = document.getElementById('ticker-mode-counter');
+  const tickerStat = document.getElementById('ticker-stat');
+  const tickerStatValue = document.getElementById('ticker-stat-value');
+  const tickerStatUnit = document.getElementById('ticker-stat-unit');
+  const tickerSignalDot = document.getElementById('ticker-signal-dot');
+  const tickerSignalRing = document.getElementById('ticker-signal-ring');
   const prevBtn = document.getElementById('nucleus-prev');
   const nextBtn = document.getElementById('nucleus-next');
 
@@ -269,42 +243,85 @@ export const initNucleus = async () => {
   const getDimensions = () => ({ width: canvas.width / (window.devicePixelRatio || 1), height: canvas.height / (window.devicePixelRatio || 1) });
   const setState = (newState: 'ambient' | 'scanning' | 'exploring') => { nucleus.setAttribute('data-state', newState); };
 
+  let statTimer: ReturnType<typeof setInterval> | null = null;
+  let currentStatIndex = 0;
+
+  const pulseSignal = (large = false) => {
+    if (reducedMotion) return;
+    tickerSignalRing?.animate([
+      { r: 3, opacity: 0.6, strokeWidth: '1.5px' },
+      { r: large ? 10 : 8, opacity: 0, strokeWidth: '0.3px' }
+    ], { duration: large ? 700 : 600, easing: 'ease-out' });
+
+    tickerSignalDot?.animate([
+      { opacity: 1, r: 3 },
+      { opacity: 1, r: large ? 4.8 : 4.1 },
+      { opacity: 1, r: 3 }
+    ], { duration: 300, easing: 'ease-out' });
+  };
+
+  const renderStat = (mode: TransmissionMode, index: number) => {
+    const stat = mode.stats[index] ?? { value: 'Awaiting first sync', unit: '' };
+    if (!tickerStat || !tickerStatValue || !tickerStatUnit) return;
+
+    if (reducedMotion) {
+      tickerStatValue.textContent = stat.value;
+      tickerStatUnit.textContent = stat.unit;
+      tickerStat.className = 'nucleus-ticker__stat nucleus-ticker__stat--visible';
+      return;
+    }
+
+    tickerStat.className = 'nucleus-ticker__stat nucleus-ticker__stat--exiting';
+    window.setTimeout(() => {
+      pulseSignal();
+      tickerStatValue.textContent = stat.value;
+      tickerStatUnit.textContent = stat.unit;
+      tickerStatValue.style.fontSize = numericValue(stat.value) ? '18px' : '15px';
+      tickerStatValue.style.fontWeight = numericValue(stat.value) ? '700' : '600';
+      tickerStat.className = 'nucleus-ticker__stat nucleus-ticker__stat--entering';
+      window.setTimeout(() => {
+        tickerStat.className = 'nucleus-ticker__stat nucleus-ticker__stat--visible';
+      }, 40);
+    }, 300);
+  };
+
+  const startStatCycle = (mode: TransmissionMode) => {
+    if (statTimer) clearInterval(statTimer);
+    currentStatIndex = 0;
+    renderStat(mode, currentStatIndex);
+    if (mode.stats.length <= 1) return;
+    statTimer = setInterval(() => {
+      currentStatIndex = (currentStatIndex + 1) % mode.stats.length;
+      renderStat(mode, currentStatIndex);
+    }, 3500);
+  };
+
   const updateSubTicker = (slide: ActiveSlide) => {
-    if (!tickerScroll || !tickerLabel || !tickerIcon || !tickerName || !tickerHero || !tickerHeroValue || !tickerHeroUnit) return;
-    const mode = modeDisplay[slide.module.id] ?? { icon: '◌', name: slide.data.label, href: slide.data.link };
-    tickerIcon.textContent = mode.icon;
-    tickerName.textContent = mode.name;
-    tickerLabel.href = mode.href;
+    const mode = buildModeStats(slide);
+    if (tickerLogo) {
+      tickerLogo.style.opacity = '0';
+      window.setTimeout(() => {
+        tickerLogo.src = mode.logo;
+        tickerLogo.alt = mode.service;
+        tickerLogo.onerror = () => {
+          tickerLogo.style.display = 'none';
+          if (tickerStatValue) tickerStatValue.textContent = mode.icon;
+        };
+        tickerLogo.style.opacity = '0.6';
+        tickerLogo.style.display = '';
+      }, 180);
+    }
+
+    if (tickerName) {
+      tickerName.textContent = mode.name;
+      tickerName.href = mode.link;
+    }
 
     const modeIndex = slides.findIndex((item) => item.module.id === slide.module.id);
     if (tickerCounter) tickerCounter.textContent = `${Math.max(1, modeIndex + 1)}/${slides.length}`;
 
-    const ticker = getTickerContent(slide);
-    tickerHeroValue.textContent = ticker.hero.value;
-    tickerHeroUnit.textContent = ticker.hero.unit;
-    tickerHero.classList.toggle('hero--empty', Boolean(ticker.hero.empty));
-
-    const source = ticker.details.length ? ticker.details : [textItem('Waiting for data')];
-    const segment = source.map((item, i) => {
-      const sep = i < source.length - 1 ? '<span class="ticker-sep" aria-hidden="true">·</span>' : '';
-      return `${item}${sep}`;
-    }).join('');
-
-    tickerScroll.classList.remove('is-animated');
-    tickerScroll.style.removeProperty('--scroll-duration');
-    tickerScroll.innerHTML = segment;
-
-    const stream = tickerScroll.parentElement;
-    if (!reducedMotion && stream instanceof HTMLElement) {
-      const contentWidth = tickerScroll.scrollWidth;
-      if (contentWidth > stream.clientWidth) {
-        const copy = `<span class="ticker-copy">${segment}<span class="ticker-sep" aria-hidden="true">·</span></span>`;
-        tickerScroll.innerHTML = `${copy}${copy}`;
-        tickerScroll.classList.add('is-animated');
-        const duration = Math.max(30, Math.min(45, contentWidth / 22));
-        tickerScroll.style.setProperty('--scroll-duration', `${duration}s`);
-      }
-    }
+    pulseSignal(true);
+    startStatCycle(mode);
   };
 
   const applySlideState = (index: number) => {
