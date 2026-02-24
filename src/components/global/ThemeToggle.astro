@@ -28,6 +28,7 @@
       const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', nextTheme);
       localStorage.setItem('theme', nextTheme);
+      document.dispatchEvent(new CustomEvent('theme-change', { detail: { theme: nextTheme } }));
       setPressed();
     });
   }

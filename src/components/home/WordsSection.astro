@@ -12,26 +12,26 @@ const screenName = xUrl.split('/').filter(Boolean).pop() ?? 'ashtin';
     <div class="words-section__drift">
       <WritingDrift />
     </div>
-    <aside class="words-section__x-feed">
+    <aside class="words-section__x-feed" data-x-feed>
       <h3 class="x-feed__header"><span class="section-prefix">//</span><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="x-feed__logo" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></h3>
-      <div class="words__x-feed-embed" id="x-feed-embed">
+      <div class="words__x-feed-embed" data-x-embed>
         <a
           class="twitter-timeline"
           data-theme="dark"
           data-chrome="noheader nofooter noborders transparent"
           data-height="280"
           data-tweet-limit="1"
-          href="https://x.com/ashtin"
+          href={xUrl}
         >
           Loading posts...
         </a>
       </div>
-      <div class="x-feed__fallback" id="x-feed-fallback">
+      <div class="x-feed__fallback" data-x-fallback>
         <div class="x-feed__fallback-inner">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
           </svg>
-          <a href="https://x.com/ashtin" target="_blank" rel="noreferrer">@ashtin</a>
+          <a href={xUrl} target="_blank" rel="noreferrer">@{screenName}</a>
           <span class="x-feed__fallback-note">Follow on X →</span>
         </div>
       </div>
@@ -40,55 +40,6 @@ const screenName = xUrl.split('/').filter(Boolean).pop() ?? 'ashtin';
   <p class="writing__footer"><a href="/writing">VIEW ALL POSTS →</a></p>
 </section>
 
-<script is:inline>
-  (function() {
-    var embed = document.getElementById('x-feed-embed');
-    var fallback = document.getElementById('x-feed-fallback');
-    if (!embed || !fallback) return;
-
-    var theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-    var anchor = embed.querySelector('a.twitter-timeline');
-    if (anchor) {
-      anchor.setAttribute('data-theme', theme);
-      anchor.setAttribute('href', 'https://x.com/ashtin');
-      anchor.setAttribute('data-tweet-limit', '1');
-      anchor.setAttribute('data-height', '280');
-    }
-
-    if (!document.getElementById('twitter-wjs')) {
-      var script = document.createElement('script');
-      script.id = 'twitter-wjs';
-      script.src = 'https://platform.twitter.com/widgets.js';
-      script.async = true;
-      document.head.appendChild(script);
-    } else if (window.twttr && window.twttr.widgets && typeof window.twttr.widgets.load === 'function') {
-      window.twttr.widgets.load(embed);
-    }
-
-    setTimeout(function() {
-      if (!embed.querySelector('iframe')) {
-        embed.style.display = 'none';
-        fallback.style.display = 'block';
-      }
-    }, 8000);
-
-    var observer = new MutationObserver(function(entries) {
-      entries.forEach(function(entry) {
-        if (entry.type === 'attributes' && entry.attributeName === 'data-theme') {
-          var nextTheme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-          var currentAnchor = embed.querySelector('a.twitter-timeline');
-          if (currentAnchor) currentAnchor.setAttribute('data-theme', nextTheme);
-          if (window.twttr && window.twttr.widgets && typeof window.twttr.widgets.load === 'function') {
-            embed.style.display = '';
-            fallback.style.display = 'none';
-            window.twttr.widgets.load(embed);
-          }
-        }
-      });
-    });
-    observer.observe(document.documentElement, { attributes: true });
-  })();
-</script>
 <style>
 .words-section__grid { display:grid; grid-template-columns:1fr 1fr; gap:0; }
 .words-section__drift { border:1px solid var(--border); border-right:none; position:relative; overflow:hidden; min-height:200px; }
