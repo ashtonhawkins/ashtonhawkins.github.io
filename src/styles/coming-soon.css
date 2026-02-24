@@ -1,7 +1,5 @@
-.coming-shell {
+.cs-root {
   min-height: 100dvh;
-  position: relative;
-  overflow: hidden;
   background: var(--bg-primary);
 }
 
@@ -9,121 +7,143 @@
   position: fixed;
   inset: 0;
   z-index: 0;
-  width: 100%;
-  height: 100%;
 }
 
-.no-webgl .coming-shell {
-  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 1px, color-mix(in srgb, var(--accent-primary), transparent 92%) 1px, color-mix(in srgb, var(--accent-primary), transparent 92%) 2px);
+.no-webgl .cs-root {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 1px,
+    color-mix(in srgb, var(--accent-primary), transparent 96%) 1px,
+    color-mix(in srgb, var(--accent-primary), transparent 96%) 2px
+  );
 }
 
-.cs-center {
+.cs-viewport {
   position: relative;
-  z-index: 2;
-  min-height: 100dvh;
-  display: grid;
-  place-items: center;
+  z-index: 1;
+  min-height: calc(100dvh - 92px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 1.5rem;
 }
 
 .cs-terminal {
-  width: min(520px, 100%);
+  width: min(600px, 100%);
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
-  line-height: 1.55;
+  font-size: 11px;
+  line-height: 1.52;
 }
-.cs-title { color: var(--text-primary); }
-.cs-title::after { content: ''; }
+
+.cs-line,
+.cs-divider {
+  margin: 0;
+  white-space: pre-wrap;
+}
+.cs-head { color: var(--text-primary); font-weight: 600; }
+.cs-sub { color: var(--text-secondary); }
+.cs-meta,
+.cs-key { color: var(--text-tertiary); }
 .cs-primary { color: var(--text-primary); }
-.cs-muted { color: var(--text-secondary); }
-.cs-accent, .cs-cursor-line { color: var(--accent-primary); }
-.cs-cursor-line { animation: cs-blink 530ms steps(1, end) infinite; }
-
-.cs-line { white-space: pre-wrap; }
-.cs-line.is-glitching {
-  animation: cs-jitter 150ms linear 1;
+.cs-accent,
+.cs-access,
+.cs-up { color: var(--accent-primary); }
+.cs-warn { color: var(--accent-secondary); }
+.cs-divider { color: var(--border); }
+.cs-cursor {
+  color: var(--accent-primary);
+  animation: cs-blink 530ms steps(1, end) infinite;
 }
 
-@keyframes cs-jitter {
-  0% { transform: translateX(0); opacity: 1; }
-  40% { transform: translateX(2px); opacity: 0.8; }
-  70% { transform: translateX(-2px); opacity: 0.95; }
-  100% { transform: translateX(0); opacity: 1; }
+.glitch-hover {
+  transform: translateX(2px);
+  opacity: 0.85;
+  transition: transform 150ms ease, opacity 150ms ease;
 }
 
-@keyframes cs-blink {
-  0%, 49% { opacity: 1; }
-  50%, 100% { opacity: 0; }
-}
-
-.cs-hint {
-  position: fixed;
-  bottom: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 3;
-  opacity: 0;
-  transition: opacity 240ms ease;
-  color: color-mix(in srgb, var(--text-tertiary), transparent 40%);
-  font: 400 11px/1.2 'IBM Plex Mono', monospace;
-  letter-spacing: 0.08em;
-}
-.cs-hint.is-visible { opacity: 1; }
-.cs-hint.is-hidden { opacity: 0; pointer-events: none; }
-
-.cs-shell {
+.cs-query-wrap {
   position: fixed;
   inset: auto 0 0;
-  z-index: 4;
-  max-height: 45vh;
-  display: flex;
-  flex-direction: column;
-  pointer-events: none;
+  z-index: 2;
+  background: linear-gradient(to top, var(--bg-primary) 50%, transparent);
+  padding: 0 1rem 1.5rem;
 }
-.cs-shell.is-open { pointer-events: auto; }
-.cs-history {
+
+.cs-query-output {
+  max-height: 35dvh;
   overflow-y: auto;
-  padding: 0 1.5rem;
-  font: 400 12px/1.5 'IBM Plex Mono', monospace;
+  padding-bottom: 0.5rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  line-height: 1.5;
 }
-.cs-term-row { margin: 0.1rem auto; max-width: 520px; }
-.cs-input-wrap {
-  margin: 0 auto;
-  width: min(520px, calc(100% - 3rem));
+
+.cs-query {
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg-secondary), transparent 70%);
+  gap: 0.5rem;
+  font-family: 'IBM Plex Mono', monospace;
 }
-.cs-prompt { color: var(--text-tertiary); padding-right: 0.25rem; }
-.cs-input {
+
+.cs-query-label { color: var(--text-tertiary); font-size: 11px; }
+
+.cs-query-input {
   flex: 1;
   border: 0;
   background: transparent;
-  color: var(--text-primary);
-  font: inherit;
-  padding: 0.65rem 0;
+  color: var(--text-secondary);
+  font: 400 12px/1.4 'IBM Plex Mono', monospace;
+  caret-color: transparent;
 }
-.cs-input:focus { outline: none; }
-.cs-ok { color: var(--accent-primary); }
-.cs-wip { color: var(--text-tertiary); }
-.cs-timeout { color: var(--accent-secondary); }
+
+.cs-query-input::placeholder { color: color-mix(in srgb, var(--text-tertiary), transparent 60%); }
+.cs-query-input:focus { outline: none; }
+.cs-query-input::after { content: '_'; }
+.cs-query-wrap::after {
+  content: '_';
+  color: var(--accent-primary);
+  margin-left: 0.2rem;
+  animation: cs-blink 530ms steps(1, end) infinite;
+}
+
+.cs-query-wrap.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 250ms ease;
+}
+
+@keyframes cs-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (width >= 640px) {
+  .cs-terminal { font-size: 12px; }
+}
+
+@media (width >= 1024px) {
+  .cs-terminal { font-size: 14px; }
+}
 
 @media (max-width: 640px) {
-  .cs-terminal { font-size: 11px; }
-  .cs-line:first-child { font-size: 14px; }
-  .cs-hint {
-    width: calc(100% - 2rem);
-    text-align: center;
+  .cs-query-input {
     min-height: 48px;
-    display: grid;
-    place-items: center;
+    font-size: 16px;
   }
-  .cs-input-wrap { min-height: 48px; }
-  .cs-input { font-size: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cs-cursor-line,
-  .cs-line.is-glitching { animation: none; }
+  .cs-cursor,
+  .glitch-hover,
+  .cs-query-wrap::after {
+    animation: none;
+    transition: none;
+  }
 }
