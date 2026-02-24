@@ -15,8 +15,24 @@ const screenName = xUrl.split('/').filter(Boolean).pop() ?? 'ashtin';
     <aside class="words-section__x-feed">
       <h3 class="x-feed__header"><span class="section-prefix">//</span><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="x-feed__logo" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></h3>
       <div class="words__x-feed-embed" id="x-feed-embed">
-        <div class="words__x-feed-fallback" id="x-feed-fallback">
-          <a href={xUrl} target="_blank" rel="noopener noreferrer">@{screenName} →</a>
+        <a
+          class="twitter-timeline"
+          data-theme="dark"
+          data-chrome="noheader nofooter noborders transparent"
+          data-height="280"
+          data-tweet-limit="1"
+          href="https://x.com/ashtin"
+        >
+          Loading posts...
+        </a>
+      </div>
+      <div class="x-feed__fallback" id="x-feed-fallback">
+        <div class="x-feed__fallback-inner">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+          <a href="https://x.com/ashtin" target="_blank" rel="noreferrer">@ashtin</a>
+          <span class="x-feed__fallback-note">Follow on X →</span>
         </div>
       </div>
     </aside>
@@ -25,80 +41,53 @@ const screenName = xUrl.split('/').filter(Boolean).pop() ?? 'ashtin';
 </section>
 
 <script is:inline>
-  const section = document.querySelector('.words-section');
-  const xContainer = document.getElementById('x-feed-embed');
-  const fallback = document.getElementById('x-feed-fallback');
-  const screenName = section?.getAttribute('data-x-screen-name') ?? 'ashtin';
+  (function() {
+    var embed = document.getElementById('x-feed-embed');
+    var fallback = document.getElementById('x-feed-fallback');
+    if (!embed || !fallback) return;
 
-  const showFallback = () => {
-    if (fallback) {
-      fallback.style.display = 'flex';
-    }
-  };
-
-  const hideFallback = () => {
-    if (fallback) {
-      fallback.style.display = 'none';
-    }
-  };
-
-  const ensureTwitterScript = () => {
-    if (document.querySelector('script[data-twitter-widget="true"]')) {
-      return;
+    var theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    var anchor = embed.querySelector('a.twitter-timeline');
+    if (anchor) {
+      anchor.setAttribute('data-theme', theme);
+      anchor.setAttribute('href', 'https://x.com/ashtin');
+      anchor.setAttribute('data-tweet-limit', '1');
+      anchor.setAttribute('data-height', '280');
     }
 
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = 'https://platform.twitter.com/widgets.js';
-    script.setAttribute('data-twitter-widget', 'true');
-    document.head.appendChild(script);
-  };
-
-  const renderTimeline = () => {
-    if (!xContainer) {
-      return;
+    if (!document.getElementById('twitter-wjs')) {
+      var script = document.createElement('script');
+      script.id = 'twitter-wjs';
+      script.src = 'https://platform.twitter.com/widgets.js';
+      script.async = true;
+      document.head.appendChild(script);
+    } else if (window.twttr && window.twttr.widgets && typeof window.twttr.widgets.load === 'function') {
+      window.twttr.widgets.load(embed);
     }
 
-    hideFallback();
-    xContainer.querySelectorAll('iframe, a.twitter-timeline').forEach((node) => node.remove());
-
-    const theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-    const anchor = document.createElement('a');
-    anchor.className = 'twitter-timeline';
-    anchor.href = `https://twitter.com/${screenName}`;
-    anchor.textContent = 'Loading posts...';
-    anchor.setAttribute('data-theme', theme);
-    anchor.setAttribute('data-chrome', 'noheader nofooter noborders transparent');
-    anchor.setAttribute('data-height', '300');
-    anchor.setAttribute('data-width', '100%');
-    anchor.setAttribute('data-tweet-limit', '3');
-    xContainer.prepend(anchor);
-
-    ensureTwitterScript();
-
-    if (window.twttr?.widgets?.load) {
-      window.twttr.widgets.load(xContainer);
-    }
-
-    window.setTimeout(() => {
-      const hasEmbed = Boolean(xContainer.querySelector('iframe'));
-      if (!hasEmbed) {
-        showFallback();
+    setTimeout(function() {
+      if (!embed.querySelector('iframe')) {
+        embed.style.display = 'none';
+        fallback.style.display = 'block';
       }
-    }, 5000);
-  };
+    }, 8000);
 
-  renderTimeline();
-
-  const observer = new MutationObserver((entries) => {
-    for (const entry of entries) {
-      if (entry.type === 'attributes' && entry.attributeName === 'data-theme') {
-        renderTimeline();
-      }
-    }
-  });
-
-  observer.observe(document.documentElement, { attributes: true });
+    var observer = new MutationObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.type === 'attributes' && entry.attributeName === 'data-theme') {
+          var nextTheme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+          var currentAnchor = embed.querySelector('a.twitter-timeline');
+          if (currentAnchor) currentAnchor.setAttribute('data-theme', nextTheme);
+          if (window.twttr && window.twttr.widgets && typeof window.twttr.widgets.load === 'function') {
+            embed.style.display = '';
+            fallback.style.display = 'none';
+            window.twttr.widgets.load(embed);
+          }
+        }
+      });
+    });
+    observer.observe(document.documentElement, { attributes: true });
+  })();
 </script>
 <style>
 .words-section__grid { display:grid; grid-template-columns:1fr 1fr; gap:0; }
@@ -109,8 +98,29 @@ const screenName = xUrl.split('/').filter(Boolean).pop() ?? 'ashtin';
 .x-feed__logo{display:block}
 .words__x-feed-embed { max-height: 320px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.1) transparent; }
 .words__x-feed-embed iframe { border: none !important; border-radius: 4px; }
-.words__x-feed-fallback { display: none; min-height: 120px; padding: 16px; align-items: center; justify-content: center; text-align: center; }
-.words__x-feed-fallback a,.writing__footer a{text-decoration:none;font:.72rem 'IBM Plex Mono',monospace;color:var(--text-secondary);letter-spacing:.08em}
-.words__x-feed-fallback a:hover,.writing__footer a:hover{color:var(--accent-primary)}
+.x-feed__fallback {
+  display: none;
+  padding: 2rem;
+  text-align: center;
+}
+.x-feed__fallback-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.x-feed__fallback-inner svg { color: var(--text-tertiary); }
+.x-feed__fallback-inner a {
+  font: 700 1rem 'IBM Plex Mono', monospace;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+.x-feed__fallback-note {
+  font: 0.72rem 'IBM Plex Mono', monospace;
+  color: var(--text-tertiary);
+  letter-spacing: 0.08em;
+}
+.writing__footer a{text-decoration:none;font:.72rem 'IBM Plex Mono',monospace;color:var(--text-secondary);letter-spacing:.08em}
+.writing__footer a:hover{color:var(--accent-primary)}
 @media (max-width: 768px) { .words-section__grid { grid-template-columns:1fr; } .words-section__drift { border-right:1px solid var(--border); } }
 </style>
