@@ -1,74 +1,52 @@
 ---
 import Base from '@layouts/Base.astro';
-import Cursor from '@components/ui/Cursor.astro';
+import '@styles/coming-soon.css';
 ---
 
 <Base
   title="Ashton Hawkins — Coming Soon"
   description="New site loading. Ashton Hawkins — web experience, optimization, and digital operations."
+  robots="noindex"
 >
-  <main class="coming-soon" aria-label="Coming soon page">
-    <div class="coming-soon__content">
-      <h1 class="coming-soon__name">
-        ASHTON HAWKINS
-        <Cursor />
-      </h1>
-      <p class="coming-soon__status">Something new is loading...</p>
-    </div>
+  <main class="coming-shell" aria-label="System terminal boot experience">
+    <canvas class="noise-canvas" id="noise-canvas" aria-hidden="true"></canvas>
+
+    <section class="cs-center">
+      <div class="cs-terminal" id="boot-sequence" aria-live="polite"></div>
+    </section>
+
+    <button class="cs-hint" id="terminal-hint" type="button">PRESS / TO ACCESS TERMINAL</button>
+
+    <section class="cs-shell" id="command-shell" aria-label="Command terminal">
+      <div class="cs-history" id="terminal-history"></div>
+      <label class="cs-input-wrap" id="terminal-input-wrap" hidden>
+        <span class="cs-prompt">&gt;</span>
+        <input class="cs-input" id="terminal-input" type="text" autocapitalize="off" autocomplete="off" spellcheck="false" />
+      </label>
+    </section>
   </main>
 </Base>
 
-<style>
-  .coming-soon {
-    min-height: 100dvh;
-    display: grid;
-    place-items: center;
-    padding: 1.5rem;
-    background: var(--bg-primary);
-  }
+<script>
+  import { initNoiseShader } from '@components/animations/NoiseShader';
+  import { initBootSequence } from '@components/coming-soon/BootSequence';
+  import { initTerminal } from '@components/coming-soon/Terminal';
 
-  .coming-soon__content {
-    width: 100%;
-    max-width: 32rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 0.65rem;
-    opacity: 0;
-    animation: fade-in 800ms ease-out forwards;
-  }
+  const canvas = document.querySelector<HTMLCanvasElement>('#noise-canvas');
+  const bootContainer = document.querySelector<HTMLElement>('#boot-sequence');
+  const hint = document.querySelector<HTMLElement>('#terminal-hint');
+  const shell = document.querySelector<HTMLElement>('#command-shell');
+  const history = document.querySelector<HTMLElement>('#terminal-history');
+  const inputWrap = document.querySelector<HTMLElement>('#terminal-input-wrap');
+  const input = document.querySelector<HTMLInputElement>('#terminal-input');
 
-  .coming-soon__name {
-    margin: 0;
-    font-family: 'Space Grotesk Variable', sans-serif;
-    font-size: 1.5rem;
-    line-height: 1.2;
-    color: var(--text-primary);
-    letter-spacing: -0.03em;
-  }
-
-  .coming-soon__status {
-    margin: 0;
-    font-family: 'IBM Plex Sans', system-ui, sans-serif;
-    font-size: 1rem;
-    color: var(--text-secondary);
-  }
-
-  @keyframes fade-in {
-    from {
-      opacity: 0;
+  if (canvas && bootContainer && hint && shell && history && inputWrap && input) {
+    initNoiseShader(canvas);
+    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+      hint.textContent = 'TAP HERE TO ACCESS TERMINAL';
     }
-
-    to {
-      opacity: 1;
-    }
+    initBootSequence(bootContainer, () => {}).then((boot) => {
+      initTerminal({ shell, history, inputWrap, input, hint }, boot);
+    });
   }
-
-  @media (prefers-reduced-motion: reduce) {
-    .coming-soon__content {
-      animation: none;
-      opacity: 1;
-    }
-  }
-</style>
+</script>

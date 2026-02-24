@@ -10,11 +10,13 @@ import ibmPlexMonoLatin400 from '@fontsource/ibm-plex-mono/files/ibm-plex-mono-l
 interface Props {
   title?: string;
   description?: string;
+  robots?: string;
 }
 
 const {
   title = 'Ashton Hawkins',
-  description = 'Digital product leader crafting AI-native experiences and thoughtful web interfaces.'
+  description = 'Digital product leader crafting AI-native experiences and thoughtful web interfaces.',
+  robots
 } = Astro.props;
 
 const pageTitle = title.includes('Ashton Hawkins') ? title : `${title} — Ashton Hawkins`;
@@ -45,6 +47,7 @@ const personSchema = {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="canonical" href={canonical} />
     <meta name="description" content={description} />
+    {robots ? <meta name="robots" content={robots} /> : null}
     <title>{pageTitle}</title>
 
     <meta property="og:title" content={pageTitle} />
