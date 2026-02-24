@@ -83,7 +83,7 @@ const xUrl = socialXUrl.replace(/^https?:\/\/x\.com\//, 'https://twitter.com/');
     const existingScript = document.getElementById('twitter-wjs');
     if (existingScript) {
       const start = Date.now();
-      while (!window.twttr?.widgets?.load && Date.now() - start < 12000) {
+      while (!window.twttr?.widgets?.load && Date.now() - start < 5000) {
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
       return Boolean(window.twttr?.widgets?.load);
@@ -104,7 +104,7 @@ const xUrl = socialXUrl.replace(/^https?:\/\/x\.com\//, 'https://twitter.com/');
       return false;
     }
     const start = Date.now();
-    while (!window.twttr?.widgets?.load && Date.now() - start < 12000) {
+    while (!window.twttr?.widgets?.load && Date.now() - start < 5000) {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
     return Boolean(window.twttr?.widgets?.load);
@@ -151,7 +151,7 @@ const xUrl = socialXUrl.replace(/^https?:\/\/x\.com\//, 'https://twitter.com/');
       return;
     }
     window.twttr.widgets.load(embedContainer);
-    const hasIframe = await waitForIframe(embedContainer, 12000);
+    const hasIframe = await waitForIframe(embedContainer, 5000);
     if (hasIframe) {
       showEmbed();
       return;

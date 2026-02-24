@@ -20,6 +20,11 @@ const firstCity = cities[0] ?? {
   routes: [] as string[],
 };
 
+const visibleSuperlatives = superlativesData.superlatives.filter((item) => {
+  const value = String(item.value ?? '').trim().toUpperCase();
+  return value && value !== 'TBD';
+});
+
 const sketchByCategory: Record<string, string> = {
   'Fork & Knife': `<svg viewBox="0 0 40 40" width="40" height="40" fill="none" stroke="var(--accent-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"><ellipse cx="20" cy="22" rx="12" ry="11" /><ellipse cx="20" cy="22" rx="7" ry="6.5" /><path d="M4,8 L4,18 Q4,22 7,22 L7,35" /><line x1="2" y1="8" x2="2" y2="14" /><line x1="6" y1="8" x2="6" y2="14" /><path d="M36,8 Q38,14 36,20 L34,20 L34,35" /></svg>`,
   'Check-In': `<svg viewBox="0 0 40 40" width="40" height="40" fill="none" stroke="var(--accent-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"><path d="M6,30 L6,12 Q6,8 10,8 L30,8 Q34,8 34,12 L34,30" /><path d="M3,30 L37,30 L37,35 L3,35 Z" /><path d="M10,14 Q10,12 14,12 L20,12 Q24,12 24,14 L24,18 Q24,20 20,20 L14,20 Q10,20 10,18 Z" /><path d="M6,25 L34,25" /></svg>`,
@@ -47,7 +52,18 @@ const sketchByCategory: Record<string, string> = {
     <div class="travel-stats__item"><div class="travel-stats__graphic"><svg width="32" height="16" viewBox="0 0 32 16" fill="none"><line x1="4" y1="14" x2="4" y2="4" stroke="var(--accent-primary)" stroke-width="1" opacity="0.4"/><rect x="4" y="4" width="5" height="3" fill="var(--accent-primary)" opacity="0.2"/><line x1="14" y1="14" x2="14" y2="2" stroke="var(--accent-primary)" stroke-width="1" opacity="0.5"/><rect x="14" y="2" width="5" height="3" fill="var(--accent-primary)" opacity="0.3"/><line x1="24" y1="14" x2="24" y2="6" stroke="var(--accent-primary)" stroke-width="1" opacity="0.4"/><rect x="24" y="6" width="5" height="3" fill="var(--accent-primary)" opacity="0.2"/></svg></div><div class="travel-stats__number">{travelStats.countries}</div><div class="travel-stats__label">Countries</div></div>
     <div class="travel-stats__item"><div class="travel-stats__graphic"><svg width="32" height="16" viewBox="0 0 32 16" fill="none"><path d="M2,14 Q16,-4 30,14" stroke="var(--accent-primary)" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.4" stroke-dasharray="3 2"/></svg></div><div class="travel-stats__number">{Math.round(travelStats.totalDistance / 1000)}K</div><div class="travel-stats__label">Miles</div></div>
   </div>
-  <div class="travel__supers">{superlativesData.superlatives.map((item) => <article class="plaque"><Fragment set:html={sketchByCategory[item.category] ?? sketchByCategory['Fork & Knife']} /><p>{item.category}</p><strong>{item.value}</strong><span>{item.place}</span></article>)}</div>
+  {visibleSuperlatives.length > 0 && (
+    <div class="travel__supers">
+      {visibleSuperlatives.map((item) => (
+        <article class="plaque">
+          <Fragment set:html={sketchByCategory[item.category] ?? sketchByCategory['Fork & Knife']} />
+          <p>{item.category}</p>
+          <strong>{item.value}</strong>
+          <span>{item.place}</span>
+        </article>
+      ))}
+    </div>
+  )}
   <p class="travel__footer"><a href="/travel" class="section-footer-link">Explore all trips →</a></p>
 </section>
 <style>
