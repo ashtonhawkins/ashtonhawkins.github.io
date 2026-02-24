@@ -3,8 +3,9 @@ import SectionHeader from '@components/ui/SectionHeader.astro';
 import WritingDrift from '@components/home/WritingDrift.astro';
 import site from '@data/site.json';
 
-const xUrl = site.social?.x ?? 'https://x.com/ashtin';
-const screenName = xUrl.split('/').filter(Boolean).pop() ?? 'ashtin';
+const socialXUrl = site.social?.x ?? 'https://x.com/ashtin';
+const screenName = socialXUrl.split('/').filter(Boolean).pop() ?? 'ashtin';
+const xUrl = socialXUrl.replace(/^https?:\/\/x\.com\//, 'https://twitter.com/');
 ---
 <section id="words" class="words-section" data-x-screen-name={screenName}>
   <SectionHeader label="Words" />
@@ -75,3 +76,99 @@ const screenName = xUrl.split('/').filter(Boolean).pop() ?? 'ashtin';
 .writing__footer a:hover{color:var(--accent-primary)}
 @media (max-width: 768px) { .words-section__grid { grid-template-columns:1fr; } .words-section__drift { border-right:1px solid var(--border); } }
 </style>
+
+<script is:inline data-astro-rerun>
+  const waitForWidgets = async () => {
+    if (window.twttr?.widgets?.load) return true;
+    const existingScript = document.getElementById('twitter-wjs');
+    if (existingScript) {
+      const start = Date.now();
+      while (!window.twttr?.widgets?.load && Date.now() - start < 12000) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      return Boolean(window.twttr?.widgets?.load);
+    }
+    const script = document.createElement('script');
+    script.id = 'twitter-wjs';
+    script.src = 'https://platform.twitter.com/widgets.js';
+    script.async = true;
+    script.charset = 'utf-8';
+    const loaded = new Promise((resolve, reject) => {
+      script.onload = resolve;
+      script.onerror = reject;
+    });
+    document.head.appendChild(script);
+    try {
+      await loaded;
+    } catch {
+      return false;
+    }
+    const start = Date.now();
+    while (!window.twttr?.widgets?.load && Date.now() - start < 12000) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    return Boolean(window.twttr?.widgets?.load);
+  };
+
+  const waitForIframe = (container, timeoutMs) =>
+    new Promise((resolve) => {
+      if (container.querySelector('iframe')) {
+        resolve(true);
+        return;
+      }
+      const observer = new MutationObserver(() => {
+        if (container.querySelector('iframe')) {
+          observer.disconnect();
+          clearTimeout(timer);
+          resolve(true);
+        }
+      });
+      observer.observe(container, { childList: true, subtree: true });
+      const timer = setTimeout(() => {
+        observer.disconnect();
+        resolve(Boolean(container.querySelector('iframe')));
+      }, timeoutMs);
+    });
+
+  const initSection = async (section) => {
+    const embedContainer = section.querySelector('[data-x-embed]');
+    const fallback = section.querySelector('[data-x-fallback]');
+    if (!embedContainer || !fallback) return;
+
+    const showEmbed = () => {
+      embedContainer.style.display = '';
+      fallback.style.display = 'none';
+    };
+    const showFallback = () => {
+      embedContainer.style.display = 'none';
+      fallback.style.display = 'block';
+    };
+
+    showEmbed();
+    const widgetsReady = await waitForWidgets();
+    if (!widgetsReady) {
+      showFallback();
+      return;
+    }
+    window.twttr.widgets.load(embedContainer);
+    const hasIframe = await waitForIframe(embedContainer, 12000);
+    if (hasIframe) {
+      showEmbed();
+      return;
+    }
+    showFallback();
+  };
+
+  const init = () => {
+    document.querySelectorAll('.words-section').forEach((section) => {
+      initSection(section);
+    });
+  };
+
+  init();
+  if (!window.__wordsSectionXFeedHandlersBound) {
+    document.addEventListener('astro:page-load', init);
+    document.addEventListener('astro:after-swap', init);
+    window.__wordsSectionXFeedHandlersBound = true;
+  }
+</script>
