@@ -4,24 +4,30 @@ import '@styles/coming-soon.css';
 ---
 
 <Base
-  title="Ashton Hawkins — Coming Soon"
-  description="New site loading. Ashton Hawkins — web experience, optimization, and digital operations."
+  title="Ashton Hawkins — Personal Operating System"
+  description="Connection logged. Ashton Hawkins — digital infrastructure, growth systems, and platform operations."
   robots="noindex"
 >
-  <main class="coming-shell" aria-label="System terminal boot experience">
-    <canvas class="noise-canvas" id="noise-canvas" aria-hidden="true"></canvas>
+  <main class="cs-root" aria-label="Personal operating system">
+    <canvas id="noise-canvas" class="noise-canvas" aria-hidden="true"></canvas>
 
-    <section class="cs-center">
-      <div class="cs-terminal" id="boot-sequence" aria-live="polite"></div>
+    <section class="cs-viewport">
+      <div id="boot-sequence" class="cs-terminal" aria-live="polite"></div>
     </section>
 
-    <button class="cs-hint" id="terminal-hint" type="button">PRESS / TO ACCESS TERMINAL</button>
-
-    <section class="cs-shell" id="command-shell" aria-label="Command terminal">
-      <div class="cs-history" id="terminal-history"></div>
-      <label class="cs-input-wrap" id="terminal-input-wrap" hidden>
-        <span class="cs-prompt">&gt;</span>
-        <input class="cs-input" id="terminal-input" type="text" autocapitalize="off" autocomplete="off" spellcheck="false" />
+    <section class="cs-query-wrap" id="query-shell">
+      <div id="query-output" class="cs-query-output" aria-live="polite"></div>
+      <label class="cs-query">
+        <span class="cs-query-label">QUERY //</span>
+        <input
+          id="query-input"
+          class="cs-query-input"
+          type="text"
+          autocapitalize="off"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="ENTER COMMAND OR TYPE 'CATALOG' FOR DIRECTORY"
+        />
       </label>
     </section>
   </main>
@@ -30,23 +36,28 @@ import '@styles/coming-soon.css';
 <script>
   import { initNoiseShader } from '@components/animations/NoiseShader';
   import { initBootSequence } from '@components/coming-soon/BootSequence';
-  import { initTerminal } from '@components/coming-soon/Terminal';
+  import { initQueryInterface } from '@components/coming-soon/QueryInterface';
 
   const canvas = document.querySelector<HTMLCanvasElement>('#noise-canvas');
-  const bootContainer = document.querySelector<HTMLElement>('#boot-sequence');
-  const hint = document.querySelector<HTMLElement>('#terminal-hint');
-  const shell = document.querySelector<HTMLElement>('#command-shell');
-  const history = document.querySelector<HTMLElement>('#terminal-history');
-  const inputWrap = document.querySelector<HTMLElement>('#terminal-input-wrap');
-  const input = document.querySelector<HTMLInputElement>('#terminal-input');
+  const bootEl = document.querySelector<HTMLElement>('#boot-sequence');
+  const outputEl = document.querySelector<HTMLElement>('#query-output');
+  const shellEl = document.querySelector<HTMLElement>('#query-shell');
+  const inputEl = document.querySelector<HTMLInputElement>('#query-input');
 
-  if (canvas && bootContainer && hint && shell && history && inputWrap && input) {
+  if (canvas && bootEl && outputEl && shellEl && inputEl) {
     initNoiseShader(canvas);
-    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-      hint.textContent = 'TAP HERE TO ACCESS TERMINAL';
-    }
-    initBootSequence(bootContainer, () => {}).then((boot) => {
-      initTerminal({ shell, history, inputWrap, input, hint }, boot);
+    const isMobile = window.matchMedia('(max-width: 640px)').matches;
+    if (isMobile) inputEl.placeholder = "ENTER COMMAND OR 'CATALOG'";
+
+    initBootSequence(bootEl).then((boot) => {
+      initQueryInterface({ output: outputEl, form: shellEl, input: inputEl }, boot);
+
+      document.querySelectorAll<HTMLElement>('[data-glitchable="1"]').forEach((line) => {
+        line.addEventListener('mouseenter', () => {
+          line.classList.add('glitch-hover');
+          window.setTimeout(() => line.classList.remove('glitch-hover'), 160);
+        });
+      });
     });
   }
 </script>

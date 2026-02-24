@@ -1,223 +1,245 @@
-export interface VisitorProfile {
+export interface ScanProfile {
+  subjectId: string;
   browser: string;
-  viewport: string;
-  localTime: string;
-  connection: string;
+  engine: string;
+  os: string;
+  display: string;
+  screenNative: string;
+  colorDepth: string;
   gpu: string;
-  cores: string;
-  darkMode: string;
-  touch: string;
-  battery?: string;
-  screen: string;
-  pixelRatio: string;
+  webglVersion: string;
+  maxTexture: string;
+  processing: string;
+  network: string;
+  power?: string;
+  colorPref: string;
+  inputMethod: string;
+  locale: string;
   languages: string;
+  timezone: string;
+  platform: string;
+  cookies: string;
+  dnt: string;
 }
 
-export interface BootController {
-  profile: VisitorProfile;
-  rerunScan: () => Promise<void>;
-  clearTerminal: () => void;
+export interface BootState {
+  profile: ScanProfile;
+  refreshIntake: () => Promise<void>;
+  clearToBoot: () => void;
+  setSubjectId: () => string;
   getUptime: () => string;
 }
 
-const LAUNCH = new Date('2025-01-15T00:00:00Z').getTime();
-const sleep = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
+const launchEpoch = Date.parse('2025-01-15T00:00:00Z');
+const wait = (ms: number): Promise<void> => new Promise((r) => window.setTimeout(r, ms));
+const emDash = '—'.repeat(48);
 
-const parseUA = (ua: string): string => {
-  const upper = ua.toUpperCase();
-  const os = /WINDOWS/.test(upper)
+const fmt = (n: number): string => new Intl.NumberFormat('en-US').format(n);
+
+const uaParse = (ua: string): { browser: string; engine: string; os: string } => {
+  const browser = /Edg\/(\d+)/i.exec(ua)?.[1]
+    ? `EDGE ${/Edg\/(\d+)/i.exec(ua)![1]}`
+    : /Chrome\/(\d+)/i.exec(ua)?.[1]
+      ? `CHROME ${/Chrome\/(\d+)/i.exec(ua)![1]}`
+      : /Version\/(\d+).+Safari/i.exec(ua)?.[1]
+        ? `SAFARI ${/Version\/(\d+).+Safari/i.exec(ua)![1]}`
+        : /Firefox\/(\d+)/i.exec(ua)?.[1]
+          ? `FIREFOX ${/Firefox\/(\d+)/i.exec(ua)![1]}`
+          : 'UNKNOWN';
+  const os = /Windows/i.test(ua)
     ? 'WINDOWS'
-    : /MAC OS X/.test(upper)
+    : /Mac OS X/i.test(ua)
       ? 'MACOS'
-      : /ANDROID/.test(upper)
+      : /Android/i.test(ua)
         ? 'ANDROID'
-        : /(IPHONE|IPAD|IOS)/.test(upper)
+        : /(iPhone|iPad|iOS)/i.test(ua)
           ? 'IOS'
-          : /LINUX/.test(upper)
+          : /Linux/i.test(ua)
             ? 'LINUX'
             : 'UNKNOWN';
-  const edge = ua.match(/EDG\/(\d+)/i)?.[1];
-  const chrome = ua.match(/CHROME\/(\d+)/i)?.[1];
-  const safari = ua.match(/VERSION\/(\d+).+SAFARI/i)?.[1];
-  const firefox = ua.match(/FIREFOX\/(\d+)/i)?.[1];
-  const browser = edge
-    ? `EDGE ${edge}`
-    : chrome
-      ? `CHROME ${chrome}`
-      : safari
-        ? `SAFARI ${safari}`
-        : firefox
-          ? `FIREFOX ${firefox}`
-          : 'UNKNOWN';
-  return `${browser} / ${os}`;
+  const engine = /AppleWebKit\/(\d+)/i.exec(ua)?.[1]
+    ? `WEBKIT ${/AppleWebKit\/(\d+)/i.exec(ua)![1]}`
+    : /Gecko\/(\d+)/i.exec(ua)?.[1]
+      ? `GECKO ${/Gecko\/(\d+)/i.exec(ua)![1]}`
+      : /Chrome\/(\d+)/i.exec(ua)?.[1]
+        ? `BLINK ${/Chrome\/(\d+)/i.exec(ua)![1]}`
+        : 'UNKNOWN';
+  return { browser, engine, os };
 };
 
-const currentLocalTime = (): string => {
-  const now = new Date();
-  return new Intl.DateTimeFormat('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-    timeZoneName: 'short'
-  }).format(now).replace(',', '');
+const parseRenderer = (raw: string): string => {
+  const upper = raw.toUpperCase();
+  const match = upper.match(/(APPLE\s+[A-Z0-9\s]+|NVIDIA\s+[A-Z0-9\s]+|AMD\s+[A-Z0-9\s]+|INTEL\s*[A-Z0-9()\s]+)/);
+  return (match?.[1] ?? raw).replace(/ANGLE \(|\)|METAL|OPENGL|DIRECT3D11/gi, '').replace(/\s+/g, ' ').trim();
 };
 
-const getGpu = (): string => {
-  const canvas = document.createElement('canvas');
-  const gl = canvas.getContext('webgl');
-  if (!gl) return 'UNKNOWN';
-  const ext = gl.getExtension('WEBGL_debug_renderer_info');
-  if (!ext) return 'UNKNOWN';
-  const raw = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) as string;
-  const extracted = raw.match(/(Apple [^,)]+|NVIDIA [^,)]+|Intel\(R\) [^,)]+|AMD [^,)]+|GeForce [^,)]+)/i)?.[1];
-  return (extracted ?? raw.split(',')[0] ?? 'UNKNOWN').replace(/ANGLE \(|\)$/g, '').trim().toUpperCase();
-};
-
-const detectVisitor = async (): Promise<VisitorProfile> => {
+const detect = async (subjectId: string): Promise<ScanProfile> => {
   const nav = navigator as Navigator & {
     connection?: { effectiveType?: string; rtt?: number };
     getBattery?: () => Promise<{ level: number; charging: boolean }>;
   };
 
-  let battery: string | undefined;
+  const glCanvas = document.createElement('canvas');
+  const gl2 = glCanvas.getContext('webgl2');
+  const gl = gl2 ?? glCanvas.getContext('webgl');
+  const debugInfo = gl?.getExtension('WEBGL_debug_renderer_info') as { UNMASKED_RENDERER_WEBGL: number } | null;
+  const renderer = debugInfo ? (gl?.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) as string) : 'UNKNOWN';
+
+  let power: string | undefined;
   if (typeof nav.getBattery === 'function') {
     try {
-      const info = await nav.getBattery();
-      battery = `${Math.round(info.level * 100)}% [${info.charging ? 'CHARGING' : 'DISCHARGING'}]`;
+      const battery = await nav.getBattery();
+      power = `${Math.round(battery.level * 100)}% ${battery.charging ? 'CHARGING' : 'DISCHARGING'}`;
     } catch {
-      battery = undefined;
+      power = undefined;
     }
   }
 
+  const parsed = uaParse(navigator.userAgent);
   const connection = nav.connection?.effectiveType
-    ? `${nav.connection.effectiveType.toUpperCase()}${typeof nav.connection.rtt === 'number' ? ` ~${nav.connection.rtt}MS RTT` : ''}`
-    : 'UNKNOWN';
+    ? `${nav.connection.effectiveType.toUpperCase()} / ~${Math.round(nav.connection.rtt ?? 0)}MS RTT`
+    : 'UNRESOLVED';
 
   return {
-    browser: parseUA(navigator.userAgent),
-    viewport: `${window.innerWidth} × ${window.innerHeight}`,
-    localTime: currentLocalTime(),
-    connection,
-    gpu: getGpu(),
-    cores: navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} LOGICAL` : 'UNKNOWN',
-    darkMode: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'PREFERRED' : 'NOT PREFERRED',
-    touch: 'ontouchstart' in window || navigator.maxTouchPoints > 0 ? 'SUPPORTED' : 'NOT SUPPORTED',
-    battery,
-    screen: `${window.screen.width} × ${window.screen.height}`,
-    pixelRatio: `${window.devicePixelRatio || 1}`,
-    languages: navigator.languages?.join(', ').toUpperCase() ?? navigator.language.toUpperCase()
+    subjectId,
+    browser: `${parsed.browser} / ${parsed.os}`,
+    engine: parsed.engine,
+    os: parsed.os,
+    display: `${window.innerWidth} × ${window.innerHeight} @ ${(window.devicePixelRatio || 1).toFixed(2).replace('.00', '')}X / ${screen.colorDepth}-BIT`,
+    screenNative: `${screen.width} × ${screen.height}`,
+    colorDepth: `${screen.colorDepth}-BIT`,
+    gpu: parseRenderer(renderer || 'UNKNOWN'),
+    webglVersion: gl2 ? 'WEBGL 2.0' : gl ? 'WEBGL 1.0' : 'UNKNOWN',
+    maxTexture: gl ? String(gl.getParameter(gl.MAX_TEXTURE_SIZE)) : 'UNKNOWN',
+    processing: navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} LOGICAL CORES` : 'UNKNOWN',
+    network: connection,
+    power,
+    colorPref: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'DARK MODE ENABLED' : 'LIGHT MODE ENABLED',
+    inputMethod:
+      navigator.maxTouchPoints > 0 || 'ontouchstart' in window
+        ? `TOUCH / ${Math.max(navigator.maxTouchPoints || 1, 1)} POINTS`
+        : 'POINTER / NO TOUCH DETECTED',
+    locale: navigator.language.toUpperCase(),
+    languages: navigator.languages.map((item) => item.toUpperCase()).join(' / '),
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    platform: navigator.platform.toUpperCase(),
+    cookies: navigator.cookieEnabled ? 'ENABLED' : 'DISABLED',
+    dnt: navigator.doNotTrack ?? 'UNSET'
   };
 };
 
-export const initBootSequence = async (
-  container: HTMLElement,
-  onComplete: () => void
-): Promise<BootController> => {
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const booted = sessionStorage.getItem('ah-booted') === '1';
-  const profile = await detectVisitor();
-  const lines = new Map<number, HTMLDivElement>();
+const typeLine = async (el: HTMLElement, text: string, speed: [number, number], instant: boolean): Promise<void> => {
+  if (instant) {
+    el.textContent = text;
+    return;
+  }
+  for (const c of text) {
+    el.textContent += c;
+    await wait(Math.max(speed[0], Math.min(speed[1], speed[0] + Math.random() * (speed[1] - speed[0]))));
+  }
+};
 
-  const uptime = () => Math.max(0, Math.floor((Date.now() - LAUNCH) / 1000)).toLocaleString();
+const makeRow = (container: HTMLElement, cls = 'cs-line'): HTMLElement => {
+  const row = document.createElement('p');
+  row.className = cls;
+  row.dataset.glitchable = '1';
+  container.append(row);
+  return row;
+};
 
-  const addLine = (line: string, className = ''): HTMLDivElement => {
-    const row = document.createElement('div');
-    row.className = `cs-line ${className}`.trim();
-    row.dataset.glitch = 'true';
-    row.textContent = line;
-    container.appendChild(row);
-    return row;
+const kv = (k: string, v: string): string => `${k.padEnd(16, ' ')}${v}`;
+
+export const initBootSequence = async (container: HTMLElement): Promise<BootState> => {
+  let profile: ScanProfile;
+  let interval = 0;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const newId = (): string => `AH-2026-${String((Date.now() % 90000) + 10000).slice(-5)}`;
+  let subjectId = newId();
+
+  const render = async (instant = false, intakeOnly = false): Promise<void> => {
+    if (!intakeOnly) container.innerHTML = '';
+    profile = await detect(subjectId);
+    const booted = instant || reduce || sessionStorage.getItem('ah-sys-booted') === 'true';
+
+    const buildDate = new Date().toISOString().slice(0, 10).replaceAll('-', '.');
+
+    if (!intakeOnly) {
+      const h1 = makeRow(container, 'cs-line cs-head');
+      await typeLine(h1, 'ASHTON HAWKINS — PERSONAL OPERATING SYSTEM', [40, 58], booted);
+      const h2 = makeRow(container, 'cs-line cs-sub');
+      await typeLine(h2, `BUILD ${buildDate} — REV 847`, [40, 58], booted);
+      const h3 = makeRow(container, 'cs-line cs-meta');
+      await typeLine(h3, 'CLASSIFICATION: UNRESTRICTED', [40, 58], booted);
+      makeRow(container, 'cs-divider').textContent = emDash;
+      if (!booted) await wait(500);
+    }
+
+    const intakeLines: [string, string, string?][] = [
+      ['cs-line cs-primary', 'INCOMING CONNECTION LOGGED'],
+      ['cs-line', `SUBJECT ID: ${profile.subjectId}`],
+      ['cs-line', ''],
+      ['cs-line', kv('BROWSER IDENT', profile.browser)],
+      ['cs-line', kv('DISPLAY CONFIG', profile.display)],
+      ['cs-line', kv('GPU SUBSYSTEM', `${profile.gpu} ${profile.webglVersion}`)],
+      ['cs-line', kv('PROCESSING', profile.processing)],
+      ['cs-line', kv('NETWORK CLASS', profile.network)],
+      ...(profile.power ? [['cs-line', kv('POWER STATUS', profile.power)] as [string, string]] : []),
+      ['cs-line', kv('COLOR PREF', profile.colorPref)],
+      ['cs-line', kv('INPUT METHOD', profile.inputMethod)],
+      ['cs-line', kv('LOCALE', profile.locale)]
+    ];
+
+    for (const [cls, text] of intakeLines) {
+      const row = makeRow(container, cls);
+      await typeLine(row, text, [30, 45], booted);
+      if (!booted) await wait(120 + Math.random() * 130);
+    }
+
+    makeRow(container, 'cs-divider').textContent = emDash;
+    if (!booted) await wait(400);
+    const access = makeRow(container, 'cs-line cs-access crt-glow');
+    await typeLine(access, 'CONNECTION PERMITTED — READ-ONLY ACCESS GRANTED', [24, 34], booted);
+    if (!booted) await wait(300);
+
+    const up = makeRow(container, 'cs-line');
+    up.dataset.uptime = '1';
+    up.innerHTML = `<span class="cs-key">SYS UPTIME       </span><span class="cs-up"></span><span class="cs-accent">S</span>`;
+    const status = makeRow(container, 'cs-line cs-primary');
+    await typeLine(status, 'STATUS           SITE RECONSTRUCTION IN PROGRESS', [28, 38], booted);
+    makeRow(container, 'cs-line cs-cursor').textContent = '▮';
+
+    const paintUptime = (): void => {
+      const node = up.querySelector('.cs-up');
+      if (node) node.textContent = fmt(Math.floor((Date.now() - launchEpoch) / 1000));
+    };
+    window.clearInterval(interval);
+    paintUptime();
+    interval = window.setInterval(paintUptime, 1000);
+    sessionStorage.setItem('ah-sys-booted', 'true');
   };
 
-  const typeLine = async (line: HTMLDivElement, text: string, speed = 45): Promise<void> => {
-    line.textContent = '';
-    if (text.startsWith('> ')) {
-      line.textContent = '> ';
-      text = text.slice(2);
-    }
-    for (const char of text) {
-      line.textContent += char;
-      await sleep(Math.max(12, speed + Math.random() * 30 - 15));
-    }
-  };
-
-  const config = [
-    { text: '> ASHTON HAWKINS_', cls: 'cs-title', speed: 50 },
-    { text: '> SYS INIT...', cls: 'cs-muted', speed: 50 },
-    { text: '', cls: '', speed: 0 },
-    { text: '> VISITOR DETECTED', cls: 'cs-primary', speed: 34 },
-    { text: `> BROWSER: ${profile.browser}`, cls: 'cs-muted', speed: 34 },
-    { text: `> VIEWPORT: ${profile.viewport}`, cls: 'cs-muted', speed: 34 },
-    { text: `> LOCAL TIME: ${profile.localTime}`, cls: 'cs-muted', speed: 34 },
-    { text: `> CONNECTION: ${profile.connection}`, cls: 'cs-muted', speed: 34 },
-    { text: `> GPU: ${profile.gpu}`, cls: 'cs-muted', speed: 34 },
-    { text: `> CORES: ${profile.cores}`, cls: 'cs-muted', speed: 34 },
-    { text: `> DARK MODE: ${profile.darkMode}`, cls: 'cs-muted', speed: 34 },
-    { text: `> TOUCH: ${profile.touch}`, cls: 'cs-muted', speed: 34 }
-  ];
-  if (profile.battery) config.push({ text: `> BATTERY: ${profile.battery}`, cls: 'cs-muted', speed: 34 });
-  config.push({ text: '', cls: '', speed: 0 }, { text: `> UPTIME: ${uptime()}S`, cls: 'cs-accent', speed: 36 });
-  config.push({ text: '> STATUS: BUILDING SOMETHING NEW', cls: 'cs-primary', speed: 42 });
-  config.push({ text: '> ▮', cls: 'cs-cursor-line', speed: 1 });
-
-  const render = async (instant: boolean): Promise<void> => {
-    container.innerHTML = '';
-    for (let i = 0; i < config.length; i += 1) {
-      const item = config[i];
-      const row = addLine(item.text, item.cls);
-      lines.set(i, row);
-      if (!instant) {
-        if (item.text) {
-          await typeLine(row, item.text, item.speed);
-          await sleep(150 + Math.random() * 150);
-        } else {
-          await sleep(i === 2 ? 400 : 300);
-        }
-      }
-    }
-  };
-
-  await render(reduced || booted);
-  sessionStorage.setItem('ah-booted', '1');
-
-  window.setInterval(() => {
-    const idx = 6;
-    const row = lines.get(idx);
-    if (row) row.textContent = `> LOCAL TIME: ${currentLocalTime()}`;
-    const uptimeRow = lines.get(config.length - 3);
-    if (uptimeRow) uptimeRow.textContent = `> UPTIME: ${uptime()}S`;
-  }, 1000);
-
-  container.querySelectorAll<HTMLElement>('[data-glitch="true"]').forEach((el) => {
-    el.addEventListener('mouseenter', () => {
-      el.classList.remove('is-glitching');
-      void el.offsetWidth;
-      el.classList.add('is-glitching');
-      window.setTimeout(() => el.classList.remove('is-glitching'), 150);
-    });
-  });
-
-  onComplete();
+  await render(false, false);
 
   return {
-    profile,
-    rerunScan: async () => {
-      const start = 3;
-      for (let i = start; i < config.length - 1; i += 1) {
-        const row = lines.get(i);
-        if (!row) continue;
-        if (!config[i].text) {
-          row.textContent = '';
-          await sleep(220);
-        } else {
-          await typeLine(row, config[i].text, i < 12 ? 32 : 36);
-        }
-      }
+    get profile() {
+      return profile;
     },
-    clearTerminal: () => {
-      container.innerHTML = '';
+    refreshIntake: async () => {
+      subjectId = newId();
+      const children = [...container.children];
+      let start = children.findIndex((n) => n.textContent?.includes('INCOMING CONNECTION LOGGED'));
+      if (start === -1) start = children.length;
+      children.slice(start).forEach((node) => node.remove());
+      await render(false, true);
     },
-    getUptime: uptime
+    clearToBoot: () => {
+      void render(true, false);
+    },
+    setSubjectId: () => {
+      subjectId = newId();
+      return subjectId;
+    },
+    getUptime: () => fmt(Math.floor((Date.now() - launchEpoch) / 1000))
   };
 };
