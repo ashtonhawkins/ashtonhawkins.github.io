@@ -12,7 +12,8 @@
     "check": "astro check",
     "feeds:fetch": "tsx scripts/fetch-feeds.ts",
     "oura:fetch": "tsx scripts/fetch-oura.ts",
-    "strava:fetch": "npx tsx scripts/fetch-strava.ts"
+    "strava:fetch": "npx tsx scripts/fetch-strava.ts",
+    "prebuild": "node scripts/generate-header-gauge-data.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.3.2",
