@@ -26,8 +26,13 @@ let weeklyCommits = 0;
 try { weeklyCommits = Number(execSync('git log --oneline --since="7 days ago" | wc -l').toString().trim()); } catch {}
 writeFileSync('src/data/commit-stats.json', JSON.stringify({ weeklyCommits }, null, 2));
 
-let bytes = 0;
+let previousWeight = { bytes: 0, kb: 0 };
+if (existsSync('src/data/build-weight.json')) {
+  try { previousWeight = JSON.parse(readFileSync('src/data/build-weight.json', 'utf8')); } catch {}
+}
+
+let bytes = Number(previousWeight.bytes) || 0;
 if (existsSync('dist')) {
-  try { bytes = Number(execSync('du -sb dist | cut -f1').toString().trim()) || 0; } catch {}
+  try { bytes = Number(execSync('du -sb dist | cut -f1').toString().trim()) || bytes; } catch {}
 }
 writeFileSync('src/data/build-weight.json', JSON.stringify({ bytes, kb: Math.round(bytes / 1024) }, null, 2));
