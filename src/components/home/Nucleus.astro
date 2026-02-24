@@ -51,8 +51,8 @@ const writingStats = {
 
     <div class="nucleus-ticker__transmission" aria-live="polite">
       <svg class="nucleus-ticker__signal" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
-        <circle cx="10" cy="10" r="3" fill="var(--accent-primary)" id="ticker-signal-dot" />
-        <circle cx="10" cy="10" r="3" fill="none" stroke="var(--accent-primary)" stroke-width="1" opacity="0" id="ticker-signal-ring" />
+        <circle cx="10" cy="10" r="3" fill="var(--accent-primary)" opacity="0.8" id="ticker-signal-dot" />
+        <circle cx="10" cy="10" r="3" fill="none" stroke="var(--accent-primary)" stroke-width="1.5" opacity="0" id="ticker-signal-ring" />
       </svg>
 
       <div class="nucleus-ticker__stat nucleus-ticker__stat--visible" id="ticker-stat">
@@ -75,14 +75,14 @@ const writingStats = {
   .nucleus-ticker { display:flex; align-items:center; height:48px; width:100%; border-top:1px solid rgba(255,255,255,.08); margin-top:6px; background:var(--surface-primary); font-family:'IBM Plex Mono',monospace; padding:0 16px; }
 
   .nucleus-ticker__source { display:flex; align-items:center; gap:8px; flex-shrink:0; min-width:160px; padding-right:16px; }
-  .nucleus-ticker__logo { width:16px; height:16px; opacity:.6; filter:grayscale(100%) brightness(1.5); transition:opacity .4s ease, filter .4s ease; color:var(--text-secondary); }
+  .nucleus-ticker__logo { width:16px; height:16px; opacity:.6; display:inline-block; filter:grayscale(100%) brightness(1.5); transition:opacity .4s ease, filter .4s ease; color:var(--text-secondary); }
   .nucleus-ticker__source:hover .nucleus-ticker__logo { opacity:.85; }
   .nucleus-ticker__mode-name { font-size:11px; font-weight:600; color:var(--text-primary); text-transform:uppercase; letter-spacing:.08em; text-decoration:none; }
   .nucleus-ticker__mode-name:hover { color:var(--accent-primary); }
   .nucleus-ticker__mode-counter { font-size:9px; color:var(--text-tertiary); opacity:.5; }
 
   .nucleus-ticker__transmission { flex:1; display:flex; align-items:center; gap:12px; min-width:0; }
-  .nucleus-ticker__signal { flex-shrink:0; }
+  .nucleus-ticker__signal { flex-shrink:0; width:20px; height:20px; }
   .nucleus-ticker__stat { display:flex; align-items:baseline; gap:6px; transition:opacity .4s ease, transform .4s ease; min-width:0; }
   .nucleus-ticker__stat-value { font-size:18px; font-weight:700; color:var(--text-primary); letter-spacing:-.01em; font-variant-numeric:tabular-nums; line-height:1; text-wrap:balance; }
   .nucleus-ticker__stat-unit { font-size:12px; font-weight:400; color:var(--text-secondary); letter-spacing:.02em; }

@@ -245,13 +245,22 @@ export const initNucleus = async () => {
 
   let statTimer: ReturnType<typeof setInterval> | null = null;
   let currentStatIndex = 0;
+  let statAnimating = false;
+
+  const HOLD_DURATION = 3500;
+  const FADE_OUT_DURATION = 300;
+  const FADE_IN_DURATION = 400;
+  const PULSE_DELAY = 200;
 
   const pulseSignal = (large = false) => {
     if (reducedMotion) return;
+    tickerSignalRing?.setAttribute('r', '3');
+    tickerSignalRing?.setAttribute('opacity', '0.6');
+    tickerSignalRing?.setAttribute('stroke-width', '1.5');
     tickerSignalRing?.animate([
       { r: 3, opacity: 0.6, strokeWidth: '1.5px' },
-      { r: large ? 10 : 8, opacity: 0, strokeWidth: '0.3px' }
-    ], { duration: large ? 700 : 600, easing: 'ease-out' });
+      { r: large ? 10 : 10, opacity: 0, strokeWidth: '0.3px' }
+    ], { duration: 600, easing: 'ease-out', fill: 'forwards' });
 
     tickerSignalDot?.animate([
       { opacity: 1, r: 3 },
@@ -260,40 +269,70 @@ export const initNucleus = async () => {
     ], { duration: 300, easing: 'ease-out' });
   };
 
-  const renderStat = (mode: TransmissionMode, index: number) => {
+  const updateStatContent = (stat: TransmissionStat) => {
+    if (!tickerStatValue || !tickerStatUnit) return;
+    tickerStatValue.textContent = stat.value;
+    tickerStatUnit.textContent = stat.unit;
+    tickerStatValue.style.fontSize = numericValue(stat.value) ? '18px' : '15px';
+    tickerStatValue.style.fontWeight = numericValue(stat.value) ? '700' : '600';
+  };
+
+  const renderStat = (mode: TransmissionMode, index: number, withPulse = false) => {
     const stat = mode.stats[index] ?? { value: 'Awaiting first sync', unit: '' };
     if (!tickerStat || !tickerStatValue || !tickerStatUnit) return;
 
     if (reducedMotion) {
-      tickerStatValue.textContent = stat.value;
-      tickerStatUnit.textContent = stat.unit;
+      updateStatContent(stat);
       tickerStat.className = 'nucleus-ticker__stat nucleus-ticker__stat--visible';
+      tickerStat.style.opacity = '1';
+      tickerStat.style.transform = 'translateY(0)';
       return;
     }
 
-    tickerStat.className = 'nucleus-ticker__stat nucleus-ticker__stat--exiting';
+    if (withPulse) {
+      tickerStat.style.opacity = '0';
+      tickerStat.style.transform = 'translateY(4px)';
+      updateStatContent(stat);
+      pulseSignal(true);
+      window.setTimeout(() => {
+        tickerStat.style.transition = `opacity ${FADE_IN_DURATION}ms ease-out, transform ${FADE_IN_DURATION}ms ease-out`;
+        tickerStat.style.opacity = '1';
+        tickerStat.style.transform = 'translateY(0)';
+      }, 400);
+      return;
+    }
+
+    if (statAnimating) return;
+    statAnimating = true;
+    tickerStat.style.transition = `opacity ${FADE_OUT_DURATION}ms ease, transform ${FADE_OUT_DURATION}ms ease`;
+    tickerStat.style.opacity = '0';
+    tickerStat.style.transform = 'translateY(-2px)';
+
     window.setTimeout(() => {
       pulseSignal();
-      tickerStatValue.textContent = stat.value;
-      tickerStatUnit.textContent = stat.unit;
-      tickerStatValue.style.fontSize = numericValue(stat.value) ? '18px' : '15px';
-      tickerStatValue.style.fontWeight = numericValue(stat.value) ? '700' : '600';
-      tickerStat.className = 'nucleus-ticker__stat nucleus-ticker__stat--entering';
       window.setTimeout(() => {
-        tickerStat.className = 'nucleus-ticker__stat nucleus-ticker__stat--visible';
-      }, 40);
-    }, 300);
+        updateStatContent(stat);
+        window.setTimeout(() => {
+          tickerStat.style.transition = `opacity ${FADE_IN_DURATION}ms ease-out, transform ${FADE_IN_DURATION}ms ease-out`;
+          tickerStat.style.opacity = '1';
+          tickerStat.style.transform = 'translateY(0)';
+          window.setTimeout(() => {
+            statAnimating = false;
+          }, FADE_IN_DURATION);
+        }, 100);
+      }, PULSE_DELAY);
+    }, FADE_OUT_DURATION);
   };
 
   const startStatCycle = (mode: TransmissionMode) => {
     if (statTimer) clearInterval(statTimer);
     currentStatIndex = 0;
-    renderStat(mode, currentStatIndex);
+    renderStat(mode, currentStatIndex, true);
     if (mode.stats.length <= 1) return;
     statTimer = setInterval(() => {
       currentStatIndex = (currentStatIndex + 1) % mode.stats.length;
       renderStat(mode, currentStatIndex);
-    }, 3500);
+    }, HOLD_DURATION + FADE_OUT_DURATION + FADE_IN_DURATION + PULSE_DELAY);
   };
 
   const updateSubTicker = (slide: ActiveSlide) => {
@@ -303,12 +342,13 @@ export const initNucleus = async () => {
       window.setTimeout(() => {
         tickerLogo.src = mode.logo;
         tickerLogo.alt = mode.service;
+        tickerLogo.style.display = 'inline-block';
+        tickerLogo.style.opacity = '0.6';
         tickerLogo.onerror = () => {
-          tickerLogo.style.display = 'none';
+          tickerLogo.style.display = 'inline-block';
+          tickerLogo.src = '/icons/globe-mono.svg';
           if (tickerStatValue) tickerStatValue.textContent = mode.icon;
         };
-        tickerLogo.style.opacity = '0.6';
-        tickerLogo.style.display = '';
       }, 180);
     }
 
@@ -320,7 +360,6 @@ export const initNucleus = async () => {
     const modeIndex = slides.findIndex((item) => item.module.id === slide.module.id);
     if (tickerCounter) tickerCounter.textContent = `${Math.max(1, modeIndex + 1)}/${slides.length}`;
 
-    pulseSignal(true);
     startStatCycle(mode);
   };
 

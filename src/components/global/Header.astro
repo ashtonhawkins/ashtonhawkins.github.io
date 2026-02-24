@@ -3,9 +3,7 @@ import ThemeToggle from '@components/global/ThemeToggle.astro';
 import Cursor from '@components/ui/Cursor.astro';
 import NoiseTexture from '@components/ui/NoiseTexture.astro';
 import AnalogClock from '@components/ui/AnalogClock.astro';
-import feedCache from '@data/feeds-cache.json';
 import siteStats from '@data/site-stats.json';
-import commitStats from '@data/commit-stats.json';
 import buildWeight from '@data/build-weight.json';
 
 const pathname = Astro.url.pathname;
@@ -37,21 +35,8 @@ const isActive = (href: string) => {
 };
 
 const DEPLOY_DATE = new Date();
-const LAUNCH_EPOCH = '2025-01-20T00:00:00.000Z';
-const feedStatus = {
-  letterboxd: ((feedCache as any)?.items?.letterboxd?.length ?? 0) > 0,
-  lastfm: ((feedCache as any)?.items?.lastfm?.length ?? 0) > 0,
-  strava: Array.isArray((feedCache as any)?.items?.strava) ? ((feedCache as any)?.items?.strava?.length ?? 0) > 0 : false,
-  oura: ((feedCache as any)?.items?.oura?.length ?? 0) > 0,
-  goodreads: ((feedCache as any)?.items?.goodreads?.length ?? 0) > 0,
-  github: true
-};
-const signalStatus = Object.fromEntries(
-  Object.entries(feedStatus).map(([name, synced]) => [name, synced ? 'synced' : 'awaiting'])
-);
-
 const codebaseValue = `${(siteStats.lines / 1000).toFixed(1)}K lines · ${siteStats.components} modules`;
-const footprintValue = `${Number(buildWeight.kb || 0).toLocaleString()} KB`;
+const payloadValue = Number(buildWeight.kb || 0);
 ---
 
 <a href="#content" class="skip-link">Skip to content</a>
@@ -96,60 +81,31 @@ const footprintValue = `${Number(buildWeight.kb || 0).toLocaleString()} KB`;
           <div class="header__gauge-text"><span class="header__gauge-label">UPDATED</span><span class="header__gauge-value" id="gauge-updated">just now</span></div>
         </div>
 
-        <div class="header__gauge" data-gauge="uptime" data-launch-epoch={LAUNCH_EPOCH}>
-          <div class="header__gauge-viz gauge-viz--odometer" aria-hidden="true">
-            <div class="odometer-group">
-              <span class="odometer-digit" data-odometer-yr>0</span><span class="odometer-unit">y</span>
-              <span class="odometer-digit" data-odometer-d>000</span><span class="odometer-unit">d</span>
-              <span class="odometer-digit" data-odometer-h>00</span><span class="odometer-unit">h</span>
-              <span class="odometer-digit" data-odometer-m>00</span><span class="odometer-unit">m</span>
-              <span class="odometer-digit" data-odometer-s>00</span><span class="odometer-ms" data-odometer-ms>.000</span><span class="odometer-unit">s</span>
-            </div>
-          </div>
-          <div class="header__gauge-text"><span class="header__gauge-label">UPTIME</span></div>
-        </div>
-
-        <div class="header__gauge" data-gauge="visitor">
-          <div class="header__gauge-viz gauge-viz--visitor" aria-hidden="true">
-            <svg width="36" height="28" viewBox="0 0 36 28" id="visitor-geo-svg">
-              <g id="visitor-geo-outline"></g>
-              <line id="visitor-radar-sweep" x1="18" y1="14" x2="18" y2="1" stroke="var(--accent-primary)" stroke-width="0.75" opacity="0" transform-origin="18 14" />
-              <circle id="visitor-pin" cx="18" cy="14" r="2" fill="var(--accent-primary)" opacity="0" />
-            </svg>
-          </div>
-          <div class="header__gauge-text"><span class="header__gauge-label">VISITOR</span><span class="header__gauge-value" id="gauge-visitor">Welcome</span></div>
-        </div>
-
         <div class="header__gauge" data-gauge="codebase">
           <div class="header__gauge-viz" aria-hidden="true"><canvas class="gauge-viz gauge-viz--site" width="32" height="32" id="site-cube-canvas"></canvas></div>
           <div class="header__gauge-text"><span class="header__gauge-label">CODEBASE</span><span class="header__gauge-value">{codebaseValue}</span></div>
         </div>
 
-        <div class="header__gauge" data-gauge="signals" data-feed-status={JSON.stringify(signalStatus)}>
-          <div class="header__gauge-viz gauge-viz--signals" aria-hidden="true">
-            <span class="signal-name" id="signal-current-name">STRAVA</span>
-            <span class="signal-status signal-status--synced" id="signal-current-status">● SYNCED</span>
-          </div>
-          <div class="header__gauge-text"><span class="header__gauge-label">SIGNALS</span></div>
-        </div>
-
-        <div class="header__gauge" data-gauge="footprint">
-          <div class="header__gauge-viz gauge-viz--footprint" aria-hidden="true">
-            <svg width="32" height="20" viewBox="0 0 32 20">
-              <rect id="footprint-block" x="2" y="2" width="28" height="16" rx="1" fill="var(--accent-primary)" opacity="0.15" stroke="var(--accent-primary)" stroke-width="0.5"/>
-              <rect id="footprint-compressed" x="2" y="2" width="3" height="16" rx="1" fill="var(--accent-primary)" opacity="0"/>
-            </svg>
-          </div>
-          <div class="header__gauge-text"><span class="header__gauge-label">FOOTPRINT</span><span class="header__gauge-value">{footprintValue}</span></div>
-        </div>
-
-        <div class="header__gauge" data-gauge="activity" data-commits={String(commitStats.weeklyCommits || 0)}>
-          <div class="header__gauge-viz gauge-viz--activity" aria-hidden="true">
-            <span class="activity-prompt">›</span>
-            <span class="activity-text" id="activity-typed"></span>
-            <span class="activity-cursor">_</span>
+        <div class="header__gauge" data-gauge="activity" data-commits="3" data-diff-add="added dark mode toggle" data-diff-remove="removed legacy nav">
+          <div class="header__gauge-viz gauge-viz--diff" aria-hidden="true">
+            <div class="diff-line diff-line--remove"><span class="diff-prefix">-</span><span class="diff-text" id="diff-remove-text"></span></div>
+            <div class="diff-line diff-line--add"><span class="diff-prefix">+</span><span class="diff-text" id="diff-add-text"></span></div>
           </div>
           <div class="header__gauge-text"><span class="header__gauge-label">ACTIVITY</span></div>
+        </div>
+
+        <div class="header__gauge" data-gauge="payload" data-weight-kb={String(payloadValue)}>
+          <div class="header__gauge-viz gauge-viz--payload" aria-hidden="true">
+            <div class="payload-rocket" id="payload-rocket">
+              <svg width="12" height="18" viewBox="0 0 12 18">
+                <path d="M6,0 C6,0 10,4 10,10 L8,12 L4,12 L2,10 C2,4 6,0 6,0Z" fill="var(--text-secondary)" />
+                <path d="M4,12 L5,16 L6,14 L7,16 L8,12Z" fill="var(--accent-primary)" opacity="0.8" class="rocket-flame" />
+                <circle cx="6" cy="6" r="1.5" fill="var(--accent-primary)" opacity="0.5" />
+              </svg>
+            </div>
+            <div class="payload-value" id="payload-value"><span class="payload-number">{payloadValue}</span><span class="payload-unit">KB</span></div>
+          </div>
+          <div class="header__gauge-text"><span class="header__gauge-label">PAYLOAD</span></div>
         </div>
       </div>
 
@@ -174,7 +130,6 @@ const footprintValue = `${Number(buildWeight.kb || 0).toLocaleString()} KB`;
 <script>
   // @ts-nocheck
   import gsap from 'gsap';
-  import stateOutlines from '@data/state-outlines.json';
   gsap.fromTo('[data-header]', { y: -12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.35, ease: 'power2.out' });
 
   const header = document.querySelector('[data-header]');
@@ -211,12 +166,10 @@ const footprintValue = `${Number(buildWeight.kb || 0).toLocaleString()} KB`;
     window.addEventListener('scroll', updateScrolled, { passive: true });
   }
 
-  const gaugeNames = ['updated', 'uptime', 'visitor', 'codebase', 'signals', 'footprint', 'activity'];
+  const gaugeNames = ['updated', 'codebase', 'activity', 'payload'];
   let currentGaugeIndex = 0;
   let gaugeRotationPaused = false;
   let rotationTimer = null;
-  let odometerRAF = null;
-  let signalsTimer = null;
 
   const showGauge = (index) => {
     document.querySelectorAll('.header__gauge').forEach((g, i) => g.classList.toggle('active', i === index));
@@ -228,7 +181,7 @@ const footprintValue = `${Number(buildWeight.kb || 0).toLocaleString()} KB`;
     rotationTimer = window.setInterval(() => {
       if (gaugeRotationPaused) return;
       showGauge((currentGaugeIndex + 1) % gaugeNames.length);
-    }, 5500);
+    }, 6000);
   };
 
   if (gaugeSlot) {
@@ -240,11 +193,6 @@ const footprintValue = `${Number(buildWeight.kb || 0).toLocaleString()} KB`;
       startRotation();
     });
   }
-
-  const setText = (selector, value) => {
-    const el = document.querySelector(selector);
-    if (el && el.textContent !== String(value)) el.textContent = String(value);
-  };
 
   const updateUpdatedGauge = () => {
     const el = document.getElementById('gauge-updated');
@@ -260,194 +208,60 @@ const footprintValue = `${Number(buildWeight.kb || 0).toLocaleString()} KB`;
     else el.textContent = new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const updateOdometer = () => {
-    const gauge = document.querySelector('[data-gauge="uptime"]');
-    if (!(gauge instanceof HTMLElement)) return;
-    const launchEpoch = new Date(gauge.dataset.launchEpoch || '');
-    const elapsed = Date.now() - launchEpoch.getTime();
-    if (Number.isNaN(elapsed) || elapsed < 0) return;
-    const years = Math.floor(elapsed / (365.25 * 24 * 60 * 60 * 1000));
-    const days = Math.floor((elapsed % (365.25 * 24 * 60 * 60 * 1000)) / (24 * 60 * 60 * 1000));
-    const hours = Math.floor((elapsed % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
-    const minutes = Math.floor((elapsed % (60 * 60 * 1000)) / (60 * 1000));
-    const seconds = Math.floor((elapsed % (60 * 1000)) / 1000);
-    const ms = Math.floor(elapsed % 1000);
-
-    setText('[data-odometer-yr]', years);
-    setText('[data-odometer-d]', String(days).padStart(3, '0'));
-    setText('[data-odometer-h]', String(hours).padStart(2, '0'));
-    setText('[data-odometer-m]', String(minutes).padStart(2, '0'));
-    setText('[data-odometer-s]', String(seconds).padStart(2, '0'));
-    setText('[data-odometer-ms]', `.${String(ms).padStart(3, '0')}`);
-  };
-
-  const startOdometerLoop = () => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      updateOdometer();
-      return;
-    }
-    const loop = () => {
-      updateOdometer();
-      odometerRAF = requestAnimationFrame(loop);
-    };
-    if (!odometerRAF) loop();
-  };
-
-  const stopOdometerLoop = () => {
-    if (odometerRAF) cancelAnimationFrame(odometerRAF);
-    odometerRAF = null;
-  };
-
-  const initVisitorGauge = async () => {
-    const valueEl = document.getElementById('gauge-visitor');
-    const outlineEl = document.getElementById('visitor-geo-outline');
-    const sweepEl = document.getElementById('visitor-radar-sweep');
-    const pinEl = document.getElementById('visitor-pin');
-
-    const runSweep = () => {
-      if (!sweepEl) return;
-      sweepEl.setAttribute('opacity', '0.5');
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      sweepEl.animate([{ transform: 'rotate(0deg)', opacity: 0.5 }, { transform: 'rotate(360deg)', opacity: 0 }], { duration: 1500, easing: 'ease-out', fill: 'forwards' });
-    };
-
-    const showPin = (x = 18, y = 14) => {
-      if (!pinEl) return;
-      pinEl.setAttribute('cx', String(Math.max(2, Math.min(34, x))));
-      pinEl.setAttribute('cy', String(Math.max(2, Math.min(26, y))));
-      pinEl.setAttribute('opacity', '1');
-      pinEl.setAttribute('fill', 'var(--accent-primary)');
-    };
-
-    try {
-      const geo = await fetch('https://ipapi.co/json/').then((r) => r.json());
-      const city = geo.city || '';
-      const region = geo.region_code || '';
-      const country = geo.country_code || '';
-      if (valueEl) valueEl.textContent = region ? `${city}, ${region}` : (city || 'Welcome');
-
-      let hasOutline = false;
-      if (country === 'US' && region && stateOutlines[region] && outlineEl) {
-        const state = stateOutlines[region];
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', state.path);
-        path.setAttribute('fill', 'none');
-        path.setAttribute('stroke', 'var(--text-tertiary)');
-        path.setAttribute('stroke-width', '0.75');
-        path.setAttribute('opacity', '0.5');
-        outlineEl.innerHTML = '';
-        outlineEl.appendChild(path);
-        hasOutline = true;
-      }
-
-      runSweep();
-      const delay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1600;
-      setTimeout(() => {
-        if (hasOutline && country === 'US' && region && stateOutlines[region]?.bounds && geo.latitude && geo.longitude) {
-          const bounds = stateOutlines[region].bounds;
-          const x = ((geo.longitude - bounds.minLng) / (bounds.maxLng - bounds.minLng)) * 36;
-          const y = ((bounds.maxLat - geo.latitude) / (bounds.maxLat - bounds.minLat)) * 28;
-          showPin(x, y);
-        } else {
-          showPin(18, 14);
-        }
-      }, delay);
-    } catch (err) {
-      console.warn('Visitor gauge geo failed:', err);
-      if (valueEl) valueEl.textContent = 'Welcome';
-      runSweep();
-      showPin(18, 14);
-    }
-  };
-
-  const initSignalsGauge = () => {
-    const gaugeEl = document.querySelector('[data-gauge="signals"]');
+  const initDiffGauge = () => {
+    const gaugeEl = document.querySelector('[data-gauge="activity"]');
     if (!(gaugeEl instanceof HTMLElement)) return;
 
-    const feedStatus = JSON.parse(gaugeEl.dataset.feedStatus || '{}');
-    const feeds = Object.entries(feedStatus).map(([name, status]) => ({
-      name: name.toUpperCase().replace('LASTFM', 'LAST.FM'),
-      status
-    }));
+    const addText = gaugeEl.dataset.diffAdd || 'new feature';
+    const removeText = gaugeEl.dataset.diffRemove || 'old code';
+    const removeTextEl = document.getElementById('diff-remove-text');
+    const addTextEl = document.getElementById('diff-add-text');
+    if (!removeTextEl || !addTextEl) return;
 
-    if (!feeds.length) return;
-    const nameEl = document.getElementById('signal-current-name');
-    const statusEl = document.getElementById('signal-current-status');
-    if (!nameEl || !statusEl) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      removeTextEl.textContent = removeText;
+      addTextEl.textContent = addText;
+      return;
+    }
 
-    let currentIndex = 0;
-    const showFeed = (index) => {
-      const feed = feeds[index];
-      const isSynced = feed.status === 'synced';
-      nameEl.style.opacity = '0';
-      statusEl.style.opacity = '0';
-      setTimeout(() => {
-        nameEl.textContent = feed.name;
-        statusEl.textContent = isSynced ? '● SYNCED' : '○ AWAITING';
-        statusEl.className = `signal-status signal-status--${isSynced ? 'synced' : 'awaiting'}`;
-        nameEl.style.opacity = '1';
-        statusEl.style.opacity = '1';
-        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          nameEl.classList.remove('signal-entering');
-          statusEl.classList.remove('signal-entering');
-          void nameEl.offsetWidth;
-          nameEl.classList.add('signal-entering');
-          statusEl.classList.add('signal-entering');
+    const typeText = (el, text, delay) => new Promise((resolve) => {
+      let i = 0;
+      const type = () => {
+        if (i <= text.length) {
+          el.textContent = text.substring(0, i);
+          i += 1;
+          setTimeout(type, 35 + Math.random() * 25);
+        } else {
+          resolve(undefined);
         }
-      }, 300);
-    };
+      };
+      setTimeout(type, delay);
+    });
 
-    showFeed(0);
-    if (signalsTimer) clearInterval(signalsTimer);
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      signalsTimer = window.setInterval(() => {
-        currentIndex = (currentIndex + 1) % feeds.length;
-        showFeed(currentIndex);
-      }, 2500);
-    }
+    typeText(removeTextEl, removeText, 600).then(() => typeText(addTextEl, addText, 400));
   };
 
-  const initFootprintViz = () => {
-    const block = document.getElementById('footprint-block');
-    const compressed = document.getElementById('footprint-compressed');
-    if (!block || !compressed) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      block.setAttribute('width', '3');
-      compressed.setAttribute('opacity', '0.6');
-      return;
-    }
-    block.animate([{ width: 28, opacity: 0.15 }, { width: 3, opacity: 0.08 }], { duration: 1000, easing: 'ease-in-out', fill: 'forwards', delay: 500 });
-    setTimeout(() => compressed.setAttribute('opacity', '0.6'), 1500);
-  };
+  const initPayloadGauge = () => {
+    const gaugeEl = document.querySelector('[data-gauge="payload"]');
+    if (!(gaugeEl instanceof HTMLElement)) return;
 
-  const initActivityViz = () => {
-    const gaugeEl = document.querySelector('[data-gauge="activity"]');
-    const textEl = document.getElementById('activity-typed');
-    const vizEl = gaugeEl?.querySelector('.gauge-viz--activity');
-    if (!(gaugeEl instanceof HTMLElement) || !(textEl instanceof HTMLElement) || !(vizEl instanceof HTMLElement)) return;
+    const weightKB = gaugeEl.dataset.weightKb || '0';
+    const rocketEl = document.getElementById('payload-rocket');
+    const valueEl = document.getElementById('payload-value');
+    const numberEl = valueEl?.querySelector('.payload-number');
+    if (numberEl) numberEl.textContent = Number(weightKB).toLocaleString();
 
-    const commitCount = parseInt(gaugeEl.dataset.commits || '0', 10);
-    const message = commitCount > 0 ? `${commitCount} commit${commitCount !== 1 ? 's' : ''} this week` : 'quiet this week';
-    textEl.textContent = '';
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      textEl.textContent = message;
+      if (valueEl) valueEl.classList.add('payload-value--visible');
       return;
     }
 
-    let charIndex = 0;
-    const typeChar = () => {
-      if (charIndex <= message.length) {
-        vizEl.classList.add('typing');
-        textEl.textContent = message.substring(0, charIndex);
-        charIndex += 1;
-        const delay = charIndex === 1 ? 200 : (message[charIndex - 1] === ' ' ? 40 : 60 + Math.random() * 40);
-        setTimeout(typeChar, delay);
-      } else {
-        vizEl.classList.remove('typing');
-      }
-    };
-
-    setTimeout(typeChar, 500);
+    setTimeout(() => {
+      if (rocketEl) rocketEl.classList.add('payload-rocket--launched');
+      setTimeout(() => {
+        if (valueEl) valueEl.classList.add('payload-value--visible');
+      }, 500);
+    }, 800);
   };
 
   const initSiteCubeViz = () => {
@@ -484,22 +298,10 @@ const footprintValue = `${Number(buildWeight.kb || 0).toLocaleString()} KB`;
   showGauge(0);
   startRotation();
   updateUpdatedGauge();
-  updateOdometer();
-  initVisitorGauge();
-  initSignalsGauge();
-  initFootprintViz();
-  initActivityViz();
+  initDiffGauge();
+  initPayloadGauge();
   initSiteCubeViz();
   setInterval(updateUpdatedGauge, 60000);
-
-  const odometerEl = document.querySelector('.gauge-viz--odometer');
-  if (odometerEl) {
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) startOdometerLoop();
-      else stopOdometerLoop();
-    });
-    observer.observe(odometerEl);
-  }
 </script>
 
 <style>
@@ -525,26 +327,24 @@ const footprintValue = `${Number(buildWeight.kb || 0).toLocaleString()} KB`;
   .header__gauge-label{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;}
   .header__gauge-value{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:var(--text-primary);text-transform:none;letter-spacing:.02em;}
 
-  .gauge-viz--odometer{display:flex;align-items:baseline;gap:0;font-family:'IBM Plex Mono',monospace;color:var(--text-primary);font-variant-numeric:tabular-nums;}
-  .gauge-viz--odometer .odometer-group{display:flex;align-items:baseline;}
-  .gauge-viz--odometer .odometer-digit{font-size:15px;font-weight:700;}
-  .gauge-viz--odometer .odometer-unit{font-size:10px;font-weight:400;color:var(--text-tertiary);margin:0 6px 0 1px;}
-  .gauge-viz--odometer .odometer-ms{font-size:11px;font-weight:400;color:var(--text-secondary);opacity:.7;min-width:3ch;font-variant-numeric:tabular-nums;}
+  .gauge-viz--diff{display:flex;flex-direction:column;gap:1px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.3;}
+  .diff-line{display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;}
+  .diff-prefix{font-weight:700;flex-shrink:0;width:10px;text-align:center;}
+  .diff-line--add .diff-prefix,.diff-line--add .diff-text{color:#4ade80;}
+  .diff-line--remove .diff-prefix,.diff-line--remove .diff-text{color:#f87171;}
+  .diff-line .diff-text{opacity:.7;}
+  :root[data-theme="light"] .diff-line--add .diff-prefix,:root[data-theme="light"] .diff-line--add .diff-text{color:#16a34a;}
+  :root[data-theme="light"] .diff-line--remove .diff-prefix,:root[data-theme="light"] .diff-line--remove .diff-text{color:#dc2626;}
 
-  .gauge-viz--signals{display:flex;align-items:center;gap:6px;min-width:160px;}
-  .signal-name{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--text-primary);text-transform:uppercase;letter-spacing:.04em;transition:opacity .4s ease;}
-  .signal-status{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:400;letter-spacing:.04em;transition:opacity .4s ease;}
-  .signal-status--synced{color:var(--accent-primary);}
-  .signal-status--awaiting{color:var(--text-tertiary);opacity:.5;}
-  .signal-entering{animation:signalFadeIn .4s ease-out;}
-  @keyframes signalFadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
-
-  .gauge-viz--activity{display:flex;align-items:center;gap:4px;font-family:'IBM Plex Mono',monospace;}
-  .activity-prompt{font-size:12px;color:var(--accent-primary);font-weight:700;}
-  .activity-text{font-size:12px;font-weight:500;color:var(--text-primary);font-variant-numeric:tabular-nums;}
-  .activity-cursor{font-size:13px;font-weight:700;color:var(--accent-primary);animation:cursorBlink 1s step-end infinite;}
-  @keyframes cursorBlink{0%,100%{opacity:1;}50%{opacity:0;}}
-  .gauge-viz--activity.typing .activity-cursor{animation:none;opacity:1;}
+  .gauge-viz--payload{display:flex;align-items:center;gap:8px;position:relative;min-height:24px;}
+  .payload-rocket{position:relative;transition:transform .6s cubic-bezier(.36,.07,.19,.97),opacity .4s ease;}
+  .payload-rocket--launched{transform:translateY(-30px);opacity:0;}
+  .rocket-flame{animation:flameFlicker .15s ease-in-out infinite alternate;}
+  @keyframes flameFlicker{from{opacity:.6;transform:scaleY(.9);}to{opacity:1;transform:scaleY(1.1);}}
+  .payload-value{display:flex;align-items:baseline;gap:4px;opacity:0;transform:translateY(4px);transition:opacity .5s ease,transform .5s ease;}
+  .payload-value--visible{opacity:1;transform:translateY(0);}
+  .payload-number{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums;}
+  .payload-unit{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:400;color:var(--text-tertiary);text-transform:uppercase;}
 
   .header__clock { display:none; }
   .header__utilities { display:flex; align-items:center; gap:8px; }
@@ -556,8 +356,9 @@ const footprintValue = `${Number(buildWeight.kb || 0).toLocaleString()} KB`;
   @media (max-width: 879px){ .header__gauge-slot{display:none;} }
 
   @media (prefers-reduced-motion: reduce) {
-    .gauge-viz canvas, .gauge-viz svg animate, .gauge-viz svg [style*='animation'], .signal-entering, .activity-cursor { animation: none !important; transition: none !important; }
-    #visitor-pin { opacity: 1; }
-    #footprint-block { width: 3; }
+    .gauge-viz canvas, .gauge-viz svg animate, .gauge-viz svg [style*='animation'] { animation: none !important; transition: none !important; }
+    .payload-rocket { display:none; }
+    .payload-value { opacity:1; transform:none; }
+    .rocket-flame { animation:none; }
   }
 </style>
