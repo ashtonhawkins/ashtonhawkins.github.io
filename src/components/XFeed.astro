@@ -1,0 +1,131 @@
+---
+import xData from '../data/x-latest.json';
+
+interface XMetrics {
+  like_count?: number;
+  retweet_count?: number;
+  quote_count?: number;
+}
+
+interface XData {
+  id: string | null;
+  text: string | null;
+  created_at: string | null;
+  url: string;
+  metrics: XMetrics | null;
+  author: {
+    name: string;
+    username: string;
+    avatar: string | null;
+  } | null;
+  fetched_at: string;
+  _fallback?: boolean;
+}
+
+const latest = xData as XData;
+
+const profileUrl = latest.url || 'https://x.com/ashtin';
+const username = latest.author?.username || 'ashtin';
+const displayName = latest.author?.name || 'Ashton Hawkins';
+
+function getRelativeTime(dateString: string | null): string {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return '';
+
+  const elapsedMs = Date.now() - date.getTime();
+  const minutes = Math.max(1, Math.floor(elapsedMs / (1000 * 60)));
+
+  if (minutes < 60) return `${minutes}m ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+
+  const weeks = Math.floor(days / 7);
+  return `${weeks}w ago`;
+}
+
+const relativeTime = latest._fallback ? '' : getRelativeTime(latest.created_at);
+const likeCount = latest.metrics?.like_count;
+const repostCount = latest.metrics?.retweet_count;
+const quoteCount = latest.metrics?.quote_count;
+const hasMetrics = [likeCount, repostCount, quoteCount].some((value) => Number.isFinite(value));
+---
+<a class="x-feed-card" href={profileUrl} target="_blank" rel="noreferrer">
+  <div class="x-feed-card__meta">
+    <span>@{username}</span>
+    {relativeTime && <span>{relativeTime}</span>}
+  </div>
+
+  {latest._fallback ? (
+    <p class="x-feed-card__empty">No recent posts</p>
+  ) : (
+    <>
+      <p class="x-feed-card__text">{latest.text}</p>
+      {hasMetrics && (
+        <div class="x-feed-card__metrics">
+          {Number.isFinite(likeCount) && <span>♡ {likeCount}</span>}
+          {Number.isFinite(repostCount) && <span>↻ {repostCount}</span>}
+          {Number.isFinite(quoteCount) && <span>↗ {quoteCount}</span>}
+        </div>
+      )}
+    </>
+  )}
+
+  <span class="sr-only">View latest post by {displayName} on X</span>
+</a>
+
+<style>
+.x-feed-card{
+  display:flex;
+  flex-direction:column;
+  gap:.8rem;
+  min-height:168px;
+  border:1px solid var(--border);
+  background:color-mix(in srgb, var(--surface-primary) 96%, var(--accent-primary) 4%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.03),0 0 20px rgba(0,0,0,.16);
+  padding:.95rem;
+  text-decoration:none;
+  transition:border-color .25s ease, box-shadow .25s ease;
+}
+.x-feed-card:hover{
+  border-color:var(--accent-primary);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 0 24px rgba(70, 214, 184, .1);
+}
+.x-feed-card__meta{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:.5rem;
+  font:700 10px 'IBM Plex Mono',monospace;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:rgba(255,255,255,.4);
+}
+.x-feed-card__text{
+  margin:0;
+  color:rgba(255,255,255,.8);
+  font:400 13px/1.55 'IBM Plex Mono',monospace;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+.x-feed-card__metrics{
+  margin-top:auto;
+  display:flex;
+  gap:.75rem;
+  font:400 9px 'IBM Plex Mono',monospace;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.25);
+}
+.x-feed-card__empty{
+  margin:0;
+  font:400 12px 'IBM Plex Mono', monospace;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.36);
+}
+</style>
