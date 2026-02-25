@@ -4,8 +4,8 @@ import Cursor from '@components/ui/Cursor.astro';
 import NoiseTexture from '@components/ui/NoiseTexture.astro';
 import AnalogClock from '@components/ui/AnalogClock.astro';
 import codebaseStats from '@data/codebase-stats.json';
-import activityData from '@data/activity-data.json';
-import buildWeight from '@data/build-weight.json';
+import activityStats from '@data/activity-stats.json';
+import payloadStats from '@data/payload-stats.json';
 
 const pathname = Astro.url.pathname;
 const links = [
@@ -38,7 +38,7 @@ const isActive = (href: string) => {
 const DEPLOY_DATE = new Date();
 const formatLines = (value: number) => (value >= 1000 ? `${(value / 1000).toFixed(1)}K` : String(value));
 const codebaseValue = `${formatLines(codebaseStats.lines)} lines · ${codebaseStats.modules} modules`;
-const payloadValue = Number(buildWeight.kb || 0);
+const payloadValue = Number(payloadStats.sizeKB || 0);
 ---
 
 <a href="#content" class="skip-link">Skip to content</a>
@@ -88,7 +88,7 @@ const payloadValue = Number(buildWeight.kb || 0);
           <div class="header__gauge-text"><span class="header__gauge-label">CODEBASE</span><span class="header__gauge-value">{codebaseValue}</span></div>
         </div>
 
-        <div class="header__gauge" data-gauge="activity" data-insertions={String(activityData.insertions)} data-deletions={String(activityData.deletions)} data-weekly-commits={String(activityData.weeklyCommits)}>
+        <div class="header__gauge" data-gauge="activity" data-insertions={String(activityStats.insertions)} data-deletions={String(activityStats.deletions)}>
           <div class="header__gauge-viz gauge-viz--diff" aria-hidden="true">
             <div class="diff-line diff-line--remove"><span class="diff-prefix">-</span><span class="diff-text" id="diff-remove-text"></span></div>
             <div class="diff-line diff-line--add"><span class="diff-prefix">+</span><span class="diff-text" id="diff-add-text"></span></div>
@@ -101,7 +101,7 @@ const payloadValue = Number(buildWeight.kb || 0);
             <div class="payload-rocket" id="payload-rocket">
               <svg width="12" height="18" viewBox="0 0 12 18">
                 <path d="M6,0 C6,0 10,4 10,10 L8,12 L4,12 L2,10 C2,4 6,0 6,0Z" fill="var(--text-secondary)" />
-                <path d="M4,12 L5,16 L6,14 L7,16 L8,12Z" fill="var(--accent-primary)" opacity="0.8" class="rocket-flame" />
+                <path d="M4,12 L5,16 L6,14 L7,16 L8,12Z" fill="var(--accent-primary)" opacity="0.8" class="rocket-flame" id="payload-flame" />
                 <circle cx="6" cy="6" r="1.5" fill="var(--accent-primary)" opacity="0.5" />
               </svg>
             </div>
@@ -218,8 +218,8 @@ const payloadValue = Number(buildWeight.kb || 0);
     const addTextEl = document.getElementById('diff-add-text');
     if (!removeTextEl || !addTextEl) return;
 
-    const insertions = gaugeEl.dataset.insertions || '0';
-    const deletions = gaugeEl.dataset.deletions || '0';
+    const insertions = Number(gaugeEl.dataset.insertions || '0');
+    const deletions = Number(gaugeEl.dataset.deletions || '0');
     const removeStr = `${deletions} lines removed`;
     const addStr = `${insertions} lines added`;
 
@@ -235,33 +235,14 @@ const payloadValue = Number(buildWeight.kb || 0);
     const typeText = (el, text, runId) => new Promise((resolve) => {
       let i = 0;
       const type = () => {
-        if (runId !== activeRun) {
-          resolve(undefined);
-          return;
-        }
-        if (i <= text.length) {
-          el.textContent = text.substring(0, i);
-          i += 1;
-          setTimeout(type, 35 + Math.random() * 25);
-        } else {
-          resolve(undefined);
-        }
+        if (runId !== activeRun) return resolve(undefined);
+        el.textContent = text.slice(0, i);
+        i += 1;
+        if (i <= text.length) window.setTimeout(type, 40);
+        else resolve(undefined);
       };
       type();
     });
-
-    const playAnimation = () => {
-      activeRun += 1;
-      const runId = activeRun;
-      removeTextEl.textContent = '';
-      addTextEl.textContent = '';
-      typeText(removeTextEl, removeStr, runId)
-        .then(() => new Promise((resolve) => setTimeout(resolve, 200)))
-        .then(() => {
-          if (runId !== activeRun) return;
-          return typeText(addTextEl, addStr, runId);
-        });
-    };
 
     const reset = () => {
       activeRun += 1;
@@ -269,72 +250,87 @@ const payloadValue = Number(buildWeight.kb || 0);
       addTextEl.textContent = '';
     };
 
-    const observer = new MutationObserver(() => {
-      const opacity = Number.parseFloat(window.getComputedStyle(gaugeEl).opacity);
-      if (opacity > 0.5) playAnimation();
-      else reset();
-    });
-    observer.observe(gaugeEl, { attributes: true, attributeFilter: ['style', 'class'] });
+    const playAnimation = () => {
+      reset();
+      const runId = activeRun;
+      typeText(removeTextEl, removeStr, runId)
+        .then(() => new Promise((resolve) => window.setTimeout(resolve, 300)))
+        .then(() => {
+          if (runId !== activeRun) return;
+          return typeText(addTextEl, addStr, runId);
+        });
+    };
 
-    if (Number.parseFloat(window.getComputedStyle(gaugeEl).opacity) > 0.5) playAnimation();
-    else reset();
+    const updateState = () => {
+      if (gaugeEl.classList.contains('active')) playAnimation();
+      else reset();
+    };
+
+    const observer = new MutationObserver(updateState);
+    observer.observe(gaugeEl, { attributes: true, attributeFilter: ['class'] });
+    updateState();
   };
 
   const initPayloadGauge = () => {
     const gaugeEl = document.querySelector('[data-gauge="payload"]');
     if (!(gaugeEl instanceof HTMLElement)) return;
 
-    const weightKB = gaugeEl.dataset.weightKb || '0';
+    const weightKB = Number(gaugeEl.dataset.weightKb || '0');
     const rocketEl = document.getElementById('payload-rocket');
+    const flameEl = document.getElementById('payload-flame');
     const valueEl = document.getElementById('payload-value');
     const numberEl = valueEl?.querySelector('.payload-number');
-    if (numberEl) numberEl.textContent = Number(weightKB).toLocaleString();
+    if (numberEl) numberEl.textContent = weightKB.toLocaleString();
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) {
-      if (rocketEl) rocketEl.style.display = 'none';
-      if (valueEl) valueEl.classList.add('payload-value--visible');
+      rocketEl?.classList.add('payload-rocket--hidden');
+      valueEl?.classList.add('payload-value--visible');
       return;
     }
 
+    let flameTimer = null;
     let launchTimer = null;
     let revealTimer = null;
 
     const clearTimers = () => {
+      if (flameTimer) window.clearTimeout(flameTimer);
       if (launchTimer) window.clearTimeout(launchTimer);
       if (revealTimer) window.clearTimeout(revealTimer);
+      flameTimer = null;
       launchTimer = null;
       revealTimer = null;
     };
 
     const resetAnimation = () => {
       clearTimers();
-      if (rocketEl) {
-        rocketEl.classList.remove('payload-rocket--launched');
-        rocketEl.style.display = '';
-      }
-      if (valueEl) valueEl.classList.remove('payload-value--visible');
+      rocketEl?.classList.remove('payload-rocket--boosting', 'payload-rocket--launched', 'payload-rocket--hidden');
+      flameEl?.classList.remove('payload-flame--boost');
+      valueEl?.classList.remove('payload-value--visible');
     };
 
     const playLaunch = () => {
       resetAnimation();
+      flameTimer = window.setTimeout(() => {
+        flameEl?.classList.add('payload-flame--boost');
+      }, 500);
       launchTimer = window.setTimeout(() => {
-        if (rocketEl) rocketEl.classList.add('payload-rocket--launched');
-        revealTimer = window.setTimeout(() => {
-          if (valueEl) valueEl.classList.add('payload-value--visible');
-        }, 500);
-      }, 600);
+        rocketEl?.classList.add('payload-rocket--launched');
+      }, 800);
+      revealTimer = window.setTimeout(() => {
+        rocketEl?.classList.add('payload-rocket--hidden');
+        valueEl?.classList.add('payload-value--visible');
+      }, 1200);
     };
 
-    const observer = new MutationObserver(() => {
-      const opacity = Number.parseFloat(window.getComputedStyle(gaugeEl).opacity);
-      if (opacity > 0.5) playLaunch();
+    const updateState = () => {
+      if (gaugeEl.classList.contains('active')) playLaunch();
       else resetAnimation();
-    });
-    observer.observe(gaugeEl, { attributes: true, attributeFilter: ['style', 'class'] });
+    };
 
-    if (Number.parseFloat(window.getComputedStyle(gaugeEl).opacity) > 0.5) playLaunch();
-    else resetAnimation();
+    const observer = new MutationObserver(updateState);
+    observer.observe(gaugeEl, { attributes: true, attributeFilter: ['class'] });
+    updateState();
   };
 
   const initSiteCubeViz = () => {
@@ -403,17 +399,19 @@ const payloadValue = Number(buildWeight.kb || 0);
   .gauge-viz--diff{display:flex;flex-direction:column;gap:1px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.3;}
   .diff-line{display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;}
   .diff-prefix{font-weight:700;flex-shrink:0;width:10px;text-align:center;}
-  .diff-line--add .diff-prefix,.diff-line--add .diff-text{color:#4ade80;opacity:.7;}
-  .diff-line--remove .diff-prefix,.diff-line--remove .diff-text{color:#f87171;opacity:.7;}
+  .diff-line--add .diff-prefix,.diff-line--add .diff-text{color:#50fa7b;opacity:.85;}
+  .diff-line--remove .diff-prefix,.diff-line--remove .diff-text{color:#ff5555;opacity:.85;}
   :root[data-theme="light"] .diff-line--add .diff-prefix,:root[data-theme="light"] .diff-line--add .diff-text{color:#16a34a;}
   :root[data-theme="light"] .diff-line--remove .diff-prefix,:root[data-theme="light"] .diff-line--remove .diff-text{color:#dc2626;}
 
-  .gauge-viz--payload{display:flex;align-items:center;gap:8px;position:relative;min-height:24px;}
-  .payload-rocket{position:relative;transition:transform .6s cubic-bezier(.36,.07,.19,.97),opacity .4s ease;}
-  .payload-rocket--launched{transform:translateY(-30px);opacity:0;}
-  .rocket-flame{animation:flameFlicker .15s ease-in-out infinite alternate;}
-  @keyframes flameFlicker{from{opacity:.6;transform:scaleY(.9);}to{opacity:1;transform:scaleY(1.1);}}
-  .payload-value{display:flex;align-items:baseline;gap:4px;opacity:0;transform:translateY(4px);transition:opacity .5s ease,transform .5s ease;}
+  .gauge-viz--payload{display:flex;align-items:flex-end;justify-content:center;gap:8px;position:relative;min-height:24px;}
+  .payload-rocket{position:relative;transform:translateY(0) scale(1);opacity:1;transition:transform .6s ease-in,opacity .35s ease;}
+  .payload-rocket--launched{transform:translateY(-30px) scale(0.7);opacity:.25;}
+  .payload-rocket--hidden{opacity:0;}
+  .rocket-flame{transform-origin:50% 20%;animation:flameFlicker .15s ease-in-out infinite alternate;}
+  .rocket-flame--boost{animation-duration:.1s;opacity:1;}
+  @keyframes flameFlicker{from{opacity:.45;transform:scale(0.9);}to{opacity:.95;transform:scale(1.15);}}
+  .payload-value{display:flex;align-items:baseline;gap:4px;opacity:0;transform:translateY(6px);transition:opacity .4s ease,transform .4s ease;}
   .payload-value--visible{opacity:1;transform:translateY(0);}
   .payload-number{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums;}
   .payload-unit{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:400;color:var(--text-tertiary);text-transform:uppercase;}

@@ -15,7 +15,8 @@
     "spotify:auth": "tsx scripts/spotify-auth.ts",
     "spotify:fetch": "tsx scripts/fetch-spotify.ts",
     "strava:fetch": "npx tsx scripts/fetch-strava.ts",
-    "prebuild": "node scripts/generate-header-gauge-data.mjs"
+    "prebuild": "node scripts/generate-header-gauge-data.mjs",
+    "postbuild": "node scripts/generate-header-gauge-data.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.3.2",
