@@ -1,4 +1,5 @@
 import type { SlideData, SlideModule } from '../types';
+import { resolveGenrePalette } from './genre-color-map';
 
 export interface RecentWatch {
   title: string;
@@ -36,21 +37,6 @@ export interface WatchingRenderData {
 const TAU = Math.PI * 2;
 const MONO = '"IBM Plex Mono", monospace';
 
-const GENRE_COLORS: Record<string, string> = {
-  romance: '#FF2D6B',
-  drama: '#2D5BFF',
-  thriller: '#FF8C00',
-  comedy: '#FFD700',
-  horror: '#00FF41',
-  'sci-fi': '#00FFFF',
-  scifi: '#00FFFF',
-  action: '#FF0000',
-  documentary: '#C4A882',
-  mystery: '#A24BFF',
-  fantasy: '#4d9cff',
-  animation: '#ff5fb2',
-  crime: '#f25f5c'
-};
 
 let introStartFrame = 0;
 let frameInitialized = false;
@@ -96,10 +82,8 @@ const ensurePoster = (url?: string | null) => {
 };
 
 const getGenrePalette = (genres: string[], fallback: string): string[] => {
-  const mapped = genres
-    .map((g) => GENRE_COLORS[g.toLowerCase()] ?? null)
-    .filter((g): g is string => Boolean(g));
-  return mapped.length ? mapped : [fallback, '#3d7090'];
+  const palette = resolveGenrePalette(genres, fallback);
+  return [palette.primary, palette.secondary];
 };
 
 const getPrimaryGenreColor = (genres: string[], fallback: string): string => getGenrePalette(genres, fallback)[0] ?? fallback;
