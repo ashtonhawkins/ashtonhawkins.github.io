@@ -1,8 +1,21 @@
 {
-  "updatedAt": "2026-02-24T18:51:43.917Z",
+  "updatedAt": "2026-02-25T01:24:57.876Z",
   "watching": {
-    "lastUpdated": "2026-02-24T18:51:43.917Z",
+    "lastUpdated": "2026-02-25T01:24:57.876Z",
     "recentItems": [
+      {
+        "title": "Love Story",
+        "year": 2026,
+        "watchedAt": "2026-02-23T01:36:00.000Z",
+        "source": "trakt",
+        "type": "tv",
+        "season": 1,
+        "episode": 1,
+        "episodeTitle": "Pilot",
+        "url": "https://trakt.tv/shows/love-story-2026",
+        "watchedDate": "2026-02-23T01:36:00.000Z",
+        "displayTitle": "Love Story · S01E01"
+      },
       {
         "title": "The Omega Man",
         "year": 1971,
@@ -16,7 +29,7 @@
     ],
     "stats": {
       "totalFilms": 1,
-      "totalEpisodes": 0,
+      "totalEpisodes": 1,
       "avgRating": 5
     }
   },
@@ -32,20 +45,32 @@
         "url": "https://letterboxd.com/drrobertneville/film/the-omega-man/"
       }
     ],
-    "trakt": [],
+    "trakt": [
+      {
+        "title": "Love Story",
+        "year": 2026,
+        "watchedAt": "2026-02-23T01:36:00.000Z",
+        "source": "trakt",
+        "type": "tv",
+        "season": 1,
+        "episode": 1,
+        "episodeTitle": "Pilot",
+        "url": "https://trakt.tv/shows/love-story-2026"
+      }
+    ],
     "goodreads": [],
     "lastfm": [
       {
-        "name": "Getting Away With It",
-        "title": "Getting Away With It",
-        "artist": "Electronic"
+        "name": "Heaven or Las Vegas",
+        "title": "Heaven or Las Vegas",
+        "artist": "Cocteau Twins"
       }
     ],
     "spotify": [
       {
-        "name": "Getting Away With It",
-        "title": "Getting Away With It",
-        "artist": "Electronic"
+        "name": "Heaven or Las Vegas",
+        "title": "Heaven or Las Vegas",
+        "artist": "Cocteau Twins"
       }
     ],
     "x": []
