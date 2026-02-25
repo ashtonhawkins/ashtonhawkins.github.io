@@ -1,13 +1,9 @@
 ---
 import SectionHeader from '@components/ui/SectionHeader.astro';
 import WritingDrift from '@components/home/WritingDrift.astro';
-import site from '@data/site.json';
-
-const socialXUrl = site.social?.x ?? 'https://x.com/ashtin';
-const screenName = socialXUrl.split('/').filter(Boolean).pop() ?? 'ashtin';
-const xUrl = socialXUrl.replace(/^https?:\/\/x\.com\//, 'https://twitter.com/');
+import XFeed from '@components/XFeed.astro';
 ---
-<section id="words" class="words-section" data-x-screen-name={screenName}>
+<section id="words" class="words-section">
   <SectionHeader label="Words" />
   <div class="words-section__grid">
     <div class="words-section__drift">
@@ -15,27 +11,7 @@ const xUrl = socialXUrl.replace(/^https?:\/\/x\.com\//, 'https://twitter.com/');
     </div>
     <aside class="words-section__x-feed" data-x-feed>
       <h3 class="x-feed__header"><span class="section-prefix">//</span><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="x-feed__logo" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></h3>
-      <div class="words__x-feed-embed" data-x-embed>
-        <a
-          class="twitter-timeline"
-          data-theme="dark"
-          data-chrome="noheader nofooter noborders transparent"
-          data-height="280"
-          data-tweet-limit="1"
-          href={xUrl}
-        >
-          Loading posts...
-        </a>
-      </div>
-      <div class="x-feed__fallback" data-x-fallback>
-        <div class="x-feed__fallback-inner">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-          </svg>
-          <a href={xUrl} target="_blank" rel="noreferrer">@{screenName}</a>
-          <span class="x-feed__fallback-note">Follow on X →</span>
-        </div>
-      </div>
+      <XFeed />
     </aside>
   </div>
   <p class="writing__footer"><a href="/writing">VIEW ALL POSTS →</a></p>
@@ -48,127 +24,7 @@ const xUrl = socialXUrl.replace(/^https?:\/\/x\.com\//, 'https://twitter.com/');
 .x-feed__header{margin:0 0 .6rem;display:flex;align-items:center;gap:.4rem;font:700 .76rem 'IBM Plex Mono',monospace;letter-spacing:.08em}
 .section-prefix{color:var(--text-tertiary)}
 .x-feed__logo{display:block}
-.words__x-feed-embed { max-height: 320px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.1) transparent; }
-.words__x-feed-embed iframe { border: none !important; border-radius: 4px; }
-.x-feed__fallback {
-  display: none;
-  padding: 2rem;
-  text-align: center;
-}
-.x-feed__fallback-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-.x-feed__fallback-inner svg { color: var(--text-tertiary); }
-.x-feed__fallback-inner a {
-  font: 700 1rem 'IBM Plex Mono', monospace;
-  color: var(--text-primary);
-  text-decoration: none;
-}
-.x-feed__fallback-note {
-  font: 0.72rem 'IBM Plex Mono', monospace;
-  color: var(--text-tertiary);
-  letter-spacing: 0.08em;
-}
 .writing__footer a{text-decoration:none;font:.72rem 'IBM Plex Mono',monospace;color:var(--text-secondary);letter-spacing:.08em}
 .writing__footer a:hover{color:var(--accent-primary)}
 @media (max-width: 768px) { .words-section__grid { grid-template-columns:1fr; } .words-section__drift { border-right:1px solid var(--border); } }
 </style>
-
-<script is:inline data-astro-rerun>
-  const waitForWidgets = async () => {
-    if (window.twttr?.widgets?.load) return true;
-    const existingScript = document.getElementById('twitter-wjs');
-    if (existingScript) {
-      const start = Date.now();
-      while (!window.twttr?.widgets?.load && Date.now() - start < 5000) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-      return Boolean(window.twttr?.widgets?.load);
-    }
-    const script = document.createElement('script');
-    script.id = 'twitter-wjs';
-    script.src = 'https://platform.twitter.com/widgets.js';
-    script.async = true;
-    script.charset = 'utf-8';
-    const loaded = new Promise((resolve, reject) => {
-      script.onload = resolve;
-      script.onerror = reject;
-    });
-    document.head.appendChild(script);
-    try {
-      await loaded;
-    } catch {
-      return false;
-    }
-    const start = Date.now();
-    while (!window.twttr?.widgets?.load && Date.now() - start < 5000) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-    return Boolean(window.twttr?.widgets?.load);
-  };
-
-  const waitForIframe = (container, timeoutMs) =>
-    new Promise((resolve) => {
-      if (container.querySelector('iframe')) {
-        resolve(true);
-        return;
-      }
-      const observer = new MutationObserver(() => {
-        if (container.querySelector('iframe')) {
-          observer.disconnect();
-          clearTimeout(timer);
-          resolve(true);
-        }
-      });
-      observer.observe(container, { childList: true, subtree: true });
-      const timer = setTimeout(() => {
-        observer.disconnect();
-        resolve(Boolean(container.querySelector('iframe')));
-      }, timeoutMs);
-    });
-
-  const initSection = async (section) => {
-    const embedContainer = section.querySelector('[data-x-embed]');
-    const fallback = section.querySelector('[data-x-fallback]');
-    if (!embedContainer || !fallback) return;
-
-    const showEmbed = () => {
-      embedContainer.style.display = '';
-      fallback.style.display = 'none';
-    };
-    const showFallback = () => {
-      embedContainer.style.display = 'none';
-      fallback.style.display = 'block';
-    };
-
-    showEmbed();
-    const widgetsReady = await waitForWidgets();
-    if (!widgetsReady) {
-      showFallback();
-      return;
-    }
-    window.twttr.widgets.load(embedContainer);
-    const hasIframe = await waitForIframe(embedContainer, 5000);
-    if (hasIframe) {
-      showEmbed();
-      return;
-    }
-    showFallback();
-  };
-
-  const init = () => {
-    document.querySelectorAll('.words-section').forEach((section) => {
-      initSection(section);
-    });
-  };
-
-  init();
-  if (!window.__wordsSectionXFeedHandlersBound) {
-    document.addEventListener('astro:page-load', init);
-    document.addEventListener('astro:after-swap', init);
-    window.__wordsSectionXFeedHandlersBound = true;
-  }
-</script>

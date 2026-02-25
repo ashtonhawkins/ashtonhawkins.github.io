@@ -62,11 +62,17 @@ jobs:
           SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
           GH_PAT: ${{ secrets.GH_PAT }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+      - name: Fetch latest X/Twitter post
+        continue-on-error: true
+        run: npm run x:fetch
+        env:
+          X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
+          X_USERNAME: ashtin
       - name: Commit cache changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/feeds-cache.json src/data/oura/ src/data/strava/ src/data/cycling.json src/data/spotify/
+          git add src/data/feeds-cache.json src/data/oura/ src/data/strava/ src/data/cycling.json src/data/spotify/ src/data/x-latest.json
           if git diff --cached --quiet; then
             echo "No changes to commit"
             exit 0
