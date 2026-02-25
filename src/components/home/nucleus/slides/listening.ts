@@ -326,7 +326,7 @@ const buildTimelineBars = (
   return source.map((item, index) => {
     const share = Math.max(70000, item.duration_ms) / totalDuration;
     const widthPx = Math.max(4, usableWidth * share - 1);
-    const opacity = 0.15 + (index / Math.max(1, source.length - 1)) * 0.25;
+    const opacity = 0.06 + (index / Math.max(1, source.length - 1)) * 0.12;
     const bar: TimelineBar = {
       x: cursor,
       width: widthPx,
@@ -436,11 +436,11 @@ const drawGenreConstellation = (
   const labelBase = clamp((metadataFadeFrame - 48) / 120, 0, 1);
 
   ctx.save();
-  ctx.font = `7px ${MONO}`;
+  ctx.font = `6px ${MONO}`;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
-  ctx.fillStyle = withAlpha(accent, 0.12);
-  ctx.fillText('◉ GENRE MAP', cx - 85, cy - 64);
+  ctx.fillStyle = withAlpha(accent, 0.06);
+  ctx.fillText('◉ GENRE MAP', cx - 50, cy - Math.min(width, height) * 0.16 - 12);
 
   const positions = nodes.map((node, index) => {
     const driftX = Math.sin(frame * 0.004 + node.seed * 0.0001) * 2;
@@ -453,6 +453,38 @@ const drawGenreConstellation = (
       index,
     };
   });
+
+  if (positions.length === 1) {
+    const p = positions[0];
+    const pulse = 0.5 + Math.sin(frame * 0.005) * 0.3;
+
+    ctx.strokeStyle = withAlpha(accent, 0.08 * fadeNodes);
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 18, 0, TAU);
+    ctx.stroke();
+
+    ctx.strokeStyle = withAlpha(accent, 0.12 * fadeNodes * pulse);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 10, 0, TAU);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.fillStyle = withAlpha(accent, 0.25 * fadeNodes);
+    ctx.arc(p.x, p.y, 3, 0, TAU);
+    ctx.fill();
+
+    const labelAngle = frame * 0.0008;
+    const labelX = p.x + Math.cos(labelAngle) * 26;
+    const labelY = p.y + Math.sin(labelAngle) * 26;
+    ctx.font = `7px ${MONO}`;
+    ctx.fillStyle = withAlpha(accent, 0.12 * labelBase);
+    ctx.textAlign = 'center';
+    ctx.fillText(`[${p.node.genre}]`, labelX, labelY);
+
+    ctx.restore();
+    return;
+  }
 
   ctx.strokeStyle = withAlpha(accent, 0.08 * fadeNodes);
   ctx.lineWidth = 0.5;
@@ -491,18 +523,18 @@ const drawTimelineStrip = (
   renderData: ListeningRenderData
 ): void => {
   const bars = getTimelineBars(width, height, renderData.recentTrackFeatures, renderData.genre);
-  const stripTop = height * 0.85;
-  const stripHeight = height * 0.13;
+  const stripTop = height * 0.88;
+  const stripHeight = height * 0.08;
   const baselineY = stripTop + stripHeight;
   const riseBase = clamp((metadataFadeFrame - 12) / 90, 0, 1);
 
   ctx.save();
-  ctx.font = `8px ${MONO}`;
-  ctx.fillStyle = withAlpha(accent, 0.12);
-  ctx.fillText('▸ RECENT 20 TRACKS', 12, stripTop - 8);
+  ctx.font = `6px ${MONO}`;
+  ctx.fillStyle = withAlpha(accent, 0.08);
+  ctx.fillText('▸ RECENT TRACKS', 12, stripTop - 4);
 
-  ctx.strokeStyle = withAlpha(accent, 0.1);
-  ctx.lineWidth = 1;
+  ctx.strokeStyle = withAlpha(accent, 0.06);
+  ctx.lineWidth = 0.5;
   ctx.beginPath();
   ctx.moveTo(12, baselineY);
   ctx.lineTo(width - 12, baselineY);
@@ -511,22 +543,30 @@ const drawTimelineStrip = (
   bars.forEach((bar, index) => {
     const stagger = clamp((metadataFadeFrame - 12 - index * 3) / 36, 0, 1);
     const rise = riseBase * stagger;
-    const breathe = Math.sin(frame * 0.01 + bar.phase) * 1;
-    const minHeight = stripHeight * 0.2;
-    const maxHeight = stripHeight;
+    const breathe = Math.sin(frame * 0.01 + bar.phase) * 0.5;
+    const minHeight = stripHeight * 0.15;
+    const maxHeight = stripHeight * 0.9;
     const target = minHeight + (maxHeight - minHeight) * bar.energy;
     const h = Math.max(1, target * rise + breathe);
     const y = baselineY - h;
     const warm = applyWarmthTint(accent, bar.valence);
     ctx.fillStyle = withAlpha(warm, bar.opacity);
-    ctx.fillRect(bar.x, y, bar.width, h);
+    const r = Math.min(1.5, bar.width * 0.3);
+    ctx.beginPath();
+    ctx.moveTo(bar.x, baselineY);
+    ctx.lineTo(bar.x, y + r);
+    ctx.arcTo(bar.x, y, bar.x + r, y, r);
+    ctx.arcTo(bar.x + bar.width, y, bar.x + bar.width, y + r, r);
+    ctx.lineTo(bar.x + bar.width, baselineY);
+    ctx.fill();
   });
 
-  ctx.fillStyle = withAlpha(accent, 0.1);
-  ctx.font = `7px ${MONO}`;
-  ctx.fillText('2D', 12, baselineY + 10);
+  ctx.fillStyle = withAlpha(accent, 0.06);
+  ctx.font = `6px ${MONO}`;
+  ctx.textAlign = 'left';
+  ctx.fillText('2D', 12, baselineY + 8);
   ctx.textAlign = 'right';
-  ctx.fillText('NOW →', width - 12, baselineY + 10);
+  ctx.fillText('NOW →', width - 12, baselineY + 8);
   ctx.restore();
 };
 
@@ -589,12 +629,23 @@ const drawNowPlayingCard = (
   accent: string,
   renderData: ListeningRenderData
 ): void => {
-  const cardW = 220;
-  const cardH = 92;
+  const cardW = 200;
+  const cardH = 82;
   const x = width - cardW - 16;
   const y = height * 0.12;
   const fade = clamp((metadataFadeFrame - 18) / 30, 0, 1);
   if (fade <= 0) return;
+
+  const truncateText = (text: string, maxWidth: number): string => {
+    if (ctx.measureText(text).width <= maxWidth) return text;
+    let truncated = text;
+    while (truncated.length > 0 && ctx.measureText(`${truncated}…`).width > maxWidth) {
+      truncated = truncated.slice(0, -1);
+    }
+    return `${truncated}…`;
+  };
+
+  const innerWidth = cardW - 24;
 
   ctx.save();
   ctx.globalAlpha = fade;
@@ -610,6 +661,7 @@ const drawNowPlayingCard = (
   const beatPulse = 0.4 + (Math.sin(frame * (bpm / 60) * 0.1) * 0.5 + 0.5) * 0.35;
   ctx.font = `7px ${MONO}`;
   ctx.fillStyle = withAlpha(accent, 0.25);
+  ctx.textAlign = 'left';
   ctx.fillText(renderData.isNowPlaying ? 'NOW PLAYING' : 'LAST PLAYED', x + 12, y + 11);
   ctx.beginPath();
   ctx.fillStyle = renderData.isNowPlaying ? withAlpha('#65d38c', beatPulse) : withAlpha('#d36969', 0.35);
@@ -618,21 +670,23 @@ const drawNowPlayingCard = (
 
   if (renderData.isNowPlaying && renderData.trackDurationMs > 0) {
     const progress = clamp(renderData.progressMs / renderData.trackDurationMs, 0, 1);
+    const barWidth = innerWidth - 40;
     ctx.fillStyle = withAlpha(accent, 0.08);
-    ctx.fillRect(x + 12, y + 22, 150, 5);
+    ctx.fillRect(x + 12, y + 20, barWidth, 4);
     ctx.fillStyle = withAlpha(accent, 0.3);
-    ctx.fillRect(x + 12, y + 22, 150 * progress, 5);
-    ctx.font = `8px ${MONO}`;
+    ctx.fillRect(x + 12, y + 20, barWidth * progress, 4);
+    ctx.font = `7px ${MONO}`;
     ctx.fillStyle = withAlpha(accent, 0.2);
-    ctx.fillText(formatDuration(renderData.trackDurationMs), x + 170, y + 27);
+    ctx.fillText(formatDuration(renderData.trackDurationMs), x + 12 + barWidth + 4, y + 24);
   } else {
-    ctx.strokeStyle = withAlpha(accent, 0.2);
+    ctx.strokeStyle = withAlpha(accent, 0.15);
     ctx.lineWidth = 1;
     ctx.beginPath();
-    const miniY = y + 25;
-    for (let i = 0; i <= 100; i += 1) {
+    const miniY = y + 22;
+    const miniW = innerWidth - 10;
+    for (let i = 0; i <= miniW; i += 1) {
       const px = x + 12 + i;
-      const py = waveformY(i, 100, miniY, 4, frame, renderData.mood, renderData.bpm, 0.2);
+      const py = waveformY(i, miniW, miniY, 3, frame, renderData.mood, renderData.bpm, 0.2);
       if (i === 0) ctx.moveTo(px, py);
       else ctx.lineTo(px, py);
     }
@@ -641,15 +695,17 @@ const drawNowPlayingCard = (
 
   const titleStart = 30;
   const titleChars = clamp(Math.floor(((metadataFadeFrame - titleStart) / 60) * Math.max(1, renderData.title.length)), 0, renderData.title.length);
-  ctx.font = `12px ${MONO}`;
+  ctx.font = `11px ${MONO}`;
   ctx.fillStyle = withAlpha(accent, 0.5);
-  ctx.fillText(renderData.title.slice(0, titleChars), x + 12, y + 50);
+  const titleText = truncateText(renderData.title.slice(0, titleChars), innerWidth);
+  ctx.fillText(titleText, x + 12, y + 45);
 
   const artistFade = clamp((metadataFadeFrame - 48) / 24, 0, 1);
   if (artistFade > 0) {
-    ctx.font = `9px ${MONO}`;
+    ctx.font = `8px ${MONO}`;
     ctx.fillStyle = withAlpha(accent, 0.25 * artistFade);
-    ctx.fillText(`${renderData.artist} · ${renderData.album}`.slice(0, 34), x + 12, y + 66);
+    const artistAlbum = `${renderData.artist} · ${renderData.album}`;
+    ctx.fillText(truncateText(artistAlbum, innerWidth), x + 12, y + 60);
   }
 
   ctx.restore();
@@ -690,7 +746,7 @@ const drawMoodArcRing = (
   ];
 
   ctx.setLineDash([2, 3]);
-  ctx.strokeStyle = 'rgba(220,220,220,0.05)';
+  ctx.strokeStyle = 'rgba(220,220,220,0.07)';
   ctx.beginPath();
   ctx.arc(cx, cy, baseRadius + 26, 0, TAU);
   ctx.stroke();
@@ -698,7 +754,7 @@ const drawMoodArcRing = (
   ctx.font = `6px ${MONO}`;
   ctx.fillStyle = 'rgba(220,220,220,0.12)';
   ctx.textAlign = 'center';
-  ctx.fillText('MOOD', cx, cy - (baseRadius + 30));
+  ctx.fillText('MOOD', cx, cy + (baseRadius + 36));
 
   metrics.forEach((metric, i) => {
     const entry = clamp((metadataFadeFrame - 60 - i * 12) / 36, 0, 1);
@@ -779,10 +835,10 @@ const drawServiceLogos = (
   height: number
 ): void => {
   const x = 12;
-  const y = height - 24;
+  const y = height - 16;
   const cycle = (Math.sin(frame * 0.01) * 0.5) + 0.5;
-  const spotifyAlpha = 0.18 + cycle * 0.12;
-  const lastAlpha = 0.18 + (1 - cycle) * 0.12;
+  const spotifyAlpha = 0.10 + cycle * 0.06;
+  const lastAlpha = 0.10 + (1 - cycle) * 0.06;
 
   ctx.save();
   const fade = clamp((metadataFadeFrame - 90) / 24, 0, 1);
@@ -790,27 +846,17 @@ const drawServiceLogos = (
 
   if (spotifyIcon && lastfmIcon) {
     ctx.globalAlpha = spotifyAlpha * fade;
-    ctx.drawImage(spotifyIcon, x, y, 14, 14);
+    ctx.drawImage(spotifyIcon, x, y, 12, 12);
     ctx.globalAlpha = lastAlpha * fade;
-    ctx.drawImage(lastfmIcon, x + 20, y, 14, 14);
+    ctx.drawImage(lastfmIcon, x + 16, y, 12, 12);
   } else {
-    ctx.font = `8px ${MONO}`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    ctx.beginPath();
+    ctx.font = `6px ${MONO}`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
     ctx.fillStyle = withAlpha(accent, spotifyAlpha);
-    ctx.arc(x + 7, y + 7, 6, 0, TAU);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(15,15,15,0.6)';
-    ctx.fillText('S', x + 7, y + 7);
-
-    ctx.beginPath();
+    ctx.fillText('spotify', x, y + 10);
     ctx.fillStyle = withAlpha(accent, lastAlpha);
-    ctx.arc(x + 27, y + 7, 6, 0, TAU);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(15,15,15,0.6)';
-    ctx.fillText('L', x + 27, y + 7);
+    ctx.fillText('last.fm', x + 34, y + 10);
   }
 
   ctx.restore();
@@ -824,38 +870,32 @@ const drawDataSourceIndicator = (
   isLive: boolean,
   updatedAt?: string
 ): void => {
-  const x = 15;
-  const y = height - 36;
+  const x = 12;
+  const y = height - 30;
   const pulse = ((frame / 60) % 4) / 4;
 
   ctx.save();
-  ctx.fillStyle = withAlpha(accent, 0.25);
+  ctx.fillStyle = withAlpha(accent, 0.15);
   ctx.beginPath();
-  ctx.arc(x, y, 3, 0, TAU);
+  ctx.arc(x, y, 2, 0, TAU);
   ctx.fill();
 
   if (pulse < 0.25) {
     const local = pulse / 0.25;
-    const radius = 3 + local * 12;
-    const alpha = 0.2 * (1 - local);
+    const radius = 2 + local * 8;
+    const alpha = 0.12 * (1 - local);
     ctx.strokeStyle = withAlpha(accent, alpha);
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 0.5;
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, TAU);
     ctx.stroke();
   }
 
   const label = isLive ? 'LIVE' : formatRelative(updatedAt);
-  ctx.fillStyle = 'rgba(0,0,0,0.14)';
-  ctx.strokeStyle = withAlpha(accent, 0.14);
-  ctx.lineWidth = 0.5;
-  ctx.beginPath();
-  ctx.roundRect(x + 8, y - 6, 42, 12, 3);
-  ctx.fill();
-  ctx.stroke();
-  ctx.font = `7px ${MONO}`;
-  ctx.fillStyle = withAlpha(accent, 0.15);
-  ctx.fillText(label, x + 14, y + 2);
+  ctx.font = `6px ${MONO}`;
+  ctx.fillStyle = withAlpha(accent, 0.10);
+  ctx.textAlign = 'left';
+  ctx.fillText(label, x + 8, y + 2);
   ctx.restore();
 };
 
