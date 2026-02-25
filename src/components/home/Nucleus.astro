@@ -20,11 +20,22 @@ const writingStats = {
 ---
 
 <script define:vars={{ feeds, travel, writingStats, cyclingActivities: stravaActivities.data }}>
+  const watchingRecent = feeds?.watching?.recentItems ?? [];
+  const currentYear = new Date().getFullYear();
+  const thisYearCount = watchingRecent.filter((item) => item?.watchedDate && new Date(item.watchedDate).getFullYear() === currentYear).length;
+  const decadeMap = watchingRecent.reduce((acc, item) => {
+    if (!item?.year) return acc;
+    const key = `${Math.floor((item.year ?? 0) / 10) * 10}s`;
+    acc[key] = (acc[key] ?? 0) + 1;
+    return acc;
+  }, {});
+  const topDecade = Object.entries(decadeMap).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+
   window.__nucleusWatchingData = {
-    thisYearCount: feeds?.watching?.stats?.totalFilms ?? null,
+    thisYearCount,
     totalFilms: feeds?.watching?.stats?.totalFilms ?? null,
     avgRating: feeds?.watching?.stats?.avgRating ?? null,
-    topDecade: feeds?.watching?.recentItems?.[0]?.year ? `${Math.floor((feeds.watching.recentItems[0].year ?? 0) / 10) * 10}s` : null,
+    topDecade,
   };
   window.__nucleusListeningData = {
     weeklyPlays: feeds?.items?.lastfm?.length ?? 0,
