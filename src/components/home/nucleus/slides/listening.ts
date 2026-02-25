@@ -3,13 +3,17 @@ import {
   estimateBpmFromGenre,
   extractDominantColor,
   getRecentTrack,
+  getRecentTracks,
   getTrackInfo,
+  getUserInfo,
+  getUserTopArtists,
 } from '@lib/lastfm';
+import { resolveGenrePalette } from './genre-color-map';
 
 const TAU = Math.PI * 2;
 const MONO = '"IBM Plex Mono", monospace';
 
-type MoodMetrics = {
+export type MoodMetrics = {
   energy: number;
   valence: number;
   danceability: number;
@@ -42,160 +46,66 @@ type SpotifyProfile = {
   topGenres?: Array<{ genre: string; count: number }>;
 };
 
-type RecentFeature = {
-  energy: number;
-  valence: number;
-  danceability: number;
-  duration_ms: number;
-  tempo: number;
-};
-
 export type ListeningRenderData = {
-  title: string;
-  artist: string;
-  album: string;
+  trackTitle: string;
+  artistName: string;
+  albumTitle: string;
   albumArtUrl: string;
-  bpm: number;
-  genre: string;
-  duration: number;
   isNowPlaying: boolean;
+  lastPlayedTimestamp: string;
+  trackDuration: number;
+  trackTags: string[];
+  playCount: number;
+  artistPlayCount: number;
+  loved: boolean;
+  scrobblesThisWeek: number;
+  scrobblesAllTime: number;
+  topArtist: string;
+  topArtistPlays: number;
+  topGenre: string;
+  topAlbum: string;
+  recentTracks: Array<{ title: string; artist: string; albumArt: string; timestamp: string; loved?: boolean }>;
+  topArtists: Array<{ artist: string; plays: number }>;
+  listeningStreak: number;
+  avgScrobblesPerDay: number;
+  bpm: number;
+  key?: string;
+  energy?: number;
+  valence?: number;
   mood: MoodMetrics | null;
-  recentTrackFeatures: RecentFeature[];
-  topGenres: Array<{ genre: string; count: number }>;
-  nowPlayingFeatures: MoodMetrics | null;
   progressMs: number;
   trackDurationMs: number;
 };
 
-/* ── module-level state ── */
-
 let metadataFadeFrame = 0;
 let grainPattern: CanvasPattern | null = null;
 let grainCanvas: HTMLCanvasElement | null = null;
-
-// retained for fetchData() — do not remove
-let spotifyIcon: HTMLImageElement | null = null;
-let lastfmIcon: HTMLImageElement | null = null;
-let iconLoadAttempted = false;
-
-// album art image cache
 let albumArtImage: HTMLImageElement | null = null;
 let cachedAlbumArtUrl = '';
-let blurredCanvas: HTMLCanvasElement | null = null;
 let albumArtLoading = false;
 
-/* ── pure helpers ── */
-
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+const withAlpha = (rgb: [number, number, number], alpha: number): string => `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${clamp(alpha, 0, 1)})`;
 
-const clampBpm = (bpm: number): number => {
-  if (!Number.isFinite(bpm) || bpm <= 0) return 120;
-  return clamp(bpm, 60, 240);
-};
-
-const parseColor = (input: string): [number, number, number] | null => {
-  const color = input.trim();
-  if (!color) return null;
-  if (color[0] === '#') {
-    const hex = color.slice(1);
-    if (hex.length === 3) {
-      const r = parseInt(hex[0] + hex[0], 16);
-      const g = parseInt(hex[1] + hex[1], 16);
-      const b = parseInt(hex[2] + hex[2], 16);
-      if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return null;
-      return [r, g, b];
-    }
-    if (hex.length === 6) {
-      const r = parseInt(hex.slice(0, 2), 16);
-      const g = parseInt(hex.slice(2, 4), 16);
-      const b = parseInt(hex.slice(4, 6), 16);
-      if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return null;
-      return [r, g, b];
-    }
+const parseHex = (input: string): [number, number, number] => {
+  const hex = input.trim().replace('#', '');
+  if (hex.length === 3) {
+    return [parseInt(hex[0] + hex[0], 16), parseInt(hex[1] + hex[1], 16), parseInt(hex[2] + hex[2], 16)];
   }
-
-  const rgbMatch = color.match(/^rgba?\(([^)]+)\)$/i);
-  if (rgbMatch) {
-    const parts = rgbMatch[1].split(',');
-    if (parts.length >= 3) {
-      const r = Number.parseFloat(parts[0]);
-      const g = Number.parseFloat(parts[1]);
-      const b = Number.parseFloat(parts[2]);
-      if (!Number.isNaN(r) && !Number.isNaN(g) && !Number.isNaN(b)) {
-        return [clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255)];
-      }
-    }
-  }
-
-  return null;
+  return [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)];
 };
 
-export const blendColors = (themeAccent: string, override: string, ratio = 0.3): string => {
-  const baseRgb = parseColor(themeAccent);
-  const overrideRgb = parseColor(override);
-  if (!baseRgb || !overrideRgb) return themeAccent;
-
-  const clampedRatio = clamp(ratio, 0, 1);
-  const inverse = 1 - clampedRatio;
-  const r = Math.round(baseRgb[0] * inverse + overrideRgb[0] * clampedRatio);
-  const g = Math.round(baseRgb[1] * inverse + overrideRgb[1] * clampedRatio);
-  const b = Math.round(baseRgb[2] * inverse + overrideRgb[2] * clampedRatio);
-
-  return `rgb(${r}, ${g}, ${b})`;
-};
-
-const withAlpha = (color: string, alpha: number): string => {
-  const rgb = parseColor(color);
-  if (!rgb) return color;
-  return `rgba(${Math.round(rgb[0])}, ${Math.round(rgb[1])}, ${Math.round(rgb[2])}, ${clamp(alpha, 0, 1)})`;
-};
-
-const applyWarmthTint = (color: string, valence = 0.5): string => {
-  const rgb = parseColor(color);
-  if (!rgb) return color;
-  const warmth = clamp(valence * 2 - 1, -1, 1);
-  const influence = 0.15;
-  const redShift = warmth > 0 ? 22 * warmth : 0;
-  const amberShift = warmth > 0 ? 14 * warmth : 0;
-  const blueShift = warmth < 0 ? 24 * Math.abs(warmth) : 0;
-  const r = clamp(rgb[0] + (redShift - blueShift * 0.3) * influence, 0, 255);
-  const g = clamp(rgb[1] + amberShift * influence, 0, 255);
-  const b = clamp(rgb[2] + (blueShift - redShift * 0.2) * influence, 0, 255);
-  return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
-};
-
-const clampMetric = (value: number | undefined, fallback: number): number => {
-  if (!Number.isFinite(value)) return fallback;
-  return clamp(value as number, 0, 1);
-};
-
-const normalizeTempo = (tempo: number | undefined, fallback = 120): number => {
-  const value = Number.isFinite(tempo) ? Number(tempo) : fallback;
-  return clampBpm(value);
-};
-
-const formatRelative = (iso: string | undefined): string => {
-  if (!iso) return 'OFFLINE';
-  const time = Date.parse(iso);
-  if (!Number.isFinite(time)) return 'OFFLINE';
-  const delta = Math.max(0, Date.now() - time);
-  const minutes = Math.floor(delta / 60000);
-  if (minutes < 1) return 'LIVE';
-  if (minutes < 60) return `${minutes}M AGO`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}H AGO`;
-  return `${Math.floor(hours / 24)}D AGO`;
-};
-
-/* ── data fetching utilities (used by fetchData — do not modify) ── */
+const lerpRgb = (a: [number, number, number], b: [number, number, number], t: number): [number, number, number] => [
+  Math.round(a[0] + (b[0] - a[0]) * t),
+  Math.round(a[1] + (b[1] - a[1]) * t),
+  Math.round(a[2] + (b[2] - a[2]) * t),
+];
 
 const fetchOptionalJson = async <T>(paths: string[]): Promise<T | null> => {
   for (const path of paths) {
     try {
       const response = await fetch(path);
-      if (response.ok) {
-        return (await response.json()) as T;
-      }
+      if (response.ok) return (await response.json()) as T;
     } catch {
       // noop
     }
@@ -203,398 +113,415 @@ const fetchOptionalJson = async <T>(paths: string[]): Promise<T | null> => {
   return null;
 };
 
-const loadIcon = (path: string): Promise<HTMLImageElement | null> => new Promise((resolve) => {
-  const image = new Image();
-  image.onload = () => resolve(image);
-  image.onerror = () => resolve(null);
-  image.src = path;
-});
-
-const ensureServiceIconsLoaded = async (): Promise<void> => {
-  if (iconLoadAttempted || typeof Image === 'undefined') return;
-  iconLoadAttempted = true;
-  [spotifyIcon, lastfmIcon] = await Promise.all([
-    loadIcon('/icons/spotify-mono.svg'),
-    loadIcon('/icons/lastfm-mono.svg'),
-  ]);
+const formatRelative = (iso: string): string => {
+  if (!iso) return 'OFFLINE';
+  const ts = Date.parse(iso);
+  if (!Number.isFinite(ts)) return 'OFFLINE';
+  const deltaM = Math.floor(Math.max(0, Date.now() - ts) / 60000);
+  if (deltaM < 1) return 'LIVE';
+  if (deltaM < 60) return `${deltaM}m ago`;
+  const h = Math.floor(deltaM / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
 };
-
-/* ── grain texture ── */
 
 const ensureGrainPattern = (ctx: CanvasRenderingContext2D): CanvasPattern | null => {
   if (grainPattern) return grainPattern;
-  if (!grainCanvas) {
-    grainCanvas = document.createElement('canvas');
-    grainCanvas.width = 64;
-    grainCanvas.height = 64;
-    const gtx = grainCanvas.getContext('2d');
-    if (!gtx) return null;
-    const img = gtx.createImageData(64, 64);
-    for (let i = 0; i < img.data.length; i += 4) {
-      const value = Math.random() > 0.5 ? 255 : 0;
-      img.data[i] = value;
-      img.data[i + 1] = value;
-      img.data[i + 2] = value;
-      img.data[i + 3] = Math.random() * 20;
-    }
-    gtx.putImageData(img, 0, 0);
+  grainCanvas = document.createElement('canvas');
+  grainCanvas.width = 96;
+  grainCanvas.height = 96;
+  const gtx = grainCanvas.getContext('2d');
+  if (!gtx) return null;
+  const img = gtx.createImageData(96, 96);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const v = Math.random() > 0.52 ? 255 : 0;
+    img.data[i] = v;
+    img.data[i + 1] = v;
+    img.data[i + 2] = v;
+    img.data[i + 3] = 16 + Math.random() * 18;
   }
+  gtx.putImageData(img, 0, 0);
   grainPattern = ctx.createPattern(grainCanvas, 'repeat');
   return grainPattern;
 };
 
-/* ── album art loader (async, non-blocking) ── */
-
 const loadAlbumArt = (url: string): void => {
-  if (!url || albumArtLoading || url === cachedAlbumArtUrl) return;
+  if (!url || albumArtLoading || cachedAlbumArtUrl === url || typeof Image === 'undefined') return;
   albumArtLoading = true;
   cachedAlbumArtUrl = url;
-  albumArtImage = null;
-  blurredCanvas = null;
-
   const img = new Image();
   img.crossOrigin = 'anonymous';
   img.onload = () => {
     albumArtImage = img;
     albumArtLoading = false;
-
-    // create tiny offscreen canvas for performant blur
-    const small = document.createElement('canvas');
-    small.width = 40;
-    small.height = 30;
-    const sCtx = small.getContext('2d');
-    if (sCtx) {
-      sCtx.drawImage(img, 0, 0, 40, 30);
-      blurredCanvas = small;
-    }
   };
   img.onerror = () => {
     albumArtLoading = false;
+    albumArtImage = null;
   };
   img.src = url;
 };
 
-/* ── drawing functions ── */
-
-const drawAlbumArtBackground = (
+const drawBackgroundAtmosphere = (
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
   frame: number,
-  accent: string,
-  mood: MoodMetrics | null,
-): void => {
-  // blurred album art → full-bleed background
-  if (blurredCanvas) {
-    ctx.drawImage(blurredCanvas, 0, 0, width, height);
-    // dark overlay for text readability
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-    ctx.fillRect(0, 0, width, height);
-  }
-
-  // subtle breathing colour tint
-  const breathe = 0.02 + (Math.sin(frame * 0.0105) * 0.5 + 0.5) * 0.02;
-  const valence = mood?.valence ?? 0.5;
-  const gradient = ctx.createLinearGradient(0, 0, width, height);
-  gradient.addColorStop(0, withAlpha(applyWarmthTint(accent, valence), breathe));
-  gradient.addColorStop(1, withAlpha(applyWarmthTint(accent, 1 - valence), breathe * 0.75));
-  ctx.fillStyle = gradient;
+  p1: [number, number, number],
+  p2: [number, number, number],
+  valence: number,
+  energy: number,
+  bpm: number,
+) => {
+  const coolShift = valence < 0.45 ? [16, 24, 44] : [0, 0, 0];
+  const warmShift = valence > 0.55 ? [28, 16, 0] : [0, 0, 0];
+  const baseA = lerpRgb([7, 10, 17], [14, 19, 30], energy * 0.5);
+  const baseB = lerpRgb([4, 6, 11], [10, 14, 22], energy * 0.6);
+  const bg = ctx.createLinearGradient(0, 0, width, height);
+  bg.addColorStop(0, withAlpha(lerpRgb(baseA as [number, number, number], coolShift as [number, number, number], 0.2), 1));
+  bg.addColorStop(1, withAlpha(lerpRgb(baseB as [number, number, number], warmShift as [number, number, number], 0.2), 1));
+  ctx.fillStyle = bg;
   ctx.fillRect(0, 0, width, height);
 
-  // film-grain overlay
-  const pattern = ensureGrainPattern(ctx);
-  if (pattern) {
+  const speed = 0.0015 + energy * 0.003;
+  for (let i = 0; i < 6; i += 1) {
+    const y = height * (0.15 + i * 0.14) + Math.sin(frame * speed * (i + 1) + i) * (8 + energy * 16);
+    const h = 24 + i * 6;
+    const t = i / 5;
+    const band = lerpRgb(p1, p2, t);
+    ctx.fillStyle = withAlpha(band, 0.08 + (i % 2) * 0.02);
+    ctx.fillRect(0, y, width, h);
+  }
+
+  const pulsePeriodFrames = (60 / clamp(bpm, 60, 220)) * 60;
+  const pulse = 0.02 + ((Math.sin((frame / pulsePeriodFrames) * TAU) + 1) * 0.5) * 0.02;
+  ctx.fillStyle = `rgba(255,255,255,${pulse})`;
+  ctx.fillRect(0, 0, width, height);
+
+  const grain = ensureGrainPattern(ctx);
+  if (grain) {
     ctx.save();
-    ctx.globalAlpha = 0.025;
-    ctx.fillStyle = pattern;
-    ctx.fillRect(0, 0, width, height);
+    ctx.translate((frame * 0.35) % 96, (frame * 0.5) % 96);
+    ctx.globalAlpha = 0.06;
+    ctx.fillStyle = grain;
+    ctx.fillRect(-96, -96, width + 192, height + 192);
     ctx.restore();
   }
 };
 
-const drawVignette = (ctx: CanvasRenderingContext2D, width: number, height: number): void => {
-  const gradient = ctx.createRadialGradient(
-    width * 0.5, height * 0.5, Math.min(width, height) * 0.2,
-    width * 0.5, height * 0.5, Math.max(width, height) * 0.7,
-  );
-  gradient.addColorStop(0, 'rgba(0,0,0,0)');
-  gradient.addColorStop(0.7, 'rgba(0,0,0,0.08)');
-  gradient.addColorStop(1, 'rgba(0,0,0,0.25)');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, width, height);
-};
-
-const drawCenteredTrackInfo = (
+const drawAlbumArtLayer = (
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
   frame: number,
-  accent: string,
-  renderData: ListeningRenderData,
-  updatedAt?: string,
-): void => {
+  p1: [number, number, number],
+  p2: [number, number, number],
+  isNowPlaying: boolean,
+  lastPlayedTimestamp: string,
+) => {
+  const artSize = clamp(width * 0.2, 120, 220);
+  const x = width < 760 ? width * 0.08 : width * 0.07;
+  const y = height * 0.5 - artSize * 0.5 + Math.sin(frame * 0.018) * 4;
+  const radius = 8;
+
   ctx.save();
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+  ctx.beginPath();
+  ctx.roundRect(x, y, artSize, artSize, radius);
+  ctx.clip();
 
-  const cx = width * 0.5;
-
-  /* status label + dot */
-  const statusY = height * 0.33;
-  const statusFade = clamp((metadataFadeFrame - 6) / 24, 0, 1);
-  if (statusFade > 0) {
-    const bpm = normalizeTempo(renderData.mood?.tempo, renderData.bpm);
-    const beatPulse = 0.5 + (Math.sin(frame * (bpm / 60) * 0.1) * 0.5 + 0.5) * 0.4;
-
-    const label = renderData.isNowPlaying
-      ? 'NOW PLAYING'
-      : `LAST PLAYED \u00B7 ${formatRelative(updatedAt)}`;
-
-    ctx.font = `8px ${MONO}`;
-    const labelWidth = ctx.measureText(label).width;
-
-    // pulsing dot
-    const dotColor = renderData.isNowPlaying
-      ? withAlpha('#65d38c', beatPulse * statusFade)
-      : withAlpha(accent, 0.3 * statusFade);
-    ctx.fillStyle = dotColor;
-    ctx.beginPath();
-    ctx.arc(cx - labelWidth * 0.5 - 10, statusY, 3, 0, TAU);
-    ctx.fill();
-
-    ctx.fillStyle = withAlpha(accent, 0.35 * statusFade);
-    ctx.fillText(label, cx, statusY);
-  }
-
-  /* track title — large, bold, centered */
-  const titleSize = Math.max(24, Math.min(36, width * 0.065));
-  const titleY = height * 0.43;
-  const titleFade = clamp((metadataFadeFrame - 12) / 36, 0, 1);
-  const titleChars = clamp(
-    Math.floor(((metadataFadeFrame - 12) / 60) * Math.max(1, renderData.title.length)),
-    0,
-    renderData.title.length,
-  );
-
-  if (titleFade > 0 && titleChars > 0) {
-    ctx.font = `bold ${Math.round(titleSize)}px ${MONO}`;
-    ctx.fillStyle = withAlpha(accent, 0.9 * titleFade);
-
-    let titleText = renderData.title.slice(0, titleChars);
-    const maxWidth = width * 0.85;
-    if (ctx.measureText(titleText).width > maxWidth) {
-      while (titleText.length > 1 && ctx.measureText(`${titleText}\u2026`).width > maxWidth) {
-        titleText = titleText.slice(0, -1);
-      }
-      titleText += '\u2026';
+  if (albumArtImage) {
+    ctx.filter = 'grayscale(1) contrast(1.12)';
+    ctx.drawImage(albumArtImage, x, y, artSize, artSize);
+    ctx.filter = 'none';
+    const duo = ctx.createLinearGradient(x, y, x + artSize, y + artSize);
+    duo.addColorStop(0, withAlpha(p1, 0.28));
+    duo.addColorStop(1, withAlpha(p2, 0.32));
+    ctx.globalCompositeOperation = 'color';
+    ctx.fillStyle = duo;
+    ctx.fillRect(x, y, artSize, artSize);
+    ctx.globalCompositeOperation = 'source-over';
+  } else {
+    const g = ctx.createRadialGradient(x + artSize * 0.5, y + artSize * 0.5, 8, x + artSize * 0.5, y + artSize * 0.5, artSize * 0.8);
+    g.addColorStop(0, withAlpha(p1, 0.6));
+    g.addColorStop(1, withAlpha(p2, 0.2));
+    ctx.fillStyle = g;
+    ctx.fillRect(x, y, artSize, artSize);
+    for (let i = 0; i < 22; i += 1) {
+      ctx.strokeStyle = withAlpha(lerpRgb(p1, p2, i / 22), 0.2);
+      ctx.beginPath();
+      ctx.arc(x + artSize / 2, y + artSize / 2, 10 + i * 4, 0, TAU);
+      ctx.stroke();
     }
-    ctx.fillText(titleText, cx, titleY);
   }
 
-  /* artist */
-  const artistY = titleY + titleSize * 0.7 + 10;
-  const artistFade = clamp((metadataFadeFrame - 36) / 24, 0, 1);
-  if (artistFade > 0) {
-    const artistSize = Math.max(14, Math.min(16, width * 0.032));
-    ctx.font = `${Math.round(artistSize)}px ${MONO}`;
-    ctx.fillStyle = withAlpha(accent, 0.5 * artistFade);
-    let artistText = renderData.artist;
-    const maxArtistWidth = width * 0.8;
-    if (ctx.measureText(artistText).width > maxArtistWidth) {
-      while (artistText.length > 1 && ctx.measureText(`${artistText}\u2026`).width > maxArtistWidth) {
-        artistText = artistText.slice(0, -1);
-      }
-      artistText += '\u2026';
-    }
-    ctx.fillText(artistText, cx, artistY);
+  for (let sy = y; sy < y + artSize; sy += 2) {
+    ctx.fillStyle = 'rgba(255,255,255,0.04)';
+    ctx.fillRect(x, sy, artSize, 1);
   }
-
-  /* album */
-  const albumY = artistY + 22;
-  const albumFade = clamp((metadataFadeFrame - 48) / 24, 0, 1);
-  if (albumFade > 0) {
-    ctx.font = `10px ${MONO}`;
-    ctx.fillStyle = withAlpha(accent, 0.25 * albumFade);
-    let albumText = renderData.album;
-    const maxAlbumWidth = width * 0.7;
-    if (ctx.measureText(albumText).width > maxAlbumWidth) {
-      while (albumText.length > 1 && ctx.measureText(`${albumText}\u2026`).width > maxAlbumWidth) {
-        albumText = albumText.slice(0, -1);
-      }
-      albumText += '\u2026';
-    }
-    ctx.fillText(albumText, cx, albumY);
-  }
-
   ctx.restore();
+
+  ctx.strokeStyle = withAlpha(p1, 0.8);
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x, y, artSize, artSize);
+  ctx.shadowColor = withAlpha(p1, 0.6);
+  ctx.shadowBlur = 18;
+  ctx.strokeRect(x, y, artSize, artSize);
+  ctx.shadowBlur = 0;
+
+  ctx.save();
+  ctx.globalAlpha = 0.22;
+  ctx.translate(0, (y + artSize * 2 + 6));
+  ctx.scale(1, -0.22);
+  if (albumArtImage) ctx.drawImage(albumArtImage, x, y, artSize, artSize);
+  ctx.restore();
+
+  ctx.font = `10px ${MONO}`;
+  if (isNowPlaying) {
+    const bx = x + 10;
+    const by = y + artSize - 12;
+    for (let i = 0; i < 4; i += 1) {
+      const h = 5 + ((Math.sin(frame * 0.12 + i * 0.8) + 1) * 0.5) * 14;
+      ctx.fillStyle = '#10B981';
+      ctx.fillRect(bx + i * 5, by - h, 3, h);
+    }
+  } else {
+    ctx.fillStyle = 'rgba(148,163,184,0.7)';
+    ctx.fillText(`LAST · ${formatRelative(lastPlayedTimestamp)}`, x + 8, y + artSize - 8);
+  }
 };
 
-const drawMainWaveform = (
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  frame: number,
-  accent: string,
-  renderData: ListeningRenderData,
-): void => {
-  const mood = renderData.nowPlayingFeatures || renderData.mood;
-  const centerY = height * 0.72;
-  const energy = clampMetric(mood?.energy, 0.5);
-  const valence = clampMetric(mood?.valence, 0.5);
-  const danceability = clampMetric(mood?.danceability, 0.5);
-  const tempo = normalizeTempo(mood?.tempo, renderData.bpm);
+const drawWaveform = (ctx: CanvasRenderingContext2D, width: number, height: number, frame: number, p1: [number, number, number], p2: [number, number, number], bpm: number, energy: number) => {
+  const bars = clamp(Math.floor(width / 10), 80, 120);
+  const baseY = height * 0.73;
+  const span = width * 0.95;
+  const startX = width * 0.025;
+  const step = span / bars;
+  const amp = 14 + energy * 34;
 
-  // energy → amplitude
-  const amplitude = height * 0.04 + height * 0.1 * energy;
-  // valence → color warmth
-  const waveColor = applyWarmthTint(accent, valence);
-  const tempoNorm = clamp(tempo / 120, 0.6, 2);
-  // danceability → smoothness (low = jagged)
-  const jaggedness = 1 - danceability;
-  // tempo → animation speed
-  const time = frame * 0.001 * tempoNorm;
-
-  ctx.save();
-  ctx.lineCap = 'round';
-  ctx.strokeStyle = withAlpha(waveColor, 0.6);
-  ctx.lineWidth = 2;
-
-  ctx.beginPath();
-  for (let x = 0; x < width; x += 1) {
-    const t = x / width;
-    const primary = Math.sin(t * TAU * 2 * tempoNorm + time) * energy * 0.52;
-    const secondary = Math.sin(t * TAU * 3.8 * tempoNorm + time * 1.5) * energy * 0.26;
-    const flow = Math.sin(t * TAU * (1.2 + danceability * 0.6) + frame * 0.0005) * 0.2;
-    const noise = Math.sin(t * TAU * 11 + frame * 0.00018) * jaggedness * 0.1;
-    const y = centerY + (primary + secondary + flow + noise) * amplitude;
-    if (x === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+  for (let i = 0; i < bars; i += 1) {
+    const x = startX + i * step;
+    const t = i / (bars - 1);
+    const c = lerpRgb(p1, p2, t);
+    const phase = frame * (0.05 + (bpm / 2400)) + i * 0.35;
+    const h = Math.max(2, (Math.sin(phase) * 0.5 + 0.5) * amp + (Math.sin(phase * 0.33) * 0.5 + 0.5) * amp * 0.55);
+    const entry = clamp((metadataFadeFrame - Math.abs(i - bars / 2) * 0.4) / 20, 0, 1);
+    ctx.fillStyle = withAlpha(c, 0.22 + entry * 0.12);
+    ctx.fillRect(x, baseY - h, 2, h * entry);
   }
-  ctx.stroke();
-  ctx.restore();
-};
 
-const drawTempoHeartbeat = (
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  frame: number,
-  accent: string,
-  tempo: number,
-): void => {
-  const bpm = Math.round(clampBpm(tempo));
-  const x = width - 130;
-  const y = 14;
-  const w = 96;
-  const h = 26;
-  const phase = (frame / 60) * (bpm / 60);
-  const cycle = phase % 1;
-  const beatGlow = cycle < 0.15 ? 0.45 : 0.2;
-
-  ctx.save();
-  ctx.strokeStyle = withAlpha(accent, 0.4);
-  ctx.lineWidth = 1.8;
-  ctx.beginPath();
-  for (let i = 0; i <= w; i += 1) {
-    const t = i / w;
-    const local = (t + cycle) % 1;
-    const spike = local > 0.44 && local < 0.5
-      ? -Math.sin(((local - 0.44) / 0.06) * Math.PI) * h * 0.7
-      : local >= 0.5 && local < 0.57
-        ? Math.sin(((local - 0.5) / 0.07) * Math.PI) * h * 0.25
-        : 0;
-    const py = y + h * 0.6 + spike;
-    const px = x + i;
-    if (i === 0) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
+  const tickSpacing = clamp(2600 / clamp(bpm, 60, 220), 10, 30);
+  ctx.fillStyle = withAlpha(p2, 0.45);
+  for (let x = 0; x < width; x += tickSpacing) {
+    ctx.fillRect(x, baseY + 5, 1, 3);
   }
-  ctx.stroke();
-
-  ctx.font = `13px ${MONO}`;
-  ctx.fillStyle = withAlpha(accent, beatGlow);
-  ctx.textAlign = 'left';
-  ctx.fillText(String(bpm), x + w + 8, y + 12);
   ctx.font = `9px ${MONO}`;
-  ctx.fillStyle = withAlpha(accent, 0.15);
-  ctx.fillText('BPM', x + w + 10, y + 24);
-  ctx.restore();
+  ctx.fillStyle = withAlpha(p2, 0.8);
+  ctx.fillText(`${Math.round(bpm)} BPM`, width - 60, baseY + 16);
 };
 
-const drawBottomStatsBar = (
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  accent: string,
-  renderData: ListeningRenderData,
-): void => {
-  const fade = clamp((metadataFadeFrame - 60) / 30, 0, 1);
-  if (fade <= 0) return;
-
-  ctx.save();
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'bottom';
-  ctx.font = `9px ${MONO}`;
-
-  const y = height - 12;
-  const items: string[] = [];
-
-  // top genre
-  if (renderData.topGenres.length > 0) {
-    items.push(renderData.topGenres[0].genre.toUpperCase());
-  }
-  // second genre
-  if (renderData.topGenres.length > 1) {
-    items.push(renderData.topGenres[1].genre.toUpperCase());
-  }
-  // recent track count
-  if (renderData.recentTrackFeatures.length > 0) {
-    items.push(`${renderData.recentTrackFeatures.length} RECENT`);
-  }
-
-  const display = items.slice(0, 3);
-  if (display.length === 0) {
-    ctx.restore();
-    return;
-  }
-
-  const text = display.join('  \u00B7  ');
-  ctx.fillStyle = withAlpha(accent, 0.18 * fade);
-  ctx.fillText(text, width * 0.5, y);
-  ctx.restore();
+const trimToWidth = (ctx: CanvasRenderingContext2D, text: string, max: number): string => {
+  if (ctx.measureText(text).width <= max) return text;
+  let out = text;
+  while (out.length > 2 && ctx.measureText(`${out}…`).width > max) out = out.slice(0, -1);
+  return `${out}…`;
 };
 
-const drawDataSourceIndicator = (
-  ctx: CanvasRenderingContext2D,
-  frame: number,
-  accent: string,
-  height: number,
-  isLive: boolean,
-): void => {
-  const x = 12;
-  const y = height - 14;
-  const pulse = ((frame / 60) % 4) / 4;
+const drawTrackInfo = (ctx: CanvasRenderingContext2D, width: number, height: number, frame: number, data: ListeningRenderData, p1: [number, number, number], p2: [number, number, number]) => {
+  const left = width < 760 ? width * 0.34 : width * 0.32;
+  const top = height * 0.2;
+  const bpm = data.bpm || data.mood?.tempo || 110;
+  const dotPulse = 0.45 + ((Math.sin(frame * ((clamp(bpm, 60, 220) / 60) * 0.1)) + 1) * 0.5) * 0.55;
+  const status = data.isNowPlaying ? 'NOW PLAYING' : `LAST PLAYED · ${formatRelative(data.lastPlayedTimestamp)}`;
 
-  ctx.save();
-  const dotAlpha = isLive ? 0.25 : 0.12;
-  ctx.fillStyle = isLive ? withAlpha('#65d38c', dotAlpha) : withAlpha(accent, dotAlpha);
+  ctx.font = `10px ${MONO}`;
+  ctx.fillStyle = withAlpha([148, 163, 184], 0.9);
+  ctx.fillText(status, left + 16, top);
+  ctx.fillStyle = withAlpha(data.isNowPlaying ? [16, 185, 129] : [100, 116, 139], dotPulse);
   ctx.beginPath();
-  ctx.arc(x, y, 2.5, 0, TAU);
+  ctx.arc(left, top - 2, 4, 0, TAU);
   ctx.fill();
 
-  if (pulse < 0.25) {
-    const local = pulse / 0.25;
-    const radius = 2.5 + local * 8;
-    const alpha = 0.12 * (1 - local);
-    ctx.strokeStyle = isLive ? withAlpha('#65d38c', alpha) : withAlpha(accent, alpha);
-    ctx.lineWidth = 0.5;
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, TAU);
-    ctx.stroke();
+  const titleWords = (data.trackTitle || '').split(/\s+/).filter(Boolean);
+  let drawTitle = '';
+  const wordsVisible = clamp(Math.floor(metadataFadeFrame / 3), 0, titleWords.length);
+  drawTitle = titleWords.slice(0, wordsVisible).join(' ');
+
+  const titleSize = data.trackTitle.length > 30 ? 24 : 30;
+  ctx.font = `700 ${titleSize}px ${MONO}`;
+  ctx.shadowColor = withAlpha(p1, 0.45);
+  ctx.shadowBlur = 10;
+  ctx.fillStyle = 'rgba(240,248,255,0.95)';
+  ctx.fillText(trimToWidth(ctx, drawTitle || data.trackTitle, width * 0.44), left, top + 36);
+  ctx.shadowBlur = 0;
+
+  if (data.loved) {
+    ctx.fillStyle = 'rgba(244,114,182,0.95)';
+    ctx.fillText('♥', left + width * 0.36, top + 34);
   }
 
-  ctx.restore();
+  ctx.font = `15px ${MONO}`;
+  ctx.fillStyle = withAlpha([203, 213, 225], 0.88);
+  ctx.fillText(`— ${trimToWidth(ctx, data.artistName, width * 0.4)}`, left, top + 62);
+  ctx.font = `10px ${MONO}`;
+  ctx.fillStyle = withAlpha([148, 163, 184], 0.9);
+  ctx.fillText(`FROM ${trimToWidth(ctx, data.albumTitle, width * 0.4)}`, left, top + 80);
+
+  let px = left;
+  const py = top + 100;
+  for (let i = 0; i < data.trackTags.slice(0, 4).length; i += 1) {
+    const tag = data.trackTags[i] || '';
+    const pal = resolveGenrePalette([tag], '#74c6ff');
+    const c = parseHex(pal.primary);
+    const visible = clamp((metadataFadeFrame - 35 - i * 4) / 16, 0, 1);
+    if (!visible) continue;
+    ctx.font = `10px ${MONO}`;
+    const label = tag.toUpperCase();
+    const w = ctx.measureText(label).width + 12;
+    ctx.fillStyle = withAlpha(c, 0.2 * visible);
+    ctx.fillRect(px, py - 10, w, 16);
+    ctx.strokeStyle = withAlpha(c, 0.4 * visible);
+    ctx.strokeRect(px, py - 10, w, 16);
+    ctx.fillStyle = withAlpha(c, 0.95 * visible);
+    ctx.fillText(label, px + 6, py + 1);
+    px += w + 6;
+  }
+
+  const statX = width * 0.02;
+  const statY = height * 0.14;
+  const trackPlays = Math.max(1, data.playCount || 1);
+  ctx.fillStyle = 'rgba(8,15,26,0.55)';
+  ctx.fillRect(statX, statY, 74, 94);
+  for (let i = 0; i < Math.min(trackPlays, 18); i += 1) {
+    ctx.fillStyle = 'rgba(148,163,184,0.09)';
+    ctx.fillRect(statX + 8, statY + 80 - i * 4, 58, 1);
+  }
+  ctx.font = `700 28px ${MONO}`;
+  ctx.fillStyle = 'rgba(241,245,249,0.95)';
+  ctx.fillText(trackPlays === 1 ? 'NEW' : String(trackPlays), statX + 10, statY + 45);
+  ctx.font = `9px ${MONO}`;
+  ctx.fillStyle = 'rgba(148,163,184,0.88)';
+  ctx.fillText(trackPlays === 1 ? 'first play' : 'plays', statX + 10, statY + 62);
+
+  if (data.energy != null || data.valence != null || data.key) {
+    const chipX = left;
+    const chipY = height * 0.64;
+    ctx.fillStyle = 'rgba(8,14,24,0.58)';
+    ctx.fillRect(chipX, chipY, 170, 42);
+    ctx.strokeStyle = withAlpha(p2, 0.4);
+    ctx.strokeRect(chipX, chipY, 170, 42);
+    ctx.font = `10px ${MONO}`;
+    ctx.fillStyle = 'rgba(226,232,240,0.9)';
+    ctx.fillText(`${Math.round(data.bpm)} BPM   ${data.key ?? '—'}`, chipX + 8, chipY + 13);
+    const energy = clamp(data.energy ?? data.mood?.energy ?? 0.5, 0, 1);
+    const valence = clamp(data.valence ?? data.mood?.valence ?? 0.5, 0, 1);
+    ctx.fillStyle = withAlpha(p1, 0.9);
+    ctx.fillRect(chipX + 8, chipY + 20, energy * 60, 4);
+    ctx.fillStyle = withAlpha(p2, 0.9);
+    ctx.fillRect(chipX + 90, chipY + 20, valence * 60, 4);
+    ctx.fillStyle = 'rgba(148,163,184,0.9)';
+    ctx.fillText('energy', chipX + 8, chipY + 36);
+    ctx.fillText('mood', chipX + 90, chipY + 36);
+  }
 };
 
-/* ── data merge (unchanged) ── */
+const drawTimeline = (ctx: CanvasRenderingContext2D, width: number, height: number, data: ListeningRenderData) => {
+  if (width < 920) return;
+  const rowH = 18;
+  const x = width - 250;
+  const y = height * 0.14;
+  ctx.fillStyle = 'rgba(3,8,15,0.5)';
+  ctx.fillRect(x - 10, y - 12, 244, 180);
+  ctx.font = `9px ${MONO}`;
+
+  data.recentTracks.slice(0, 8).forEach((track, idx) => {
+    const a = clamp(1 - idx * 0.11, 0.25, 1);
+    const yy = y + idx * rowH;
+    if (idx === 0) {
+      ctx.fillStyle = 'rgba(16,185,129,0.35)';
+      ctx.fillRect(x - 10, yy - 10, 2, 14);
+    }
+    ctx.fillStyle = `rgba(226,232,240,${a})`;
+    const label = `${formatRelative(track.timestamp).replace(' ago', '')} · ${track.title} · ${track.artist}`;
+    ctx.fillText(trimToWidth(ctx, label, 228), x, yy);
+    if (track.loved) {
+      ctx.fillStyle = `rgba(244,114,182,${a})`;
+      ctx.fillText('♥', x + 214, yy);
+    }
+  });
+};
+
+const drawBottomStats = (ctx: CanvasRenderingContext2D, width: number, height: number, data: ListeningRenderData, p1: [number, number, number], p2: [number, number, number]) => {
+  const y = height - 46;
+  const cols = 5;
+  const colW = width / cols;
+  const progress = clamp((metadataFadeFrame - 25) / 40, 0, 1);
+
+  ctx.fillStyle = 'rgba(2,7,13,0.6)';
+  ctx.fillRect(0, y, width, 46);
+
+  for (let i = 0; i < cols; i += 1) {
+    const x = i * colW;
+    ctx.strokeStyle = 'rgba(148,163,184,0.13)';
+    ctx.beginPath();
+    ctx.moveTo(x, y + 4);
+    ctx.lineTo(x, y + 42);
+    ctx.stroke();
+    ctx.font = `9px ${MONO}`;
+    ctx.fillStyle = 'rgba(148,163,184,0.8)';
+
+    if (i === 0) {
+      const count = Math.round(data.scrobblesThisWeek * progress);
+      ctx.fillText(`${count}`, x + 10, y + 13);
+      ctx.fillText('week', x + 10, y + 24);
+      for (let d = 0; d < 7; d += 1) {
+        const h = 3 + (((count / 7) * (0.6 + (d % 3) * 0.2)) % 10);
+        ctx.fillStyle = d === new Date().getDay() ? withAlpha(p1, 0.95) : 'rgba(148,163,184,0.25)';
+        ctx.fillRect(x + 10 + d * 10, y + 40 - h, 6, h);
+      }
+    } else if (i === 1) {
+      ctx.fillStyle = 'rgba(226,232,240,0.9)';
+      ctx.fillText(trimToWidth(ctx, data.topArtist || '—', colW - 20), x + 10, y + 13);
+      ctx.fillStyle = 'rgba(148,163,184,0.75)';
+      ctx.fillText(`${data.topArtistPlays || 0} plays`, x + 10, y + 24);
+      data.topArtists.slice(0, 3).forEach((a, idx) => {
+        const max = data.topArtists[0]?.plays || 1;
+        const w = clamp((a.plays / max) * 62, 8, 62);
+        ctx.fillStyle = idx === 0 ? withAlpha(p2, 0.9) : 'rgba(148,163,184,0.45)';
+        ctx.fillRect(x + 10, y + 30 + idx * 4, w, 2);
+      });
+    } else if (i === 2) {
+      ctx.fillStyle = withAlpha(p1, 0.95);
+      ctx.fillText((data.topGenre || '—').toUpperCase(), x + 10, y + 13);
+      const dots = 10;
+      for (let d = 0; d < dots; d += 1) {
+        const t = d / (dots - 1);
+        ctx.fillStyle = withAlpha(lerpRgb(p1, p2, t), 0.85);
+        ctx.beginPath();
+        ctx.arc(x + 12 + d * 8, y + 33, 2, 0, TAU);
+        ctx.fill();
+      }
+    } else if (i === 3) {
+      ctx.fillStyle = 'rgba(226,232,240,0.9)';
+      ctx.fillText(`${Math.round(data.listeningStreak * progress)}`, x + 10, y + 13);
+      ctx.fillStyle = 'rgba(148,163,184,0.75)';
+      ctx.fillText('day streak', x + 10, y + 24);
+      const dots = Math.min(14, Math.max(1, data.listeningStreak));
+      for (let d = 0; d < dots; d += 1) {
+        ctx.fillStyle = d === dots - 1 ? withAlpha([16, 185, 129], 0.95) : 'rgba(148,163,184,0.45)';
+        ctx.beginPath();
+        ctx.arc(x + 12 + d * 7, y + 34, 2.2, 0, TAU);
+        ctx.fill();
+      }
+    } else {
+      const life = Math.round(data.scrobblesAllTime * progress);
+      ctx.fillStyle = 'rgba(226,232,240,0.9)';
+      ctx.fillText(life.toLocaleString(), x + 10, y + 13);
+      ctx.fillStyle = 'rgba(148,163,184,0.75)';
+      ctx.fillText('all time', x + 10, y + 24);
+      ctx.fillText(`~${data.avgScrobblesPerDay.toFixed(1)}/day`, x + 10, y + 35);
+    }
+  }
+};
 
 const mergeRenderData = (
   base: Partial<ListeningRenderData>,
@@ -602,69 +529,48 @@ const mergeRenderData = (
   spotifyAudioFeatures: TrackFeatures[] | null,
 ): ListeningRenderData => {
   const features = Array.isArray(spotifyAudioFeatures) ? spotifyAudioFeatures : [];
-  const reducedFeatures = features
-    .filter((item) => item && Number.isFinite(item.energy))
-    .slice(0, 20)
-    .map((item) => ({
-      energy: clampMetric(item.energy, 0.5),
-      valence: clampMetric(item.valence, 0.5),
-      danceability: clampMetric(item.danceability, 0.5),
-      duration_ms: Math.max(80000, Number(item.duration_ms) || 180000),
-      tempo: normalizeTempo(item.tempo),
-    }));
-
   const nowPlayingId = spotifyProfile?.currentTrack?.id || spotifyProfile?.lastPlayed?.id;
   const nowFeature = nowPlayingId ? features.find((item) => item.id === nowPlayingId) : null;
 
-  const nowPlayingFeatures: MoodMetrics | null = nowFeature
-    ? {
-      energy: clampMetric(nowFeature.energy, 0.5),
-      valence: clampMetric(nowFeature.valence, 0.5),
-      danceability: clampMetric(nowFeature.danceability, 0.5),
-      acousticness: clampMetric(nowFeature.acousticness, 0.5),
-      tempo: normalizeTempo(nowFeature.tempo),
-    }
-    : null;
-
-  const fallbackMoodFromRecent = reducedFeatures.length
-    ? {
-      energy: reducedFeatures.reduce((s, item) => s + item.energy, 0) / reducedFeatures.length,
-      valence: reducedFeatures.reduce((s, item) => s + item.valence, 0) / reducedFeatures.length,
-      danceability: reducedFeatures.reduce((s, item) => s + item.danceability, 0) / reducedFeatures.length,
-      acousticness: 0.5,
-      tempo: reducedFeatures.reduce((s, item) => s + item.tempo, 0) / reducedFeatures.length,
-    }
-    : null;
-
   return {
-    title: base.title || '',
-    artist: base.artist || '',
-    album: base.album || '',
+    trackTitle: base.trackTitle || base.topAlbum || '',
+    artistName: base.artistName || '',
+    albumTitle: base.albumTitle || '',
     albumArtUrl: base.albumArtUrl || spotifyProfile?.currentTrack?.albumArt || '',
-    bpm: Number(base.bpm) || 120,
-    genre: base.genre || 'unknown',
-    duration: Number(base.duration) || 0,
     isNowPlaying: Boolean(base.isNowPlaying),
-    mood: spotifyProfile?.mood || fallbackMoodFromRecent,
-    recentTrackFeatures: reducedFeatures,
-    topGenres: spotifyProfile?.topGenres || [],
-    nowPlayingFeatures,
+    lastPlayedTimestamp: base.lastPlayedTimestamp || '',
+    trackDuration: Number(base.trackDuration) || 0,
+    trackTags: base.trackTags || (base.topGenre ? [base.topGenre] : []),
+    playCount: Number(base.playCount) || 1,
+    artistPlayCount: Number(base.artistPlayCount) || 0,
+    loved: Boolean(base.loved),
+    scrobblesThisWeek: Number(base.scrobblesThisWeek) || 0,
+    scrobblesAllTime: Number(base.scrobblesAllTime) || 0,
+    topArtist: base.topArtist || '',
+    topArtistPlays: Number(base.topArtistPlays) || 0,
+    topGenre: base.topGenre || base.trackTags?.[0] || '',
+    topAlbum: base.topAlbum || '',
+    recentTracks: Array.isArray(base.recentTracks) ? base.recentTracks : [],
+    topArtists: Array.isArray(base.topArtists) ? base.topArtists : [],
+    listeningStreak: Number(base.listeningStreak) || 0,
+    avgScrobblesPerDay: Number(base.avgScrobblesPerDay) || 0,
+    bpm: Number(base.bpm) || Number(nowFeature?.tempo) || estimateBpmFromGenre(base.topGenre || 'rock'),
+    key: base.key,
+    energy: Number(base.energy ?? nowFeature?.energy ?? spotifyProfile?.mood?.energy) || undefined,
+    valence: Number(base.valence ?? nowFeature?.valence ?? spotifyProfile?.mood?.valence) || undefined,
+    mood: spotifyProfile?.mood || base.mood || null,
     progressMs: Number(base.progressMs) || Number(spotifyProfile?.currentTrack?.progressMs) || 0,
     trackDurationMs: Number(base.trackDurationMs)
       || Number(spotifyProfile?.currentTrack?.durationMs)
-      || Number(base.duration)
+      || Number(base.trackDuration)
       || 0,
   };
 };
-
-/* ── slide module ── */
 
 export const listeningSlide: SlideModule = {
   id: 'listening',
 
   async fetchData(): Promise<SlideData | null> {
-    await ensureServiceIconsLoaded();
-
     const spotifyProfile = await fetchOptionalJson<SpotifyProfile>([
       '/data/spotify/profile.json',
       '/spotify/profile.json',
@@ -678,95 +584,114 @@ export const listeningSlide: SlideModule = {
 
     try {
       const username = import.meta.env.PUBLIC_LASTFM_USERNAME as string | undefined;
-      if (username) {
-        const recentTrack = await getRecentTrack(username);
-        if (recentTrack) {
-          const trackInfo = await getTrackInfo(recentTrack.artist, recentTrack.name);
-          const dominantColor = recentTrack.albumArtUrl ? await extractDominantColor(recentTrack.albumArtUrl) : null;
-          const genre = trackInfo?.tags?.[0] || 'unknown';
-          const bpm = trackInfo?.bpm || estimateBpmFromGenre(genre);
+      if (!username) return null;
 
-          const renderData = mergeRenderData({
-            title: recentTrack.name,
-            artist: recentTrack.artist,
-            album: recentTrack.album,
-            albumArtUrl: recentTrack.albumArtUrl,
-            bpm,
-            genre,
-            duration: trackInfo?.duration || 0,
-            isNowPlaying: recentTrack.isNowPlaying,
-            progressMs: spotifyProfile?.currentTrack?.progressMs || 0,
-            trackDurationMs: spotifyProfile?.currentTrack?.durationMs || trackInfo?.duration || 0,
-          }, spotifyProfile, spotifyAudioFeatures);
+      const [recentTrack, recentTracks, topArtists, userInfo] = await Promise.all([
+        getRecentTrack(username),
+        getRecentTracks(username, 120),
+        getUserTopArtists(username, '7day', 5),
+        getUserInfo(username),
+      ]);
 
-          (window as any).__nucleusListeningData = {
-            ...((window as any).__nucleusListeningData || {}),
-            moodEnergy: renderData.mood?.energy ?? null,
-            moodTempo: renderData.mood?.tempo ?? null,
-          };
+      if (!recentTrack) return null;
 
-          return {
-            label: 'LISTENING',
-            detail: `${recentTrack.name} – ${recentTrack.artist}`,
-            link: '#consumption',
-            updatedAt: recentTrack.scrobbledAt || new Date().toISOString(),
-            accentOverride: dominantColor || undefined,
-            renderData,
-          };
+      const trackInfo = await getTrackInfo(recentTrack.artist, recentTrack.name);
+      const tags = (trackInfo?.tags || []).filter((tag) => tag.toLowerCase() !== 'unknown');
+      const primaryGenre = tags[0] || 'electronic';
+      const bpm = trackInfo?.bpm || estimateBpmFromGenre(primaryGenre);
+
+      const now = Date.now();
+      const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+      const nonNowTracks = recentTracks.filter((track) => Boolean(track.scrobbledAt));
+      const weekScrobbles = nonNowTracks.filter((track) => Date.parse(track.scrobbledAt || '') >= weekAgo).length;
+
+      const days = new Set(nonNowTracks.map((track) => (track.scrobbledAt || '').slice(0, 10)).filter(Boolean));
+      let streak = 0;
+      const cursor = new Date();
+      for (let i = 0; i < 400; i += 1) {
+        const dayKey = cursor.toISOString().slice(0, 10);
+        if (days.has(dayKey)) {
+          streak += 1;
+          cursor.setUTCDate(cursor.getUTCDate() - 1);
+        } else {
+          break;
         }
       }
+
+      const registeredAt = Date.parse(userInfo?.registeredAt || '') || Date.now();
+      const lifetimeDays = Math.max(1, (Date.now() - registeredAt) / (1000 * 60 * 60 * 24));
+      const allTime = userInfo?.playCount || 0;
+      const avgPerDay = allTime / lifetimeDays;
+
+      const dominantColor = recentTrack.albumArtUrl ? await extractDominantColor(recentTrack.albumArtUrl) : null;
+      const renderData = mergeRenderData({
+        trackTitle: recentTrack.name,
+        artistName: recentTrack.artist,
+        albumTitle: recentTrack.album,
+        albumArtUrl: recentTrack.albumArtUrl,
+        isNowPlaying: recentTrack.isNowPlaying,
+        lastPlayedTimestamp: recentTrack.scrobbledAt,
+        trackDuration: trackInfo?.duration || 0,
+        trackTags: tags,
+        playCount: trackInfo?.playCount || 1,
+        loved: Boolean(trackInfo?.userLoved || recentTrack.loved),
+        scrobblesThisWeek: weekScrobbles,
+        scrobblesAllTime: allTime,
+        topArtist: topArtists[0]?.name || recentTrack.artist,
+        topArtistPlays: topArtists[0]?.playCount || 0,
+        topGenre: primaryGenre,
+        topAlbum: recentTrack.album,
+        topArtists: topArtists.map((artist) => ({ artist: artist.name, plays: artist.playCount })),
+        recentTracks: recentTracks.slice(0, 14).map((track) => ({
+          title: track.name,
+          artist: track.artist,
+          albumArt: track.albumArtUrl,
+          timestamp: track.scrobbledAt,
+          loved: track.loved,
+        })),
+        listeningStreak: streak,
+        avgScrobblesPerDay: avgPerDay,
+        bpm,
+      }, spotifyProfile, spotifyAudioFeatures);
+
+      (window as any).__nucleusListeningData = {
+        ...((window as any).__nucleusListeningData || {}),
+        weeklyPlays: renderData.scrobblesThisWeek,
+        streakDays: renderData.listeningStreak,
+      };
+
+      return {
+        label: 'LISTENING',
+        detail: `${recentTrack.name} – ${recentTrack.artist}`,
+        link: '#consumption',
+        updatedAt: recentTrack.scrobbledAt || new Date().toISOString(),
+        accentOverride: dominantColor || undefined,
+        renderData,
+      };
     } catch (error) {
-      console.error('[Nucleus] Live Last.fm fetch failed, trying pre-built data:', error);
+      console.error('[Nucleus] Listening slide data fetch failed.', error);
+      return null;
     }
-
-    try {
-      const response = await fetch('/api/nucleus/listening.json');
-      if (response.ok) {
-        const data = (await response.json()) as SlideData | null;
-        if (data) {
-          const merged = mergeRenderData((data.renderData || {}) as Partial<ListeningRenderData>, spotifyProfile, spotifyAudioFeatures);
-          data.renderData = merged;
-
-          if (merged.albumArtUrl) {
-            const dominantColor = await extractDominantColor(merged.albumArtUrl);
-            if (dominantColor) data.accentOverride = dominantColor;
-          }
-
-          (window as any).__nucleusListeningData = {
-            ...((window as any).__nucleusListeningData || {}),
-            moodEnergy: merged.mood?.energy ?? null,
-            moodTempo: merged.mood?.tempo ?? null,
-          };
-
-          return data;
-        }
-      }
-    } catch (error) {
-      console.error('[Nucleus] Failed to fetch pre-built listening data:', error);
-    }
-
-    return null;
   },
 
   render(ctx, width, height, frame, data, theme) {
     const renderData = mergeRenderData((data?.renderData || {}) as Partial<ListeningRenderData>, null, null);
-    const primaryAccent = data?.accentOverride ? blendColors(theme.accent, data.accentOverride, 0.3) : theme.accent;
-    const accent = applyWarmthTint(primaryAccent, renderData.mood?.valence ?? 0.5);
+    if (renderData.albumArtUrl) loadAlbumArt(renderData.albumArtUrl);
 
-    // kick off album art loading (async, non-blocking — only reloads when URL changes)
-    if (renderData.albumArtUrl) {
-      loadAlbumArt(renderData.albumArtUrl);
-    }
+    const palette = resolveGenrePalette(renderData.trackTags.length ? renderData.trackTags : [renderData.topGenre], data?.accentOverride || theme.accent);
+    const p1 = parseHex(palette.primary);
+    const p2 = parseHex(palette.secondary);
+    const energy = clamp(renderData.energy ?? renderData.mood?.energy ?? 0.45, 0, 1);
+    const valence = clamp(renderData.valence ?? renderData.mood?.valence ?? 0.5, 0, 1);
+    const bpm = renderData.bpm || renderData.mood?.tempo || 110;
 
     ctx.clearRect(0, 0, width, height);
-
-    drawAlbumArtBackground(ctx, width, height, frame, accent, renderData.mood);
-    drawVignette(ctx, width, height);
-    drawCenteredTrackInfo(ctx, width, height, frame, accent, renderData, data?.updatedAt);
-    drawMainWaveform(ctx, width, height, frame, accent, renderData);
-    drawTempoHeartbeat(ctx, width, frame, accent, renderData.mood?.tempo || renderData.bpm);
-    drawBottomStatsBar(ctx, width, height, accent, renderData);
-    drawDataSourceIndicator(ctx, frame, accent, height, renderData.isNowPlaying);
+    drawBackgroundAtmosphere(ctx, width, height, frame, p1, p2, valence, energy, bpm);
+    drawAlbumArtLayer(ctx, width, height, frame, p1, p2, renderData.isNowPlaying, renderData.lastPlayedTimestamp);
+    drawWaveform(ctx, width, height, frame, p1, p2, bpm, energy);
+    drawTrackInfo(ctx, width, height, frame, renderData, p1, p2);
+    drawTimeline(ctx, width, height, renderData);
+    drawBottomStats(ctx, width, height, renderData, p1, p2);
 
     metadataFadeFrame += 1;
   },
