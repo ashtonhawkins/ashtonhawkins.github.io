@@ -35,7 +35,7 @@ const getCodebaseStats = () => {
 
 const getActivityData = () => {
   try {
-    const diffStat = execSync('git diff --shortstat HEAD~1 HEAD 2>/dev/null').toString().trim();
+    const diffStat = execSync('git rev-parse --verify HEAD~1 >/dev/null 2>&1 && git diff --shortstat HEAD~1 HEAD || true').toString().trim();
     const insertions = Number.parseInt(diffStat.match(/(\d+) insertion/)?.[1] ?? '0', 10) || 0;
     const deletions = Number.parseInt(diffStat.match(/(\d+) deletion/)?.[1] ?? '0', 10) || 0;
     const filesChanged = Number.parseInt(diffStat.match(/(\d+) file/)?.[1] ?? '0', 10) || 0;
@@ -44,9 +44,9 @@ const getActivityData = () => {
       10
     ) || 0;
 
-    return { insertions, deletions, filesChanged, weeklyCommits };
+    return { insertions, deletions, filesChanged, weeklyCommits, timestamp: new Date().toISOString() };
   } catch {
-    return { insertions: 0, deletions: 0, filesChanged: 0, weeklyCommits: 0 };
+    return { insertions: 0, deletions: 0, filesChanged: 0, weeklyCommits: 0, timestamp: new Date().toISOString() };
   }
 };
 
@@ -67,7 +67,7 @@ const getDirSize = (dir) => {
 
 const getBuildWeight = () => {
   const distSize = getDirSize('dist');
-  if (distSize > 0) return { bytes: distSize, kb: Math.round(distSize / 1024) };
+  if (distSize > 0) return { bytes: distSize, kb: Math.round(distSize / 1024), timestamp: new Date().toISOString() };
 
   if (existsSync('src/data/build-weight.json')) {
     try {
@@ -76,7 +76,8 @@ const getBuildWeight = () => {
       if (previousKb > 0) {
         return {
           bytes: Number(previousWeight.bytes) || previousKb * 1024,
-          kb: previousKb
+          kb: previousKb,
+          timestamp: previousWeight.timestamp || new Date().toISOString()
         };
       }
     } catch {
@@ -84,7 +85,7 @@ const getBuildWeight = () => {
     }
   }
 
-  return { bytes: 453 * 1024, kb: 453 };
+  return { bytes: 453 * 1024, kb: 453, timestamp: new Date().toISOString() };
 };
 
 mkdirSync('src/data', { recursive: true });
@@ -94,9 +95,18 @@ writeFileSync('src/data/codebase-stats.json', JSON.stringify(codebaseStats, null
 
 const activityData = getActivityData();
 writeFileSync('src/data/activity-data.json', JSON.stringify(activityData, null, 2));
+writeFileSync('src/data/activity-stats.json', JSON.stringify({
+  insertions: activityData.insertions,
+  deletions: activityData.deletions,
+  timestamp: activityData.timestamp
+}, null, 2));
 
 const buildWeight = getBuildWeight();
 writeFileSync('src/data/build-weight.json', JSON.stringify(buildWeight, null, 2));
+writeFileSync('src/data/payload-stats.json', JSON.stringify({
+  sizeKB: buildWeight.kb,
+  timestamp: buildWeight.timestamp
+}, null, 2));
 
 writeFileSync('src/data/site-stats.json', JSON.stringify({ components: codebaseStats.modules, lines: codebaseStats.lines }, null, 2));
 writeFileSync('src/data/commit-stats.json', JSON.stringify({ weeklyCommits: activityData.weeklyCommits }, null, 2));
