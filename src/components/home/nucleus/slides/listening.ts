@@ -7,8 +7,14 @@ import {
 } from '@lib/lastfm';
 
 const TAU = Math.PI * 2;
-const BPM_FONT = '10px "IBM Plex Mono", monospace';
-const GENRE_FONT = '34px "IBM Plex Mono", monospace';
+const MONO = '"IBM Plex Mono", monospace';
+const ARC_COLORS = [
+  'rgba(200, 160, 80, 0.3)',
+  'rgba(80, 180, 160, 0.3)',
+  'rgba(180, 100, 120, 0.3)',
+  'rgba(100, 140, 200, 0.3)',
+  'rgba(200, 200, 200, 0.2)',
+];
 
 type MoodMetrics = {
   energy: number;
@@ -28,11 +34,27 @@ type TrackFeatures = {
   acousticness?: number;
 };
 
+type SpotifyTrackRef = {
+  id?: string;
+  progressMs?: number;
+  durationMs?: number;
+  albumArt?: string;
+  playedAt?: string;
+};
+
 type SpotifyProfile = {
-  currentTrack?: { id?: string } | null;
-  lastPlayed?: { id?: string } | null;
+  currentTrack?: SpotifyTrackRef | null;
+  lastPlayed?: SpotifyTrackRef | null;
   mood?: MoodMetrics | null;
   topGenres?: Array<{ genre: string; count: number }>;
+};
+
+type RecentFeature = {
+  energy: number;
+  valence: number;
+  danceability: number;
+  duration_ms: number;
+  tempo: number;
 };
 
 export type ListeningRenderData = {
@@ -45,10 +67,41 @@ export type ListeningRenderData = {
   duration: number;
   isNowPlaying: boolean;
   mood: MoodMetrics | null;
-  recentTrackFeatures: Array<{ energy: number; valence: number; danceability: number; duration_ms: number; tempo: number }>;
+  recentTrackFeatures: RecentFeature[];
   topGenres: Array<{ genre: string; count: number }>;
   nowPlayingFeatures: MoodMetrics | null;
+  progressMs: number;
+  trackDurationMs: number;
 };
+
+type GenreNode = {
+  genre: string;
+  count: number;
+  angle: number;
+  orbit: number;
+  radius: number;
+  seed: number;
+};
+
+type TimelineBar = {
+  x: number;
+  width: number;
+  energy: number;
+  valence: number;
+  opacity: number;
+  phase: number;
+};
+
+let metadataFadeFrame = 0;
+let timelineCacheKey = '';
+let timelineBars: TimelineBar[] = [];
+let constellationCacheKey = '';
+let constellationNodes: GenreNode[] = [];
+let grainPattern: CanvasPattern | null = null;
+let grainCanvas: HTMLCanvasElement | null = null;
+let spotifyIcon: HTMLImageElement | null = null;
+let lastfmIcon: HTMLImageElement | null = null;
+let iconLoadAttempted = false;
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 
@@ -60,7 +113,6 @@ const clampBpm = (bpm: number): number => {
 const parseColor = (input: string): [number, number, number] | null => {
   const color = input.trim();
   if (!color) return null;
-
   if (color[0] === '#') {
     const hex = color.slice(1);
     if (hex.length === 3) {
@@ -70,7 +122,6 @@ const parseColor = (input: string): [number, number, number] | null => {
       if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return null;
       return [r, g, b];
     }
-
     if (hex.length === 6) {
       const r = parseInt(hex.slice(0, 2), 16);
       const g = parseInt(hex.slice(2, 4), 16);
@@ -130,25 +181,6 @@ const applyWarmthTint = (color: string, valence = 0.5): string => {
   return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
 };
 
-const simplex2D = (x: number, y: number): number => {
-  const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
-  return (s - Math.floor(s)) * 2 - 1;
-};
-
-const genreHash = (genre: string): number => {
-  let hash = 2166136261;
-  for (let i = 0; i < genre.length; i += 1) {
-    hash ^= genre.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return Math.abs(hash);
-};
-
-const pseudoRandom = (seed: number, index: number): number => {
-  const x = Math.sin(seed * 0.0013 + index * 12.9898) * 43758.5453;
-  return x - Math.floor(x);
-};
-
 const clampMetric = (value: number | undefined, fallback: number): number => {
   if (!Number.isFinite(value)) return fallback;
   return clamp(value as number, 0, 1);
@@ -159,6 +191,20 @@ const normalizeTempo = (tempo: number | undefined, fallback = 120): number => {
   return clampBpm(value);
 };
 
+const hashNumber = (value: string): number => {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return Math.abs(hash >>> 0);
+};
+
+const pseudoRandom = (seed: number, index: number): number => {
+  const x = Math.sin(seed * 0.0013 + index * 12.9898) * 43758.5453;
+  return x - Math.floor(x);
+};
+
 const fetchOptionalJson = async <T>(paths: string[]): Promise<T | null> => {
   for (const path of paths) {
     try {
@@ -167,73 +213,188 @@ const fetchOptionalJson = async <T>(paths: string[]): Promise<T | null> => {
         return (await response.json()) as T;
       }
     } catch {
-      // noop, try next
+      // noop
     }
   }
   return null;
 };
 
-type TerrainPoint = {
-  x: number;
-  y: number;
-  valence: number;
+const loadIcon = (path: string): Promise<HTMLImageElement | null> => new Promise((resolve) => {
+  const image = new Image();
+  image.onload = () => resolve(image);
+  image.onerror = () => resolve(null);
+  image.src = path;
+});
+
+const ensureServiceIconsLoaded = async (): Promise<void> => {
+  if (iconLoadAttempted || typeof Image === 'undefined') return;
+  iconLoadAttempted = true;
+  [spotifyIcon, lastfmIcon] = await Promise.all([
+    loadIcon('/icons/spotify-mono.svg'),
+    loadIcon('/icons/lastfm-mono.svg'),
+  ]);
 };
 
-let terrainCacheKey = '';
-let terrainCachePoints: TerrainPoint[] = [];
-let metadataFadeFrame = 0;
+const ensureGrainPattern = (ctx: CanvasRenderingContext2D): CanvasPattern | null => {
+  if (grainPattern) return grainPattern;
+  if (!grainCanvas) {
+    grainCanvas = document.createElement('canvas');
+    grainCanvas.width = 64;
+    grainCanvas.height = 64;
+    const gtx = grainCanvas.getContext('2d');
+    if (!gtx) return null;
+    const img = gtx.createImageData(64, 64);
+    for (let i = 0; i < img.data.length; i += 4) {
+      const value = Math.random() > 0.5 ? 255 : 0;
+      img.data[i] = value;
+      img.data[i + 1] = value;
+      img.data[i + 2] = value;
+      img.data[i + 3] = Math.random() * 20;
+    }
+    gtx.putImageData(img, 0, 0);
+  }
+  grainPattern = ctx.createPattern(grainCanvas, 'repeat');
+  return grainPattern;
+};
 
-const getTerrainPoints = (
+const buildConstellation = (
   width: number,
   height: number,
-  features: ListeningRenderData['recentTrackFeatures'],
-  genre: string
-): TerrainPoint[] => {
-  const dataKey = `${width}:${height}:${genre}:${features.length}:${features.map((item) => `${item.energy.toFixed(3)}-${item.valence.toFixed(3)}-${item.duration_ms}`).join('|')}`;
-  if (terrainCacheKey === dataKey && terrainCachePoints.length > 0) {
-    return terrainCachePoints;
-  }
+  genres: Array<{ genre: string; count: number }>,
+  fallbackGenre: string
+): GenreNode[] => {
+  const nodes = genres.slice(0, 8).filter((g) => g.genre);
+  const source = nodes.length ? nodes : [{ genre: fallbackGenre, count: 1 }];
+  const maxCount = Math.max(...source.map((item) => item.count), 1);
+  const cx = width * 0.28;
+  const cy = height * 0.33;
+  const radius = Math.min(width, height) * 0.16;
+  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
 
-  const baseY = height * 0.88;
-  const points: TerrainPoint[] = [];
-
-  if (features.length > 0) {
-    const totalDuration = features.reduce((sum, item) => sum + Math.max(80000, item.duration_ms || 180000), 0);
-    let cursor = 0;
-    features.forEach((item) => {
-      const duration = Math.max(80000, item.duration_ms || 180000);
-      const widthShare = duration / totalDuration;
-      const centerRatio = cursor + widthShare * 0.5;
-      cursor += widthShare;
-      const x = clamp(centerRatio * width, 0, width);
-      const peakHeight = (height * 0.15) + clampMetric(item.energy, 0.55) * (height * 0.25);
-      points.push({
-        x,
-        y: baseY - peakHeight,
-        valence: clampMetric(item.valence, 0.5),
-      });
-    });
-  } else {
-    const seed = genreHash(genre || 'unknown');
-    const peaks = 12;
-    for (let i = 0; i < peaks; i += 1) {
-      const ratio = i / (peaks - 1);
-      const energyLike = 0.35 + Math.abs(Math.sin(ratio * TAU * 1.7 + pseudoRandom(seed, i) * 4.2)) * 0.55;
-      const peakHeight = (height * 0.15) + energyLike * (height * 0.25);
-      points.push({
-        x: ratio * width,
-        y: baseY - peakHeight,
-        valence: 0.4 + pseudoRandom(seed, i + 31) * 0.2,
-      });
-    }
-  }
-
-  terrainCacheKey = dataKey;
-  terrainCachePoints = points;
-  return points;
+  return source.map((item, index) => {
+    const ratio = Math.sqrt((index + 0.5) / source.length);
+    const orbit = radius * ratio;
+    const angle = index * goldenAngle;
+    const size = 3 + 5 * clamp(item.count / maxCount, 0.2, 1);
+    return {
+      genre: item.genre,
+      count: item.count,
+      angle,
+      orbit,
+      radius: size,
+      seed: hashNumber(`${item.genre}:${item.count}:${cx}:${cy}`),
+    };
+  });
 };
 
-const drawMoodGradient = (
+const getConstellationNodes = (
+  width: number,
+  height: number,
+  genres: Array<{ genre: string; count: number }>,
+  fallbackGenre: string
+): GenreNode[] => {
+  const key = `${width}:${height}:${fallbackGenre}:${genres.map((g) => `${g.genre}-${g.count}`).join('|')}`;
+  if (constellationCacheKey === key) return constellationNodes;
+  constellationCacheKey = key;
+  constellationNodes = buildConstellation(width, height, genres, fallbackGenre);
+  return constellationNodes;
+};
+
+const buildTimelineBars = (
+  width: number,
+  _height: number,
+  features: RecentFeature[],
+  genre: string
+): TimelineBar[] => {
+  const xPad = 12;
+  const usableWidth = width - xPad * 2;
+  const source = features.length > 0
+    ? features.slice(-20)
+    : Array.from({ length: 18 }, (_, i) => {
+      const seed = hashNumber(`${genre}:${i}`);
+      return {
+        energy: 0.35 + pseudoRandom(seed, 2) * 0.55,
+        valence: 0.25 + pseudoRandom(seed, 5) * 0.5,
+        danceability: 0.3 + pseudoRandom(seed, 7) * 0.6,
+        duration_ms: 120000 + pseudoRandom(seed, 11) * 170000,
+        tempo: 90 + pseudoRandom(seed, 13) * 70,
+      };
+    });
+  const totalDuration = source.reduce((sum, item) => sum + Math.max(70000, item.duration_ms), 0);
+
+  let cursor = xPad;
+  return source.map((item, index) => {
+    const share = Math.max(70000, item.duration_ms) / totalDuration;
+    const widthPx = Math.max(4, usableWidth * share - 1);
+    const opacity = 0.15 + (index / Math.max(1, source.length - 1)) * 0.25;
+    const bar: TimelineBar = {
+      x: cursor,
+      width: widthPx,
+      energy: clampMetric(item.energy, 0.5),
+      valence: clampMetric(item.valence, 0.5),
+      opacity,
+      phase: index * 0.4,
+    };
+    cursor += widthPx + 1;
+    if (cursor > width - 10) cursor = width - 10;
+    return bar;
+  }).map((bar) => ({ ...bar, x: clamp(bar.x, xPad, width - xPad - bar.width) }));
+};
+
+const getTimelineBars = (width: number, height: number, features: RecentFeature[], genre: string): TimelineBar[] => {
+  const key = `${width}:${height}:${genre}:${features.length}:${features.map((f) => `${f.energy.toFixed(3)}-${f.valence.toFixed(3)}-${f.duration_ms}`).join('|')}`;
+  if (timelineCacheKey === key) return timelineBars;
+  timelineCacheKey = key;
+  timelineBars = buildTimelineBars(width, height, features, genre);
+  return timelineBars;
+};
+
+const formatDuration = (ms: number): string => {
+  const seconds = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+};
+
+const formatRelative = (iso: string | undefined): string => {
+  if (!iso) return 'OFFLINE';
+  const time = Date.parse(iso);
+  if (!Number.isFinite(time)) return 'OFFLINE';
+  const delta = Math.max(0, Date.now() - time);
+  const minutes = Math.floor(delta / 60000);
+  if (minutes < 1) return 'LIVE';
+  if (minutes < 60) return `${minutes}M AGO`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}H AGO`;
+  return `${Math.floor(hours / 24)}D AGO`;
+};
+
+const waveformY = (
+  x: number,
+  width: number,
+  centerY: number,
+  amplitude: number,
+  frame: number,
+  mood: MoodMetrics | null,
+  fallbackBpm: number,
+  phaseOffset = 0
+): number => {
+  const tempo = normalizeTempo(mood?.tempo, fallbackBpm);
+  const tempoNormalized = clamp(tempo / 120, 0.6, 2);
+  const energy = clampMetric(mood?.energy, 0.58);
+  const danceability = clampMetric(mood?.danceability, 0.5);
+  const jaggedness = 1 - danceability;
+  const t = x / width;
+  const timePrimary = frame * 0.001 * tempoNormalized;
+  const timeSecondary = frame * 0.0015 * tempoNormalized;
+  const primary = Math.sin(t * TAU * 2 * tempoNormalized + timePrimary + phaseOffset) * energy * 0.52;
+  const secondary = Math.sin(t * TAU * 3.8 * tempoNormalized + timeSecondary + phaseOffset * 0.7) * energy * 0.26;
+  const flow = Math.sin(t * TAU * (1.2 + danceability * 0.6) + frame * 0.0005 + phaseOffset) * 0.2;
+  const noise = Math.sin((t + phaseOffset) * TAU * 11 + frame * 0.00018) * jaggedness * 0.1;
+  return centerY + (primary + secondary + flow + noise) * amplitude;
+};
+
+const drawMoodAtmosphere = (
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
@@ -241,160 +402,25 @@ const drawMoodGradient = (
   accent: string,
   mood: MoodMetrics | null
 ): void => {
-  const driftX = Math.sin(frame * 0.0001) * width * 0.1;
-  const gradient = ctx.createLinearGradient(-width * 0.2 + driftX, 0, width * 1.1 + driftX, height);
+  const breathe = 0.03 + (Math.sin(frame * 0.0105) * 0.5 + 0.5) * 0.03;
+  const gradient = ctx.createLinearGradient(-width * 0.2, 0, width * 1.1, height);
   const valence = mood?.valence ?? 0.5;
-
-  if (mood == null) {
-    gradient.addColorStop(0, 'rgba(80, 90, 110, 0.03)');
-    gradient.addColorStop(1, 'rgba(40, 48, 62, 0.04)');
-  } else if (valence < 0.3) {
-    gradient.addColorStop(0, withAlpha(accent, 0.03));
-    gradient.addColorStop(1, 'rgba(80, 100, 140, 0.04)');
-  } else if (valence > 0.6) {
-    gradient.addColorStop(0, 'rgba(180, 140, 100, 0.04)');
-    gradient.addColorStop(1, withAlpha(accent, 0.035));
-  } else {
-    gradient.addColorStop(0, withAlpha(accent, 0.04));
-    gradient.addColorStop(1, 'rgba(75, 80, 90, 0.03)');
-  }
-
+  gradient.addColorStop(0, withAlpha(applyWarmthTint(accent, valence), breathe));
+  gradient.addColorStop(1, withAlpha(applyWarmthTint(accent, 1 - valence), breathe * 0.75));
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, width, height);
+
+  const pattern = ensureGrainPattern(ctx);
+  if (pattern) {
+    ctx.save();
+    ctx.globalAlpha = 0.018;
+    ctx.fillStyle = pattern;
+    ctx.fillRect(0, 0, width, height);
+    ctx.restore();
+  }
 };
 
-const drawGenreFog = (
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  frame: number,
-  primaryGenre: string,
-  secondaryGenre: string | null,
-  accent: string
-): void => {
-  ctx.save();
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = accent;
-
-  const driftX = Math.sin(frame * 0.00016) * 18;
-  const driftY = Math.cos(frame * 0.00013) * 10;
-
-  ctx.globalAlpha = 0.06;
-  ctx.font = GENRE_FONT;
-  ctx.fillText(primaryGenre.toUpperCase(), width * 0.5 + driftX, height * 0.33 + driftY);
-
-  if (secondaryGenre) {
-    ctx.globalAlpha = 0.03;
-    ctx.font = '22px "IBM Plex Mono", monospace';
-    ctx.fillText(secondaryGenre.toUpperCase(), width * 0.58 - driftX * 0.45, height * 0.42 - driftY * 0.4);
-  }
-
-  ctx.restore();
-};
-
-const drawTerrain = (
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  frame: number,
-  accent: string,
-  points: TerrainPoint[]
-): void => {
-  if (points.length < 2) return;
-
-  const breathingOffset = Math.sin(frame * 0.0003) * 2;
-  const baseY = height * 0.88 + breathingOffset;
-
-  const path = new Path2D();
-  path.moveTo(0, baseY);
-  path.lineTo(points[0].x, points[0].y + breathingOffset);
-
-  for (let i = 0; i < points.length - 1; i += 1) {
-    const p0 = points[i];
-    const p1 = points[i + 1];
-    const midX = (p0.x + p1.x) * 0.5;
-    const jitterA = simplex2D(i * 0.37, frame * 0.00005) * 5;
-    const jitterB = simplex2D((i + 1) * 0.37, frame * 0.00005) * 5;
-    path.bezierCurveTo(
-      midX, p0.y + breathingOffset + jitterA,
-      midX, p1.y + breathingOffset + jitterB,
-      p1.x, p1.y + breathingOffset
-    );
-  }
-
-  path.lineTo(width, baseY);
-  path.closePath();
-
-  const avgValence = points.reduce((sum, item) => sum + item.valence, 0) / points.length;
-  const terrainAccent = applyWarmthTint(accent, avgValence);
-
-  const gradient = ctx.createLinearGradient(0, baseY, 0, height * 0.45);
-  gradient.addColorStop(0, withAlpha(terrainAccent, 0.12));
-  gradient.addColorStop(1, withAlpha(terrainAccent, 0));
-
-  ctx.fillStyle = gradient;
-  ctx.fill(path);
-
-  ctx.strokeStyle = withAlpha(terrainAccent, 0.2);
-  ctx.lineWidth = 1;
-  ctx.stroke(path);
-};
-
-const drawWaveform = (
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  frame: number,
-  accent: string,
-  mood: MoodMetrics | null,
-  fallbackBpm: number
-): void => {
-  const tempo = normalizeTempo(mood?.tempo, fallbackBpm);
-  const tempoNormalized = clamp(tempo / 120, 0.6, 2);
-  const energy = clampMetric(mood?.energy, 0.6);
-  const danceability = clampMetric(mood?.danceability, 0.5);
-  const jaggedness = 1 - danceability;
-
-  const centerY = height * 0.5;
-  const amplitude = height * (0.15 + energy * 0.25);
-  const timePrimary = frame * 0.001 * tempoNormalized;
-  const timeSecondary = frame * 0.0014 * tempoNormalized;
-  const noiseScale = 3 + jaggedness * 4;
-
-  ctx.strokeStyle = withAlpha(accent, 0.7);
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  for (let x = 0; x < width; x += 1) {
-    const t = x / width;
-    const primary = Math.sin(t * TAU * 2 * tempoNormalized + timePrimary) * energy * 0.5;
-    const secondary = Math.sin(t * TAU * 3.7 * tempoNormalized + timeSecondary) * energy * 0.25;
-    const flow = Math.sin(t * TAU * (1.1 + danceability * 0.8) + frame * 0.00045) * 0.22;
-    const noise = simplex2D(t * noiseScale + frame * 0.0003, 0) * jaggedness * 0.2;
-    const shape = primary + secondary + flow + noise;
-    const py = centerY + shape * amplitude;
-
-    if (x === 0) ctx.moveTo(x, py);
-    else ctx.lineTo(x, py);
-  }
-  ctx.stroke();
-
-  ctx.strokeStyle = withAlpha(accent, 0.2);
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  for (let x = 0; x < width; x += 1) {
-    const t = x / width;
-    const primary = Math.sin(t * TAU * 2 * tempoNormalized + timePrimary + 0.5) * energy * 0.44;
-    const secondary = Math.sin(t * TAU * 3.7 * tempoNormalized + timeSecondary + 0.3) * energy * 0.2;
-    const noise = simplex2D(t * noiseScale + frame * 0.00026, 1.33) * jaggedness * 0.12;
-    const py = centerY + (primary + secondary + noise) * (amplitude * 0.85) + 4;
-    if (x === 0) ctx.moveTo(x, py);
-    else ctx.lineTo(x, py);
-  }
-  ctx.stroke();
-};
-
-const drawFloatingMetadata = (
+const drawGenreConstellation = (
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
@@ -402,134 +428,443 @@ const drawFloatingMetadata = (
   accent: string,
   renderData: ListeningRenderData
 ): void => {
-  if (!renderData.title || !renderData.artist) return;
+  const nodes = getConstellationNodes(width, height, renderData.topGenres, renderData.genre || 'unknown');
+  const cx = width * 0.28;
+  const cy = height * 0.33;
+  const rotate = frame * 0.00033;
+  const fadeNodes = clamp((metadataFadeFrame - 30) / 36, 0, 1);
+  const labelBase = clamp((metadataFadeFrame - 48) / 120, 0, 1);
 
-  const fade = clamp(metadataFadeFrame / 120, 0, 1);
-  const drift = Math.sin(frame * 0.0007) * 1;
-  const x = width - 16;
-  const y = height * 0.2 + drift;
+  ctx.save();
+  ctx.font = `7px ${MONO}`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = withAlpha(accent, 0.12);
+  ctx.fillText('◉ GENRE MAP', cx - 85, cy - 64);
 
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'top';
-  ctx.font = '14px "IBM Plex Mono", monospace';
-  ctx.fillStyle = withAlpha(accent, 0.3 * fade);
-  ctx.fillText(renderData.title, x, y);
+  const positions = nodes.map((node, index) => {
+    const driftX = Math.sin(frame * 0.004 + node.seed * 0.0001) * 2;
+    const driftY = Math.cos(frame * 0.003 + node.seed * 0.0001) * 2;
+    const angle = node.angle + rotate;
+    return {
+      x: cx + Math.cos(angle) * node.orbit + driftX,
+      y: cy + Math.sin(angle) * node.orbit + driftY,
+      node,
+      index,
+    };
+  });
 
-  ctx.font = '10px "IBM Plex Mono", monospace';
-  ctx.fillStyle = withAlpha(accent, 0.2 * fade);
-  ctx.fillText(renderData.artist, x, y + 16);
-
-  if (renderData.isNowPlaying) {
-    const pulse = 0.45 + Math.sin(frame * 0.004) * 0.15;
+  ctx.strokeStyle = withAlpha(accent, 0.08 * fadeNodes);
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i < positions.length - 1; i += 1) {
+    const a = positions[i];
+    const b = positions[i + 1];
     ctx.beginPath();
-    ctx.fillStyle = withAlpha(accent, clamp(pulse * fade, 0, 0.6));
-    ctx.arc(x - Math.min(220, ctx.measureText(renderData.title).width) - 10, y + 7, 4, 0, TAU);
-    ctx.fill();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
   }
+
+  positions.forEach((item, index) => {
+    const pulse = 0.7 + Math.sin(frame * 0.007 + index) * 0.3;
+    ctx.beginPath();
+    ctx.fillStyle = withAlpha(accent, (0.2 + pulse * 0.15) * fadeNodes);
+    ctx.arc(item.x, item.y, item.node.radius, 0, TAU);
+    ctx.fill();
+
+    const labelFade = labelBase * clamp((metadataFadeFrame - 48 - index * 10) / 18, 0, 1);
+    if (labelFade > 0.01) {
+      ctx.fillStyle = withAlpha(accent, 0.15 * labelFade);
+      ctx.fillText(`[${item.node.genre}]`, item.x + 6, item.y - 3);
+    }
+  });
+
+  ctx.restore();
 };
 
-const drawRadar = (
+const drawTimelineStrip = (
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
   frame: number,
   accent: string,
-  features: MoodMetrics | null
+  renderData: ListeningRenderData
 ): void => {
-  if (!features) return;
+  const bars = getTimelineBars(width, height, renderData.recentTrackFeatures, renderData.genre);
+  const stripTop = height * 0.85;
+  const stripHeight = height * 0.13;
+  const baselineY = stripTop + stripHeight;
+  const riseBase = clamp((metadataFadeFrame - 12) / 90, 0, 1);
 
-  const radius = 50;
-  const centerX = width - 16 - radius;
-  const centerY = height - 16 - radius;
+  ctx.save();
+  ctx.font = `8px ${MONO}`;
+  ctx.fillStyle = withAlpha(accent, 0.12);
+  ctx.fillText('▸ RECENT 20 TRACKS', 12, stripTop - 8);
 
-  const values = [
-    clampMetric(features.energy, 0.5),
-    clampMetric(features.danceability, 0.5),
-    clampMetric(features.valence, 0.5),
-    clampMetric(features.acousticness, 0.5),
-    clamp(normalizeTempo(features.tempo) / 200, 0, 1),
-  ];
-
-  const labels = ['NRG', 'DNC', 'VAL', 'ACO', 'BPM'];
-
-  const vertex = (index: number, value: number) => {
-    const angle = -Math.PI / 2 + (TAU * index) / 5;
-    const breathe = 1 + Math.sin(frame * 0.0009 + index * 0.8) * 0.05;
-    const r = radius * value * breathe;
-    return {
-      x: centerX + Math.cos(angle) * r,
-      y: centerY + Math.sin(angle) * r,
-      angle,
-    };
-  };
-
-  ctx.strokeStyle = withAlpha(accent, 0.08);
+  ctx.strokeStyle = withAlpha(accent, 0.1);
   ctx.lineWidth = 1;
   ctx.beginPath();
-  for (let i = 0; i < 5; i += 1) {
-    const angle = -Math.PI / 2 + (TAU * i) / 5;
-    const x = centerX + Math.cos(angle) * radius;
-    const y = centerY + Math.sin(angle) * radius;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.closePath();
+  ctx.moveTo(12, baselineY);
+  ctx.lineTo(width - 12, baselineY);
   ctx.stroke();
 
-  ctx.beginPath();
-  for (let i = 0; i < 5; i += 1) {
-    ctx.moveTo(centerX, centerY);
-    const angle = -Math.PI / 2 + (TAU * i) / 5;
-    ctx.lineTo(centerX + Math.cos(angle) * radius, centerY + Math.sin(angle) * radius);
-  }
-  ctx.stroke();
+  bars.forEach((bar, index) => {
+    const stagger = clamp((metadataFadeFrame - 12 - index * 3) / 36, 0, 1);
+    const rise = riseBase * stagger;
+    const breathe = Math.sin(frame * 0.01 + bar.phase) * 1;
+    const minHeight = stripHeight * 0.2;
+    const maxHeight = stripHeight;
+    const target = minHeight + (maxHeight - minHeight) * bar.energy;
+    const h = Math.max(1, target * rise + breathe);
+    const y = baselineY - h;
+    const warm = applyWarmthTint(accent, bar.valence);
+    ctx.fillStyle = withAlpha(warm, bar.opacity);
+    ctx.fillRect(bar.x, y, bar.width, h);
+  });
 
-  ctx.beginPath();
-  for (let i = 0; i < 5; i += 1) {
-    const p = vertex(i, values[i]);
-    if (i === 0) ctx.moveTo(p.x, p.y);
-    else ctx.lineTo(p.x, p.y);
-  }
-  ctx.closePath();
-  ctx.fillStyle = withAlpha(accent, 0.12);
-  ctx.strokeStyle = withAlpha(accent, 0.25);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.font = '7px "IBM Plex Mono", monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = withAlpha(accent, 0.15);
-  for (let i = 0; i < 5; i += 1) {
-    const angle = -Math.PI / 2 + (TAU * i) / 5;
-    const labelX = centerX + Math.cos(angle) * (radius + 10);
-    const labelY = centerY + Math.sin(angle) * (radius + 10);
-    ctx.fillText(labels[i], labelX, labelY);
-  }
+  ctx.fillStyle = withAlpha(accent, 0.1);
+  ctx.font = `7px ${MONO}`;
+  ctx.fillText('2D', 12, baselineY + 10);
+  ctx.textAlign = 'right';
+  ctx.fillText('NOW →', width - 12, baselineY + 10);
+  ctx.restore();
 };
 
-const drawTempoAndServices = (
+const drawMainWaveform = (
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
+  frame: number,
+  accent: string,
+  renderData: ListeningRenderData
+): void => {
+  const centerY = height * 0.5;
+  const amplitude = height * 0.28;
+
+  ctx.save();
+  ctx.lineCap = 'round';
+
+  ctx.strokeStyle = withAlpha(blendColors(accent, '#88a8ff', 0.45), 0.08);
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  for (let x = 0; x < width; x += 1) {
+    const y = waveformY(x, width, centerY + 3, amplitude, frame, renderData.mood, renderData.bpm, 0.35);
+    if (x === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  ctx.strokeStyle = withAlpha(accent, 0.7);
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let x = 0; x < width; x += 1) {
+    const y = waveformY(x, width, centerY, amplitude, frame, renderData.mood, renderData.bpm);
+    if (x === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  if (renderData.isNowPlaying) {
+    const pulseCount = 4;
+    const speed = normalizeTempo(renderData.mood?.tempo, renderData.bpm) / 60;
+    for (let i = 0; i < pulseCount; i += 1) {
+      const progress = (frame * 0.0035 * speed + i * 0.27) % 1;
+      const x = progress * width;
+      const y = waveformY(x, width, centerY, amplitude, frame, renderData.mood, renderData.bpm);
+      ctx.beginPath();
+      ctx.fillStyle = withAlpha(accent, 0.5);
+      ctx.arc(x, y, 3, 0, TAU);
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+};
+
+const drawNowPlayingCard = (
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  frame: number,
+  accent: string,
+  renderData: ListeningRenderData
+): void => {
+  const cardW = 220;
+  const cardH = 92;
+  const x = width - cardW - 16;
+  const y = height * 0.12;
+  const fade = clamp((metadataFadeFrame - 18) / 30, 0, 1);
+  if (fade <= 0) return;
+
+  ctx.save();
+  ctx.globalAlpha = fade;
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  ctx.strokeStyle = withAlpha(accent, 0.15);
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.roundRect(x, y, cardW, cardH, 5);
+  ctx.fill();
+  ctx.stroke();
+
+  const bpm = normalizeTempo(renderData.mood?.tempo, renderData.bpm);
+  const beatPulse = 0.4 + (Math.sin(frame * (bpm / 60) * 0.1) * 0.5 + 0.5) * 0.35;
+  ctx.font = `7px ${MONO}`;
+  ctx.fillStyle = withAlpha(accent, 0.25);
+  ctx.fillText(renderData.isNowPlaying ? 'NOW PLAYING' : 'LAST PLAYED', x + 12, y + 11);
+  ctx.beginPath();
+  ctx.fillStyle = renderData.isNowPlaying ? withAlpha('#65d38c', beatPulse) : withAlpha('#d36969', 0.35);
+  ctx.arc(x + 7, y + 8, 2, 0, TAU);
+  ctx.fill();
+
+  if (renderData.isNowPlaying && renderData.trackDurationMs > 0) {
+    const progress = clamp(renderData.progressMs / renderData.trackDurationMs, 0, 1);
+    ctx.fillStyle = withAlpha(accent, 0.08);
+    ctx.fillRect(x + 12, y + 22, 150, 5);
+    ctx.fillStyle = withAlpha(accent, 0.3);
+    ctx.fillRect(x + 12, y + 22, 150 * progress, 5);
+    ctx.font = `8px ${MONO}`;
+    ctx.fillStyle = withAlpha(accent, 0.2);
+    ctx.fillText(formatDuration(renderData.trackDurationMs), x + 170, y + 27);
+  } else {
+    ctx.strokeStyle = withAlpha(accent, 0.2);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    const miniY = y + 25;
+    for (let i = 0; i <= 100; i += 1) {
+      const px = x + 12 + i;
+      const py = waveformY(i, 100, miniY, 4, frame, renderData.mood, renderData.bpm, 0.2);
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+
+  const titleStart = 30;
+  const titleChars = clamp(Math.floor(((metadataFadeFrame - titleStart) / 60) * Math.max(1, renderData.title.length)), 0, renderData.title.length);
+  ctx.font = `12px ${MONO}`;
+  ctx.fillStyle = withAlpha(accent, 0.5);
+  ctx.fillText(renderData.title.slice(0, titleChars), x + 12, y + 50);
+
+  const artistFade = clamp((metadataFadeFrame - 48) / 24, 0, 1);
+  if (artistFade > 0) {
+    ctx.font = `9px ${MONO}`;
+    ctx.fillStyle = withAlpha(accent, 0.25 * artistFade);
+    ctx.fillText(`${renderData.artist} · ${renderData.album}`.slice(0, 34), x + 12, y + 66);
+  }
+
+  ctx.restore();
+};
+
+const drawMoodArcRing = (
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  frame: number,
+  renderData: ListeningRenderData
+): void => {
+  const mood = renderData.nowPlayingFeatures || renderData.mood;
+  const cx = width - 74;
+  const cy = height - 74;
+  const baseRadius = 22;
+
+  ctx.save();
+  if (!mood) {
+    ctx.strokeStyle = 'rgba(200,200,200,0.08)';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 36, 0, TAU);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(200,200,200,0.14)';
+    ctx.font = `12px ${MONO}`;
+    ctx.textAlign = 'center';
+    ctx.fillText('—', cx, cy + 4);
+    ctx.restore();
+    return;
+  }
+
+  const metrics = [
+    clampMetric(mood.energy, 0.5),
+    clampMetric(mood.danceability, 0.5),
+    clampMetric(mood.valence, 0.5),
+    clampMetric(mood.acousticness, 0.5),
+    clamp(normalizeTempo(mood.tempo, renderData.bpm) / 200, 0, 1),
+  ];
+
+  ctx.setLineDash([2, 3]);
+  ctx.strokeStyle = 'rgba(220,220,220,0.05)';
+  ctx.beginPath();
+  ctx.arc(cx, cy, baseRadius + 26, 0, TAU);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.font = `6px ${MONO}`;
+  ctx.fillStyle = 'rgba(220,220,220,0.12)';
+  ctx.textAlign = 'center';
+  ctx.fillText('MOOD', cx, cy - (baseRadius + 30));
+
+  metrics.forEach((metric, i) => {
+    const entry = clamp((metadataFadeFrame - 60 - i * 12) / 36, 0, 1);
+    if (entry <= 0) return;
+    const breath = Math.sin(frame * 0.01 + i) * (Math.PI / 18);
+    const maxSweep = (Math.PI * 1.5) + breath;
+    const sweep = maxSweep * metric * entry;
+    const radius = baseRadius + i * 6;
+    const start = -Math.PI / 2;
+    const end = start + sweep;
+    ctx.strokeStyle = ARC_COLORS[i];
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, start, end);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.fillStyle = ARC_COLORS[i].replace('0.3', '0.5').replace('0.2', '0.45');
+    ctx.arc(cx + Math.cos(end) * radius, cy + Math.sin(end) * radius, 2.2, 0, TAU);
+    ctx.fill();
+  });
+
+  const glyphPulse = 0.1 + (Math.sin(frame * 0.015) * 0.5 + 0.5) * 0.1;
+  ctx.font = `11px ${MONO}`;
+  ctx.fillStyle = `rgba(225,225,225,${glyphPulse.toFixed(3)})`;
+  ctx.fillText('◎', cx, cy + 4);
+  ctx.restore();
+};
+
+const drawTempoHeartbeat = (
+  ctx: CanvasRenderingContext2D,
+  width: number,
   frame: number,
   accent: string,
   tempo: number
 ): void => {
   const bpm = Math.round(clampBpm(tempo));
-  const pulse = 0.25 + 0.18 * Math.sin(frame * (bpm / 60) * 0.06);
+  const x = width - 112;
+  const y = 16;
+  const w = 82;
+  const h = 20;
+  const phase = (frame / 60) * (bpm / 60);
+  const cycle = phase % 1;
+  const beatGlow = cycle < 0.15 ? 0.4 : 0.18;
 
-  ctx.font = BPM_FONT;
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'top';
-  ctx.fillStyle = withAlpha(accent, pulse);
-  ctx.fillText(`${bpm} BPM`, width - 16, 16);
+  ctx.save();
+  ctx.strokeStyle = withAlpha(accent, 0.35);
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (let i = 0; i <= w; i += 1) {
+    const t = i / w;
+    const local = (t + cycle) % 1;
+    const spike = local > 0.44 && local < 0.5
+      ? -Math.sin(((local - 0.44) / 0.06) * Math.PI) * h * 0.7
+      : local >= 0.5 && local < 0.57
+        ? Math.sin(((local - 0.5) / 0.07) * Math.PI) * h * 0.25
+        : 0;
+    const py = y + h * 0.6 + spike;
+    const px = x + i;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
 
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'bottom';
-  ctx.font = '8px "IBM Plex Mono", monospace';
+  ctx.font = `11px ${MONO}`;
+  ctx.fillStyle = withAlpha(accent, beatGlow);
+  ctx.fillText(String(bpm), x + w + 6, y + 10);
+  ctx.font = `8px ${MONO}`;
+  ctx.fillStyle = withAlpha(accent, 0.12);
+  ctx.fillText('BPM', x + w + 8, y + 18);
+  ctx.restore();
+};
+
+const drawServiceLogos = (
+  ctx: CanvasRenderingContext2D,
+  frame: number,
+  accent: string,
+  height: number
+): void => {
+  const x = 12;
+  const y = height - 24;
+  const cycle = (Math.sin(frame * 0.01) * 0.5) + 0.5;
+  const spotifyAlpha = 0.18 + cycle * 0.12;
+  const lastAlpha = 0.18 + (1 - cycle) * 0.12;
+
+  ctx.save();
+  const fade = clamp((metadataFadeFrame - 90) / 24, 0, 1);
+  ctx.globalAlpha = fade;
+
+  if (spotifyIcon && lastfmIcon) {
+    ctx.globalAlpha = spotifyAlpha * fade;
+    ctx.drawImage(spotifyIcon, x, y, 14, 14);
+    ctx.globalAlpha = lastAlpha * fade;
+    ctx.drawImage(lastfmIcon, x + 20, y, 14, 14);
+  } else {
+    ctx.font = `8px ${MONO}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    ctx.beginPath();
+    ctx.fillStyle = withAlpha(accent, spotifyAlpha);
+    ctx.arc(x + 7, y + 7, 6, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(15,15,15,0.6)';
+    ctx.fillText('S', x + 7, y + 7);
+
+    ctx.beginPath();
+    ctx.fillStyle = withAlpha(accent, lastAlpha);
+    ctx.arc(x + 27, y + 7, 6, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(15,15,15,0.6)';
+    ctx.fillText('L', x + 27, y + 7);
+  }
+
+  ctx.restore();
+};
+
+const drawDataSourceIndicator = (
+  ctx: CanvasRenderingContext2D,
+  frame: number,
+  accent: string,
+  height: number,
+  isLive: boolean,
+  updatedAt?: string
+): void => {
+  const x = 15;
+  const y = height - 36;
+  const pulse = ((frame / 60) % 4) / 4;
+
+  ctx.save();
+  ctx.fillStyle = withAlpha(accent, 0.25);
+  ctx.beginPath();
+  ctx.arc(x, y, 3, 0, TAU);
+  ctx.fill();
+
+  if (pulse < 0.25) {
+    const local = pulse / 0.25;
+    const radius = 3 + local * 12;
+    const alpha = 0.2 * (1 - local);
+    ctx.strokeStyle = withAlpha(accent, alpha);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, TAU);
+    ctx.stroke();
+  }
+
+  const label = isLive ? 'LIVE' : formatRelative(updatedAt);
+  ctx.fillStyle = 'rgba(0,0,0,0.14)';
+  ctx.strokeStyle = withAlpha(accent, 0.14);
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.roundRect(x + 8, y - 6, 42, 12, 3);
+  ctx.fill();
+  ctx.stroke();
+  ctx.font = `7px ${MONO}`;
   ctx.fillStyle = withAlpha(accent, 0.15);
-  ctx.fillText('♫ spotify · last.fm', 12, height - 12);
+  ctx.fillText(label, x + 14, y + 2);
+  ctx.restore();
+};
+
+const drawVignette = (ctx: CanvasRenderingContext2D, width: number, height: number): void => {
+  const gradient = ctx.createRadialGradient(width * 0.5, height * 0.5, Math.min(width, height) * 0.25, width * 0.5, height * 0.5, Math.max(width, height) * 0.75);
+  gradient.addColorStop(0, 'rgba(0,0,0,0)');
+  gradient.addColorStop(1, 'rgba(0,0,0,0.05)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
 };
 
 const mergeRenderData = (
@@ -576,7 +911,7 @@ const mergeRenderData = (
     title: base.title || '',
     artist: base.artist || '',
     album: base.album || '',
-    albumArtUrl: base.albumArtUrl || '',
+    albumArtUrl: base.albumArtUrl || spotifyProfile?.currentTrack?.albumArt || '',
     bpm: Number(base.bpm) || 120,
     genre: base.genre || 'unknown',
     duration: Number(base.duration) || 0,
@@ -585,6 +920,11 @@ const mergeRenderData = (
     recentTrackFeatures: reducedFeatures,
     topGenres: spotifyProfile?.topGenres || [],
     nowPlayingFeatures,
+    progressMs: Number(base.progressMs) || Number(spotifyProfile?.currentTrack?.progressMs) || 0,
+    trackDurationMs: Number(base.trackDurationMs)
+      || Number(spotifyProfile?.currentTrack?.durationMs)
+      || Number(base.duration)
+      || 0,
   };
 };
 
@@ -592,6 +932,8 @@ export const listeningSlide: SlideModule = {
   id: 'listening',
 
   async fetchData(): Promise<SlideData | null> {
+    await ensureServiceIconsLoaded();
+
     const spotifyProfile = await fetchOptionalJson<SpotifyProfile>([
       '/data/spotify/profile.json',
       '/spotify/profile.json',
@@ -603,18 +945,16 @@ export const listeningSlide: SlideModule = {
       '/api/spotify/audio-features.json',
     ]);
 
-    // Try live Last.fm API first for freshest data
     try {
       const username = import.meta.env.PUBLIC_LASTFM_USERNAME as string | undefined;
       if (username) {
         const recentTrack = await getRecentTrack(username);
         if (recentTrack) {
           const trackInfo = await getTrackInfo(recentTrack.artist, recentTrack.name);
-          const dominantColor = recentTrack.albumArtUrl
-            ? await extractDominantColor(recentTrack.albumArtUrl)
-            : null;
+          const dominantColor = recentTrack.albumArtUrl ? await extractDominantColor(recentTrack.albumArtUrl) : null;
           const genre = trackInfo?.tags?.[0] || 'unknown';
           const bpm = trackInfo?.bpm || estimateBpmFromGenre(genre);
+
           const renderData = mergeRenderData({
             title: recentTrack.name,
             artist: recentTrack.artist,
@@ -624,6 +964,8 @@ export const listeningSlide: SlideModule = {
             genre,
             duration: trackInfo?.duration || 0,
             isNowPlaying: recentTrack.isNowPlaying,
+            progressMs: spotifyProfile?.currentTrack?.progressMs || 0,
+            trackDurationMs: spotifyProfile?.currentTrack?.durationMs || trackInfo?.duration || 0,
           }, spotifyProfile, spotifyAudioFeatures);
 
           (window as any).__nucleusListeningData = {
@@ -646,7 +988,6 @@ export const listeningSlide: SlideModule = {
       console.error('[Nucleus] Live Last.fm fetch failed, trying pre-built data:', error);
     }
 
-    // Fall back to pre-built data from build time
     try {
       const response = await fetch('/api/nucleus/listening.json');
       if (response.ok) {
@@ -657,9 +998,7 @@ export const listeningSlide: SlideModule = {
 
           if (merged.albumArtUrl) {
             const dominantColor = await extractDominantColor(merged.albumArtUrl);
-            if (dominantColor) {
-              data.accentOverride = dominantColor;
-            }
+            if (dominantColor) data.accentOverride = dominantColor;
           }
 
           (window as any).__nucleusListeningData = {
@@ -680,27 +1019,26 @@ export const listeningSlide: SlideModule = {
 
   render(ctx, width, height, frame, data, theme) {
     const renderData = mergeRenderData((data?.renderData || {}) as Partial<ListeningRenderData>, null, null);
-    const primaryAccent = data.accentOverride ? blendColors(theme.accent, data.accentOverride, 0.3) : theme.accent;
+    const primaryAccent = data?.accentOverride ? blendColors(theme.accent, data.accentOverride, 0.3) : theme.accent;
     const accent = applyWarmthTint(primaryAccent, renderData.mood?.valence ?? 0.5);
-
-    const topGenre = renderData.topGenres[0]?.genre || renderData.genre || 'unknown';
-    const secondaryGenre = renderData.topGenres[1]?.genre || null;
-    const terrainPoints = getTerrainPoints(width, height, renderData.recentTrackFeatures, topGenre);
 
     ctx.clearRect(0, 0, width, height);
 
-    drawMoodGradient(ctx, width, height, frame, accent, renderData.mood);
-    drawGenreFog(ctx, width, height, frame, topGenre, secondaryGenre, accent);
-    drawTerrain(ctx, width, height, frame, accent, terrainPoints);
-    drawWaveform(ctx, width, height, frame, accent, renderData.mood, renderData.bpm);
-    drawFloatingMetadata(ctx, width, height, frame, accent, renderData);
-    drawRadar(ctx, width, height, frame, accent, renderData.nowPlayingFeatures || renderData.mood);
-    drawTempoAndServices(ctx, width, height, frame, accent, renderData.mood?.tempo || renderData.bpm);
+    drawMoodAtmosphere(ctx, width, height, frame, accent, renderData.mood);
+    drawMainWaveform(ctx, width, height, frame, accent, renderData);
+    drawVignette(ctx, width, height);
+    drawTimelineStrip(ctx, width, height, frame, accent, renderData);
+    drawNowPlayingCard(ctx, width, height, frame, accent, renderData);
+    drawGenreConstellation(ctx, width, height, frame, accent, renderData);
+    drawMoodArcRing(ctx, width, height, frame, renderData);
+    drawTempoHeartbeat(ctx, width, frame, accent, renderData.mood?.tempo || renderData.bpm);
+    drawServiceLogos(ctx, frame, accent, height);
+    drawDataSourceIndicator(ctx, frame, accent, height, renderData.isNowPlaying, data?.updatedAt);
 
     metadataFadeFrame += 1;
   },
 
   reset() {
     metadataFadeFrame = 0;
-  }
+  },
 };
