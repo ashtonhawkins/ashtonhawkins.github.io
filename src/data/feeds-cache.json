@@ -1,8 +1,21 @@
 {
-  "updatedAt": "2026-03-11T18:43:51.305Z",
+  "updatedAt": "2026-03-12T01:16:16.352Z",
   "watching": {
-    "lastUpdated": "2026-03-11T18:43:51.305Z",
+    "lastUpdated": "2026-03-12T01:16:16.352Z",
     "recentItems": [
+      {
+        "title": "Love Story",
+        "year": 2026,
+        "watchedAt": "2026-02-23T01:36:00.000Z",
+        "source": "trakt",
+        "type": "tv",
+        "season": 1,
+        "episode": 1,
+        "episodeTitle": "Pilot",
+        "url": "https://trakt.tv/shows/love-story-2026",
+        "watchedDate": "2026-02-23T01:36:00.000Z",
+        "displayTitle": "Love Story · S01E01"
+      },
       {
         "title": "The Omega Man",
         "year": 1971,
@@ -16,7 +29,7 @@
     ],
     "stats": {
       "totalFilms": 1,
-      "totalEpisodes": 0,
+      "totalEpisodes": 1,
       "avgRating": 5
     }
   },
@@ -32,20 +45,32 @@
         "url": "https://letterboxd.com/drrobertneville/film/the-omega-man/"
       }
     ],
-    "trakt": [],
+    "trakt": [
+      {
+        "title": "Love Story",
+        "year": 2026,
+        "watchedAt": "2026-02-23T01:36:00.000Z",
+        "source": "trakt",
+        "type": "tv",
+        "season": 1,
+        "episode": 1,
+        "episodeTitle": "Pilot",
+        "url": "https://trakt.tv/shows/love-story-2026"
+      }
+    ],
     "goodreads": [],
     "lastfm": [
       {
-        "name": "Life's What You Make It - 1997 Remaster",
-        "title": "Life's What You Make It - 1997 Remaster",
-        "artist": "Talk Talk"
+        "name": "Devices",
+        "title": "Devices",
+        "artist": "Tycho"
       }
     ],
     "spotify": [
       {
-        "name": "Life's What You Make It - 1997 Remaster",
-        "title": "Life's What You Make It - 1997 Remaster",
-        "artist": "Talk Talk"
+        "name": "Devices",
+        "title": "Devices",
+        "artist": "Tycho"
       }
     ],
     "x": []
