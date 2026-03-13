@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-03-13T04:28:30.657Z",
+  "fetched_at": "2026-03-13T06:41:51.773Z",
   "spo2": [
     {
       "id": "1145d2bb-df81-4333-a757-8e406cc3ff65",
@@ -1230,8 +1230,8 @@
       "id": "e309fa86-3099-41e7-94f4-c8dffb6e1148",
       "day": "2026-03-12",
       "day_summary": "normal",
-      "recovery_high": 2700,
-      "stress_high": 3600
+      "recovery_high": 3600,
+      "stress_high": 6300
     }
   ],
   "cardiovascular_age": [
