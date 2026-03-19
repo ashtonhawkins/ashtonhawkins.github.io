@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-03-19T06:48:58.986Z",
+  "fetched_at": "2026-03-19T12:43:33.293Z",
   "daily": [
     {
       "id": "0f59c00b-ccf2-4183-b55a-06fefb8c9cae",
@@ -1155,6 +1155,21 @@
       "day": "2026-03-18",
       "score": 61,
       "timestamp": "2026-03-18T00:00:00.000+00:00"
+    },
+    {
+      "id": "da8cba4c-f4ef-41f8-b4df-d7acf7571447",
+      "contributors": {
+        "deep_sleep": 54,
+        "efficiency": 90,
+        "latency": 91,
+        "rem_sleep": 47,
+        "restfulness": 77,
+        "timing": 80,
+        "total_sleep": 29
+      },
+      "day": "2026-03-19",
+      "score": 58,
+      "timestamp": "2026-03-19T00:00:00.000+00:00"
     }
   ],
   "periods": [
