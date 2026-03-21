@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-03-21T14:19:50.312Z",
+  "updatedAt": "2026-03-21T18:25:52.717Z",
   "watching": {
-    "lastUpdated": "2026-03-21T14:19:50.312Z",
+    "lastUpdated": "2026-03-21T18:25:52.717Z",
     "recentItems": [
       {
         "title": "Love Story",
@@ -59,20 +59,8 @@
       }
     ],
     "goodreads": [],
-    "lastfm": [
-      {
-        "name": "My Old Ways",
-        "title": "My Old Ways",
-        "artist": "Tame Impala"
-      }
-    ],
-    "spotify": [
-      {
-        "name": "My Old Ways",
-        "title": "My Old Ways",
-        "artist": "Tame Impala"
-      }
-    ],
+    "lastfm": [],
+    "spotify": [],
     "x": []
   }
 }
