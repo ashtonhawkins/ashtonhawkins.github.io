@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-03-22T04:47:01.112Z",
+  "fetched_at": "2026-03-22T06:41:14.010Z",
   "spo2": [
     {
       "id": "2c23d323-5b07-4100-8ac6-3622a45ffb4e",
@@ -1228,7 +1228,7 @@
       "id": "e9df3595-c9d9-4b7e-a5ed-933c0be89d7b",
       "day": "2026-03-21",
       "day_summary": "normal",
-      "recovery_high": 1800,
+      "recovery_high": 2700,
       "stress_high": 1800
     }
   ],
