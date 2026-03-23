@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-03-23T14:50:35.621Z",
+  "updatedAt": "2026-03-23T18:42:20.486Z",
   "watching": {
-    "lastUpdated": "2026-03-23T14:50:35.621Z",
+    "lastUpdated": "2026-03-23T18:42:20.486Z",
     "recentItems": [
       {
         "title": "The Omega Man",
@@ -34,8 +34,20 @@
     ],
     "trakt": [],
     "goodreads": [],
-    "lastfm": [],
-    "spotify": [],
+    "lastfm": [
+      {
+        "name": "My Old Ways",
+        "title": "My Old Ways",
+        "artist": "Tame Impala"
+      }
+    ],
+    "spotify": [
+      {
+        "name": "My Old Ways",
+        "title": "My Old Ways",
+        "artist": "Tame Impala"
+      }
+    ],
     "x": []
   }
 }
