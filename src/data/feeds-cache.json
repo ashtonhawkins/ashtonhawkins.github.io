@@ -1,21 +1,8 @@
 {
-  "updatedAt": "2026-03-22T18:26:18.099Z",
+  "updatedAt": "2026-03-23T01:25:38.902Z",
   "watching": {
-    "lastUpdated": "2026-03-22T18:26:18.099Z",
+    "lastUpdated": "2026-03-23T01:25:38.902Z",
     "recentItems": [
-      {
-        "title": "Love Story",
-        "year": 2026,
-        "watchedAt": "2026-02-23T01:36:00.000Z",
-        "source": "trakt",
-        "type": "tv",
-        "season": 1,
-        "episode": 1,
-        "episodeTitle": "Pilot",
-        "url": "https://trakt.tv/shows/love-story-2026",
-        "watchedDate": "2026-02-23T01:36:00.000Z",
-        "displayTitle": "Love Story · S01E01"
-      },
       {
         "title": "The Omega Man",
         "year": 1971,
@@ -29,7 +16,7 @@
     ],
     "stats": {
       "totalFilms": 1,
-      "totalEpisodes": 1,
+      "totalEpisodes": 0,
       "avgRating": 5
     }
   },
@@ -45,19 +32,7 @@
         "url": "https://letterboxd.com/drrobertneville/film/the-omega-man/"
       }
     ],
-    "trakt": [
-      {
-        "title": "Love Story",
-        "year": 2026,
-        "watchedAt": "2026-02-23T01:36:00.000Z",
-        "source": "trakt",
-        "type": "tv",
-        "season": 1,
-        "episode": 1,
-        "episodeTitle": "Pilot",
-        "url": "https://trakt.tv/shows/love-story-2026"
-      }
-    ],
+    "trakt": [],
     "goodreads": [],
     "lastfm": [
       {
