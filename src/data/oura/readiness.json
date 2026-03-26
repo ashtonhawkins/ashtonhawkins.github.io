@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-03-26T06:59:36.774Z",
+  "fetched_at": "2026-03-26T12:56:24.279Z",
   "readiness": [
     {
       "id": "5aac80bb-3e52-4dff-bcd7-ba21e74d87b6",
@@ -1463,6 +1463,25 @@
       "temperature_deviation": -0.35,
       "temperature_trend_deviation": -0.17,
       "timestamp": "2026-03-25T00:00:00.000+00:00"
+    },
+    {
+      "id": "57863523-0e3d-4e33-a25b-905cd47664fa",
+      "contributors": {
+        "activity_balance": 92,
+        "body_temperature": 86,
+        "hrv_balance": 33,
+        "previous_day_activity": 76,
+        "previous_night": 39,
+        "recovery_index": 48,
+        "resting_heart_rate": 44,
+        "sleep_balance": 45,
+        "sleep_regularity": 77
+      },
+      "day": "2026-03-26",
+      "score": 53,
+      "temperature_deviation": 0.23,
+      "temperature_trend_deviation": 0,
+      "timestamp": "2026-03-26T00:00:00.000+00:00"
     }
   ],
   "resilience": [
