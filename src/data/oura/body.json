@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-03-29T18:31:59.301Z",
+  "fetched_at": "2026-03-30T01:48:27.983Z",
   "spo2": [
     {
       "id": "3f78e271-5b9e-42f7-adf8-43ea3283d819",
@@ -599,21 +599,14 @@
     },
     {
       "id": "84295015-6c0e-4903-9d20-f82ebad57739",
-      "breathing_disturbance_index": 4,
+      "breathing_disturbance_index": 5,
       "day": "2026-03-29",
       "spo2_percentage": {
-        "average": 96.611
+        "average": 96.512
       }
     }
   ],
   "stress": [
-    {
-      "id": "8d92221e-9094-46ef-b5e9-12d913db7aef",
-      "day": "2025-12-29",
-      "day_summary": "normal",
-      "recovery_high": 0,
-      "stress_high": 9000
-    },
     {
       "id": "2225798e-39f0-41e7-8247-bbb8de987ee3",
       "day": "2025-12-30",
@@ -1240,8 +1233,8 @@
     {
       "id": "c8090baf-e8c2-4799-b5e2-fb4ea02dc2a0",
       "day": "2026-03-29",
-      "day_summary": null,
-      "recovery_high": 900,
+      "day_summary": "restored",
+      "recovery_high": 9900,
       "stress_high": 0
     }
   ],
