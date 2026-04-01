@@ -1,66 +1,6 @@
 {
-  "fetched_at": "2026-03-31T18:51:08.734Z",
+  "fetched_at": "2026-04-01T01:52:25.865Z",
   "workouts": [
-    {
-      "id": "bf949509-c1bc-4542-bc2b-136fd8884c7e",
-      "activity": "walking",
-      "calories": 116.04292297363281,
-      "day": "2025-12-31",
-      "distance": 1846.085693983068,
-      "end_datetime": "2025-12-31T13:12:00.000+09:00",
-      "intensity": "moderate",
-      "label": null,
-      "source": "confirmed",
-      "start_datetime": "2025-12-31T12:45:00.000+09:00"
-    },
-    {
-      "id": "340de5ea-7c89-4e45-9c49-49f21bc9aa4d",
-      "activity": "walking",
-      "calories": 89.94669342041016,
-      "day": "2025-12-31",
-      "distance": 1404.333177411166,
-      "end_datetime": "2025-12-31T13:43:00.000+09:00",
-      "intensity": "moderate",
-      "label": null,
-      "source": "confirmed",
-      "start_datetime": "2025-12-31T13:24:00.000+09:00"
-    },
-    {
-      "id": "15549d86-ef2e-4dcd-b595-c1dcf7667dbc",
-      "activity": "walking",
-      "calories": 249.76980590820312,
-      "day": "2025-12-31",
-      "distance": 3559.4959040817944,
-      "end_datetime": "2025-12-31T15:58:00.000+09:00",
-      "intensity": "moderate",
-      "label": null,
-      "source": "confirmed",
-      "start_datetime": "2025-12-31T15:07:00.000+09:00"
-    },
-    {
-      "id": "87f68d8e-8e09-480b-bc77-56fc3c716ef3",
-      "activity": "walking",
-      "calories": 132.08201599121094,
-      "day": "2025-12-31",
-      "distance": 1657.102692014448,
-      "end_datetime": "2025-12-31T21:27:00.000+09:00",
-      "intensity": "moderate",
-      "label": null,
-      "source": "confirmed",
-      "start_datetime": "2025-12-31T20:40:00.000+09:00"
-    },
-    {
-      "id": "bd730583-01bc-41e4-9868-76b36406f4b4",
-      "activity": "walking",
-      "calories": 59.67040252685547,
-      "day": "2025-12-31",
-      "distance": 305.89054400013424,
-      "end_datetime": "2025-12-31T22:31:00.000+09:00",
-      "intensity": "moderate",
-      "label": null,
-      "source": "confirmed",
-      "start_datetime": "2025-12-31T22:14:00.000+09:00"
-    },
     {
       "id": "ec37041e-2feb-4d53-ae9f-b95668b17313",
       "activity": "walking",
