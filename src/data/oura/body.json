@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-04-02T14:48:57.663Z",
+  "fetched_at": "2026-04-02T18:44:44.260Z",
   "spo2": [
     {
       "id": "a68687c9-a764-4e36-84d8-ab28d02bce8b",
@@ -1234,14 +1234,14 @@
       "id": "bf20d127-0b7a-4d30-a463-6229747052ed",
       "day": "2026-04-01",
       "day_summary": "restored",
-      "recovery_high": 12600,
+      "recovery_high": 6300,
       "stress_high": 3600
     },
     {
       "id": "7caf16d3-7bc2-4ed4-b74f-b92322771be4",
       "day": "2026-04-02",
-      "day_summary": null,
-      "recovery_high": 0,
+      "day_summary": "restored",
+      "recovery_high": 8100,
       "stress_high": 0
     }
   ],

@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-04-02T14:48:57.663Z",
+  "fetched_at": "2026-04-02T18:44:44.260Z",
   "data": [
     {
       "id": "017a4f84-1b1c-49d4-baeb-a0c659fdb315",
@@ -130250,7 +130250,7 @@
         "meet_daily_targets": 25,
         "move_every_hour": 78,
         "recovery_time": 100,
-        "stay_active": 86,
+        "stay_active": 87,
         "training_frequency": 1,
         "training_volume": 40
       },
@@ -131711,10 +131711,10 @@
       },
       "meters_to_target": 1600,
       "non_wear_time": 16140,
-      "resting_time": 30360,
+      "resting_time": 31020,
       "score": 58,
       "sedentary_met_minutes": 5,
-      "sedentary_time": 28320,
+      "sedentary_time": 27660,
       "steps": 2959,
       "target_calories": 300,
       "target_meters": 6000,
