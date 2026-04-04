@@ -1,4 +1,69 @@
 {
-  "fetched_at": "2026-04-03T18:37:15.841Z",
-  "data": []
+  "fetched_at": "2026-04-04T01:25:35.960Z",
+  "data": [
+    {
+      "resource_state": 2,
+      "athlete": {
+        "id": 109496482,
+        "resource_state": 1
+      },
+      "name": "Afternoon Walk",
+      "distance": 4639.5,
+      "moving_time": 3511,
+      "elapsed_time": 3705,
+      "total_elevation_gain": 45,
+      "type": "Walk",
+      "sport_type": "Walk",
+      "device_name": "Apple Watch Ultra",
+      "id": 17967142107,
+      "start_date": "2026-04-03T20:07:52Z",
+      "start_date_local": "2026-04-03T16:07:52Z",
+      "timezone": "(GMT-05:00) America/New_York",
+      "utc_offset": -14400,
+      "location_city": null,
+      "location_state": null,
+      "location_country": null,
+      "achievement_count": 0,
+      "kudos_count": 0,
+      "comment_count": 0,
+      "athlete_count": 1,
+      "photo_count": 0,
+      "map": {
+        "id": "a17967142107",
+        "summary_polyline": "snalDzdtpNUdGM|@ShA[fAg@lAMRYCy@z@c@Ve@Rm@Jo@DeACu@D[?q@M]MqAs@a@O}Aw@o@SgAKqDAc@Ek@Ky@Wk@]]W}@aA][a@Wu@]m@Qq@Kw@Em@@m@DeATo@Ti@Zc@Z_@`@mA`BUT_@XiAl@Gx@KRm@`@m@Xw@b@G@]X]RQl@ALP~@\\bACB@?FKCJMQ[eAAg@@k@JYtAy@b@]b@Q`@YR]Za@BWjAq@h@c@Za@b@s@x@{@|@k@l@WZI|AUr@Ar@F`AP|@ZVLp@f@bAdAd@^n@\\x@X^Hn@DdD?|@Fr@Rd@PbAj@r@Vf@\\^Pj@NZD\\@jAC|@BbAMr@Wb@[NO|@qAj@kBZuALsA@e@Fe@@g@",
+        "resource_state": 2
+      },
+      "trainer": false,
+      "commute": false,
+      "manual": false,
+      "private": false,
+      "visibility": "everyone",
+      "flagged": false,
+      "gear_id": null,
+      "start_latlng": [
+        28.35,
+        -81.53
+      ],
+      "end_latlng": [
+        28.36,
+        -81.53
+      ],
+      "average_speed": 1.321,
+      "max_speed": 11.516,
+      "has_heartrate": true,
+      "average_heartrate": 100.1,
+      "max_heartrate": 124,
+      "heartrate_opt_out": false,
+      "display_hide_heartrate_option": true,
+      "elev_high": 37,
+      "elev_low": 0,
+      "upload_id": 19067414110,
+      "upload_id_str": "19067414110",
+      "external_id": "8DD10D1A-EFBE-4E99-B6F1-D1CFCFE54B25.fit",
+      "from_accepted_tag": false,
+      "pr_count": 0,
+      "total_photo_count": 0,
+      "has_kudoed": false
+    }
+  ]
 }
