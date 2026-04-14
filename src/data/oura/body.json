@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-04-14T15:07:50.335Z",
+  "fetched_at": "2026-04-14T19:01:27.106Z",
   "spo2": [
     {
       "id": "602a2ca8-0e19-4d7b-bbe4-b8feb85237c6",
@@ -603,6 +603,14 @@
       "day": "2026-04-12",
       "spo2_percentage": {
         "average": 96.358
+      }
+    },
+    {
+      "id": "da89a202-4a58-411f-80dc-054b776d2920",
+      "breathing_disturbance_index": 1,
+      "day": "2026-04-14",
+      "spo2_percentage": {
+        "average": 96.505
       }
     }
   ],
@@ -1236,372 +1244,458 @@
       "day_summary": "stressful",
       "recovery_high": 0,
       "stress_high": 16200
+    },
+    {
+      "id": "e01b348a-bafc-46fb-aadb-28805003c930",
+      "day": "2026-04-14",
+      "day_summary": null,
+      "recovery_high": 0,
+      "stress_high": 0
     }
   ],
   "cardiovascular_age": [
     {
       "id": "28d9504a-4e27-4d55-8afb-600f0d0630e7",
       "day": "2026-01-15",
+      "pulse_wave_velocity": 7.187774658203125,
       "vascular_age": 40
     },
     {
       "id": "42590a90-a288-4f36-b90a-db91897b9c33",
       "day": "2026-01-16",
+      "pulse_wave_velocity": 7.073569297790527,
       "vascular_age": 39
     },
     {
       "id": "c7eb86fd-0be6-4b38-8c68-2d7dce0f9c72",
       "day": "2026-01-17",
+      "pulse_wave_velocity": 6.98872709274292,
       "vascular_age": 38
     },
     {
       "id": "761ef324-3a5d-4e68-a28e-ec55f0b5dcee",
       "day": "2026-01-18",
+      "pulse_wave_velocity": 6.9888176918029785,
       "vascular_age": 38
     },
     {
       "id": "a2bc1599-2e34-42bc-b81d-750af9f56770",
       "day": "2026-01-19",
+      "pulse_wave_velocity": 6.8794779777526855,
       "vascular_age": 36
     },
     {
       "id": "242f558b-5cf2-4da9-875a-4ed463a1dead",
       "day": "2026-01-20",
+      "pulse_wave_velocity": 6.879883766174316,
       "vascular_age": 36
     },
     {
       "id": "00806aef-8f23-4b6b-9496-edfd8ef5922d",
       "day": "2026-01-21",
+      "pulse_wave_velocity": 7.228574752807617,
       "vascular_age": 41
     },
     {
       "id": "89131f04-60f2-40fb-bdcd-ac8926a108c0",
       "day": "2026-01-23",
+      "pulse_wave_velocity": 7.038308143615723,
       "vascular_age": 38
     },
     {
       "id": "27f1a76b-91e5-407d-b7d4-32be6895ce45",
       "day": "2026-01-25",
+      "pulse_wave_velocity": 7.08787202835083,
       "vascular_age": 39
     },
     {
       "id": "e057356c-b8d4-43e4-bf57-9541ea070f26",
       "day": "2026-01-26",
+      "pulse_wave_velocity": 7.17987585067749,
       "vascular_age": 40
     },
     {
       "id": "e01aa9bb-0d05-48aa-b82f-d723df12829f",
       "day": "2026-01-28",
+      "pulse_wave_velocity": 7.020866870880127,
       "vascular_age": 38
     },
     {
       "id": "1086d194-dd15-422b-bb9c-af0785338e78",
       "day": "2026-01-29",
+      "pulse_wave_velocity": 7.215377330780029,
       "vascular_age": 41
     },
     {
       "id": "f3227e42-6b42-42c1-b2da-edce55935203",
       "day": "2026-01-30",
+      "pulse_wave_velocity": 6.873135566711426,
       "vascular_age": 36
     },
     {
       "id": "7eaa7012-e901-4927-b5d9-65acac2d21eb",
       "day": "2026-01-31",
+      "pulse_wave_velocity": 7.018884658813477,
       "vascular_age": 38
     },
     {
       "id": "8fed0dd9-cd98-4291-b906-365f4d6161a7",
       "day": "2026-02-01",
+      "pulse_wave_velocity": 6.959784030914307,
       "vascular_age": 37
     },
     {
       "id": "e39d6901-7c18-48fe-94fb-760c0c8b10bf",
       "day": "2026-02-02",
+      "pulse_wave_velocity": 7.173985004425049,
       "vascular_age": 40
     },
     {
       "id": "1682d666-f00d-4a54-82d2-69d71f60a0fc",
       "day": "2026-02-03",
+      "pulse_wave_velocity": 7.008536338806152,
       "vascular_age": 38
     },
     {
       "id": "73c112d9-799d-48f8-85a7-7ca6fda81ab2",
       "day": "2026-02-05",
+      "pulse_wave_velocity": 7.005493640899658,
       "vascular_age": 38
     },
     {
       "id": "eb30635f-962e-42b3-80b4-690e11941725",
       "day": "2026-02-07",
+      "pulse_wave_velocity": 6.870669841766357,
       "vascular_age": 36
     },
     {
       "id": "126d6901-8583-4baa-bbfe-32838684f5db",
       "day": "2026-02-08",
+      "pulse_wave_velocity": 7.026287078857422,
       "vascular_age": 38
     },
     {
       "id": "34b5fc90-abe4-4a57-9dd5-969ec3a18429",
       "day": "2026-02-09",
+      "pulse_wave_velocity": 7.216245651245117,
       "vascular_age": 41
     },
     {
       "id": "5fd92f74-ef95-4c65-b489-cc76995884f7",
       "day": "2026-02-10",
+      "pulse_wave_velocity": 6.839510917663574,
       "vascular_age": 35
     },
     {
       "id": "b1b41f58-8d75-461f-8414-7c811758cac1",
       "day": "2026-02-11",
+      "pulse_wave_velocity": 6.98808479309082,
       "vascular_age": 38
     },
     {
       "id": "539bba4a-d023-466d-9d5c-b99dc1c0a6ff",
       "day": "2026-02-12",
+      "pulse_wave_velocity": 7.008491039276123,
       "vascular_age": 38
     },
     {
       "id": "982e4715-b990-4dfb-8832-2a9f669640f1",
       "day": "2026-02-13",
+      "pulse_wave_velocity": 6.958341121673584,
       "vascular_age": 37
     },
     {
       "id": "ab38bee3-5a95-40e4-b709-b05b57e619b8",
       "day": "2026-02-14",
+      "pulse_wave_velocity": 7.024592876434326,
       "vascular_age": 38
     },
     {
       "id": "d57718ae-8d8e-4a9c-a079-3bd490832a53",
       "day": "2026-02-15",
+      "pulse_wave_velocity": 7.03362512588501,
       "vascular_age": 38
     },
     {
       "id": "a992cf26-a709-481e-80d5-e2e49252f9c3",
       "day": "2026-02-16",
+      "pulse_wave_velocity": 7.22531795501709,
       "vascular_age": 41
     },
     {
       "id": "68473969-c4a6-49de-906f-646cbaad19fc",
       "day": "2026-02-17",
+      "pulse_wave_velocity": 7.095455169677734,
       "vascular_age": 39
     },
     {
       "id": "37c105f5-6eeb-4256-99d2-988c4c54f90c",
       "day": "2026-02-18",
+      "pulse_wave_velocity": 7.3874592781066895,
       "vascular_age": 43
     },
     {
       "id": "5c392925-1123-4273-b37a-0ab4c405fb59",
       "day": "2026-02-20",
+      "pulse_wave_velocity": 7.088876724243164,
       "vascular_age": 39
     },
     {
       "id": "8033926b-5ec4-4957-8d97-3477a5279477",
       "day": "2026-02-21",
+      "pulse_wave_velocity": 7.086042881011963,
       "vascular_age": 39
     },
     {
       "id": "2d42edfd-c30d-4314-8a5f-eb1263e5421b",
       "day": "2026-02-22",
+      "pulse_wave_velocity": 7.157634735107422,
       "vascular_age": 40
     },
     {
       "id": "8b538f3d-407d-4d2e-85c3-abacdb40aae1",
       "day": "2026-02-23",
+      "pulse_wave_velocity": 7.149814128875732,
       "vascular_age": 40
     },
     {
       "id": "33d5e31d-8d0c-475f-a4c6-57c9e354aedc",
       "day": "2026-02-24",
+      "pulse_wave_velocity": 7.27236270904541,
       "vascular_age": 42
     },
     {
       "id": "b4ac8cf9-73fb-42c7-96d8-5eabe4766068",
       "day": "2026-02-25",
+      "pulse_wave_velocity": 7.078631401062012,
       "vascular_age": 39
     },
     {
       "id": "10d97577-5e1a-42b7-90d5-910facf8a8cb",
       "day": "2026-02-27",
+      "pulse_wave_velocity": 7.034335613250732,
       "vascular_age": 38
     },
     {
       "id": "77424dff-e139-41d3-9906-7186fc29557c",
       "day": "2026-02-28",
+      "pulse_wave_velocity": 7.042203426361084,
       "vascular_age": 38
     },
     {
       "id": "32e2ae42-4c5a-435c-b670-4f95467343c0",
       "day": "2026-03-01",
+      "pulse_wave_velocity": 7.019168853759766,
       "vascular_age": 38
     },
     {
       "id": "d89c669b-6c64-4f94-8013-a4ae77ed03f6",
       "day": "2026-03-02",
+      "pulse_wave_velocity": 7.067358493804932,
       "vascular_age": 39
     },
     {
       "id": "ebbc1129-a516-4952-bfe0-b59ccbd36013",
       "day": "2026-03-03",
+      "pulse_wave_velocity": 7.1326823234558105,
       "vascular_age": 40
     },
     {
       "id": "8f65a79f-2436-4749-8d72-c5cbf474e30b",
       "day": "2026-03-04",
+      "pulse_wave_velocity": 7.064792156219482,
       "vascular_age": 39
     },
     {
       "id": "88621d2f-3c4b-4b63-91db-a7bc75914820",
       "day": "2026-03-05",
+      "pulse_wave_velocity": 6.931636333465576,
       "vascular_age": 37
     },
     {
       "id": "d51fc719-e814-427b-b6b7-6d405d62de16",
       "day": "2026-03-06",
+      "pulse_wave_velocity": 7.144532680511475,
       "vascular_age": 40
     },
     {
       "id": "32a47efa-98cf-48e0-86b8-775cd2fe3197",
       "day": "2026-03-07",
+      "pulse_wave_velocity": 7.057709217071533,
       "vascular_age": 39
     },
     {
       "id": "cbf8ea88-fb4d-41e8-af7e-0c53cb635171",
       "day": "2026-03-08",
+      "pulse_wave_velocity": 7.185310363769531,
       "vascular_age": 40
     },
     {
       "id": "4d3d652f-8eda-4a0a-9288-ef9e64c219c7",
       "day": "2026-03-09",
+      "pulse_wave_velocity": 7.264641761779785,
       "vascular_age": 42
     },
     {
       "id": "16a77c2a-ac1a-4d19-b8cf-e2d1a36f2b28",
       "day": "2026-03-12",
+      "pulse_wave_velocity": 7.041952133178711,
       "vascular_age": 38
     },
     {
       "id": "a2a80c44-cee5-4d77-a4d8-8781dc429d84",
       "day": "2026-03-13",
+      "pulse_wave_velocity": 6.957959175109863,
       "vascular_age": 37
     },
     {
       "id": "8c98a15f-5992-4e4a-91fa-efaf7e96f6da",
       "day": "2026-03-14",
+      "pulse_wave_velocity": 7.292967796325684,
       "vascular_age": 42
     },
     {
       "id": "72ef97f1-d089-4bcb-8f93-60206f5536a5",
       "day": "2026-03-15",
+      "pulse_wave_velocity": 6.992882251739502,
       "vascular_age": 38
     },
     {
       "id": "bca4318a-0e7f-4a99-9944-6b74a879dfba",
       "day": "2026-03-16",
+      "pulse_wave_velocity": 7.113625526428223,
       "vascular_age": 39
     },
     {
       "id": "6f96cd9c-d021-4ccb-b82e-46c684506576",
       "day": "2026-03-17",
+      "pulse_wave_velocity": 7.172295093536377,
       "vascular_age": 40
     },
     {
       "id": "e3ade9b3-ab46-486a-97ac-1a29af5e47cd",
       "day": "2026-03-18",
+      "pulse_wave_velocity": 7.186110973358154,
       "vascular_age": 40
     },
     {
       "id": "108892c6-9424-4c22-a8e0-4f9376f8cfe3",
       "day": "2026-03-19",
+      "pulse_wave_velocity": 7.055315971374512,
       "vascular_age": 38
     },
     {
       "id": "7c91d52a-0cb2-42f8-a422-c76731911bc3",
       "day": "2026-03-20",
+      "pulse_wave_velocity": 7.120110988616943,
       "vascular_age": 39
     },
     {
       "id": "c1b39d7e-bc86-4b1e-815d-d17c996806af",
       "day": "2026-03-21",
+      "pulse_wave_velocity": 7.117336750030518,
       "vascular_age": 39
     },
     {
       "id": "4484fa52-d2d7-4ee2-852b-2ffb6b15c7d5",
       "day": "2026-03-22",
+      "pulse_wave_velocity": 7.033248424530029,
       "vascular_age": 38
     },
     {
       "id": "f67a87ee-8352-4e0c-97ff-8ff9e36fb212",
       "day": "2026-03-23",
+      "pulse_wave_velocity": 7.636023044586182,
       "vascular_age": 47
     },
     {
       "id": "a1f5b2fc-103a-4fd0-8eb6-2f4ba2cf331e",
       "day": "2026-03-24",
+      "pulse_wave_velocity": 6.876306533813477,
       "vascular_age": 36
     },
     {
       "id": "a8bf9392-2c31-4210-8eeb-c9f6b25c58a2",
       "day": "2026-03-26",
+      "pulse_wave_velocity": 6.984591007232666,
       "vascular_age": 37
     },
     {
       "id": "9d53b795-ae00-4f06-9e8e-1693e9d07703",
       "day": "2026-03-28",
+      "pulse_wave_velocity": 7.173424243927002,
       "vascular_age": 40
     },
     {
       "id": "bab32649-c3d1-440e-8d1f-08a0d8058aa2",
       "day": "2026-03-29",
+      "pulse_wave_velocity": 7.09064245223999,
       "vascular_age": 39
     },
     {
       "id": "ffcb14ee-cd05-4685-9ed0-5dca7f5af976",
       "day": "2026-03-30",
+      "pulse_wave_velocity": 7.140920162200928,
       "vascular_age": 40
     },
     {
       "id": "e86ed192-8387-4c61-961d-0fd0a33088d2",
       "day": "2026-04-01",
+      "pulse_wave_velocity": 7.385023593902588,
       "vascular_age": 43
     },
     {
       "id": "0f87e5f5-7c45-4c7b-ba44-1b8b6ace36b8",
       "day": "2026-04-02",
+      "pulse_wave_velocity": 7.06622314453125,
       "vascular_age": 39
     },
     {
       "id": "17337ed0-1519-4722-aaf5-621171b065e5",
       "day": "2026-04-03",
+      "pulse_wave_velocity": 7.093957901000977,
       "vascular_age": 39
     },
     {
       "id": "e50bd49f-bf69-4ae0-9487-47c720574378",
       "day": "2026-04-04",
+      "pulse_wave_velocity": 6.898859024047852,
       "vascular_age": 36
     },
     {
       "id": "45217be7-3b32-4138-86cb-5dae976b47c1",
       "day": "2026-04-05",
+      "pulse_wave_velocity": 7.0420451164245605,
       "vascular_age": 38
     },
     {
       "id": "3024263a-ce28-4c17-b788-e4006f092672",
       "day": "2026-04-06",
+      "pulse_wave_velocity": 6.84076452255249,
       "vascular_age": 35
     },
     {
       "id": "5dca9bce-f675-4fac-85d8-d349574f54d1",
       "day": "2026-04-09",
+      "pulse_wave_velocity": 7.0105414390563965,
       "vascular_age": 38
     },
     {
       "id": "b1c7c75d-884a-47ed-8840-e011c453f6c2",
       "day": "2026-04-10",
+      "pulse_wave_velocity": 7.077311992645264,
       "vascular_age": 39
     },
     {
       "id": "e0527cef-80aa-454e-a5b9-ee1f2010e028",
       "day": "2026-04-12",
+      "pulse_wave_velocity": 6.931065082550049,
+      "vascular_age": 37
+    },
+    {
+      "id": "2a59135b-0b5b-4615-b3de-1e8b7f1bf259",
+      "day": "2026-04-14",
+      "pulse_wave_velocity": 6.935417175292969,
       "vascular_age": 37
     }
   ],
