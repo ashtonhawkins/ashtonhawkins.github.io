@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-04-15T01:48:10.211Z",
+  "fetched_at": "2026-04-15T05:15:22.692Z",
   "daily": [
     {
       "id": "9a3f7cb4-8737-4c09-b9c6-68128cb1d616",
@@ -24499,6 +24499,86 @@
       "type": "long_sleep",
       "ring_id": null,
       "app_sleep_phase_5_min": "44222111112221212233222333332222122242222222444444442222222233334444444444"
+    },
+    {
+      "id": "822c5905-d046-4faa-a023-ccb4602a3374",
+      "average_breath": null,
+      "average_heart_rate": 64,
+      "average_hrv": 91,
+      "awake_time": 1261,
+      "bedtime_end": "2026-04-14T14:28:03.000-07:00",
+      "bedtime_start": "2026-04-14T13:35:32.000-07:00",
+      "day": "2026-04-14",
+      "deep_sleep_duration": 150,
+      "efficiency": 60,
+      "heart_rate": {
+        "interval": 300,
+        "items": [
+          null,
+          64,
+          67,
+          67,
+          62,
+          62,
+          62,
+          null,
+          null,
+          null,
+          null
+        ],
+        "timestamp": "2026-04-14T13:35:32.000-07:00"
+      },
+      "hrv": {
+        "interval": 300,
+        "items": [
+          null,
+          89,
+          96,
+          77,
+          100,
+          97,
+          89,
+          null,
+          null,
+          null,
+          null
+        ],
+        "timestamp": "2026-04-14T13:35:32.000-07:00"
+      },
+      "latency": 270,
+      "light_sleep_duration": 1740,
+      "low_battery_alert": false,
+      "lowest_heart_rate": 62,
+      "movement_30_sec": "1121111111111111111111111111111111111111111111111111111111111111111111211232222211123111111212221213111211",
+      "period": 2,
+      "readiness": {
+        "contributors": {
+          "activity_balance": 76,
+          "body_temperature": null,
+          "hrv_balance": 90,
+          "previous_day_activity": 70,
+          "previous_night": 1,
+          "recovery_index": 24,
+          "resting_heart_rate": 69,
+          "sleep_balance": 40
+        },
+        "score": 56,
+        "temperature_deviation": null,
+        "temperature_trend_deviation": null
+      },
+      "readiness_score_delta": null,
+      "rem_sleep_duration": 0,
+      "restless_periods": 2,
+      "sleep_algorithm_version": "v2",
+      "sleep_analysis_reason": "foreground_sleep_analysis",
+      "sleep_phase_30_sec": "444444444222222222222222222222222222222222222222222222222211221112222224424444444444444444444444444444444",
+      "sleep_phase_5_min": "42222222444",
+      "sleep_score_delta": null,
+      "time_in_bed": 3151,
+      "total_sleep_duration": 1890,
+      "type": "sleep",
+      "ring_id": null,
+      "app_sleep_phase_5_min": "42222224444"
     }
   ]
 }
