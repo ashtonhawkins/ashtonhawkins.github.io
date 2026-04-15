@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-04-15T15:00:33.739Z",
+  "fetched_at": "2026-04-15T19:03:34.325Z",
   "readiness": [
     {
       "id": "dc92caa5-0c95-403a-9518-5a8abcf444f0",
@@ -1501,6 +1501,25 @@
       "temperature_deviation": -0.28,
       "temperature_trend_deviation": -0.15,
       "timestamp": "2026-04-14T00:00:00.000+00:00"
+    },
+    {
+      "id": "23829952-49ce-4bc8-850f-e65731e552fe",
+      "contributors": {
+        "activity_balance": 69,
+        "body_temperature": 100,
+        "hrv_balance": 85,
+        "previous_day_activity": 85,
+        "previous_night": 70,
+        "recovery_index": 74,
+        "resting_heart_rate": 100,
+        "sleep_balance": 75,
+        "sleep_regularity": 85
+      },
+      "day": "2026-04-15",
+      "score": 81,
+      "temperature_deviation": 0.01,
+      "temperature_trend_deviation": -0.01,
+      "timestamp": "2026-04-15T00:00:00.000+00:00"
     }
   ],
   "resilience": [
@@ -2291,6 +2310,16 @@
         "sleep_recovery": 39.5,
         "daytime_recovery": 37.3,
         "stress": 60.5
+      },
+      "level": "adequate"
+    },
+    {
+      "id": "3f7f528c-b1af-42c8-9ce2-d057decc85a7",
+      "day": "2026-04-15",
+      "contributors": {
+        "sleep_recovery": 44.1,
+        "daytime_recovery": 41.6,
+        "stress": 57.5
       },
       "level": "adequate"
     }
