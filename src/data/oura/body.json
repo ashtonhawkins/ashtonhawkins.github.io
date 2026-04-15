@@ -1,12 +1,6 @@
 {
-  "fetched_at": "2026-04-14T19:01:27.106Z",
+  "fetched_at": "2026-04-15T01:48:10.211Z",
   "spo2": [
-    {
-      "id": "602a2ca8-0e19-4d7b-bbe4-b8feb85237c6",
-      "breathing_disturbance_index": 3,
-      "day": "2026-01-14",
-      "spo2_percentage": null
-    },
     {
       "id": "0b59b7dc-1cfc-4d48-949e-e714a87de5c7",
       "breathing_disturbance_index": 8,
@@ -615,13 +609,6 @@
     }
   ],
   "stress": [
-    {
-      "id": "aeed3023-5324-42d1-ab65-ac5d8629d5fb",
-      "day": "2026-01-14",
-      "day_summary": "normal",
-      "recovery_high": 5400,
-      "stress_high": 900
-    },
     {
       "id": "909467a4-f870-41a8-97ea-4693a5db9a13",
       "day": "2026-01-15",
@@ -1243,14 +1230,14 @@
       "day": "2026-04-13",
       "day_summary": "stressful",
       "recovery_high": 0,
-      "stress_high": 16200
+      "stress_high": 17100
     },
     {
       "id": "e01b348a-bafc-46fb-aadb-28805003c930",
       "day": "2026-04-14",
-      "day_summary": null,
-      "recovery_high": 0,
-      "stress_high": 0
+      "day_summary": "restored",
+      "recovery_high": 7200,
+      "stress_high": 900
     }
   ],
   "cardiovascular_age": [
