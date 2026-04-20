@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-04-20T05:31:36.948Z",
+  "fetched_at": "2026-04-20T07:54:16.700Z",
   "spo2": [
     {
       "id": "beda275d-0102-4e31-a6e1-430315136bfe",
@@ -1225,7 +1225,7 @@
       "day": "2026-04-19",
       "day_summary": "normal",
       "recovery_high": 3600,
-      "stress_high": 1800
+      "stress_high": 2700
     }
   ],
   "cardiovascular_age": [
