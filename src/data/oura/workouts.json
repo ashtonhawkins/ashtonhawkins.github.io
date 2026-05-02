@@ -1,30 +1,6 @@
 {
-  "fetched_at": "2026-05-01T19:00:13.427Z",
+  "fetched_at": "2026-05-02T02:01:06.819Z",
   "workouts": [
-    {
-      "id": "4ac76998-5264-404b-bb4f-c05302d49abf",
-      "activity": "walking",
-      "calories": 147.779052734375,
-      "day": "2026-01-31",
-      "distance": 2549.232327809821,
-      "end_datetime": "2026-01-31T14:09:00.000-05:00",
-      "intensity": "moderate",
-      "label": null,
-      "source": "confirmed",
-      "start_datetime": "2026-01-31T13:35:00.000-05:00"
-    },
-    {
-      "id": "0f8fe76c-21ff-45d9-aea4-15f8cde6c684",
-      "activity": "walking",
-      "calories": 98.43852233886719,
-      "day": "2026-01-31",
-      "distance": 1646.691542880012,
-      "end_datetime": "2026-01-31T14:46:00.000-05:00",
-      "intensity": "moderate",
-      "label": null,
-      "source": "confirmed",
-      "start_datetime": "2026-01-31T14:21:00.000-05:00"
-    },
     {
       "id": "23d38a93-3543-4e4c-aeac-661354f8fbc5",
       "activity": "walking",
