@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-05-05T19:07:22.712Z",
+  "fetched_at": "2026-05-06T02:04:35.624Z",
   "spo2": [
     {
       "id": "46d8c363-7bd9-47b8-9a2e-0c0176b05b5b",
@@ -601,13 +601,6 @@
     }
   ],
   "stress": [
-    {
-      "id": "aab47dfd-35f7-456a-80ba-b5abd304707d",
-      "day": "2026-02-04",
-      "day_summary": "normal",
-      "recovery_high": 7200,
-      "stress_high": 3600
-    },
     {
       "id": "36f13950-82a4-4224-94ef-db5babbad7fa",
       "day": "2026-02-05",
@@ -1234,9 +1227,9 @@
     {
       "id": "5db81219-036d-49ec-8acc-11e28e16672c",
       "day": "2026-05-05",
-      "day_summary": null,
+      "day_summary": "stressful",
       "recovery_high": 900,
-      "stress_high": 7200
+      "stress_high": 14400
     }
   ],
   "cardiovascular_age": [
