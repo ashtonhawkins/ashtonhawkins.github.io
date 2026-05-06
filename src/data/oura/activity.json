@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-05-06T15:58:31.992Z",
+  "fetched_at": "2026-05-06T19:25:35.354Z",
   "data": [
     {
       "id": "71139295-020a-4018-9097-9a67cf85cc5b",
@@ -131727,12 +131727,12 @@
       "average_met_minutes": 1.375,
       "class_5_min": "111111111112333322223222322222222223222323333330003344223222222222222222223433333002222222223322222211112222222222222222222221111122333433222222223334322111222222222222222222222322222221121111121222222332222222222222222222223333333332333332333300003221111111111111111111111111111111111111",
       "contributors": {
-        "meet_daily_targets": 25,
+        "meet_daily_targets": 60,
         "move_every_hour": 60,
-        "recovery_time": 97,
+        "recovery_time": 100,
         "stay_active": 46,
-        "training_frequency": 71,
-        "training_volume": 80
+        "training_frequency": 96,
+        "training_volume": 86
       },
       "day": "2026-05-05",
       "equivalent_walking_distance": 5616,
@@ -133189,15 +133189,15 @@
         ],
         "timestamp": "2026-05-05T04:00:00.000-07:00"
       },
-      "meters_to_target": 3200,
+      "meters_to_target": -200,
       "non_wear_time": 2940,
       "resting_time": 21720,
-      "score": 63,
+      "score": 75,
       "sedentary_met_minutes": 4,
       "sedentary_time": 47280,
       "steps": 7102,
-      "target_calories": 500,
-      "target_meters": 9000,
+      "target_calories": 300,
+      "target_meters": 6000,
       "timestamp": "2026-05-05T04:00:00.000-07:00",
       "total_calories": 2612
     }
