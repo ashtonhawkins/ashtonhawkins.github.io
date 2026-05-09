@@ -1,11 +1,11 @@
 {
-  "fetched_at": "2026-05-08T19:06:24.811Z",
+  "fetched_at": "2026-05-09T02:07:47.801Z",
   "data": [
     {
       "id": "54afc472-644b-4163-b648-e6ca0794c60f",
       "color": "stealth_black",
       "design": null,
-      "firmware_version": "2.10.4",
+      "firmware_version": "2.11.0",
       "hardware_type": "gen4",
       "set_up_at": "2025-09-27T00:00:00.000Z",
       "size": 11
