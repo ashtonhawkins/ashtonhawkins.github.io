@@ -1,25 +1,6 @@
 {
-  "fetched_at": "2026-05-15T19:19:50.766Z",
+  "fetched_at": "2026-05-16T02:10:27.681Z",
   "readiness": [
-    {
-      "id": "ba690916-2af2-474e-bb56-fd241634eb9c",
-      "contributors": {
-        "activity_balance": 98,
-        "body_temperature": 96,
-        "hrv_balance": 84,
-        "previous_day_activity": 86,
-        "previous_night": 65,
-        "recovery_index": 53,
-        "resting_heart_rate": 46,
-        "sleep_balance": 72,
-        "sleep_regularity": 70
-      },
-      "day": "2026-02-14",
-      "score": 71,
-      "temperature_deviation": 0.11,
-      "temperature_trend_deviation": 0.05,
-      "timestamp": "2026-02-14T00:00:00.000+00:00"
-    },
     {
       "id": "3cecfb44-0ffd-4895-a45a-f47d355fc4b6",
       "contributors": {
@@ -1509,30 +1490,20 @@
         "body_temperature": 92,
         "hrv_balance": 88,
         "previous_day_activity": 81,
-        "previous_night": 43,
-        "recovery_index": 50,
-        "resting_heart_rate": 100,
-        "sleep_balance": 50,
+        "previous_night": 65,
+        "recovery_index": 38,
+        "resting_heart_rate": 82,
+        "sleep_balance": 58,
         "sleep_regularity": 73
       },
       "day": "2026-05-15",
-      "score": 72,
+      "score": 73,
       "temperature_deviation": 0.16,
       "temperature_trend_deviation": -0.05,
       "timestamp": "2026-05-15T00:00:00.000+00:00"
     }
   ],
   "resilience": [
-    {
-      "id": "6eac783e-5a55-45f7-b68c-57606b9003be",
-      "day": "2026-02-14",
-      "contributors": {
-        "sleep_recovery": 51.7,
-        "daytime_recovery": 46.8,
-        "stress": 58
-      },
-      "level": "solid"
-    },
     {
       "id": "2163ed5f-a07c-45e6-923f-8b89867c5e6c",
       "day": "2026-02-15",
@@ -2317,8 +2288,8 @@
       "id": "d17d7a83-9221-4880-959d-f147becb6654",
       "day": "2026-05-15",
       "contributors": {
-        "sleep_recovery": 47.3,
-        "daytime_recovery": 49.6,
+        "sleep_recovery": 46.9,
+        "daytime_recovery": 49.3,
         "stress": 38.4
       },
       "level": "adequate"
