@@ -1,25 +1,6 @@
 {
-  "fetched_at": "2026-05-18T19:27:37.225Z",
+  "fetched_at": "2026-05-19T02:34:15.061Z",
   "readiness": [
-    {
-      "id": "fe30354d-95cf-40ad-b458-38f1a02c90f1",
-      "contributors": {
-        "activity_balance": 89,
-        "body_temperature": 91,
-        "hrv_balance": 74,
-        "previous_day_activity": 86,
-        "previous_night": 85,
-        "recovery_index": 39,
-        "resting_heart_rate": 66,
-        "sleep_balance": 72,
-        "sleep_regularity": 68
-      },
-      "day": "2026-02-17",
-      "score": 73,
-      "temperature_deviation": 0.17,
-      "temperature_trend_deviation": 0.18,
-      "timestamp": "2026-02-17T00:00:00.000+00:00"
-    },
     {
       "id": "5acf6986-2bc0-4e2c-9701-0e760cb9f395",
       "contributors": {
@@ -1501,19 +1482,28 @@
       "temperature_deviation": -0.13,
       "temperature_trend_deviation": 0.2,
       "timestamp": "2026-05-17T00:00:00.000+00:00"
+    },
+    {
+      "id": "2dc4c83f-3528-4b39-a865-09e07bce0ba3",
+      "contributors": {
+        "activity_balance": 96,
+        "body_temperature": 100,
+        "hrv_balance": 74,
+        "previous_day_activity": 81,
+        "previous_night": 48,
+        "recovery_index": 28,
+        "resting_heart_rate": 98,
+        "sleep_balance": 67,
+        "sleep_regularity": 75
+      },
+      "day": "2026-05-18",
+      "score": 71,
+      "temperature_deviation": -0.1,
+      "temperature_trend_deviation": 0.08,
+      "timestamp": "2026-05-18T00:00:00.000+00:00"
     }
   ],
   "resilience": [
-    {
-      "id": "0bf322ad-4c98-4e50-bd79-bf4ed936eb73",
-      "day": "2026-02-17",
-      "contributors": {
-        "sleep_recovery": 49,
-        "daytime_recovery": 43.7,
-        "stress": 62.4
-      },
-      "level": "solid"
-    },
     {
       "id": "ef2b8856-2303-4de3-8748-b531d8d2a998",
       "day": "2026-02-18",
@@ -2291,6 +2281,16 @@
         "sleep_recovery": 50.3,
         "daytime_recovery": 51.6,
         "stress": 39.6
+      },
+      "level": "solid"
+    },
+    {
+      "id": "64bed9d0-c18d-4cc8-a224-b7ebcaba0843",
+      "day": "2026-05-18",
+      "contributors": {
+        "sleep_recovery": 49.1,
+        "daytime_recovery": 50.3,
+        "stress": 41.4
       },
       "level": "solid"
     }
