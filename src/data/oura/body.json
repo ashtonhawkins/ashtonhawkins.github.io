@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-05-26T17:22:24.114Z",
+  "fetched_at": "2026-05-26T19:58:47.414Z",
   "spo2": [
     {
       "id": "6486ec42-dc99-4d62-9bd9-d0978c2ac3d6",
@@ -1235,13 +1235,13 @@
       "day": "2026-05-25",
       "day_summary": "stressful",
       "recovery_high": 9000,
-      "stress_high": 10800
+      "stress_high": 11700
     },
     {
       "id": "7d1f065e-af8f-43aa-a8fb-94951c4439d0",
       "day": "2026-05-26",
-      "day_summary": null,
-      "recovery_high": 0,
+      "day_summary": "restored",
+      "recovery_high": 13500,
       "stress_high": 0
     }
   ],
