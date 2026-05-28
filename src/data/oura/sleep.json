@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-05-28T02:27:15.981Z",
+  "fetched_at": "2026-05-28T06:41:56.508Z",
   "daily": [
     {
       "id": "38a846c3-f65e-40f3-a0fe-0547ca41ef50",
@@ -1204,16 +1204,16 @@
     {
       "id": "16184144-daf5-4f5e-b146-77f8a70e8ee5",
       "contributors": {
-        "deep_sleep": 27,
-        "efficiency": 90,
+        "deep_sleep": 39,
+        "efficiency": 83,
         "latency": 99,
         "rem_sleep": 33,
-        "restfulness": 82,
-        "timing": 53,
-        "total_sleep": 45
+        "restfulness": 85,
+        "timing": 60,
+        "total_sleep": 60
       },
       "day": "2026-05-27",
-      "score": 58,
+      "score": 65,
       "timestamp": "2026-05-27T00:00:00.000+00:00"
     }
   ],
@@ -23469,6 +23469,98 @@
       "type": "long_sleep",
       "ring_id": null,
       "app_sleep_phase_5_min": "444222222221112221124333342422222222222222222333423222222222422222"
+    },
+    {
+      "id": "79b242b3-4ad8-4833-a4e5-f837fb77d801",
+      "average_breath": null,
+      "average_heart_rate": 63.625,
+      "average_hrv": 114,
+      "awake_time": 1231,
+      "bedtime_end": "2026-05-27T17:22:02.000-07:00",
+      "bedtime_start": "2026-05-27T16:01:31.000-07:00",
+      "day": "2026-05-27",
+      "deep_sleep_duration": 600,
+      "efficiency": 75,
+      "heart_rate": {
+        "interval": 300,
+        "items": [
+          null,
+          null,
+          66,
+          72,
+          65,
+          61,
+          64,
+          63,
+          61,
+          61,
+          63,
+          64,
+          62,
+          61,
+          null,
+          null,
+          null
+        ],
+        "timestamp": "2026-05-27T16:01:31.000-07:00"
+      },
+      "hrv": {
+        "interval": 300,
+        "items": [
+          null,
+          null,
+          102,
+          58,
+          109,
+          130,
+          107,
+          111,
+          118,
+          129,
+          98,
+          96,
+          126,
+          137,
+          null,
+          null,
+          null
+        ],
+        "timestamp": "2026-05-27T16:01:31.000-07:00"
+      },
+      "latency": 480,
+      "light_sleep_duration": 3000,
+      "low_battery_alert": false,
+      "lowest_heart_rate": 61,
+      "movement_30_sec": "432232123211111111111111111111121111111111111111111111111111111111111111111111111111111111111111111111111111111122111111111111111111111131112223223112222212122211",
+      "period": 1,
+      "readiness": {
+        "contributors": {
+          "activity_balance": 53,
+          "body_temperature": null,
+          "hrv_balance": 98,
+          "previous_day_activity": 1,
+          "previous_night": 1,
+          "recovery_index": 29,
+          "resting_heart_rate": 74,
+          "sleep_balance": 60
+        },
+        "score": 68,
+        "temperature_deviation": null,
+        "temperature_trend_deviation": -0.23
+      },
+      "readiness_score_delta": 6,
+      "rem_sleep_duration": 0,
+      "restless_periods": 9,
+      "sleep_algorithm_version": "v2",
+      "sleep_analysis_reason": "foreground_sleep_analysis",
+      "sleep_phase_30_sec": "44444444444444442222222222222224422222222222222222222222222222222112222222222222222222222221111111111221122211111142222222222222222222224422244444444444444444444",
+      "sleep_phase_5_min": "44222222221122244",
+      "sleep_score_delta": 7,
+      "time_in_bed": 4831,
+      "total_sleep_duration": 3600,
+      "type": "sleep",
+      "ring_id": null,
+      "app_sleep_phase_5_min": "4422222221122244"
     }
   ]
 }
