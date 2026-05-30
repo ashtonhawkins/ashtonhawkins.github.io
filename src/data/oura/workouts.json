@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-05-29T20:10:20.464Z",
+  "fetched_at": "2026-05-30T02:26:18.823Z",
   "workouts": [
     {
       "id": "3dcce49c-bb67-42c0-87d6-754b79d842d3",
@@ -84,6 +84,18 @@
       "label": null,
       "source": "confirmed",
       "start_datetime": "2026-05-27T18:55:00.000-07:00"
+    },
+    {
+      "id": "f91ab416-9363-476f-b235-82e2a2beb95c",
+      "activity": "cycling",
+      "calories": 563.0653076171875,
+      "day": "2026-05-28",
+      "distance": 9734.763261634447,
+      "end_datetime": "2026-05-28T19:18:00.000-07:00",
+      "intensity": "moderate",
+      "label": null,
+      "source": "confirmed",
+      "start_datetime": "2026-05-28T18:20:00.000-07:00"
     }
   ],
   "sessions": []
