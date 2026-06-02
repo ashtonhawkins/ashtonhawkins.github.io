@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-06-02T16:05:51.138Z",
+  "fetched_at": "2026-06-02T18:00:40.163Z",
   "readiness": [
     {
       "id": "66594cb3-af79-436a-a152-e3543bd58b8d",
@@ -2368,6 +2368,16 @@
         "sleep_recovery": 63,
         "daytime_recovery": 60.6,
         "stress": 39.7
+      },
+      "level": "strong"
+    },
+    {
+      "id": "b69c866f-04cb-4e1a-b08b-67294e7fb06f",
+      "day": "2026-06-02",
+      "contributors": {
+        "sleep_recovery": 62.2,
+        "daytime_recovery": 59.5,
+        "stress": 41.9
       },
       "level": "strong"
     }
