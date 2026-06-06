@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-06-06T13:13:06.713Z",
+  "fetched_at": "2026-06-06T15:07:25.083Z",
   "spo2": [
     {
       "id": "2722296e-2f39-4aec-94ad-5382fecdca50",
@@ -580,6 +580,12 @@
       "spo2_percentage": {
         "average": 98.517
       }
+    },
+    {
+      "id": "1799aad2-ebff-461b-a1ad-b5fd488dcffc",
+      "breathing_disturbance_index": 1,
+      "day": "2026-06-06",
+      "spo2_percentage": null
     }
   ],
   "stress": [
@@ -1210,7 +1216,7 @@
       "id": "1822097e-482a-446f-86a2-d7c67edc7fa6",
       "day": "2026-06-05",
       "day_summary": "stressful",
-      "recovery_high": 4500,
+      "recovery_high": 5400,
       "stress_high": 10800
     },
     {
