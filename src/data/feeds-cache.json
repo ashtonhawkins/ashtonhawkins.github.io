@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-06-09T14:30:22.431Z",
+  "updatedAt": "2026-06-09T16:26:57.460Z",
   "watching": {
-    "lastUpdated": "2026-06-09T14:30:22.431Z",
+    "lastUpdated": "2026-06-09T16:26:57.460Z",
     "recentItems": [
       {
         "title": "The Omega Man",
@@ -34,20 +34,8 @@
     ],
     "trakt": [],
     "goodreads": [],
-    "lastfm": [
-      {
-        "name": "Naraka",
-        "title": "Naraka",
-        "artist": "Boards of Canada"
-      }
-    ],
-    "spotify": [
-      {
-        "name": "Naraka",
-        "title": "Naraka",
-        "artist": "Boards of Canada"
-      }
-    ],
+    "lastfm": [],
+    "spotify": [],
     "x": []
   }
 }
