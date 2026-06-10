@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-06-10T14:57:06.870Z",
+  "fetched_at": "2026-06-10T16:54:32.483Z",
   "spo2": [
     {
       "id": "ddab7fb0-2797-47d9-88a5-72aef30cb716",
@@ -579,6 +579,14 @@
       "day": "2026-06-08",
       "spo2_percentage": {
         "average": 96.133
+      }
+    },
+    {
+      "id": "ec40e500-1180-4b39-9f77-f098d06f83a8",
+      "breathing_disturbance_index": 0,
+      "day": "2026-06-10",
+      "spo2_percentage": {
+        "average": 96.035
       }
     }
   ],
