@@ -1,14 +1,6 @@
 {
-  "fetched_at": "2026-06-21T19:18:20.902Z",
+  "fetched_at": "2026-06-22T02:56:29.502Z",
   "spo2": [
-    {
-      "id": "6d133089-32ff-4859-9e04-9a9963cb400f",
-      "breathing_disturbance_index": 1,
-      "day": "2026-03-23",
-      "spo2_percentage": {
-        "average": 97.03
-      }
-    },
     {
       "id": "e41e94a9-b949-4aa6-8921-be815b21454a",
       "breathing_disturbance_index": 0,
@@ -558,16 +550,15 @@
       "spo2_percentage": {
         "average": 95.464
       }
+    },
+    {
+      "id": "6b5555a5-2f74-4cc3-9e08-c5e0e24c15d0",
+      "breathing_disturbance_index": 0,
+      "day": "2026-06-21",
+      "spo2_percentage": null
     }
   ],
   "stress": [
-    {
-      "id": "5a3385f3-e8a4-447e-984b-dbd072a4e2d0",
-      "day": "2026-03-23",
-      "day_summary": "normal",
-      "recovery_high": 1800,
-      "stress_high": 900
-    },
     {
       "id": "d40fc6c1-5bec-424f-8466-55998a5388e2",
       "day": "2026-03-24",
@@ -1188,24 +1179,18 @@
       "id": "d101c505-05b6-4c3a-a545-aaa193888beb",
       "day": "2026-06-20",
       "day_summary": "restored",
-      "recovery_high": 27000,
+      "recovery_high": 10800,
       "stress_high": 0
     },
     {
       "id": "f1a6f421-ea52-4063-baee-7940957544b0",
       "day": "2026-06-21",
-      "day_summary": "restored",
-      "recovery_high": 16200,
-      "stress_high": 0
+      "day_summary": null,
+      "recovery_high": 1800,
+      "stress_high": 900
     }
   ],
   "cardiovascular_age": [
-    {
-      "id": "f67a87ee-8352-4e0c-97ff-8ff9e36fb212",
-      "day": "2026-03-23",
-      "pulse_wave_velocity": 7.636023044586182,
-      "vascular_age": 47
-    },
     {
       "id": "a1f5b2fc-103a-4fd0-8eb6-2f4ba2cf331e",
       "day": "2026-03-24",
@@ -1569,6 +1554,12 @@
     {
       "id": "a7970d32-54e4-4297-8a7b-01e67b3b488b",
       "day": "2026-06-20",
+      "pulse_wave_velocity": 7.073010444641113,
+      "vascular_age": 39
+    },
+    {
+      "id": "1c27de23-4bb4-4100-9b6c-8f2d56ad8754",
+      "day": "2026-06-21",
       "pulse_wave_velocity": 7.073010444641113,
       "vascular_age": 39
     }
