@@ -1,10 +1,11 @@
 {
-  "fetched_at": "2026-06-24T16:10:54.554Z",
+  "fetched_at": "2026-06-24T19:28:43.631Z",
   "data": [
     {
       "resource_state": 2,
       "athlete": {
         "id": 109496482,
+        "id_str": "109496482",
         "resource_state": 1
       },
       "name": "Afternoon Walk",
@@ -16,6 +17,7 @@
       "sport_type": "Walk",
       "device_name": "Apple Watch Ultra",
       "id": 17967142107,
+      "id_str": "17967142107",
       "start_date": "2026-04-03T20:07:52Z",
       "start_date_local": "2026-04-03T16:07:52Z",
       "timezone": "(GMT-05:00) America/New_York",
@@ -69,6 +71,7 @@
       "resource_state": 2,
       "athlete": {
         "id": 109496482,
+        "id_str": "109496482",
         "resource_state": 1
       },
       "name": "Night Walk",
@@ -80,6 +83,7 @@
       "sport_type": "Walk",
       "device_name": "Apple Watch Ultra",
       "id": 18314180994,
+      "id_str": "18314180994",
       "start_date": "2026-04-30T01:53:42Z",
       "start_date_local": "2026-04-29T21:53:42Z",
       "timezone": "(GMT-05:00) America/New_York",
