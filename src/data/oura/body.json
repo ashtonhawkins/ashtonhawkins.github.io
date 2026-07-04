@@ -1,14 +1,6 @@
 {
-  "fetched_at": "2026-07-03T19:05:27.103Z",
+  "fetched_at": "2026-07-04T02:06:05.810Z",
   "spo2": [
-    {
-      "id": "a39aedc7-7345-461e-b8ec-5aa80b3854a2",
-      "breathing_disturbance_index": 0,
-      "day": "2026-04-04",
-      "spo2_percentage": {
-        "average": 96.774
-      }
-    },
     {
       "id": "fed5b71b-5028-45fc-91ae-53cd5b977c1f",
       "breathing_disturbance_index": 0,
@@ -573,13 +565,6 @@
     }
   ],
   "stress": [
-    {
-      "id": "ac33d38e-5811-49f2-bda5-8d14cabbd326",
-      "day": "2026-04-04",
-      "day_summary": "stressful",
-      "recovery_high": 1800,
-      "stress_high": 15300
-    },
     {
       "id": "d8b45976-192a-4273-91a5-433670c46dc3",
       "day": "2026-04-05",
@@ -1199,8 +1184,8 @@
     {
       "id": "2691a3d1-c861-4ff3-ad29-68757852ebee",
       "day": "2026-07-02",
-      "day_summary": "stressful",
-      "recovery_high": 0,
+      "day_summary": "restored",
+      "recovery_high": 14400,
       "stress_high": 13500
     },
     {
@@ -1208,16 +1193,10 @@
       "day": "2026-07-03",
       "day_summary": null,
       "recovery_high": 0,
-      "stress_high": 0
+      "stress_high": 3600
     }
   ],
   "cardiovascular_age": [
-    {
-      "id": "e50bd49f-bf69-4ae0-9487-47c720574378",
-      "day": "2026-04-04",
-      "pulse_wave_velocity": 6.898859024047852,
-      "vascular_age": 36
-    },
     {
       "id": "45217be7-3b32-4138-86cb-5dae976b47c1",
       "day": "2026-04-05",
