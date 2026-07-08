@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-07-07T19:43:43.178Z",
+  "fetched_at": "2026-07-08T01:55:08.982Z",
   "daily": [
     {
       "id": "79201336-184d-4e4f-87ec-b9d88ebaa07d",
@@ -1143,70 +1143,6 @@
     }
   ],
   "periods": [
-    {
-      "id": "05caf998-8c4b-4996-bb21-851879fc03fc",
-      "average_breath": null,
-      "average_heart_rate": 0,
-      "average_hrv": null,
-      "awake_time": 871,
-      "bedtime_end": "2026-04-08T13:05:58.000-04:00",
-      "bedtime_start": "2026-04-08T12:50:27.000-04:00",
-      "day": "2026-04-08",
-      "deep_sleep_duration": 0,
-      "efficiency": 6,
-      "heart_rate": {
-        "interval": 300,
-        "items": [
-          null,
-          null,
-          null
-        ],
-        "timestamp": "2026-04-08T12:50:27.000-04:00"
-      },
-      "hrv": {
-        "interval": 300,
-        "items": [
-          null,
-          null,
-          null
-        ],
-        "timestamp": "2026-04-08T12:50:27.000-04:00"
-      },
-      "latency": 0,
-      "light_sleep_duration": 60,
-      "low_battery_alert": false,
-      "lowest_heart_rate": null,
-      "movement_30_sec": "13111111212111122111112232111111",
-      "period": 1,
-      "readiness": {
-        "contributors": {
-          "activity_balance": 62,
-          "body_temperature": null,
-          "hrv_balance": 79,
-          "previous_day_activity": 75,
-          "previous_night": 1,
-          "recovery_index": 23,
-          "resting_heart_rate": null,
-          "sleep_balance": 43
-        },
-        "score": 50,
-        "temperature_deviation": null,
-        "temperature_trend_deviation": 0.01
-      },
-      "readiness_score_delta": null,
-      "rem_sleep_duration": 0,
-      "restless_periods": 2,
-      "sleep_algorithm_version": "v2",
-      "sleep_analysis_reason": "foreground_sleep_analysis",
-      "sleep_phase_30_sec": "4444444444444444444444224444444",
-      "sleep_phase_5_min": "4444",
-      "sleep_score_delta": null,
-      "time_in_bed": 931,
-      "total_sleep_duration": 60,
-      "type": "sleep",
-      "ring_id": null,
-      "app_sleep_phase_5_min": "444"
-    },
     {
       "id": "2ab4ab97-8978-4ac2-ad5c-291427624538",
       "average_breath": 13.5,
