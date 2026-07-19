@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-07-19T01:54:22.569Z",
+  "fetched_at": "2026-07-19T05:40:55.445Z",
   "workouts": [
     {
       "id": "1f06a646-091f-4223-925c-4913956b2cdb",
@@ -180,6 +180,54 @@
       "label": null,
       "source": "confirmed",
       "start_datetime": "2026-06-08T14:29:00.000-04:00"
+    },
+    {
+      "id": "4ea4776f-d006-4a6b-9f8d-8e2c1d93b3be",
+      "activity": "hiking",
+      "calories": 369.8233337402344,
+      "day": "2026-07-18",
+      "distance": 3833.3598967234766,
+      "end_datetime": "2026-07-18T14:17:00.000+09:00",
+      "intensity": "moderate",
+      "label": null,
+      "source": "confirmed",
+      "start_datetime": "2026-07-18T12:41:00.000+09:00"
+    },
+    {
+      "id": "52f6ec60-fca6-4ad1-b802-d42189a15ed0",
+      "activity": "hiking",
+      "calories": 566.5916748046875,
+      "day": "2026-07-18",
+      "distance": 4893.209968097058,
+      "end_datetime": "2026-07-18T17:26:00.000+09:00",
+      "intensity": "moderate",
+      "label": null,
+      "source": "confirmed",
+      "start_datetime": "2026-07-18T14:54:00.000+09:00"
+    },
+    {
+      "id": "95b0b5b3-b627-492c-80b3-55ca717c114b",
+      "activity": "hiking",
+      "calories": 70.03058624267578,
+      "day": "2026-07-18",
+      "distance": 375.2504439861051,
+      "end_datetime": "2026-07-18T18:47:00.000+09:00",
+      "intensity": "moderate",
+      "label": null,
+      "source": "confirmed",
+      "start_datetime": "2026-07-18T18:27:00.000+09:00"
+    },
+    {
+      "id": "1b644949-1a52-4f7f-991c-35bfc7b875bf",
+      "activity": "hiking",
+      "calories": 209.8202667236328,
+      "day": "2026-07-18",
+      "distance": 2897.494893369052,
+      "end_datetime": "2026-07-18T20:04:00.000+09:00",
+      "intensity": "moderate",
+      "label": null,
+      "source": "confirmed",
+      "start_datetime": "2026-07-18T19:12:00.000+09:00"
     }
   ],
   "sessions": []
