@@ -1,66 +1,6 @@
 {
-  "fetched_at": "2026-07-26T14:57:07.712Z",
+  "fetched_at": "2026-07-26T18:59:07.979Z",
   "data": [
-    {
-      "timestamp": "2026-04-27T14:58:13.000Z",
-      "bpm": 62,
-      "producer_timestamp": 1777226827722,
-      "source": "rest"
-    },
-    {
-      "timestamp": "2026-04-27T15:03:13.000Z",
-      "bpm": 58,
-      "producer_timestamp": 1777226827722,
-      "source": "rest"
-    },
-    {
-      "timestamp": "2026-04-27T15:08:13.000Z",
-      "bpm": 57,
-      "producer_timestamp": 1777226827722,
-      "source": "rest"
-    },
-    {
-      "timestamp": "2026-04-27T15:13:13.000Z",
-      "bpm": 58,
-      "producer_timestamp": 1777226827722,
-      "source": "rest"
-    },
-    {
-      "timestamp": "2026-04-27T15:18:13.000Z",
-      "bpm": 64,
-      "producer_timestamp": 1777226827722,
-      "source": "rest"
-    },
-    {
-      "timestamp": "2026-04-27T15:23:13.000Z",
-      "bpm": 72,
-      "producer_timestamp": 1777226827722,
-      "source": "rest"
-    },
-    {
-      "timestamp": "2026-04-27T15:27:29.000Z",
-      "bpm": 69,
-      "producer_timestamp": 1777226827722,
-      "source": "rest"
-    },
-    {
-      "timestamp": "2026-04-27T15:44:37.000Z",
-      "bpm": 87,
-      "producer_timestamp": 1777226827722,
-      "source": "awake"
-    },
-    {
-      "timestamp": "2026-04-27T15:44:41.000Z",
-      "bpm": 75,
-      "producer_timestamp": 1777226827722,
-      "source": "awake"
-    },
-    {
-      "timestamp": "2026-04-27T15:44:42.000Z",
-      "bpm": 80,
-      "producer_timestamp": 1777226827722,
-      "source": "awake"
-    },
     {
       "timestamp": "2026-04-27T19:23:30.000Z",
       "bpm": 85,
