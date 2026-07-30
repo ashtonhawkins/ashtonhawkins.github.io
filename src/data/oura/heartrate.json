@@ -1,42 +1,6 @@
 {
-  "fetched_at": "2026-07-30T15:46:00.363Z",
+  "fetched_at": "2026-07-30T19:12:16.309Z",
   "data": [
-    {
-      "timestamp": "2026-05-01T16:38:57.000Z",
-      "bpm": 87,
-      "producer_timestamp": 1777413296714,
-      "source": "awake"
-    },
-    {
-      "timestamp": "2026-05-01T16:39:15.000Z",
-      "bpm": 79,
-      "producer_timestamp": 1777413296714,
-      "source": "awake"
-    },
-    {
-      "timestamp": "2026-05-01T16:39:16.000Z",
-      "bpm": 75,
-      "producer_timestamp": 1777413296714,
-      "source": "awake"
-    },
-    {
-      "timestamp": "2026-05-01T18:29:19.000Z",
-      "bpm": 74,
-      "producer_timestamp": 1777413296714,
-      "source": "awake"
-    },
-    {
-      "timestamp": "2026-05-01T18:29:48.000Z",
-      "bpm": 71,
-      "producer_timestamp": 1777413296714,
-      "source": "awake"
-    },
-    {
-      "timestamp": "2026-05-01T18:29:56.000Z",
-      "bpm": 67,
-      "producer_timestamp": 1777413296714,
-      "source": "awake"
-    },
     {
       "timestamp": "2026-05-01T19:16:08.000Z",
       "bpm": 79,
