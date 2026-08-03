@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-08-03T02:01:09.646Z",
+  "fetched_at": "2026-08-03T06:08:57.088Z",
   "spo2": [
     {
       "id": "fc3b23af-bba0-4870-8fb1-951ec103262f",
@@ -1466,6 +1466,12 @@
       "day": "2026-08-02",
       "pulse_wave_velocity": 6.930306434631348,
       "vascular_age": 37
+    },
+    {
+      "id": "66209892-0b6d-4d6c-a977-c0ad9aa89d41",
+      "day": "2026-08-03",
+      "pulse_wave_velocity": 7.276389122009277,
+      "vascular_age": 42
     }
   ],
   "vo2_max": []
