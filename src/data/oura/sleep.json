@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-08-07T07:01:38.368Z",
+  "fetched_at": "2026-08-07T12:43:03.683Z",
   "daily": [
     {
       "id": "68db1707-6b27-4934-8bb9-7e886fca3f11",
@@ -18006,7 +18006,7 @@
           "resting_heart_rate": 51,
           "sleep_balance": null
         },
-        "score": 58,
+        "score": 53,
         "temperature_deviation": -0.27,
         "temperature_trend_deviation": null
       },
@@ -18292,7 +18292,7 @@
           "resting_heart_rate": 34,
           "sleep_balance": null
         },
-        "score": 41,
+        "score": 34,
         "temperature_deviation": -0.71,
         "temperature_trend_deviation": null
       },

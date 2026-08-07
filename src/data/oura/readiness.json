@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-08-07T07:01:38.368Z",
+  "fetched_at": "2026-08-07T12:43:03.683Z",
   "readiness": [
     {
       "id": "0826109b-cbb8-4613-9a85-90afb531b35f",
@@ -1171,10 +1171,10 @@
         "recovery_index": 56,
         "resting_heart_rate": 51,
         "sleep_balance": null,
-        "sleep_regularity": 86
+        "sleep_regularity": null
       },
       "day": "2026-08-02",
-      "score": 58,
+      "score": 53,
       "temperature_deviation": -0.27,
       "temperature_trend_deviation": null,
       "timestamp": "2026-08-02T00:00:00.000+00:00"
@@ -1190,10 +1190,10 @@
         "recovery_index": 62,
         "resting_heart_rate": 34,
         "sleep_balance": null,
-        "sleep_regularity": 86
+        "sleep_regularity": null
       },
       "day": "2026-08-03",
-      "score": 41,
+      "score": 34,
       "temperature_deviation": -0.7,
       "temperature_trend_deviation": null,
       "timestamp": "2026-08-03T00:00:00.000+00:00"
