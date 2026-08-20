@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-08-20T00:44:43.540Z",
+  "fetched_at": "2026-08-20T03:36:48.101Z",
   "daily": [
     {
       "id": "07571c64-7419-4b20-8d7a-d9699598e432",
@@ -17852,7 +17852,7 @@
       "sleep_score_delta": null,
       "time_in_bed": 6391,
       "total_sleep_duration": 5190,
-      "type": "sleep",
+      "type": "rest",
       "ring_id": null,
       "app_sleep_phase_5_min": "442222221123444222214"
     }
