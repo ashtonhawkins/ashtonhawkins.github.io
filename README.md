@@ -12,10 +12,12 @@ Astro 5 scaffold for a personal website deployed to GitHub Pages.
 
 ## Getting started
 
+Use Node 22, matching the GitHub Actions build environment.
+
 1. Install dependencies:
 
    ```bash
-   npm install
+   npm ci
    ```
 
 2. Start development server:
