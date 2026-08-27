@@ -32,4 +32,4 @@ Prove bounded local Cursor execution on `ashtonhawkins.com` without changing the
 
 ## Pending
 
-The first production-affecting work order remains pending PM / ChatGPT control-room decisions. Cursor SDK/API automation remains deferred until the manual delegation loop has succeeded twice.
+The first production-affecting website work order remains pending the ChatGPT control-room architecture conversation. Native Cursor SDK/API automation is active and proven end to end through the GitHub control plane; no manual-loop deferral applies.
