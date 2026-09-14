@@ -38,6 +38,7 @@ playwright-report/
 
 # temp / cache
 .cache/
+.firecrawl/
 .tmp/
 tmp/
 
