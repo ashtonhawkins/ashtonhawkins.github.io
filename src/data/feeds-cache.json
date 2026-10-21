@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-21T08:04:24.743Z",
+  "updatedAt": "2026-10-21T10:54:11.666Z",
   "watching": {
-    "lastUpdated": "2026-10-21T08:04:24.743Z",
+    "lastUpdated": "2026-10-21T10:54:11.666Z",
     "recentItems": [
       {
         "title": "The Omega Man",
@@ -34,8 +34,20 @@
     ],
     "trakt": [],
     "goodreads": [],
-    "lastfm": [],
-    "spotify": [],
+    "lastfm": [
+      {
+        "name": "Someday, Somewhere",
+        "title": "Someday, Somewhere",
+        "artist": "Jungle"
+      }
+    ],
+    "spotify": [
+      {
+        "name": "Someday, Somewhere",
+        "title": "Someday, Somewhere",
+        "artist": "Jungle"
+      }
+    ],
     "x": []
   }
 }
