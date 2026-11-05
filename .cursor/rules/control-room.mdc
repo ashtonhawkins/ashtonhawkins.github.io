@@ -1,0 +1,12 @@
+---
+alwaysApply: true
+---
+
+Read and follow `AGENTS.md` before taking action.
+
+- ChatGPT owns product, content, design, privacy, scope, acceptance, and review decisions.
+- Cursor executes bounded, approved work orders and reports evidence back for review.
+- Inspect and plan before editing. Ask rather than inventing a missing decision.
+- Never work directly on `main`, merge, deploy, change external configuration, or handle secrets without explicit authorization.
+- Treat personal feed data, especially `src/data/oura/`, as sensitive.
+- Use Node 22 and validate implementation changes with `npm run check` and `npm run build`.
