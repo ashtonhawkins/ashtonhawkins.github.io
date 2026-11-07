@@ -1,37 +1,16 @@
 {
-  "updatedAt": "2026-11-07T09:22:38.113Z",
+  "updatedAt": "2026-11-07T12:10:20.348Z",
   "watching": {
-    "lastUpdated": "2026-11-07T09:22:38.113Z",
-    "recentItems": [
-      {
-        "title": "The Omega Man",
-        "year": 1971,
-        "rating": 5,
-        "watchedAt": "2026-02-21T22:13:37.000Z",
-        "source": "letterboxd",
-        "type": "film",
-        "url": "https://letterboxd.com/drrobertneville/film/the-omega-man/",
-        "watchedDate": "2026-02-21T22:13:37.000Z"
-      }
-    ],
+    "lastUpdated": "2026-11-07T12:10:20.349Z",
+    "recentItems": [],
     "stats": {
-      "totalFilms": 1,
+      "totalFilms": 0,
       "totalEpisodes": 0,
-      "avgRating": 5
+      "avgRating": null
     }
   },
   "items": {
-    "letterboxd": [
-      {
-        "title": "The Omega Man",
-        "year": 1971,
-        "rating": 5,
-        "watchedAt": "2026-02-21T22:13:37.000Z",
-        "source": "letterboxd",
-        "type": "film",
-        "url": "https://letterboxd.com/drrobertneville/film/the-omega-man/"
-      }
-    ],
+    "letterboxd": [],
     "trakt": [],
     "goodreads": [],
     "lastfm": [
